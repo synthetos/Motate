@@ -29,7 +29,7 @@
 using namespace Motate; 
 
 // create the led Pin object, setup as an output
-Pin<13> led = Output;
+Pin<13> ledPin = Output;
 
 // Variables will change:
 long previousMillis = 0;        // will store last time LED was updated
@@ -57,10 +57,10 @@ void loop()
     previousMillis = currentMillis;   
 
     // if the LED is off turn it on and vice-versa:
-    if (led == LOW)
-      led = HIGH;
+    if (ledPin == LOW)
+      ledPin = HIGH;
     else
-      led = LOW;
+      ledPin = LOW;
   }
 }
 

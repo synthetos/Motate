@@ -32,8 +32,8 @@ This example code is in the public domain.
 using namespace Motate; 
 
 // create the Pin objects
-Pin<2> button = Input;     // the number of the pushbutton pin
-Pin<13> led = Output;      // the number of the LED pin
+Pin<2> buttonPin = Input;     // the number of the pushbutton pin
+Pin<13> ledPin = Output;      // the number of the LED pin
 
 // Variables will change:
 int buttonState;             // the current reading from the input pin
@@ -50,7 +50,7 @@ void setup() {
 
 void loop() {
   // read the state of the switch into a local variable:
-  int reading = button;
+  int reading = buttonPin;
 
   // check to see if you just pressed the button 
   // (i.e. the input went from LOW to HIGH),  and you've waited 
@@ -69,7 +69,7 @@ void loop() {
   }
   
   // set the LED using the state of the button:
-  led = buttonState;
+  ledPin = buttonState;
 
   // save the reading.  Next time through the loop,
   // it'll be the lastButtonState:

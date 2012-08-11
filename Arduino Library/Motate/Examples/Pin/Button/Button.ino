@@ -31,8 +31,8 @@
 using namespace Motate; 
 
 // create the Pin objects
-Pin<2> button = Input;     // the number of the pushbutton pin
-Pin<13> led = Output;      // the number of the LED pin
+Pin<2> buttonPin = Input;     // the number of the pushbutton pin
+Pin<13> ledPin = Output;      // the number of the LED pin
 
 void setup() {
   // nothing to do here, move on
@@ -41,12 +41,12 @@ void setup() {
 void loop(){
   // check if the pushbutton is pressed.
   // if it is, the buttonState is HIGH:
-  if (button == HIGH) {     
+  if (buttonPin == HIGH) {     
     // turn LED on:    
-    led = HIGH;
+    ledPin = HIGH;
   } 
   else {
     // turn LED off:
-    led = LOW;
+    ledPin = LOW;
   }
 }
