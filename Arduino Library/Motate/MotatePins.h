@@ -31,16 +31,17 @@ namespace Motate {
 	typedef volatile uint8_t & reg8_t;
 	
 	enum PinSetupType {
-		Output          = 0,
-		Input           = 1,
-		InputWithPullup = 2,
+		Unchanged       = 0,
+		Output          = 1,
+		Input           = 2,
+		InputWithPullup = 3,
 	};
 	
 	template<uint8_t pinNum>
 	struct Pin {
 		enum { number = pinNum };
 		
-		Pin(const PinSetupType type) {
+		Pin(const PinSetupType type = Unchanged) {
 			init(type);
 		};
 		
@@ -65,11 +66,13 @@ namespace Motate {
 		template <> void Pin<pinNum>::init(const PinSetupType type)  { \
 			switch (type) {\
 				case Output:\
-					(DDR ## registerLetter) &= ~(1<<registerPin);\
+					(DDR ## registerLetter) |= (1<<registerPin);\
 					break;\
 				case InputWithPullup:\
 				case Input:\
 					(DDR ## registerLetter) &= ~(1<<registerPin);\
+					break;\
+				default:\
 					break;\
 			}\
 			if (type == InputWithPullup)  (PORT ## registerLetter) &= ~(1<<registerPin);\
