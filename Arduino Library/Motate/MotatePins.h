@@ -28,7 +28,7 @@
 #include <inttypes.h>
 
 namespace Motate {
-	typedef volatile uint8_t & reg8_t;
+	typedef volatile uint8_t & reg8_t;	
 	
 	enum PinSetupType {
 		Unchanged       = 0,
@@ -36,34 +36,60 @@ namespace Motate {
 		Input           = 2,
 		InputWithPullup = 3,
 	};
+
+
+	namespace implementation {
+		// valid_pin_check is a partial specialization based on pinNum
+		// default is that the pin is not null
+		template <uint8_t, class T = void> 
+		struct valid_pin_check
+		{
+			bool isNull() { return false; };
+		};
+
+		// pin number -1 (255, technically, since it unsigned) is NULL
+		template <class T> 
+		struct valid_pin_check<-1, T> 
+		{
+			bool isNull() { return true; };
+		};
+	}
+	
+	struct PinBase {
+		virtual void init(const PinSetupType type) = 0;
+		virtual void set(bool value);
+		virtual uint8_t get();
+		
+	};
 	
 	template<uint8_t pinNum>
-	struct Pin {
+	struct Pin : public PinBase, public implementation::valid_pin_check< pinNum > {
 		enum { number = pinNum };
-		
+				
 		Pin(const PinSetupType type = Unchanged) {
 			init(type);
 		};
-		
-		Pin<pinNum> &operator=(bool value) { return set(value); };
+		Pin<pinNum> &operator=(bool value) { set(value); return *this; };
 		operator bool() { return (get() != 0); };
-
-		// These need overridden. These non-ops are used when not overriden.
 		void init(const PinSetupType type) {
 			// stub
 		};
-		Pin<pinNum> &set(bool value) {
+		void set(bool value) {
 			// stub
-			return *this;
 		};
 		uint8_t get() {
 			// stub
 			return 0;
-		}
+		};
 	};
-
+	
+	// Explicitly pre-define a NullPin to compare to
+	Pin<-1> NullPin;
+	
+	typedef const uint8_t pin_number;
+	
 	#define _MAKE_MOTATE_PIN(pinNum, registerLetter, registerPin)\
-		template <> void Pin<pinNum>::init(const PinSetupType type)  { \
+		template <> void Pin<pinNum>::init(const PinSetupType type) { \
 			switch (type) {\
 				case Output:\
 					(DDR ## registerLetter) |= (1<<registerPin);\
@@ -77,18 +103,19 @@ namespace Motate {
 			}\
 			if (type == InputWithPullup)  (PORT ## registerLetter) &= ~(1<<registerPin);\
 		};\
-		template <> Pin<pinNum> & Pin<pinNum>::set(bool value)  { \
+		template <> void Pin<pinNum>::set(bool value)  { \
 			ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {\
 				if (!value)\
 					(PORT ## registerLetter) &= ~(1<<registerPin);\
 				else\
 					(PORT ## registerLetter) |= (1<<registerPin);\
-				}\
-				return *this;\
+			}\
 		};\
-		template <> uint8_t Pin<pinNum>::get()  { \
+		template <> uint8_t Pin<pinNum>::get() { \
 			return (PIN ## registerLetter) & (1<<registerPin);\
-		};
+		};\
+		typedef Pin<pinNum> Pin ## pinNum;\
+		Pin<pinNum> pin ## pinNum;
 
 #if defined(__AVR_ATmega168__) || defined(__AVR_ATmega328P__)
 
