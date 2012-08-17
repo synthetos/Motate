@@ -69,7 +69,8 @@ namespace Motate {
 		Pin(const PinSetupType type = Unchanged) {
 			init(type);
 		};
-		Pin<pinNum> &operator=(bool value) { set(value); return *this; };
+		Pin<pinNum> &operator=(const bool value) { set(value); return *this; };
+		Pin<pinNum> &operator=(const PinSetupType type) { init(type); return *this; };
 		operator bool() { return (get() != 0); };
 		void init(const PinSetupType type) {
 			// stub
