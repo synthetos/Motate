@@ -71,6 +71,7 @@ namespace implementation {
 	  Pin<d5> _data_pin5;
 	  Pin<d6> _data_pin6;
 	  Pin<d7> _data_pin7;
+		PinHolder<d7, d6, d5, d4, d3, d2, d1, d0> _data;
 
 		LiquidCrystal() : _rs_pin(Output), _rw_pin(Output), _enable_pin(Output), _data_pin0(Output), _data_pin1(Output), _data_pin2(Output), _data_pin3(Output), _data_pin4(Output), _data_pin5(Output), _data_pin6(Output), _data_pin7(Output) {
   		// if there is a RW pin indicated, set it low to Write
@@ -81,7 +82,6 @@ namespace implementation {
 
 		void initMode();
 
-	  void write4bits(uint8_t);
 	  void write8bits(uint8_t);
 	};
 
@@ -95,6 +95,8 @@ namespace implementation {
 		Pin<rs> _rs_pin; // LOW: command.  HIGH: character.
 	  Pin<rw> _rw_pin; // LOW: write to LCD.  HIGH: read from LCD.
 	  Pin<enable> _enable_pin; // activated by a HIGH pulse.
+		PinHolder<d3, d2, d1, d0> _data_high;
+		PinHolder<-1, -1, -1, -1, d3, d2, d1, d0> _data_low;
 	  Pin<d0> _data_pin0;
 	  Pin<d1> _data_pin1;
 	  Pin<d2> _data_pin2;
@@ -200,13 +202,14 @@ namespace implementation {
 	
 	template<uint8_t rs, uint8_t rw, uint8_t enable, uint8_t d0, uint8_t d1, uint8_t d2, uint8_t d3>
 	void LiquidCrystal<rs, rw, enable, d0, d1, d2, d3, 255, 255, 255, 255>::write4bits(uint8_t value) {
-	  _data_pin0 = value & 0x01;
-		value >>= 1;
-	  _data_pin1 = value & 0x01;
-		value >>= 1;
-	  _data_pin2 = value & 0x01;
-		value >>= 1;
-	  _data_pin3 = value & 0x01;
+		// _data_pin0 = value & 0x01;
+		// value >>= 1;
+		// _data_pin1 = value & 0x01;
+		// value >>= 1;
+		// _data_pin2 = value & 0x01;
+		// value >>= 1;
+		// _data_pin3 = value & 0x01;
+		_data_low.set(value);
 		
 	  _enable_pin = LOW;
 	  delayMicroseconds(1);    
@@ -221,14 +224,16 @@ namespace implementation {
 		// still in four-bit mode
 		// write the most significant 4 bits first, then pulse the enable
 		// note that value_high_4 >>=4 is expensive, where (0x01 << 4) is cheap
-		uint8_t value_high_4 = value >> 4;
-		_data_pin0 = value_high_4 & 0x01;
-		value_high_4 >>= 1;
-	  _data_pin1 = value_high_4 & 0x01;
-		value_high_4 >>= 1;
-	  _data_pin2 = value_high_4 & 0x01;
-		value_high_4 >>= 1;
-	  _data_pin3 = value_high_4 & 0x01;
+		// uint8_t value_high_4 = value >> 4;
+		// _data_pin0 = value_high_4 & 0x01;
+		// value_high_4 >>= 1;
+		// _data_pin1 = value_high_4 & 0x01;
+		// value_high_4 >>= 1;
+		// _data_pin2 = value_high_4 & 0x01;
+		// value_high_4 >>= 1;
+		// _data_pin3 = value_high_4 & 0x01;
+
+		_data_high.set(value);
 		
 	  _enable_pin = LOW;
 	  delayMicroseconds(1);    
@@ -237,14 +242,16 @@ namespace implementation {
 	  _enable_pin = LOW;
 	  delayMicroseconds(100);   // commands need > 37us to settle
 	
-		// still in four-bit mode
-	  _data_pin0 = value & 0x01;
-		value >>= 1;
-	  _data_pin1 = value & 0x01;
-		value >>= 1;
-	  _data_pin2 = value & 0x01;
-		value >>= 1;
-	  _data_pin3 = value & 0x01;
+		// // still in four-bit mode
+		// _data_pin0 = value & 0x01;
+		// value >>= 1;
+		// _data_pin1 = value & 0x01;
+		// value >>= 1;
+		// _data_pin2 = value & 0x01;
+		// value >>= 1;
+		// _data_pin3 = value & 0x01;
+
+		_data_low.set(value);
 		
 	  _enable_pin = LOW;
 	  delayMicroseconds(1);    
@@ -290,21 +297,23 @@ namespace implementation {
 		uint8_t d0, uint8_t d1, uint8_t d2, uint8_t d3,
 		uint8_t d4, uint8_t d5, uint8_t d6, uint8_t d7>
 	void LiquidCrystal<rs, rw, enable, d0, d1, d2, d3, d4, d5, d6, d7>::write8bits(uint8_t value) {
-	  _data_pin0 = value & 0x01;
-		value >>= 1;
-	  _data_pin1 = value & 0x01;
-		value >>= 1;
-	  _data_pin2 = value & 0x01;
-		value >>= 1;
-	  _data_pin3 = value & 0x01;
-		value >>= 1;
-	  _data_pin4 = value & 0x01;
-		value >>= 1;
-	  _data_pin5 = value & 0x01;
-		value >>= 1;
-	  _data_pin6 = value & 0x01;
-		value >>= 1;
-	  _data_pin7 = value & 0x01;
+		// 	  _data_pin0 = value & 0x01;
+		// value >>= 1;
+		// 	  _data_pin1 = value & 0x01;
+		// value >>= 1;
+		// 	  _data_pin2 = value & 0x01;
+		// value >>= 1;
+		// 	  _data_pin3 = value & 0x01;
+		// value >>= 1;
+		// 	  _data_pin4 = value & 0x01;
+		// value >>= 1;
+		// 	  _data_pin5 = value & 0x01;
+		// value >>= 1;
+		// 	  _data_pin6 = value & 0x01;
+		// value >>= 1;
+		// 	  _data_pin7 = value & 0x01;
+		
+		_data.set(value);
 		
 	  _enable_pin = LOW;
 	  delayMicroseconds(1);    

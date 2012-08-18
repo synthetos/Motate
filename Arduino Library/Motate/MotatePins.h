@@ -130,16 +130,16 @@ namespace Motate {
 
 	#define _MAKE_MOTATE_PORT8(registerLetter, registerChar)\
 	template <> void Port8<registerChar>::setDirection(const uint8_t value, const uint8_t mask) {\
-		uint8_t port_value = (DDR ## registerLetter);\
+		uint8_t port_value = 0;\
 		if (mask != 0xff) {\
-			port_value &= mask;\
+			port_value = (DDR ## registerLetter) & mask;\
 		}\
 		(DDR ## registerLetter) = port_value | value;\
 	};\
 	template <> void Port8<registerChar>::setPins(const uint8_t value, const uint8_t mask) {\
-		uint8_t port_value = (PIN ## registerLetter);\
+		uint8_t port_value = 0;\
 		if (mask != 0xff) {\
-			port_value &= mask;\
+			port_value = (PORT ## registerLetter) & mask;\
 		}\
 		(PORT ## registerLetter) = port_value | value;\
 	};\
@@ -154,7 +154,7 @@ namespace Motate {
 	template <> void Pin<-1> ::set(bool)  {};
 	template <> uint8_t Pin<-1>::get() {return 0;};
 	template <> const uint8_t Pin<-1>::portLetter = 0;
-	template <> const uint8_t Pin<-1>::mask = 0xFF;
+	template <> const uint8_t Pin<-1>::mask = 0x00;
 	typedef Pin<-1> NullPin;
 	NullPin nullPin;
 
@@ -375,10 +375,10 @@ namespace Motate {
 			uint8_t port_value    = 0x00; // Port<> handles reading the port and setting the masked pins
 #define _MOTATE_PINHOLDER_CHECKANDSETPIN(portLetter, bitNumber) \
 			if (PinBit ## bitNumber.maskForPort(port ## portLetter.letter) &&\
-					(PinBit ## bitNumber.mask != (1 << bitNumber)) &&\
-					(in_value & (1 << bitNumber))) {\
+					(PinBit ## bitNumber.mask != (1 << bitNumber)) && (in_value & (1 << bitNumber))) {\
 				port_value |= PinBit ## bitNumber.mask;\
 			}
+			
 			if (portBClearMask != 0x00) {
 				_MOTATE_PINHOLDER_CHECKANDSETPIN(B, 7);
 				_MOTATE_PINHOLDER_CHECKANDSETPIN(B, 6);
@@ -388,8 +388,8 @@ namespace Motate {
 				_MOTATE_PINHOLDER_CHECKANDSETPIN(B, 2);
 				_MOTATE_PINHOLDER_CHECKANDSETPIN(B, 1);
 				_MOTATE_PINHOLDER_CHECKANDSETPIN(B, 0);
-				port_value |= in_value & ~portBCopyMask;
-				portB.setPins(port_value, portBClearMask);
+				port_value |= in_value & portBCopyMask;
+				portB.setPins(port_value, ~portBClearMask);
 			}
 
 			if (portCClearMask != 0x00) {
@@ -402,8 +402,8 @@ namespace Motate {
 				_MOTATE_PINHOLDER_CHECKANDSETPIN(C, 2);
 				_MOTATE_PINHOLDER_CHECKANDSETPIN(C, 1);
 				_MOTATE_PINHOLDER_CHECKANDSETPIN(C, 0);
-				port_value |= in_value & ~portCCopyMask;
-				portC.setPins(port_value, portCClearMask);
+				port_value |= in_value & portCCopyMask;
+				portC.setPins(port_value, ~portCClearMask);
 			}
 			
 			if (portDClearMask != 0x00) {
@@ -416,8 +416,8 @@ namespace Motate {
 				_MOTATE_PINHOLDER_CHECKANDSETPIN(D, 2);
 				_MOTATE_PINHOLDER_CHECKANDSETPIN(D, 1);
 				_MOTATE_PINHOLDER_CHECKANDSETPIN(D, 0);
-				port_value |= in_value & ~portCCopyMask;
-				portD.setPins(port_value, portDClearMask);
+				port_value |= in_value & portCCopyMask;
+				portD.setPins(port_value, ~portDClearMask);
 			}
 		}
 		
