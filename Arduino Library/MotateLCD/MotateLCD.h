@@ -3,7 +3,7 @@
 
 #include <inttypes.h>
 #include "Print.h"
-#include "MotatePins.h"
+#include "../Motate/MotatePins.h"
 
 #include "Arduino.h" // delay
 
@@ -161,9 +161,9 @@ public:
 
   void createChar(uint8_t, uint8_t[]);
   void setCursor(uint8_t, uint8_t); 
-  virtual size_t write(uint8_t);
   void command(uint8_t);
-  
+
+  virtual size_t write(uint8_t);
   using Print::write;
 };
 
