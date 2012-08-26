@@ -143,9 +143,9 @@ using namespace Motate;
 
 // initialize the library with the numbers of the interface pins
 LiquidCrystal</*RS*/12, /*R/W*/-1, /*Enable*/11, /*D4*/5, /*D5*/4, /*D6*/3, /*D7*/2> lcd;
-``
+```
 
-Note that the `R/W` pin position is mandatory, but the pin itself isn't. If you don't use that pin, then simply use the value `-1`.
+Note that the `R/W` pin *position* is mandatory, but the pin itself isn't. If you don't use that pin, then simply use the value `-1`.
 
 ##Motate::TWI
 
@@ -185,5 +185,6 @@ Master.close(); // Indicates that a STOP is requested
 ```
 
 
+I'll post updates over on the [+Motate](http://plus.google.com/114859135931792455633?prsrc=3) Google+ page, and on my blog: [Tinkerin.gs](http://tinkerin.gs).
 
 -Rob
