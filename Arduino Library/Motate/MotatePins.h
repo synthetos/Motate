@@ -378,52 +378,29 @@ namespace Motate {
 		
 		void set(uint8_t in_value) {
 			uint8_t port_value    = 0x00; // Port<> handles reading the port and setting the masked pins
-#define _MOTATE_PINHOLDER_CHECKANDSETPIN(portLetter, bitNumber) \
+#define _MOTATE_PINHOLDER_CHECKANDSETPIN(portLetter, bitNumber, bitMask) \
 			if (PinBit ## bitNumber.maskForPort(port ## portLetter.letter) &&\
-					(PinBit ## bitNumber.mask != (1 << bitNumber)) && (in_value & (1 << bitNumber))) {\
+					(PinBit ## bitNumber.mask != (bitMask)) && (in_value & (bitMask))) {\
 				port_value |= PinBit ## bitNumber.mask;\
 			}
 			
-			if (portBClearMask != 0x00) {
-				_MOTATE_PINHOLDER_CHECKANDSETPIN(B, 7);
-				_MOTATE_PINHOLDER_CHECKANDSETPIN(B, 6);
-				_MOTATE_PINHOLDER_CHECKANDSETPIN(B, 5);
-				_MOTATE_PINHOLDER_CHECKANDSETPIN(B, 4);
-				_MOTATE_PINHOLDER_CHECKANDSETPIN(B, 3);
-				_MOTATE_PINHOLDER_CHECKANDSETPIN(B, 2);
-				_MOTATE_PINHOLDER_CHECKANDSETPIN(B, 1);
-				_MOTATE_PINHOLDER_CHECKANDSETPIN(B, 0);
-				port_value |= in_value & portBCopyMask;
-				portB.setPins(port_value, ~portBClearMask);
-			}
-
-			if (portCClearMask != 0x00) {
-				port_value    = 0x00; // Port<> handles reading the port and setting the masked pins
-				_MOTATE_PINHOLDER_CHECKANDSETPIN(C, 7);
-				_MOTATE_PINHOLDER_CHECKANDSETPIN(C, 6);
-				_MOTATE_PINHOLDER_CHECKANDSETPIN(C, 5);
-				_MOTATE_PINHOLDER_CHECKANDSETPIN(C, 4);
-				_MOTATE_PINHOLDER_CHECKANDSETPIN(C, 3);
-				_MOTATE_PINHOLDER_CHECKANDSETPIN(C, 2);
-				_MOTATE_PINHOLDER_CHECKANDSETPIN(C, 1);
-				_MOTATE_PINHOLDER_CHECKANDSETPIN(C, 0);
-				port_value |= in_value & portCCopyMask;
-				portC.setPins(port_value, ~portCClearMask);
+#define _MOTATE_PINHOLDER_SETPORT(portLetter) \
+			if (port ## portLetter ## ClearMask != 0x00) {\
+				_MOTATE_PINHOLDER_CHECKANDSETPIN(portLetter, 7, 0b10000000);\
+				_MOTATE_PINHOLDER_CHECKANDSETPIN(portLetter, 6, 0b01000000);\
+				_MOTATE_PINHOLDER_CHECKANDSETPIN(portLetter, 5, 0b00100000);\
+				_MOTATE_PINHOLDER_CHECKANDSETPIN(portLetter, 4, 0b00010000);\
+				_MOTATE_PINHOLDER_CHECKANDSETPIN(portLetter, 3, 0b00001000);\
+				_MOTATE_PINHOLDER_CHECKANDSETPIN(portLetter, 2, 0b00000100);\
+				_MOTATE_PINHOLDER_CHECKANDSETPIN(portLetter, 1, 0b00000010);\
+				_MOTATE_PINHOLDER_CHECKANDSETPIN(portLetter, 0, 0b00000001);\
+				port_value |= in_value & port ## portLetter ## CopyMask;\
+				port ## portLetter.setPins(port_value, ~port ## portLetter ## ClearMask);\
 			}
 			
-			if (portDClearMask != 0x00) {
-				port_value    = 0x00; // Port<> handles reading the port and setting the masked pins
-				_MOTATE_PINHOLDER_CHECKANDSETPIN(D, 7);
-				_MOTATE_PINHOLDER_CHECKANDSETPIN(D, 6);
-				_MOTATE_PINHOLDER_CHECKANDSETPIN(D, 5);
-				_MOTATE_PINHOLDER_CHECKANDSETPIN(D, 4);
-				_MOTATE_PINHOLDER_CHECKANDSETPIN(D, 3);
-				_MOTATE_PINHOLDER_CHECKANDSETPIN(D, 2);
-				_MOTATE_PINHOLDER_CHECKANDSETPIN(D, 1);
-				_MOTATE_PINHOLDER_CHECKANDSETPIN(D, 0);
-				port_value |= in_value & portCCopyMask;
-				portD.setPins(port_value, ~portDClearMask);
-			}
+			_MOTATE_PINHOLDER_SETPORT(B);
+			_MOTATE_PINHOLDER_SETPORT(C);
+			_MOTATE_PINHOLDER_SETPORT(D);
 		}
 		
 	};
