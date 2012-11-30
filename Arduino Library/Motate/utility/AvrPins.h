@@ -349,6 +349,7 @@ namespace Motate {
 			
 #define _MOTATE_PINHOLDER_SETPORT(portLetter) \
 			if (port ## portLetter ## ClearMask != 0x00) {\
+				port_value    = 0x00;\
 				_MOTATE_PINHOLDER_CHECKANDSETPIN(portLetter, 7, 0b10000000);\
 				_MOTATE_PINHOLDER_CHECKANDSETPIN(portLetter, 6, 0b01000000);\
 				_MOTATE_PINHOLDER_CHECKANDSETPIN(portLetter, 5, 0b00100000);\

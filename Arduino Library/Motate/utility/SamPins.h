@@ -535,7 +535,7 @@ namespace Motate {
 		};
 
 		void set(uint8_t in_value) {
-			uint32_t port_value    = 0x00; // Port<> handles reading the port and setting the masked pins
+			uint32_t port_value = 0; // Port<> handles reading the port and setting the masked pins
 			#define _MOTATE_PH8_PINHOLDER_CHECKANDSETPIN(portLetter, bitNumber, bitMask) \
 				if (PinBit ## bitNumber.maskForPort(Port ## portLetter::letter) &&\
 						(PinBit ## bitNumber.mask != (bitMask)) && ((uint32_t)in_value & (bitMask))) {\
@@ -546,6 +546,7 @@ namespace Motate {
 			// Shortcut: ruby -e '(0..7).each() { |x| print "_MOTATE_PH8_PINHOLDER_CHECKANDSETPIN(portLetter, %2d, 0x%02x);\\\n" % [7-x, (1<<(7-x))]}'
 			#define _MOTATE_PH8_PINHOLDER_SETPORT(portLetter) \
 				if (port ## portLetter ## ClearMask) {\
+					port_value = 0;\
 					_MOTATE_PH8_PINHOLDER_CHECKANDSETPIN(portLetter,  7, 0x00000080u);\
 					_MOTATE_PH8_PINHOLDER_CHECKANDSETPIN(portLetter,  6, 0x00000040u);\
 					_MOTATE_PH8_PINHOLDER_CHECKANDSETPIN(portLetter,  5, 0x00000020u);\
