@@ -290,7 +290,7 @@ namespace Motate {
 
 	// PinHolder - virtual ports
 	template<uint8_t PinBit7num, uint8_t PinBit6num, uint8_t PinBit5num = -1, uint8_t PinBit4num = -1, uint8_t PinBit3num = -1, uint8_t PinBit2num = -1, uint8_t PinBit1num = -1, uint8_t PinBit0num = -1>
-	class PinHolder {
+	class PinHolder8 {
 
 		static Pin<PinBit7num> PinBit7;
 		static Pin<PinBit6num> PinBit6;
@@ -335,7 +335,7 @@ namespace Motate {
 		_MOTATE_CREATE_CLEAR_AND_COPY_MASKS(D);
 				
 	public:
-		PinHolder() {
+		PinHolder8() {
 			
 		};
 		

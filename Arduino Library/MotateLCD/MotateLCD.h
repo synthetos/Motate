@@ -57,62 +57,62 @@ namespace implementation {
 		uint8_t d4, uint8_t d5, uint8_t d6, uint8_t d7>
 	class LiquidCrystal {
 	public:
-	  uint8_t _displayfunction;
+		uint8_t _displayfunction;
 
 		// 8-bit mode
 		Pin<rs> _rs_pin; // LOW: command.  HIGH: character.
-	  Pin<rw> _rw_pin; // LOW: write to LCD.  HIGH: read from LCD.
-	  Pin<enable> _enable_pin; // activated by a HIGH pulse.
-	  Pin<d0> _data_pin0;
-	  Pin<d1> _data_pin1;
-	  Pin<d2> _data_pin2;
-	  Pin<d3> _data_pin3;
-	  Pin<d4> _data_pin4;
-	  Pin<d5> _data_pin5;
-	  Pin<d6> _data_pin6;
-	  Pin<d7> _data_pin7;
-		PinHolder<d7, d6, d5, d4, d3, d2, d1, d0> _data;
+		Pin<rw> _rw_pin; // LOW: write to LCD.  HIGH: read from LCD.
+		Pin<enable> _enable_pin; // activated by a HIGH pulse.
+		Pin<d0> _data_pin0;
+		Pin<d1> _data_pin1;
+		Pin<d2> _data_pin2;
+		Pin<d3> _data_pin3;
+		Pin<d4> _data_pin4;
+		Pin<d5> _data_pin5;
+		Pin<d6> _data_pin6;
+		Pin<d7> _data_pin7;
+		PinHolder8<d7, d6, d5, d4, d3, d2, d1, d0> _data;
 
 		LiquidCrystal() : _rs_pin(Output), _rw_pin(Output), _enable_pin(Output), _data_pin0(Output), _data_pin1(Output), _data_pin2(Output), _data_pin3(Output), _data_pin4(Output), _data_pin5(Output), _data_pin6(Output), _data_pin7(Output) {
-  		// if there is a RW pin indicated, set it low to Write
+		// if there is a RW pin indicated, set it low to Write
 			_rw_pin = LOW; // non-op if this is set to NullPin
-			
+
 			_displayfunction = LCD_8BITMODE | LCD_1LINE | LCD_5x8DOTS;
 		}
 
 		void initMode();
 
-	  void write8bits(uint8_t);
+		void write8bits(uint8_t);
 	};
 
 	// here we'll specialize a few routines for 4 or 8-bit mode
 	template<uint8_t rs, uint8_t rw, uint8_t enable, uint8_t d0, uint8_t d1, uint8_t d2, uint8_t d3>
 	class LiquidCrystal<rs, rw, enable, d0, d1, d2, d3, 255, 255, 255, 255> {
 	public:
-	  uint8_t _displayfunction;
+	uint8_t _displayfunction;
 
-		// 4-bit mode
-		Pin<rs> _rs_pin; // LOW: command.  HIGH: character.
-	  Pin<rw> _rw_pin; // LOW: write to LCD.  HIGH: read from LCD.
-	  Pin<enable> _enable_pin; // activated by a HIGH pulse.
-		PinHolder<d3, d2, d1, d0> _data_high;
-		PinHolder<-1, -1, -1, -1, d3, d2, d1, d0> _data_low;
-	  Pin<d0> _data_pin0;
-	  Pin<d1> _data_pin1;
-	  Pin<d2> _data_pin2;
-	  Pin<d3> _data_pin3;
+	// 4-bit mode
+	Pin<rs> _rs_pin; // LOW: command.  HIGH: character.
+	Pin<rw> _rw_pin; // LOW: write to LCD.  HIGH: read from LCD.
+	Pin<enable> _enable_pin; // activated by a HIGH pulse.
+	PinHolder8<d3, d2, d1, d0> _data_high;
+	PinHolder8<-1, -1, -1, -1, d3, d2, d1, d0> _data_low;
+	Pin<d0> _data_pin0;
+	Pin<d1> _data_pin1;
+	Pin<d2> _data_pin2;
+	Pin<d3> _data_pin3;
 
-		LiquidCrystal() : _rs_pin(Output), _rw_pin(Output), _enable_pin(Output), _data_pin0(Output), _data_pin1(Output), _data_pin2(Output), _data_pin3(Output) {
-  		// if there is a RW pin indicated, set it low to Write
-			_rw_pin = LOW; // non-op if this is set to NullPin
+	LiquidCrystal() : _rs_pin(Output), _rw_pin(Output), _enable_pin(Output), _data_pin0(Output), _data_pin1(Output), _data_pin2(Output), _data_pin3(Output) {
+		// if there is a RW pin indicated, set it low to Write
+		_rw_pin = LOW; // non-op if this is set to NullPin
 
-	    _displayfunction = LCD_4BITMODE | LCD_1LINE | LCD_5x8DOTS;
-		}
+		_displayfunction = LCD_4BITMODE | LCD_1LINE | LCD_5x8DOTS;
+	}
 
-		void initMode();
-		
-	  void write4bits(uint8_t);
-	  void write8bits(uint8_t);
+	void initMode();
+
+	void write4bits(uint8_t);
+	void write8bits(uint8_t);
 	};
 }
 
@@ -123,48 +123,48 @@ class LiquidCrystal
 	: public implementation::LiquidCrystal<rs, rw, enable, d0, d1, d2, d3, d4, d5, d6, d7>
 	, public Print {
 
-	typedef implementation::LiquidCrystal<rs, rw, enable, d0, d1, d2, d3, d4, d5, d6, d7>  _lcd_base;
+		typedef implementation::LiquidCrystal<rs, rw, enable, d0, d1, d2, d3, d4, d5, d6, d7>  _lcd_base;
 
 	/* The using is required. See: http://gcc.gnu.org/onlinedocs/gcc/Name-lookup.html */
-	using  _lcd_base::_displayfunction;
+		using  _lcd_base::_displayfunction;
 
-	uint8_t _displaycontrol;
-	uint8_t _displaymode;
+		uint8_t _displaycontrol;
+		uint8_t _displaymode;
 
-	uint8_t _initialized;
+		uint8_t _initialized;
 
-	uint8_t _numlines,_currline;
+		uint8_t _numlines,_currline;
 
-public:
+	public:
 
-  void begin(uint8_t cols, uint8_t rows, uint8_t charsize = LCD_5x8DOTS);
-  
-  LiquidCrystal() : implementation::LiquidCrystal<rs, rw, enable, d0, d1, d2, d3, d4, d5, d6, d7>() {
-	  begin(16, 1);  
-	};
-    
-  void clear();
-  void home();
+		void begin(uint8_t cols, uint8_t rows, uint8_t charsize = LCD_5x8DOTS);
 
-  void noDisplay();
-  void display();
-  void noBlink();
-  void blink();
-  void noCursor();
-  void cursor();
-  void scrollDisplayLeft();
-  void scrollDisplayRight();
-  void leftToRight();
-  void rightToLeft();
-  void autoscroll();
-  void noAutoscroll();
+		LiquidCrystal() : implementation::LiquidCrystal<rs, rw, enable, d0, d1, d2, d3, d4, d5, d6, d7>() {
+			begin(16, 1);  
+		};
 
-  void createChar(uint8_t, uint8_t[]);
-  void setCursor(uint8_t, uint8_t); 
-  void command(uint8_t);
+		void clear();
+		void home();
 
-  virtual size_t write(uint8_t);
-  using Print::write;
+		void noDisplay();
+		void display();
+		void noBlink();
+		void blink();
+		void noCursor();
+		void cursor();
+		void scrollDisplayLeft();
+		void scrollDisplayRight();
+		void leftToRight();
+		void rightToLeft();
+		void autoscroll();
+		void noAutoscroll();
+
+		void createChar(uint8_t, uint8_t[]);
+		void setCursor(uint8_t, uint8_t); 
+		void command(uint8_t);
+
+		virtual size_t write(uint8_t);
+		using Print::write;
 };
 
 
@@ -174,30 +174,30 @@ public:
 namespace implementation {
 	template<uint8_t rs, uint8_t rw, uint8_t enable, uint8_t d0, uint8_t d1, uint8_t d2, uint8_t d3>
 	void LiquidCrystal<rs, rw, enable, d0, d1, d2, d3, 255, 255, 255, 255>::initMode() {
-	  // Now we pull both RS and R/W low to begin commands
-	  _rs_pin = LOW;
-	  _enable_pin = LOW;
-	  if (_rw_pin != 255) { 
-	    _rw_pin = LOW;
-	  }
+	// Now we pull both RS and R/W low to begin commands
+		_rs_pin = LOW;
+		_enable_pin = LOW;
+		if (_rw_pin != 255) { 
+			_rw_pin = LOW;
+		}
 
-    // this is according to the hitachi HD44780 datasheet
-    // figure 24, pg 46
+	// this is according to the hitachi HD44780 datasheet
+	// figure 24, pg 46
 
-    // we start in 8bit mode, try to set 4 bit mode
-    write4bits(0x03);
-    delayMicroseconds(4500); // wait min 4.1ms
+	// we start in 8bit mode, try to set 4 bit mode
+		write4bits(0x03);
+		delayMicroseconds(4500); // wait min 4.1ms
 
-    // second try
-    write4bits(0x03);
-    delayMicroseconds(4500); // wait min 4.1ms
-  
-    // third go!
-    write4bits(0x03); 
-    delayMicroseconds(150);
+	// second try
+		write4bits(0x03);
+		delayMicroseconds(4500); // wait min 4.1ms
 
-    // finally, set to 4-bit interface
-    write4bits(0x02); 
+	// third go!
+		write4bits(0x03); 
+		delayMicroseconds(150);
+
+	// finally, set to 4-bit interface
+		write4bits(0x02); 
 	}
 	
 	template<uint8_t rs, uint8_t rw, uint8_t enable, uint8_t d0, uint8_t d1, uint8_t d2, uint8_t d3>
@@ -210,13 +210,13 @@ namespace implementation {
 		// value >>= 1;
 		// _data_pin3 = value & 0x01;
 		_data_low.set(value);
-		
-	  _enable_pin = LOW;
-	  delayMicroseconds(1);    
-	  _enable_pin = HIGH;
-	  delayMicroseconds(1);    // enable pulse must be >450ns
-	  _enable_pin = LOW;
-	  delayMicroseconds(100);   // commands need > 37us to settle
+
+		_enable_pin = LOW;
+		delayMicroseconds(1);    
+		_enable_pin = HIGH;
+		delayMicroseconds(1);    // enable pulse must be >450ns
+		_enable_pin = LOW;
+		delayMicroseconds(100);   // commands need > 37us to settle
 	}
 
 	template<uint8_t rs, uint8_t rw, uint8_t enable, uint8_t d0, uint8_t d1, uint8_t d2, uint8_t d3>
@@ -226,70 +226,70 @@ namespace implementation {
 		// note that value_high_4 >>=4 is expensive, where (0x01 << 4) is cheap
 		// uint8_t value_high_4 = value >> 4;
 		// _data_pin0 = value_high_4 & 0x01;
-		// value_high_4 >>= 1;
-		// _data_pin1 = value_high_4 & 0x01;
-		// value_high_4 >>= 1;
-		// _data_pin2 = value_high_4 & 0x01;
-		// value_high_4 >>= 1;
-		// _data_pin3 = value_high_4 & 0x01;
+		// // value_high_4 >>= 1;
+		// _data_pin1 = value_high_4 & 0x02;
+		// // value_high_4 >>= 1;
+		// _data_pin2 = value_high_4 & 0x04;
+		// // value_high_4 >>= 1;
+		// _data_pin3 = value_high_4 & 0x08;
 
 		_data_high.set(value);
-		
-	  _enable_pin = LOW;
-	  delayMicroseconds(1);    
-	  _enable_pin = HIGH;
-	  delayMicroseconds(1);    // enable pulse must be >450ns
-	  _enable_pin = LOW;
-	  delayMicroseconds(100);   // commands need > 37us to settle
-	
-		// // still in four-bit mode
+
+		_enable_pin = LOW;
+		delayMicroseconds(10);    
+		_enable_pin = HIGH;
+		delayMicroseconds(10);    // enable pulse must be >450ns
+		_enable_pin = LOW;
+		delayMicroseconds(100);   // commands need > 37us to settle
+
+		// // // still in four-bit mode
 		// _data_pin0 = value & 0x01;
-		// value >>= 1;
-		// _data_pin1 = value & 0x01;
-		// value >>= 1;
-		// _data_pin2 = value & 0x01;
-		// value >>= 1;
-		// _data_pin3 = value & 0x01;
+		// // value >>= 1;
+		// _data_pin1 = value & 0x02;
+		// // value >>= 1;
+		// _data_pin2 = value & 0x04;
+		// // value >>= 1;
+		// _data_pin3 = value & 0x08;
 
 		_data_low.set(value);
-		
-	  _enable_pin = LOW;
-	  delayMicroseconds(1);    
-	  _enable_pin = HIGH;
-	  delayMicroseconds(1);    // enable pulse must be >450ns
-	  _enable_pin = LOW;
-	  delayMicroseconds(100);   // commands need > 37us to settle
+
+		_enable_pin = LOW;
+		delayMicroseconds(10);    
+		_enable_pin = HIGH;
+		delayMicroseconds(10);    // enable pulse must be >450ns
+		_enable_pin = LOW;
+		delayMicroseconds(100);   // commands need > 37us to settle
 	}
 
 	template<uint8_t rs, uint8_t rw, uint8_t enable,
 		uint8_t d0, uint8_t d1, uint8_t d2, uint8_t d3,
 		uint8_t d4, uint8_t d5, uint8_t d6, uint8_t d7>
 	void LiquidCrystal<rs, rw, enable, d0, d1, d2, d3, d4, d5, d6, d7>::initMode() {
-	  // Now we pull both RS and R/W low to begin commands
-	  _rs_pin = LOW;
-	  _enable_pin = LOW;
-	  if (_rw_pin != 255) { 
-	    _rw_pin = LOW;
-	  }
- 
-   // this is according to the hitachi HD44780 datasheet
-    // page 45 figure 23
+	// Now we pull both RS and R/W low to begin commands
+		_rs_pin = LOW;
+		_enable_pin = LOW;
+		if (_rw_pin != 255) { 
+			_rw_pin = LOW;
+		}
 
-    // Send function set command sequence
+// this is according to the hitachi HD44780 datasheet
+	// page 45 figure 23
+
+	// Send function set command sequence
 		// we haven't defined command() yet, but that's ok
 		// we'll just write8bits() after setting _rs_pin = LOW
 
-	  _rs_pin = LOW;
-	  
-    write8bits(LCD_FUNCTIONSET | _displayfunction);
-    delayMicroseconds(4500);  // wait more than 4.1ms
+		_rs_pin = LOW;
 
-    // second try
-    write8bits(LCD_FUNCTIONSET | _displayfunction);
-    delayMicroseconds(150);
+		write8bits(LCD_FUNCTIONSET | _displayfunction);
+		delayMicroseconds(4500);  // wait more than 4.1ms
 
-    // third go
-    write8bits(LCD_FUNCTIONSET | _displayfunction);
+	// second try
+		write8bits(LCD_FUNCTIONSET | _displayfunction);
+		delayMicroseconds(150);
+
+	// third go
+		write8bits(LCD_FUNCTIONSET | _displayfunction);
 	}
 	
 	

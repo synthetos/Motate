@@ -32,8 +32,7 @@ namespace Motate {
 #include <utility/AvrPins.h>
 #endif
 
-#ifdef SAM
-// Really, they defined it with no __ guards?
+#ifdef __SAM3X8E__
 #include <utility/SamPins.h>
 #endif
 

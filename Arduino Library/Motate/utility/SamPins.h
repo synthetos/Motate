@@ -23,6 +23,8 @@
 #ifndef SAMPINS_H_ONCE
 #define SAMPINS_H_ONCE
 
+#include <chip.h>
+
 namespace Motate {
 	enum PinSetupType {
 		Unchanged       = 0,
@@ -40,25 +42,37 @@ namespace Motate {
 	
 	template<int8_t pinNum>
 	struct Pin {
+		static const int8_t number = pinNum;
+		static const uint8_t portLetter = 0;
+		static const uint32_t mask = 0;
+		Pin(const PinSetupType type = Unchanged) {};
+		Pin<pinNum> &operator=(const bool value) {return *this; };
+		Pin<pinNum> &operator=(const PinSetupType type) { return *this; };
+		operator bool() { return 0; };
+		void init(const PinSetupType type) {};
+		void set(bool value)  {};
+		uint32_t get() { return 0;};
+		bool isNull() { return true; };
+		static uint32_t maskForPort(const uint8_t otherPortLetter) {return 0;}
 	};
 	
 	typedef const int8_t pin_number;
 	
+	
+	// (type == OutputOpendrain) ? PIO_OPENDRAIN : PIO_DEFAULT
 	#define _MAKE_MOTATE_PIN(pinNum, registerLetter, registerChar, registerPin)\
 		template<>\
 		struct Pin<pinNum> {\
 			static const int8_t number = pinNum;\
 			static const uint8_t portLetter = (uint8_t) registerChar;\
-			static const uint32_t mask = (1 << registerPin);\
-			static const Pio* portPtr = (PIO ## registerLetter);\
-				\
+			static const uint32_t mask = (1u << registerPin);\
+			static Pio* portPtr;\
 			Pin(const PinSetupType type = Unchanged) {\
 				init(type);\
 			};\
 			Pin<pinNum> &operator=(const bool value) { set(value); return *this; };\
 			Pin<pinNum> &operator=(const PinSetupType type) { init(type); return *this; };\
 			operator bool() { return (get() != 0); };\
-		\
 			void init(const PinSetupType type) {\
 				switch (type) {\
 					case Output:\
@@ -66,44 +80,46 @@ namespace Motate {
 						PIO_Configure(\
 							(PIO ## registerLetter),\
 							PIO_OUTPUT_0,\
-							_BV(registerPin),\
-							(type == OutputOpendrain) ? PIO_OPENDRAIN : PIO_DEFAULT ) ;\
-		\
+							1u<<(registerPin),\
+							0 ) ;\
 						/* if all pins are output, disable PIO Controller clocking, reduce power consumption */\
-						if ( portPtr->PIO_OSR == 0xffffffff )\
+						if ( (PIO ## registerLetter)->PIO_OSR == 0xffffffff )\
 						{\
-							pmc_disable_periph_clk( (ID_PIO ## registerLetter) ) ) ;\
+							pmc_disable_periph_clk( ( ID_PIO ## registerLetter ) ) ;\
 						}\
 						break;\
-		\
 					case InputWithPullup:\
 					case Input:\
 						pmc_enable_periph_clk( (ID_PIO ## registerLetter) ) ;\
 						PIO_Configure(\
 							(PIO ## registerLetter),\
 							PIO_INPUT,\
-							_BV(registerPin),\
-							(type == InputWithPullup) ? PIO_PULLUP : PIO_DEFAULT ) ;\
+							1u<<(registerPin),\
+							(type == InputWithPullup) ? PIO_PULLUP : PIO_DEFAULT );\
 						break;\
-
 					default:\
 						break;\
 				}\
 			};\
 			void set(bool value)  {\
 				if (!value)\
-					portPtr->PIO_CODR = _BV(registerPin) ;\
+					(PIO ## registerLetter)->PIO_CODR = mask;\
 				else\
-					portPtr->PIO_SODR = _BV(registerPin) ;\
+					(PIO ## registerLetter)->PIO_SODR = mask;\
 			};\
-			uint8_t get() {\
-				return portPtr->PIO_PDSR & _BV(registerPin);\
+			uint32_t get() {\
+				if ((PIO ## registerLetter)->PIO_OSR & mask) {\
+					return (PIO ## registerLetter)->PIO_ODSR & mask;\
+				}else{\
+					return (PIO ## registerLetter)->PIO_PDSR & mask;\
+				}\
 			};\
 			bool isNull() { return false; };\
-			static uint8_t maskForPort(const uint8_t otherPortLetter) {\
-				return portLetter == otherPortLetter ? mask : 0x00;\
+			static uint32_t maskForPort(const uint8_t otherPortLetter) {\
+				return portLetter == otherPortLetter ? mask : 0x00u;\
 			};\
 		};\
+		Pio* Pin<pinNum>::portPtr = (PIO ## registerLetter);\
 		typedef Pin<pinNum> Pin ## pinNum;\
 		static Pin ## pinNum pin ## pinNum;
 
@@ -112,39 +128,67 @@ namespace Motate {
 	template<>\
 	struct Port<registerChar> {\
 		typedef uint32_t uintPort_t;\
-		static const Pio* portPtr = (PIO ## registerLetter);\
-		static const uint8_t letter = (uint8_t) portLetter;\
-		setDirection(const uintPort_t value, const uintPort_t mask) {\
-			if (mask != 0xff) {\
+		enum {allPinsOnMask = 0xFFFFFFFF};\
+		static Pio* portPtr;\
+		static const uint8_t letter = (uint8_t) registerChar;\
+		void setDirection(const uintPort_t value, const uintPort_t mask = allPinsOnMask) {\
+			if (mask != allPinsOnMask) {\
+				/* Disable the whole port and turn off it's clock if we have a zero mask. */\
+				if (mask == 0) {\
+					(PIO ## registerLetter)->PIO_PER = 0;\
+					pmc_disable_periph_clk( ( ID_PIO ## registerLetter ) );\
+					return;\
+				}\
 				/* Set the masked 1 bits as ouputs */\
-				portPtr->PIO_OER = value & mask;\
+				(PIO ## registerLetter)->PIO_OER = value & mask;\
 				/* Set the masked 0 bits as inputs */\
-				portPtr->PIO_ODR = ~value & mask;\
+				if ((~value) & mask) {\
+					(PIO ## registerLetter)->PIO_ODR = (~value) & mask;\
+					/* Enable the peripheral clock if we have inputs. */\
+					pmc_enable_periph_clk( (ID_PIO ## registerLetter) );\
+				}\
+				/* Enable the masked pins */\
+			    (PIO ## registerLetter)->PIO_PER = mask;\
 			} else {\
 				/* Set the whole port */\
-				portPtr->PIO_OSR = value;\
+				(PIO ## registerLetter)->PIO_OSR = value;\
+				/* Enable the whole port (?!) */\
+				(PIO ## registerLetter)->PIO_PER = allPinsOnMask;\
+				/* Turn on the peripheral clock if we have some inputs. */\
+				if (value == allPinsOnMask) {\
+					pmc_disable_periph_clk( ( ID_PIO ## registerLetter ) );\
+				} else {\
+					pmc_enable_periph_clk( (ID_PIO ## registerLetter) );\
+				}\
 			}\
 		};\
-		setPins(const uintPort_t value, const uintPort_t mask) {\
-			if (mask != ~0x00) {\
-				portPtr->PIO_OWDR = ~mask;/*Disable writing to unmasked pins*/\
-			}\
-			portPtr->PIO_ODSR = value;\
-			if (mask != ~0x00) {\
-				portPtr->PIO_OWER = ~mask;/*Re-enable writing to unmasked pins*/\
+		void setPins(const uintPort_t value, const uintPort_t mask = allPinsOnMask) {\
+			if (mask != allPinsOnMask) {\
+				(PIO ## registerLetter)->PIO_ODSR = ((PIO ## registerLetter)->PIO_ODSR & ~(mask)) | (value & mask);\
+			} else {\
+				(PIO ## registerLetter)->PIO_ODSR = value;\
 			}\
 		};\
-		getPins(const uintPort_t mask) {\
-			return portPtr->PIO_PDSR & (mask);\
-		}\
+		uintPort_t getPins(const uintPort_t mask) {\
+			uint32_t outputStatusReg = (PIO ## registerLetter)->PIO_OSR;\
+			/* If a pin is output, we have to read ODSR, otherwise we read PDSR. */\
+			return ((outputStatusReg & (PIO ## registerLetter)->PIO_ODSR) | (~outputStatusReg & (PIO ## registerLetter)->PIO_PDSR)) & (mask);\
+		};\
+		uintPort_t getOutputPins(const uintPort_t mask) {\
+			return (PIO ## registerLetter)->PIO_ODSR & (mask);\
+		};\
+		uintPort_t getInputPins(const uintPort_t mask) {\
+			return (PIO ## registerLetter)->PIO_PDSR & (mask);\
+		};\
 	};\
-	typedef Port<uint32_t, registerChar> Port ## registerLetter;\
+	Pio* Port<registerChar>::portPtr = (PIO ## registerLetter);\
+	typedef Port<registerChar> Port ## registerLetter;\
 	static Port ## registerLetter port ## registerLetter;
 
 	typedef Pin<-1> NullPin;
 	static NullPin nullPin;
 
-	#if part_is_defined( SAM3X8E )
+	// #if part_is_defined( SAM3X8E )
 
 	// DUE
 		_MAKE_MOTATE_PORT32(A, 'A');
@@ -152,8 +196,8 @@ namespace Motate {
 		_MAKE_MOTATE_PORT32(C, 'C');
 		_MAKE_MOTATE_PORT32(D, 'D');
 
-		_MAKE_MOTATE_PIN( 0, A, 'A', 08);
-		_MAKE_MOTATE_PIN( 1, A, 'A', 09);
+		_MAKE_MOTATE_PIN( 0, A, 'A',  8);
+		_MAKE_MOTATE_PIN( 1, A, 'A',  9);
 		_MAKE_MOTATE_PIN( 2, B, 'B', 25);
 		_MAKE_MOTATE_PIN( 3, C, 'C', 28);
 		_MAKE_MOTATE_PIN( 4, C, 'C', 26);
@@ -162,182 +206,363 @@ namespace Motate {
 		_MAKE_MOTATE_PIN( 7, C, 'C', 23);
 		_MAKE_MOTATE_PIN( 8, C, 'C', 22);
 		_MAKE_MOTATE_PIN( 9, C, 'C', 21);
-		
 		_MAKE_MOTATE_PIN(10, C, 'C', 29);
-		_MAKE_MOTATE_PIN(11, D, 'D', 07);
-		_MAKE_MOTATE_PIN(12, D, 'D', 08);
-		
+		_MAKE_MOTATE_PIN(11, D, 'D',  7);
+		_MAKE_MOTATE_PIN(12, D, 'D',  8);
 		_MAKE_MOTATE_PIN(13, B, 'B', 27);
-		
-		_MAKE_MOTATE_PIN(14, D, 'D', 04);
-		_MAKE_MOTATE_PIN(15, D, 'D', 05);
-		
+		_MAKE_MOTATE_PIN(14, D, 'D',  4);
+		_MAKE_MOTATE_PIN(15, D, 'D',  5);
 		_MAKE_MOTATE_PIN(16, A, 'A', 13);
 		_MAKE_MOTATE_PIN(17, A, 'A', 12);
-		
 		_MAKE_MOTATE_PIN(18, A, 'A', 11);
 		_MAKE_MOTATE_PIN(19, A, 'A', 10);
-		
 		_MAKE_MOTATE_PIN(20, B, 'B', 12);
 		_MAKE_MOTATE_PIN(21, B, 'B', 13);
-		
 		_MAKE_MOTATE_PIN(22, B, 'B', 26);
 		_MAKE_MOTATE_PIN(23, A, 'A', 14);
 		_MAKE_MOTATE_PIN(24, A, 'A', 15);
-		_MAKE_MOTATE_PIN(25, D, 'D', 00);
-		
-		_MAKE_MOTATE_PIN(26, D, 'D', 01);
-		_MAKE_MOTATE_PIN(27, D, 'D', 02);
-		_MAKE_MOTATE_PIN(28, D, 'D', 03);
-		_MAKE_MOTATE_PIN(29, D, 'D', 06);
-		
-		_MAKE_MOTATE_PIN(30, D, 'D', 09);
-		_MAKE_MOTATE_PIN(31, A, 'A', 07);
+		_MAKE_MOTATE_PIN(25, D, 'D',  0);
+		_MAKE_MOTATE_PIN(26, D, 'D',  1);
+		_MAKE_MOTATE_PIN(27, D, 'D',  2);
+		_MAKE_MOTATE_PIN(28, D, 'D',  3);
+		_MAKE_MOTATE_PIN(29, D, 'D',  6);
+		_MAKE_MOTATE_PIN(30, D, 'D',  9);
+		_MAKE_MOTATE_PIN(31, A, 'A',  7);
 		_MAKE_MOTATE_PIN(32, D, 'D', 10);
-		_MAKE_MOTATE_PIN(33, C, 'C', 01);
-		
-		_MAKE_MOTATE_PIN(34, C, 'C', 02);
-		_MAKE_MOTATE_PIN(35, C, 'C', 03);
-		_MAKE_MOTATE_PIN(36, C, 'C', 04);
-		_MAKE_MOTATE_PIN(37, C, 'C', 05);
-		
-		_MAKE_MOTATE_PIN(38, C, 'C', 06);
-		_MAKE_MOTATE_PIN(39, C, 'C', 07);
-		_MAKE_MOTATE_PIN(40, C, 'C', 08);
-		_MAKE_MOTATE_PIN(41, C, 'C', 09);
-		
+		_MAKE_MOTATE_PIN(33, C, 'C',  1);
+		_MAKE_MOTATE_PIN(34, C, 'C',  2);
+		_MAKE_MOTATE_PIN(35, C, 'C',  3);
+		_MAKE_MOTATE_PIN(36, C, 'C',  4);
+		_MAKE_MOTATE_PIN(37, C, 'C',  5);
+		_MAKE_MOTATE_PIN(38, C, 'C',  6);
+		_MAKE_MOTATE_PIN(39, C, 'C',  7);
+		_MAKE_MOTATE_PIN(40, C, 'C',  8);
+		_MAKE_MOTATE_PIN(41, C, 'C',  9);
 		_MAKE_MOTATE_PIN(42, A, 'A', 19);
 		_MAKE_MOTATE_PIN(43, A, 'A', 20);
 		_MAKE_MOTATE_PIN(44, C, 'C', 19);
 		_MAKE_MOTATE_PIN(45, C, 'C', 18);
-		
 		_MAKE_MOTATE_PIN(46, C, 'C', 17);
 		_MAKE_MOTATE_PIN(47, C, 'C', 16);
 		_MAKE_MOTATE_PIN(48, C, 'C', 15);
 		_MAKE_MOTATE_PIN(49, C, 'C', 14);
-		
 		_MAKE_MOTATE_PIN(50, C, 'C', 13);
 		_MAKE_MOTATE_PIN(51, C, 'C', 12);
 		_MAKE_MOTATE_PIN(52, B, 'B', 21);
 		_MAKE_MOTATE_PIN(53, B, 'B', 14);
-		
 		_MAKE_MOTATE_PIN(54, A, 'A', 16);
 		_MAKE_MOTATE_PIN(55, A, 'A', 24);
 		_MAKE_MOTATE_PIN(56, A, 'A', 23);
 		_MAKE_MOTATE_PIN(57, A, 'A', 22);
-		
-		_MAKE_MOTATE_PIN(58, A, 'A', 06);
-		_MAKE_MOTATE_PIN(69, A, 'A', 04);
-		_MAKE_MOTATE_PIN(60, A, 'A', 03);
-		_MAKE_MOTATE_PIN(61, A, 'A', 02);
-		
+		_MAKE_MOTATE_PIN(58, A, 'A',  6);
+		_MAKE_MOTATE_PIN(59, A, 'A',  4);
+		_MAKE_MOTATE_PIN(60, A, 'A',  3);
+		_MAKE_MOTATE_PIN(61, A, 'A',  2);
 		_MAKE_MOTATE_PIN(62, B, 'B', 17);
 		_MAKE_MOTATE_PIN(63, B, 'B', 18);
 		_MAKE_MOTATE_PIN(64, B, 'B', 19);
 		_MAKE_MOTATE_PIN(65, B, 'B', 20);
-		
 		_MAKE_MOTATE_PIN(66, B, 'B', 15);
 		_MAKE_MOTATE_PIN(67, B, 'B', 16);
-		
-		_MAKE_MOTATE_PIN(68, A, 'A', 01);
-		_MAKE_MOTATE_PIN(69, A, 'A', 00);
-		
+		_MAKE_MOTATE_PIN(68, A, 'A',  1);
+		_MAKE_MOTATE_PIN(69, A, 'A',  0);
 		_MAKE_MOTATE_PIN(70, A, 'A', 17);
 		_MAKE_MOTATE_PIN(71, A, 'A', 18);
-		
 		_MAKE_MOTATE_PIN(72, C, 'C', 30);
-		
 		_MAKE_MOTATE_PIN(73, A, 'A', 21);
-		
 		_MAKE_MOTATE_PIN(74, A, 'A', 25);
 		_MAKE_MOTATE_PIN(75, A, 'A', 26);
 		_MAKE_MOTATE_PIN(76, A, 'A', 27);
-		
 		_MAKE_MOTATE_PIN(77, A, 'A', 28);
 		_MAKE_MOTATE_PIN(78, B, 'B', 23);
-	#endif
+	// #endif
 
 // disable pinholder for Due for now -- nned to convert to 32bit
-#if 0
-	// PinHolder - virtual ports
-	template<uint8_t PinBit7num, uint8_t PinBit6num, uint8_t PinBit5num = -1, uint8_t PinBit4num = -1, uint8_t PinBit3num = -1, uint8_t PinBit2num = -1, uint8_t PinBit1num = -1, uint8_t PinBit0num = -1>
-	class PinHolder {
+	// PinHolder - 32bit virtual ports (I've never made a template with 32 parameters before.)
+	template<
+		int8_t PinBit31num,
+		int8_t PinBit30num = -1,
+		int8_t PinBit29num = -1,
+		int8_t PinBit28num = -1,
+		int8_t PinBit27num = -1,
+		int8_t PinBit26num = -1,
+		int8_t PinBit25num = -1,
+		int8_t PinBit24num = -1,
+		int8_t PinBit23num = -1,
+		int8_t PinBit22num = -1,
+		int8_t PinBit21num = -1,
+		int8_t PinBit20num = -1,
+		int8_t PinBit19num = -1,
+		int8_t PinBit18num = -1,
+		int8_t PinBit17num = -1,
+		int8_t PinBit16num = -1,
+		int8_t PinBit15num = -1,
+		int8_t PinBit14num = -1,
+		int8_t PinBit13num = -1,
+		int8_t PinBit12num = -1,
+		int8_t PinBit11num = -1,
+		int8_t PinBit10num = -1,
+		int8_t PinBit9num  = -1,
+		int8_t PinBit8num  = -1,
+		int8_t PinBit7num  = -1,
+		int8_t PinBit6num  = -1,
+		int8_t PinBit5num  = -1,
+		int8_t PinBit4num  = -1,
+		int8_t PinBit3num  = -1,
+		int8_t PinBit2num  = -1,
+		int8_t PinBit1num  = -1,
+		int8_t PinBit0num  = -1>
+	class PinHolder32 {
 
-		static Pin<PinBit7num> PinBit7;
-		static Pin<PinBit6num> PinBit6;
-		static Pin<PinBit5num> PinBit5;
-		static Pin<PinBit4num> PinBit4;
-		static Pin<PinBit3num> PinBit3;
-		static Pin<PinBit2num> PinBit2;
-		static Pin<PinBit1num> PinBit1;
-		static Pin<PinBit0num> PinBit0;
+		static Pin<PinBit31num> PinBit31;
+		static Pin<PinBit30num> PinBit30;
+		static Pin<PinBit29num> PinBit29;
+		static Pin<PinBit28num> PinBit28;
+		static Pin<PinBit27num> PinBit27;
+		static Pin<PinBit26num> PinBit26;
+		static Pin<PinBit25num> PinBit25;
+		static Pin<PinBit24num> PinBit24;
+		static Pin<PinBit23num> PinBit23;
+		static Pin<PinBit22num> PinBit22;
+		static Pin<PinBit21num> PinBit21;
+		static Pin<PinBit20num> PinBit20;
+		static Pin<PinBit19num> PinBit19;
+		static Pin<PinBit18num> PinBit18;
+		static Pin<PinBit17num> PinBit17;
+		static Pin<PinBit16num> PinBit16;
+		static Pin<PinBit15num> PinBit15;
+		static Pin<PinBit14num> PinBit14;
+		static Pin<PinBit13num> PinBit13;
+		static Pin<PinBit12num> PinBit12;
+		static Pin<PinBit11num> PinBit11;
+		static Pin<PinBit10num> PinBit10;
+		static Pin<PinBit9num>  PinBit9;
+		static Pin<PinBit8num>  PinBit8;
+		static Pin<PinBit7num>  PinBit7;
+		static Pin<PinBit6num>  PinBit6;
+		static Pin<PinBit5num>  PinBit5;
+		static Pin<PinBit4num>  PinBit4;
+		static Pin<PinBit3num>  PinBit3;
+		static Pin<PinBit2num>  PinBit2;
+		static Pin<PinBit1num>  PinBit1;
+		static Pin<PinBit0num>  PinBit0;
 
-#define _MOTATE_CREATE_CLEAR_AND_COPY_MASKS(aPortLetter) \
-		static const uint8_t port ## aPortLetter ## ClearMask =\
-			(Pin<PinBit7num>::portLetter == Port ## aPortLetter::letter ? Pin<PinBit7num>::mask : 0x00) |\
-			(Pin<PinBit6num>::portLetter == Port ## aPortLetter::letter ? Pin<PinBit6num>::mask : 0x00) |\
-			(Pin<PinBit5num>::portLetter == Port ## aPortLetter::letter ? Pin<PinBit5num>::mask : 0x00) |\
-			(Pin<PinBit4num>::portLetter == Port ## aPortLetter::letter ? Pin<PinBit4num>::mask : 0x00) |\
-			(Pin<PinBit3num>::portLetter == Port ## aPortLetter::letter ? Pin<PinBit3num>::mask : 0x00) |\
-			(Pin<PinBit2num>::portLetter == Port ## aPortLetter::letter ? Pin<PinBit2num>::mask : 0x00) |\
-			(Pin<PinBit1num>::portLetter == Port ## aPortLetter::letter ? Pin<PinBit1num>::mask : 0x00) |\
-			(Pin<PinBit0num>::portLetter == Port ## aPortLetter::letter ? Pin<PinBit0num>::mask : 0x00);\
+#define _MOTATE_PH32_CREATE_CLEAR_AND_COPY_MASKS(aPortLetter) \
+		static const uint32_t port ## aPortLetter ## ClearMask =\
+			(Pin<PinBit31num>::portLetter == Port ## aPortLetter::letter ? Pin<PinBit31num>::mask : 0x00) |\
+			(Pin<PinBit30num>::portLetter == Port ## aPortLetter::letter ? Pin<PinBit30num>::mask : 0x00) |\
+			(Pin<PinBit29num>::portLetter == Port ## aPortLetter::letter ? Pin<PinBit29num>::mask : 0x00) |\
+			(Pin<PinBit28num>::portLetter == Port ## aPortLetter::letter ? Pin<PinBit28num>::mask : 0x00) |\
+			(Pin<PinBit27num>::portLetter == Port ## aPortLetter::letter ? Pin<PinBit27num>::mask : 0x00) |\
+			(Pin<PinBit26num>::portLetter == Port ## aPortLetter::letter ? Pin<PinBit26num>::mask : 0x00) |\
+			(Pin<PinBit25num>::portLetter == Port ## aPortLetter::letter ? Pin<PinBit25num>::mask : 0x00) |\
+			(Pin<PinBit24num>::portLetter == Port ## aPortLetter::letter ? Pin<PinBit24num>::mask : 0x00) |\
+			(Pin<PinBit23num>::portLetter == Port ## aPortLetter::letter ? Pin<PinBit23num>::mask : 0x00) |\
+			(Pin<PinBit22num>::portLetter == Port ## aPortLetter::letter ? Pin<PinBit22num>::mask : 0x00) |\
+			(Pin<PinBit21num>::portLetter == Port ## aPortLetter::letter ? Pin<PinBit21num>::mask : 0x00) |\
+			(Pin<PinBit20num>::portLetter == Port ## aPortLetter::letter ? Pin<PinBit20num>::mask : 0x00) |\
+			(Pin<PinBit19num>::portLetter == Port ## aPortLetter::letter ? Pin<PinBit19num>::mask : 0x00) |\
+			(Pin<PinBit18num>::portLetter == Port ## aPortLetter::letter ? Pin<PinBit18num>::mask : 0x00) |\
+			(Pin<PinBit17num>::portLetter == Port ## aPortLetter::letter ? Pin<PinBit17num>::mask : 0x00) |\
+			(Pin<PinBit16num>::portLetter == Port ## aPortLetter::letter ? Pin<PinBit16num>::mask : 0x00) |\
+			(Pin<PinBit15num>::portLetter == Port ## aPortLetter::letter ? Pin<PinBit15num>::mask : 0x00) |\
+			(Pin<PinBit14num>::portLetter == Port ## aPortLetter::letter ? Pin<PinBit14num>::mask : 0x00) |\
+			(Pin<PinBit13num>::portLetter == Port ## aPortLetter::letter ? Pin<PinBit13num>::mask : 0x00) |\
+			(Pin<PinBit12num>::portLetter == Port ## aPortLetter::letter ? Pin<PinBit12num>::mask : 0x00) |\
+			(Pin<PinBit11num>::portLetter == Port ## aPortLetter::letter ? Pin<PinBit11num>::mask : 0x00) |\
+			(Pin<PinBit10num>::portLetter == Port ## aPortLetter::letter ? Pin<PinBit10num>::mask : 0x00) |\
+			(Pin<PinBit9num>::portLetter  == Port ## aPortLetter::letter ? Pin<PinBit9num>::mask  : 0x00) |\
+			(Pin<PinBit8num>::portLetter  == Port ## aPortLetter::letter ? Pin<PinBit8num>::mask  : 0x00) |\
+			(Pin<PinBit7num>::portLetter  == Port ## aPortLetter::letter ? Pin<PinBit7num>::mask  : 0x00) |\
+			(Pin<PinBit6num>::portLetter  == Port ## aPortLetter::letter ? Pin<PinBit6num>::mask  : 0x00) |\
+			(Pin<PinBit5num>::portLetter  == Port ## aPortLetter::letter ? Pin<PinBit5num>::mask  : 0x00) |\
+			(Pin<PinBit4num>::portLetter  == Port ## aPortLetter::letter ? Pin<PinBit4num>::mask  : 0x00) |\
+			(Pin<PinBit3num>::portLetter  == Port ## aPortLetter::letter ? Pin<PinBit3num>::mask  : 0x00) |\
+			(Pin<PinBit2num>::portLetter  == Port ## aPortLetter::letter ? Pin<PinBit2num>::mask  : 0x00) |\
+			(Pin<PinBit1num>::portLetter  == Port ## aPortLetter::letter ? Pin<PinBit1num>::mask  : 0x00) |\
+			(Pin<PinBit0num>::portLetter  == Port ## aPortLetter::letter ? Pin<PinBit0num>::mask  : 0x00);\
 \
-		static const uint8_t port ## aPortLetter ## CopyMask =\
-			(Pin<PinBit7num>::portLetter == Port ## aPortLetter::letter && Pin<PinBit7num>::mask == (1 << 7 ) \
-				? Pin<PinBit7num>::mask : 0x00) |\
-			(Pin<PinBit6num>::portLetter == Port ## aPortLetter::letter && Pin<PinBit6num>::mask == (1 << 6 )\
-				? Pin<PinBit6num>::mask : 0x00) |\
-			(Pin<PinBit5num>::portLetter == Port ## aPortLetter::letter && Pin<PinBit5num>::mask == (1 << 5 )\
-				? Pin<PinBit5num>::mask : 0x00) |\
-			(Pin<PinBit4num>::portLetter == Port ## aPortLetter::letter && Pin<PinBit4num>::mask == (1 << 4 )\
-				? Pin<PinBit4num>::mask : 0x00) |\
-			(Pin<PinBit3num>::portLetter == Port ## aPortLetter::letter && Pin<PinBit3num>::mask == (1 << 3 )\
-				? Pin<PinBit3num>::mask : 0x00) |\
-			(Pin<PinBit2num>::portLetter == Port ## aPortLetter::letter && Pin<PinBit2num>::mask == (1 << 2 )\
-				? Pin<PinBit2num>::mask : 0x00) |\
-			(Pin<PinBit1num>::portLetter == Port ## aPortLetter::letter && Pin<PinBit1num>::mask == (1 << 1 )\
-				? Pin<PinBit1num>::mask : 0x00) |\
-			(Pin<PinBit0num>::portLetter == Port ## aPortLetter::letter && Pin<PinBit0num>::mask == (1 << 0 )\
-				? Pin<PinBit0num>::mask : 0x00);
+		static const uint32_t port ## aPortLetter ## CopyMask =\
+		(Pin<PinBit31num>::portLetter == Port ## aPortLetter::letter && Pin<PinBit31num>::mask == 0x80000000u ? Pin<PinBit31num>::mask : 0x00) |\
+		(Pin<PinBit30num>::portLetter == Port ## aPortLetter::letter && Pin<PinBit30num>::mask == 0x40000000u ? Pin<PinBit30num>::mask : 0x00) |\
+		(Pin<PinBit29num>::portLetter == Port ## aPortLetter::letter && Pin<PinBit29num>::mask == 0x20000000u ? Pin<PinBit29num>::mask : 0x00) |\
+		(Pin<PinBit28num>::portLetter == Port ## aPortLetter::letter && Pin<PinBit28num>::mask == 0x10000000u ? Pin<PinBit28num>::mask : 0x00) |\
+		(Pin<PinBit27num>::portLetter == Port ## aPortLetter::letter && Pin<PinBit27num>::mask == 0x08000000u ? Pin<PinBit27num>::mask : 0x00) |\
+		(Pin<PinBit26num>::portLetter == Port ## aPortLetter::letter && Pin<PinBit26num>::mask == 0x04000000u ? Pin<PinBit26num>::mask : 0x00) |\
+		(Pin<PinBit25num>::portLetter == Port ## aPortLetter::letter && Pin<PinBit25num>::mask == 0x02000000u ? Pin<PinBit25num>::mask : 0x00) |\
+		(Pin<PinBit24num>::portLetter == Port ## aPortLetter::letter && Pin<PinBit24num>::mask == 0x01000000u ? Pin<PinBit24num>::mask : 0x00) |\
+		(Pin<PinBit23num>::portLetter == Port ## aPortLetter::letter && Pin<PinBit23num>::mask == 0x00800000u ? Pin<PinBit23num>::mask : 0x00) |\
+		(Pin<PinBit22num>::portLetter == Port ## aPortLetter::letter && Pin<PinBit22num>::mask == 0x00400000u ? Pin<PinBit22num>::mask : 0x00) |\
+		(Pin<PinBit21num>::portLetter == Port ## aPortLetter::letter && Pin<PinBit21num>::mask == 0x00200000u ? Pin<PinBit21num>::mask : 0x00) |\
+		(Pin<PinBit20num>::portLetter == Port ## aPortLetter::letter && Pin<PinBit20num>::mask == 0x00100000u ? Pin<PinBit20num>::mask : 0x00) |\
+		(Pin<PinBit19num>::portLetter == Port ## aPortLetter::letter && Pin<PinBit19num>::mask == 0x00080000u ? Pin<PinBit19num>::mask : 0x00) |\
+		(Pin<PinBit18num>::portLetter == Port ## aPortLetter::letter && Pin<PinBit18num>::mask == 0x00040000u ? Pin<PinBit18num>::mask : 0x00) |\
+		(Pin<PinBit17num>::portLetter == Port ## aPortLetter::letter && Pin<PinBit17num>::mask == 0x00020000u ? Pin<PinBit17num>::mask : 0x00) |\
+		(Pin<PinBit16num>::portLetter == Port ## aPortLetter::letter && Pin<PinBit16num>::mask == 0x00010000u ? Pin<PinBit16num>::mask : 0x00) |\
+		(Pin<PinBit15num>::portLetter == Port ## aPortLetter::letter && Pin<PinBit15num>::mask == 0x00008000u ? Pin<PinBit15num>::mask : 0x00) |\
+		(Pin<PinBit14num>::portLetter == Port ## aPortLetter::letter && Pin<PinBit14num>::mask == 0x00004000u ? Pin<PinBit14num>::mask : 0x00) |\
+		(Pin<PinBit13num>::portLetter == Port ## aPortLetter::letter && Pin<PinBit13num>::mask == 0x00002000u ? Pin<PinBit13num>::mask : 0x00) |\
+		(Pin<PinBit12num>::portLetter == Port ## aPortLetter::letter && Pin<PinBit12num>::mask == 0x00001000u ? Pin<PinBit12num>::mask : 0x00) |\
+		(Pin<PinBit11num>::portLetter == Port ## aPortLetter::letter && Pin<PinBit11num>::mask == 0x00000800u ? Pin<PinBit11num>::mask : 0x00) |\
+		(Pin<PinBit10num>::portLetter == Port ## aPortLetter::letter && Pin<PinBit10num>::mask == 0x00000400u ? Pin<PinBit10num>::mask : 0x00) |\
+		(Pin<PinBit9num>::portLetter  == Port ## aPortLetter::letter && Pin<PinBit9num>::mask  == 0x00000200u ? Pin<PinBit9num>::mask  : 0x00) |\
+		(Pin<PinBit8num>::portLetter  == Port ## aPortLetter::letter && Pin<PinBit8num>::mask  == 0x00000100u ? Pin<PinBit8num>::mask  : 0x00) |\
+		(Pin<PinBit7num>::portLetter  == Port ## aPortLetter::letter && Pin<PinBit7num>::mask  == 0x00000080u ? Pin<PinBit7num>::mask  : 0x00) |\
+		(Pin<PinBit6num>::portLetter  == Port ## aPortLetter::letter && Pin<PinBit6num>::mask  == 0x00000040u ? Pin<PinBit6num>::mask  : 0x00) |\
+		(Pin<PinBit5num>::portLetter  == Port ## aPortLetter::letter && Pin<PinBit5num>::mask  == 0x00000020u ? Pin<PinBit5num>::mask  : 0x00) |\
+		(Pin<PinBit4num>::portLetter  == Port ## aPortLetter::letter && Pin<PinBit4num>::mask  == 0x00000010u ? Pin<PinBit4num>::mask  : 0x00) |\
+		(Pin<PinBit3num>::portLetter  == Port ## aPortLetter::letter && Pin<PinBit3num>::mask  == 0x00000008u ? Pin<PinBit3num>::mask  : 0x00) |\
+		(Pin<PinBit2num>::portLetter  == Port ## aPortLetter::letter && Pin<PinBit2num>::mask  == 0x00000004u ? Pin<PinBit2num>::mask  : 0x00) |\
+		(Pin<PinBit1num>::portLetter  == Port ## aPortLetter::letter && Pin<PinBit1num>::mask  == 0x00000002u ? Pin<PinBit1num>::mask  : 0x00) |\
+		(Pin<PinBit0num>::portLetter  == Port ## aPortLetter::letter && Pin<PinBit0num>::mask  == 0x00000001u ? Pin<PinBit0num>::mask  : 0x00);
 
-		_MOTATE_CREATE_CLEAR_AND_COPY_MASKS(B);
-		_MOTATE_CREATE_CLEAR_AND_COPY_MASKS(C);
-		_MOTATE_CREATE_CLEAR_AND_COPY_MASKS(D);
+		_MOTATE_PH32_CREATE_CLEAR_AND_COPY_MASKS(A);
+		_MOTATE_PH32_CREATE_CLEAR_AND_COPY_MASKS(B);
+		_MOTATE_PH32_CREATE_CLEAR_AND_COPY_MASKS(C);
+		_MOTATE_PH32_CREATE_CLEAR_AND_COPY_MASKS(D);
 				
 	public:
-		PinHolder() {
+		PinHolder32() {
 			
 		};
 		
-		void set(uint8_t in_value) {
-			uint8_t port_value    = 0x00; // Port<> handles reading the port and setting the masked pins
-#define _MOTATE_PINHOLDER_CHECKANDSETPIN(portLetter, bitNumber, bitMask) \
-			if (PinBit ## bitNumber.maskForPort(port ## portLetter.letter) &&\
+		void set(uint32_t in_value) {
+			uint32_t port_value    = 0x00; // Port<> handles reading the port and setting the masked pins
+#define _MOTATE_PH32_PINHOLDER_CHECKANDSETPIN(portLetter, bitNumber, bitMask) \
+			if (PinBit ## bitNumber.maskForPort(Port ## portLetter::letter) &&\
 					(PinBit ## bitNumber.mask != (bitMask)) && (in_value & (bitMask))) {\
 				port_value |= PinBit ## bitNumber.mask;\
 			}
-			
-#define _MOTATE_PINHOLDER_SETPORT(portLetter) \
+
+// Using direct 0x00000000 notation instead of 1<<x, since the compiler occasionally won't precompile that.
+// Shortcut: ruby -e '(0..31).each() { |x| print "_MOTATE_PINHOLDER_CHECKANDSETPIN(portLetter, %2d, 0x%08x);\\\n" % [31-x, (1<<(31-x))]}'
+#define _MOTATE_PH32_PINHOLDER_SETPORT(portLetter) \
 			if (port ## portLetter ## ClearMask != 0x00) {\
-				_MOTATE_PINHOLDER_CHECKANDSETPIN(portLetter, 7, 0b10000000);\
-				_MOTATE_PINHOLDER_CHECKANDSETPIN(portLetter, 6, 0b01000000);\
-				_MOTATE_PINHOLDER_CHECKANDSETPIN(portLetter, 5, 0b00100000);\
-				_MOTATE_PINHOLDER_CHECKANDSETPIN(portLetter, 4, 0b00010000);\
-				_MOTATE_PINHOLDER_CHECKANDSETPIN(portLetter, 3, 0b00001000);\
-				_MOTATE_PINHOLDER_CHECKANDSETPIN(portLetter, 2, 0b00000100);\
-				_MOTATE_PINHOLDER_CHECKANDSETPIN(portLetter, 1, 0b00000010);\
-				_MOTATE_PINHOLDER_CHECKANDSETPIN(portLetter, 0, 0b00000001);\
+				_MOTATE_PH32_PINHOLDER_CHECKANDSETPIN(portLetter, 31, 0x80000000u);\
+				_MOTATE_PH32_PINHOLDER_CHECKANDSETPIN(portLetter, 30, 0x40000000u);\
+				_MOTATE_PH32_PINHOLDER_CHECKANDSETPIN(portLetter, 29, 0x20000000u);\
+				_MOTATE_PH32_PINHOLDER_CHECKANDSETPIN(portLetter, 28, 0x10000000u);\
+				_MOTATE_PH32_PINHOLDER_CHECKANDSETPIN(portLetter, 27, 0x08000000u);\
+				_MOTATE_PH32_PINHOLDER_CHECKANDSETPIN(portLetter, 26, 0x04000000u);\
+				_MOTATE_PH32_PINHOLDER_CHECKANDSETPIN(portLetter, 25, 0x02000000u);\
+				_MOTATE_PH32_PINHOLDER_CHECKANDSETPIN(portLetter, 24, 0x01000000u);\
+				_MOTATE_PH32_PINHOLDER_CHECKANDSETPIN(portLetter, 23, 0x00800000u);\
+				_MOTATE_PH32_PINHOLDER_CHECKANDSETPIN(portLetter, 22, 0x00400000u);\
+				_MOTATE_PH32_PINHOLDER_CHECKANDSETPIN(portLetter, 21, 0x00200000u);\
+				_MOTATE_PH32_PINHOLDER_CHECKANDSETPIN(portLetter, 20, 0x00100000u);\
+				_MOTATE_PH32_PINHOLDER_CHECKANDSETPIN(portLetter, 19, 0x00080000u);\
+				_MOTATE_PH32_PINHOLDER_CHECKANDSETPIN(portLetter, 18, 0x00040000u);\
+				_MOTATE_PH32_PINHOLDER_CHECKANDSETPIN(portLetter, 17, 0x00020000u);\
+				_MOTATE_PH32_PINHOLDER_CHECKANDSETPIN(portLetter, 16, 0x00010000u);\
+				_MOTATE_PH32_PINHOLDER_CHECKANDSETPIN(portLetter, 15, 0x00008000u);\
+				_MOTATE_PH32_PINHOLDER_CHECKANDSETPIN(portLetter, 14, 0x00004000u);\
+				_MOTATE_PH32_PINHOLDER_CHECKANDSETPIN(portLetter, 13, 0x00002000u);\
+				_MOTATE_PH32_PINHOLDER_CHECKANDSETPIN(portLetter, 12, 0x00001000u);\
+				_MOTATE_PH32_PINHOLDER_CHECKANDSETPIN(portLetter, 11, 0x00000800u);\
+				_MOTATE_PH32_PINHOLDER_CHECKANDSETPIN(portLetter, 10, 0x00000400u);\
+				_MOTATE_PH32_PINHOLDER_CHECKANDSETPIN(portLetter,  9, 0x00000200u);\
+				_MOTATE_PH32_PINHOLDER_CHECKANDSETPIN(portLetter,  8, 0x00000100u);\
+				_MOTATE_PH32_PINHOLDER_CHECKANDSETPIN(portLetter,  7, 0x00000080u);\
+				_MOTATE_PH32_PINHOLDER_CHECKANDSETPIN(portLetter,  6, 0x00000040u);\
+				_MOTATE_PH32_PINHOLDER_CHECKANDSETPIN(portLetter,  5, 0x00000020u);\
+				_MOTATE_PH32_PINHOLDER_CHECKANDSETPIN(portLetter,  4, 0x00000010u);\
+				_MOTATE_PH32_PINHOLDER_CHECKANDSETPIN(portLetter,  3, 0x00000008u);\
+				_MOTATE_PH32_PINHOLDER_CHECKANDSETPIN(portLetter,  2, 0x00000004u);\
+				_MOTATE_PH32_PINHOLDER_CHECKANDSETPIN(portLetter,  1, 0x00000002u);\
+				_MOTATE_PH32_PINHOLDER_CHECKANDSETPIN(portLetter,  0, 0x00000001u);\
 				port_value |= in_value & port ## portLetter ## CopyMask;\
 				port ## portLetter.setPins(port_value, ~port ## portLetter ## ClearMask);\
 			}
 			
-			_MOTATE_PINHOLDER_SETPORT(B);
-			_MOTATE_PINHOLDER_SETPORT(C);
-			_MOTATE_PINHOLDER_SETPORT(D);
+			_MOTATE_PH32_PINHOLDER_SETPORT(A);
+			_MOTATE_PH32_PINHOLDER_SETPORT(B);
+			_MOTATE_PH32_PINHOLDER_SETPORT(C);
+			_MOTATE_PH32_PINHOLDER_SETPORT(D);
 		}
-		
 	};
-#endif
+	
+	// disable pinholder for Due for now -- nned to convert to 32bit
+	// PinHolder - 32bit virtual ports (I've never made a template with 32 parameters before.)
+	template<
+		int8_t PinBit7num,
+		int8_t PinBit6num  = -1,
+		int8_t PinBit5num  = -1,
+		int8_t PinBit4num  = -1,
+		int8_t PinBit3num  = -1,
+		int8_t PinBit2num  = -1,
+		int8_t PinBit1num  = -1,
+		int8_t PinBit0num  = -1>
+	class PinHolder8 {
+
+		static Pin<PinBit7num>  PinBit7;
+		static Pin<PinBit6num>  PinBit6;
+		static Pin<PinBit5num>  PinBit5;
+		static Pin<PinBit4num>  PinBit4;
+		static Pin<PinBit3num>  PinBit3;
+		static Pin<PinBit2num>  PinBit2;
+		static Pin<PinBit1num>  PinBit1;
+		static Pin<PinBit0num>  PinBit0;
+	public:
+#define _MOTATE_PH8_CREATE_CLEAR_AND_COPY_MASKS(aPortLetter) \
+		static const uint32_t port ## aPortLetter ## ClearMask =\
+			(Pin<PinBit7num>::portLetter  == Port ## aPortLetter::letter ? Pin<PinBit7num>::mask  : 0x00u) |\
+			(Pin<PinBit6num>::portLetter  == Port ## aPortLetter::letter ? Pin<PinBit6num>::mask  : 0x00u) |\
+			(Pin<PinBit5num>::portLetter  == Port ## aPortLetter::letter ? Pin<PinBit5num>::mask  : 0x00u) |\
+			(Pin<PinBit4num>::portLetter  == Port ## aPortLetter::letter ? Pin<PinBit4num>::mask  : 0x00u) |\
+			(Pin<PinBit3num>::portLetter  == Port ## aPortLetter::letter ? Pin<PinBit3num>::mask  : 0x00u) |\
+			(Pin<PinBit2num>::portLetter  == Port ## aPortLetter::letter ? Pin<PinBit2num>::mask  : 0x00u) |\
+			(Pin<PinBit1num>::portLetter  == Port ## aPortLetter::letter ? Pin<PinBit1num>::mask  : 0x00u) |\
+			(Pin<PinBit0num>::portLetter  == Port ## aPortLetter::letter ? Pin<PinBit0num>::mask  : 0x00u);\
+\
+		static const uint32_t port ## aPortLetter ## CopyMask =\
+		(Pin<PinBit7num>::portLetter  == Port ## aPortLetter::letter && Pin<PinBit7num>::mask  == 0x00000080u ? Pin<PinBit7num>::mask  : 0x00u) |\
+		(Pin<PinBit6num>::portLetter  == Port ## aPortLetter::letter && Pin<PinBit6num>::mask  == 0x00000040u ? Pin<PinBit6num>::mask  : 0x00u) |\
+		(Pin<PinBit5num>::portLetter  == Port ## aPortLetter::letter && Pin<PinBit5num>::mask  == 0x00000020u ? Pin<PinBit5num>::mask  : 0x00u) |\
+		(Pin<PinBit4num>::portLetter  == Port ## aPortLetter::letter && Pin<PinBit4num>::mask  == 0x00000010u ? Pin<PinBit4num>::mask  : 0x00u) |\
+		(Pin<PinBit3num>::portLetter  == Port ## aPortLetter::letter && Pin<PinBit3num>::mask  == 0x00000008u ? Pin<PinBit3num>::mask  : 0x00u) |\
+		(Pin<PinBit2num>::portLetter  == Port ## aPortLetter::letter && Pin<PinBit2num>::mask  == 0x00000004u ? Pin<PinBit2num>::mask  : 0x00u) |\
+		(Pin<PinBit1num>::portLetter  == Port ## aPortLetter::letter && Pin<PinBit1num>::mask  == 0x00000002u ? Pin<PinBit1num>::mask  : 0x00u) |\
+		(Pin<PinBit0num>::portLetter  == Port ## aPortLetter::letter && Pin<PinBit0num>::mask  == 0x00000001u ? Pin<PinBit0num>::mask  : 0x00u);
+
+		_MOTATE_PH8_CREATE_CLEAR_AND_COPY_MASKS(A);
+		_MOTATE_PH8_CREATE_CLEAR_AND_COPY_MASKS(B);
+		_MOTATE_PH8_CREATE_CLEAR_AND_COPY_MASKS(C);
+		_MOTATE_PH8_CREATE_CLEAR_AND_COPY_MASKS(D);
+
+	public:
+		PinHolder8() {
+
+		};
+
+		void set(uint8_t in_value) {
+			uint32_t port_value    = 0x00; // Port<> handles reading the port and setting the masked pins
+			#define _MOTATE_PH8_PINHOLDER_CHECKANDSETPIN(portLetter, bitNumber, bitMask) \
+				if (PinBit ## bitNumber.maskForPort(Port ## portLetter::letter) &&\
+						(PinBit ## bitNumber.mask != (bitMask)) && ((uint32_t)in_value & (bitMask))) {\
+					port_value |= PinBit ## bitNumber.mask;\
+				}
+
+			// Using direct 0x00000000 notation instead of 1<<x, since the compiler occasionally won't precompile that.
+			// Shortcut: ruby -e '(0..7).each() { |x| print "_MOTATE_PH8_PINHOLDER_CHECKANDSETPIN(portLetter, %2d, 0x%02x);\\\n" % [7-x, (1<<(7-x))]}'
+			#define _MOTATE_PH8_PINHOLDER_SETPORT(portLetter) \
+				if (port ## portLetter ## ClearMask) {\
+					_MOTATE_PH8_PINHOLDER_CHECKANDSETPIN(portLetter,  7, 0x00000080u);\
+					_MOTATE_PH8_PINHOLDER_CHECKANDSETPIN(portLetter,  6, 0x00000040u);\
+					_MOTATE_PH8_PINHOLDER_CHECKANDSETPIN(portLetter,  5, 0x00000020u);\
+					_MOTATE_PH8_PINHOLDER_CHECKANDSETPIN(portLetter,  4, 0x00000010u);\
+					_MOTATE_PH8_PINHOLDER_CHECKANDSETPIN(portLetter,  3, 0x00000008u);\
+					_MOTATE_PH8_PINHOLDER_CHECKANDSETPIN(portLetter,  2, 0x00000004u);\
+					_MOTATE_PH8_PINHOLDER_CHECKANDSETPIN(portLetter,  1, 0x00000002u);\
+					_MOTATE_PH8_PINHOLDER_CHECKANDSETPIN(portLetter,  0, 0x00000001u);\
+					port_value |= (uint32_t)in_value & port ## portLetter ## CopyMask;\
+					port ## portLetter.setPins(port_value, port ## portLetter ## ClearMask);\
+				}
+
+			_MOTATE_PH8_PINHOLDER_SETPORT(A);
+			_MOTATE_PH8_PINHOLDER_SETPORT(B);
+			_MOTATE_PH8_PINHOLDER_SETPORT(C);
+			_MOTATE_PH8_PINHOLDER_SETPORT(D);
+		}
+	};
 }
 #endif /* end of include guard: SAMPINS_H_ONCE */
