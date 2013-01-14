@@ -236,11 +236,11 @@ namespace implementation {
 		_data_high.set(value);
 
 		_enable_pin = LOW;
-		delayMicroseconds(10);    
+		delayMicroseconds(1);    
 		_enable_pin = HIGH;
-		delayMicroseconds(10);    // enable pulse must be >450ns
+		delayMicroseconds(1);    // enable pulse must be >450ns
 		_enable_pin = LOW;
-		delayMicroseconds(100);   // commands need > 37us to settle
+		delayMicroseconds(40);   // commands need > 37us to settle
 
 		// // // still in four-bit mode
 		// _data_pin0 = value & 0x01;
@@ -254,11 +254,11 @@ namespace implementation {
 		_data_low.set(value);
 
 		_enable_pin = LOW;
-		delayMicroseconds(10);    
+		delayMicroseconds(1);    
 		_enable_pin = HIGH;
-		delayMicroseconds(10);    // enable pulse must be >450ns
+		delayMicroseconds(1);    // enable pulse must be >450ns
 		_enable_pin = LOW;
-		delayMicroseconds(100);   // commands need > 37us to settle
+		delayMicroseconds(40);   // commands need > 37us to settle
 	}
 
 	template<uint8_t rs, uint8_t rw, uint8_t enable,
