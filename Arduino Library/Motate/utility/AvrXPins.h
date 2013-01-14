@@ -26,6 +26,8 @@
 #include <avr/io.h>
 #include <util/atomic.h>
 
+#include "../MotateTWI/MotateStaticAssert.h"
+
 namespace Motate {
 	enum PinMode {
 		kUnchanged    = 0,
@@ -35,7 +37,7 @@ namespace Motate {
 	
 	enum PinOptions {
 		kTotem        = 0,
-		kFloat        = 0,
+		kFloating     = 0,
 		kBusKeeper    = 1,
 		kPulldown     = 2,
 		kPullup       = 3,
@@ -54,6 +56,12 @@ namespace Motate {
 			// stub
 		};
 		void setOptions(const PinOptions options, const uint8_t mask) {
+			// stub
+		};
+		void getModes() {
+			// stub
+		};
+		void getOptions() {
 			// stub
 		};
 		void set(const uint8_t value) {
@@ -82,10 +90,10 @@ namespace Motate {
 	struct Pin {
 	};
 	template<int8_t pinNum>
-	struct InPin {
+	struct InputPin {
 	};
 	template<int8_t pinNum>
-	struct OutPin {
+	struct OutputPin {
 	};
 	
 	
@@ -101,10 +109,14 @@ namespace Motate {
 			Pin(const PinMode type = kUnchanged) {\
 				init(type);\
 			};\
-			void operator=(const bool value) { set(value); return *this; };\
+			void operator=(const bool value) { set(value); };\
 			operator bool() { return (get() != 0); };\
 		\
 			void init(const PinMode type, const PinOptions options = kTotem) {\
+				setMode(type);\
+				setOptions(options);\
+			};\
+			void setMode(const PinMode type) {\
 				switch (type) {\
 					case kOutput:\
 						(PORT ## registerLetter).DIR |= mask;\
@@ -115,9 +127,14 @@ namespace Motate {
 					default:\
 						break;\
 				}\
+			};\
+			PinMode getMode() {\
+				return ((PORT ## registerLetter).DIR |= mask) ? kOutput : kInput;\
+			};\
+			void setOptions(const PinOptions options) {\
 				switch (options) {\
 					case kTotem:\
-					/*case kFloat:*/\
+					/*case kFloating:*/\
 						(PORT ## registerLetter).PIN ## registerPin ## CTRL = PORT_OPC_TOTEM_gc;\
 						break;\
 					case kBusKeeper:\
@@ -145,19 +162,22 @@ namespace Motate {
 						break;\
 				}\
 			};\
+			PinOptions getOptions() {\
+				return static_cast<PinOptions>((PORT ## registerLetter).PIN ## registerPin ## CTRL);\
+			};\
 			void set(bool value)  {\
 				if (value)\
 					(PORT ## registerLetter).OUTSET = mask;\
 				else\
 					(PORT ## registerLetter).OUTCLR = mask;\
 			};\
-			uint8_t get() {\
-				return ((PORT ## registerLetter).DIR & mask) ? ((PORT ## registerLetter).OUT & mask) : ((PORT ## registerLetter).IN & mask);\
-			};\
-			uint8_t getInput() {\
+			uint8_t get() { /* WARNING: This will fail if the input buffer is disabled for this pin!!! Use getOutputValue() instead. */\
 				return ((PORT ## registerLetter).IN & mask);\
 			};\
-			uint8_t getOutput() {\
+			uint8_t getInputValue() {\
+				return ((PORT ## registerLetter).IN & mask);\
+			};\
+			uint8_t getOutputValue() {\
 				return ((PORT ## registerLetter).OUT & mask);\
 			};\
 			bool isNull() { return false; };\
@@ -167,25 +187,28 @@ namespace Motate {
 		};\
 		template<>\
 		struct InputPin<pinNum> : Pin<pinNum> {\
-			void init() {init(kInput)};\
-			void set() {UnDefinedFunction();};\
+			void init(const PinOptions options = kTotem) {Pin<pinNum>::init(kInput, options);};\
 			uint8_t get() {\
 				return ((PORT ## registerLetter).IN & mask);\
 			};\
 			/*Override these to pick up new methods */\
-			void operator=(const bool value) { /* NULL METHOD */ return *this; };\
 			operator bool() { return (get() != 0); };\
-		}\
+		private: /* Make these private to catch them early. These are intentionally not defined. */\
+			void init(const PinMode type, const PinOptions options = kTotem);\
+			void operator=(const bool value) { set(value); };\
+			void set(const bool);\
+		};\
 		template<>\
 		struct OutputPin<pinNum> : Pin<pinNum> {\
-			void init() {init(kOutput)};\
+			void init(const PinOptions options = kTotem) {Pin<pinNum>::init(kOutput, options);};\
 			uint8_t get() {\
 				return ((PORT ## registerLetter).OUT & mask);\
 			};\
 			/*Override these to pick up new methods */\
-			void operator=(const bool value) { set(value); return *this; };\
 			operator bool() { return (get() != 0); };\
-		}\
+		private: /* Make these private to catch them early. */\
+			void init(const PinMode type, const PinOptions options = kTotem); /* Intentially not defined. */\
+		};\
 		typedef Pin<pinNum> Pin ## pinNum;\
 		static Pin<pinNum> pin ## pinNum;\
 		typedef InputPin<pinNum> InputPin ## pinNum;\
@@ -207,7 +230,7 @@ namespace Motate {
 		/* MPCMASK is automatically cleared after any PINnCTRL write completes.*/\
 		switch (options) {\
 			case kTotem:\
-			/*case kFloat:*/\
+			/*case kFloating:*/\
 				(PORT ## registerLetter).PIN0CTRL = PORT_OPC_TOTEM_gc;\
 				break;\
 			case kBusKeeper:\
@@ -272,7 +295,7 @@ namespace Motate {
 	_MAKE_MOTATE_PORT8(E ,'E');
 	_MAKE_MOTATE_PORT8(F ,'F');
 	
-	#include "motate_pin_assignments.h"
+	#include <motate_pin_assignments.h>
 
 	// PinHolder - virtual ports
 	template<uint8_t PinBit7num, uint8_t PinBit6num, uint8_t PinBit5num = -1, uint8_t PinBit4num = -1, uint8_t PinBit3num = -1, uint8_t PinBit2num = -1, uint8_t PinBit1num = -1, uint8_t PinBit0num = -1>
