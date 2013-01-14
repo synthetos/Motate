@@ -127,6 +127,7 @@ namespace Motate {
 	typedef Pin<-1> NullPin;
 	static NullPin nullPin;
 
+#if defined(ARDUINO)
 	#if defined(__AVR_ATmega168__) || defined(__AVR_ATmega328P__)
 
 	// standard (UNO, etc)
@@ -287,6 +288,7 @@ namespace Motate {
 		_MAKE_MOTATE_PIN(69, K, 'K', 7);
 
 	#endif
+#endif // defined(ARDUINO)
 
 	// PinHolder - virtual ports
 	template<uint8_t PinBit7num, uint8_t PinBit6num, uint8_t PinBit5num = -1, uint8_t PinBit4num = -1, uint8_t PinBit3num = -1, uint8_t PinBit2num = -1, uint8_t PinBit1num = -1, uint8_t PinBit0num = -1>
