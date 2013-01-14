@@ -102,12 +102,16 @@ namespace Motate {
 	#define _MAKE_MOTATE_PIN(pinNum, registerLetter, registerChar, registerPin)\
 		template<>\
 		struct Pin<pinNum> {\
+		private:\
+			Pin(const Pin<pinNum>&){};\
+		public:\
 			static const int8_t number = pinNum;\
 			static const uint8_t portLetter = (uint8_t) registerChar;\
 			static const uint8_t mask = (1 << registerPin);\
 				\
-			Pin(const PinMode type = kUnchanged) {\
-				init(type);\
+			Pin(){};\
+			Pin(const PinMode type, const PinOptions options = kTotem) {\
+				init(type, options);\
 			};\
 			void operator=(const bool value) { set(value); };\
 			operator bool() { return (get() != 0); };\
@@ -187,6 +191,8 @@ namespace Motate {
 		};\
 		template<>\
 		struct InputPin<pinNum> : Pin<pinNum> {\
+			InputPin() : Pin<pinNum>(kInput) {};\
+			InputPin(const PinOptions options) : Pin<pinNum>(kOutput, options) {};\
 			void init(const PinOptions options = kTotem) {Pin<pinNum>::init(kInput, options);};\
 			uint8_t get() {\
 				return ((PORT ## registerLetter).IN & mask);\
@@ -200,17 +206,20 @@ namespace Motate {
 		};\
 		template<>\
 		struct OutputPin<pinNum> : Pin<pinNum> {\
+			OutputPin() : Pin<pinNum>(kOutput) {};\
+			OutputPin(const PinOptions options) : Pin<pinNum>(kOutput, options) {};\
 			void init(const PinOptions options = kTotem) {Pin<pinNum>::init(kOutput, options);};\
 			uint8_t get() {\
 				return ((PORT ## registerLetter).OUT & mask);\
 			};\
+			void operator=(const bool value) { set(value); };\
 			/*Override these to pick up new methods */\
 			operator bool() { return (get() != 0); };\
 		private: /* Make these private to catch them early. */\
 			void init(const PinMode type, const PinOptions options = kTotem); /* Intentially not defined. */\
 		};\
 		typedef Pin<pinNum> Pin ## pinNum;\
-		static Pin<pinNum> pin ## pinNum;\
+		static Pin<pinNum> pin ## pinNum(kOutput);\
 		typedef InputPin<pinNum> InputPin ## pinNum;\
 		static InputPin<pinNum> inputPin ## pinNum;\
 		typedef OutputPin<pinNum> OutputPin ## pinNum;\
