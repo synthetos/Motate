@@ -264,8 +264,6 @@ namespace Motate {
 	static NullPin nullPin;
 	
 	// TODO: Support other, non-atxmega192a3 XMegas
-	
-	
 
 	_MAKE_MOTATE_PORT8(A ,'A');
 	_MAKE_MOTATE_PORT8(B ,'B');
@@ -273,6 +271,8 @@ namespace Motate {
 	_MAKE_MOTATE_PORT8(D ,'D');
 	_MAKE_MOTATE_PORT8(E ,'E');
 	_MAKE_MOTATE_PORT8(F ,'F');
+	
+	#include "motate_pin_assignments.h"
 
 	// PinHolder - virtual ports
 	template<uint8_t PinBit7num, uint8_t PinBit6num, uint8_t PinBit5num = -1, uint8_t PinBit4num = -1, uint8_t PinBit3num = -1, uint8_t PinBit2num = -1, uint8_t PinBit1num = -1, uint8_t PinBit0num = -1>
