@@ -28,8 +28,16 @@
 namespace Motate {	
 } // namespace Motate
 
+#ifdef __AVR_XMEGA__
+
+#include <utility/AvrXPins.h>
+
+#else
+
 #ifdef __AVR__
 #include <utility/AvrPins.h>
+#endif
+
 #endif
 
 #ifdef __SAM3X8E__
