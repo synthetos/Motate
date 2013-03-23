@@ -28,6 +28,14 @@
 namespace Motate {	
 } // namespace Motate
 
+/****************************************
+	These defines allow masking of *some* (non-neccessary) functionality that is
+	not available on all architectures:
+		MOTATE_AVR_COMPATIBILITY -- only present functionality that is also on the AVR architecture
+		MOTATE_AVRX_COMPATIBILITY -- only present functionality that is also on the AVR XMEGA architecture
+		MOTATE_SAM_COMPATIBILITY -- only present functionality that is also on the SAM architecture
+****************************************/
+
 #ifdef __AVR_XMEGA__
 
 #include <utility/AvrXPins.h>

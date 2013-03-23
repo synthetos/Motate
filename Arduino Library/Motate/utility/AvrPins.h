@@ -27,11 +27,16 @@
 #include <util/atomic.h>
 
 namespace Motate {
-	enum PinSetupType {
-		Unchanged       = 0,
-		Output          = 1,
-		Input           = 2,
-		InputWithPullup = 3,
+	enum PinMode {
+		kUnchanged    = 0,
+		kOutput       = 1,
+		kInput        = 2,
+	};
+	
+	enum PinOptions {
+		kNormal       = 0,
+		kTotem        = 0, // alias
+		kPullup       = 1,
 	};
 
 	template <unsigned char portLetter>
@@ -39,13 +44,35 @@ namespace Motate {
 		typedef uint8_t uintPort_t;
 		static const uint8_t letter = (uint8_t) portLetter;
 		
-		void setDirection(const uint8_t value, const uint8_t mask = 0xff) {
+		void setModes(const uint8_t value, const uint8_t mask = 0xff) {
 			// stub
 		};
-		void setPins(const uint8_t value, const uint8_t mask = 0xff) {
+		void setOptions(const PinOptions options, const uint8_t mask) {
 			// stub
 		};
-		uint8_t getPins(const uint8_t mask = 0xff) {
+		void getModes() {
+			// stub
+		};
+		void getOptions() {
+			// stub
+		};
+		void set(const uint8_t value) {
+			// stub
+		};
+		void clear(const uint8_t value) {
+			// stub
+		};
+		void write(const uint8_t value) {
+			// stub
+		};
+		void write(const uint8_t value, const uint8_t mask) {
+			// stub
+		};
+		uint8_t getInputValues(const uint8_t mask = 0xff) {
+			// stub
+			return 0;
+		};
+		uint8_t getOutputValues(const uint8_t mask = 0xff) {
 			// stub
 			return 0;
 		};
@@ -53,6 +80,19 @@ namespace Motate {
 	
 	template<int8_t pinNum>
 	struct Pin {
+		static const int8_t number = -1;
+		static const uint8_t portLetter = 0;
+		static const uint8_t mask = 0;
+		static uint8_t maskForPort(const uint8_t otherPortLetter) {
+			return 0x00;
+		};
+		bool isNull() { return true; };
+	};
+	template<int8_t pinNum>
+	struct InputPin {
+	};
+	template<int8_t pinNum>
+	struct OutputPin {
 	};
 	
 	typedef const int8_t pin_number;
@@ -60,65 +100,166 @@ namespace Motate {
 	#define _MAKE_MOTATE_PIN(pinNum, registerLetter, registerChar, registerPin)\
 		template<>\
 		struct Pin<pinNum> /*: public PinBase*/ {\
+		private: /* Lock the copy contructor.*/\
+			Pin(const Pin<pinNum>&){};\
+		public:\
 			static const int8_t number = pinNum;\
 			static const uint8_t portLetter = (uint8_t) registerChar;\
 			static const uint8_t mask = (1 << registerPin);\
 				\
-			Pin(const PinSetupType type = Unchanged) {\
-				init(type);\
+			Pin(const PinMode type, const PinOptions options = kNormal) {\
+				init(type, options);\
 			};\
-			Pin<pinNum> &operator=(const bool value) { set(value); return *this; };\
+			void operator=(const bool value) { write(value); };\
 			operator bool() { return (get() != 0); };\
-		\
-			void init(const PinSetupType type) {\
+			void init(const PinMode type, const PinOptions options = kNormal) {\
+				setMode(type);\
+				if (type == kInput) setOptions(options);\
+			};\
+			void setMode(const PinMode type) {\
 				switch (type) {\
-					case Output:\
-						(DDR ## registerLetter) |= _BV(registerPin);\
+					case kOutput:\
+						(DDR ## registerLetter) |= mask;\
 						break;\
-					case InputWithPullup:\
-					case Input:\
-						(DDR ## registerLetter) &= ~_BV(registerPin);\
+					case kInput:\
+						(DDR ## registerLetter) &= ~mask;\
 						break;\
 					default:\
 						break;\
 				}\
-				if (type == InputWithPullup)  (PORT ## registerLetter) |= _BV(registerPin);\
 			};\
-			void set(bool value)  {\
+			PinMode getMode() {\
+				return ((DDR ## registerLetter) |= mask) ? kOutput : kInput;\
+			};\
+			void setOptions(const PinOptions options) {\
+				if (getMode() != kInput)\
+					return; /* These options are only valid on input pins. */\
+				switch (options) {\
+					case kNormal:\
+					/*case kTotem:*/\
+						(PORT ## registerLetter) &= ~mask;\
+						break;\
+					case kPullup:\
+						(PORT ## registerLetter) |= mask;\
+						break;\
+					default:\
+						break;\
+				}\
+			};\
+			PinOptions getOptions() {\
+				if (getMode() != kInput)\
+					return kNormal;\
+				return (PORT ## registerLetter) | ~mask ? kPullup : kNormal;\
+			};\
+			void set() {\
+				(PORT ## registerLetter) |= mask;\
+			};\
+			void clear() {\
+				(PORT ## registerLetter) &= ~mask;\
+			};\
+			void write(bool value) {\
 				if (!value)\
-					(PORT ## registerLetter) &= ~_BV(registerPin);\
+					clear();\
 				else\
-					(PORT ## registerLetter) |= _BV(registerPin);\
+					set();\
 			};\
-			uint8_t get() {\
-				return (PIN ## registerLetter) & _BV(registerPin);\
+			void toggle() {\
+				/* PINx is read-only as the input values of the port.\
+				   However, bits *written* to PINx will toggle the corresponding bits in PORTx. */\
+				(PIN ## registerLetter) = mask;\
+			};\
+			uint8_t get() { /* WARNING: This will return the input status of the pin! Use getOutputValue() for the set output value. */\
+				return (PIN ## registerLetter) & mask;\
+			};\
+			uint8_t getInputValue() {\
+				return (PIN ## registerLetter) & mask;\
+			};\
+			uint8_t getOutputValue() {\
+				return (PORT ## registerLetter) & mask;\
 			};\
 			bool isNull() { return false; };\
 			static uint8_t maskForPort(const uint8_t otherPortLetter) {\
 				return portLetter == otherPortLetter ? mask : 0x00;\
 			};\
 		};\
+		template<>\
+		struct InputPin<pinNum> : Pin<pinNum> {\
+			InputPin() : Pin<pinNum>(kInput) {};\
+			InputPin(const PinOptions options) : Pin<pinNum>(kOutput, options) {};\
+			void init(const PinOptions options = kNormal) {Pin<pinNum>::init(kInput, options);};\
+			uint8_t get() {\
+				return (PIN ## registerLetter) & mask;\
+			};\
+			/*Override these to pick up new methods */\
+			operator bool() { return (get() != 0); };\
+		private: /* Make these private to catch them early. These are intentionally not defined. */\
+			void init(const PinMode type, const PinOptions options = kNormal);\
+			void operator=(const bool value) { write(value); };\
+			void write(const bool);\
+		};\
+		template<>\
+		struct OutputPin<pinNum> : Pin<pinNum> {\
+			OutputPin() : Pin<pinNum>(kOutput) {};\
+			OutputPin(const PinOptions options) : Pin<pinNum>(kOutput, options) {};\
+			void init(const PinOptions options = kNormal) {Pin<pinNum>::init(kOutput, options);};\
+			uint8_t get() {\
+				return (PORT ## registerLetter) & mask;\
+			};\
+			void operator=(const bool value) { write(value); };\
+			/*Override these to pick up new methods */\
+			operator bool() { return (get() != 0); };\
+		private: /* Make these private to catch them early. */\
+			void init(const PinMode type, const PinOptions options = kNormal); /* Intentially not defined. */\
+		};\
 		typedef Pin<pinNum> Pin ## pinNum;\
-		static Pin ## pinNum pin ## pinNum;
-
+		static Pin<pinNum> pin ## pinNum(kUnchanged);\
+		typedef InputPin<pinNum> InputPin ## pinNum;\
+		typedef OutputPin<pinNum> OutputPin ## pinNum;
 
 	#define _MAKE_MOTATE_PORT8(registerLetter, registerChar)\
-	template <> inline void Port8<registerChar>::setDirection(const uint8_t value, const uint8_t mask) {\
+	template <> inline void Port8<registerChar>::setModes(const uint8_t value, const uint8_t mask) {\
 		uint8_t port_value = 0;\
 		if (mask != 0xff) {\
 			port_value = (DDR ## registerLetter) & mask;\
 		}\
 		(DDR ## registerLetter) = port_value | value;\
 	};\
-	template <> inline void Port8<registerChar>::setPins(const uint8_t value, const uint8_t mask) {\
+	template <> inline void Port8<registerChar>::setOptions(const PinOptions options, const uint8_t mask) {\
+		/* Only pin that are outputs are efected by these changes. */\
+		/* On the AVR, a pullup is turned on on an input that is set HIGH. */\
+		switch (options) {\
+			case kNormal:\
+			/*case kTotem:*/\
+				(PORT ## registerLetter) &= ~(~(DDR ## registerLetter) & mask); /* Clear masked input pins. */\
+				break;\
+			case kPullup:\
+				(PORT ## registerLetter) |=  (~(DDR ## registerLetter) & mask); /* Set masked input pins. */\
+				break;\
+			default:\
+				break;\
+		}\
+	};\
+	template <> inline void Port8<registerChar>::set(const uint8_t value) {\
+		(PORT ## registerLetter) |= value;\
+	};\
+	template <> inline void Port8<registerChar>::clear(const uint8_t value) {\
+		(PORT ## registerLetter) &= ~value;\
+	};\
+	template <> inline void Port8<registerChar>::write(const uint8_t value) {\
+		(PORT ## registerLetter) = value;\
+	};\
+	template <> inline void Port8<registerChar>::write(const uint8_t value, const uint8_t mask) {\
 		uint8_t port_value = 0;\
 		if (mask != 0xff) {\
 			port_value = (PORT ## registerLetter) & mask;\
 		}\
 		(PORT ## registerLetter) = port_value | value;\
 	};\
-	template <> inline uint8_t Port8<registerChar>::getPins(const uint8_t mask) {\
+	template <> inline uint8_t Port8<registerChar>::getInputValues(const uint8_t mask) {\
 		return (PIN ## registerLetter) & (mask);\
+	}\
+	template <> inline uint8_t Port8<registerChar>::getOutputValues(const uint8_t mask) {\
+		return (PORT ## registerLetter) & (mask);\
 	}\
 	typedef Port8<registerChar> Port ## registerLetter;\
 	static Port ## registerLetter port ## registerLetter;
@@ -360,7 +501,7 @@ namespace Motate {
 				_MOTATE_PINHOLDER_CHECKANDSETPIN(portLetter, 1, 0b00000010);\
 				_MOTATE_PINHOLDER_CHECKANDSETPIN(portLetter, 0, 0b00000001);\
 				port_value |= in_value & port ## portLetter ## CopyMask;\
-				port ## portLetter.setPins(port_value, ~port ## portLetter ## ClearMask);\
+				port ## portLetter.write(port_value, ~port ## portLetter ## ClearMask);\
 			}
 			
 			_MOTATE_PINHOLDER_SETPORT(B);
