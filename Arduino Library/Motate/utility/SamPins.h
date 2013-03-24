@@ -23,7 +23,8 @@
 #ifndef SAMPINS_H_ONCE
 #define SAMPINS_H_ONCE
 
-#include <chip.h>
+// #include <chip.h>
+#include "sam.h"
 
 namespace Motate {
 	// Numbering is arbitrary:
@@ -61,7 +62,8 @@ namespace Motate {
 	template <unsigned char portLetter>
 	struct Port32 {
 		static const uint8_t letter = (uint8_t) portLetter;
-		static Pio* portPtr;\
+		static Pio* portPtr;
+		static uint32_t pmcId;
 		
 		void setModes(const uintPort_t value, const uintPort_t mask = 0xffffffff) {
 			// stub
@@ -95,6 +97,10 @@ namespace Motate {
 			// stub
 			return 0;
 		};
+		
+		/* SAM specific: */
+		void enablePeripheralClock();
+		void disablePeripheralClock();
 	};
 
 	template<int8_t pinNum>
@@ -129,6 +135,7 @@ namespace Motate {
 			static const uint8_t portLetter = (uint8_t) registerChar;\
 			static const uint32_t mask = (1u << registerPin);\
 			static Pio* portPtr;\
+			static Port32<registerChar> port;\
 			\
 			Pin() {};\
 			Pin(const PinMode type, const PinOptions options = kNormal) {\
@@ -150,12 +157,12 @@ namespace Motate {
 						if (!fromConstructor) {\
 							if ( portPtr->PIO_OSR == 0xffffffff )\
 							{\
-								pmc_disable_periph_clk( ( ID_PIO ## registerLetter ) );\
+								port.disablePeripheralClock();\
 							}\
 						}\
 						break;\
 					case kInput:\
-						pmc_enable_periph_clk( (ID_PIO ## registerLetter) );\
+						port.enablePeripheralClock();\
 						portPtr->PIO_ODR = mask ;\
 						portPtr->PIO_PER = mask ;\
 						break;\
@@ -242,6 +249,32 @@ namespace Motate {
 
 
 	#define _MAKE_MOTATE_PORT32(registerLetter, registerChar)\
+		template <> inline void Port32<registerChar>::enablePeripheralClock() {\
+			if (pmcId < 32) {\
+				uint32_t id_mask = 1u << ( pmcId );\
+				if ((PMC->PMC_PCSR0 & id_mask) != id_mask) {\
+					PMC->PMC_PCER0 = id_mask;\
+				}\
+			} else {\
+				uint32_t id_mask = 1u << ( pmcId - 32 );\
+				if ((PMC->PMC_PCSR1 & id_mask) != id_mask) {\
+					PMC->PMC_PCER1 = id_mask;\
+				}\
+			}\
+		};\
+		template <> inline void Port32<registerChar>::disablePeripheralClock() {\
+			if (pmcId < 32) {\
+				uint32_t id_mask = 1u << ( pmcId );\
+				if ((PMC->PMC_PCSR0 & id_mask) == id_mask) {\
+					PMC->PMC_PCDR0 = id_mask;\
+				}\
+			} else {\
+				uint32_t id_mask = 1u << ( pmcId-32 );\
+				if ((PMC->PMC_PCSR1 & id_mask) == id_mask) {\
+					PMC->PMC_PCDR1 = id_mask;\
+				}\
+			}\
+		};\
 		template <> inline void Port32<registerChar>::setModes(const uintPort_t value, const uintPort_t mask) {\
 			portPtr->PIO_ODR = ~value & mask ;\
 			portPtr->PIO_OER = value & mask ;\
@@ -249,9 +282,9 @@ namespace Motate {
 			/* if all pins are output, disable PIO Controller clocking, reduce power consumption */\
 			if ( portPtr->PIO_OSR == 0xffffffff )\
 			{\
-				pmc_disable_periph_clk( ( ID_PIO ## registerLetter ) );\
+				disablePeripheralClock();\
 			} else {\
-				pmc_enable_periph_clk( ( ID_PIO ## registerLetter ) );\
+				enablePeripheralClock();\
 			}\
 		};\
 		template <> inline void Port32<registerChar>::setOptions(const uint16_t options, const uintPort_t mask) {\
@@ -311,7 +344,8 @@ namespace Motate {
 		template <> inline uintPort_t Port32<registerChar>::getOutputValues(const uintPort_t mask) {\
 			return portPtr->PIO_OSR & mask;\
 		};\
-		template <> Pio* Port32<registerChar>::portPtr = (PIO ## registerLetter);\
+		template <> Pio* Port32<registerChar>::portPtr = ( PIO ## registerLetter );\
+		template <> uint32_t Port32<registerChar>::pmcId = ( ID_PIO ## registerLetter );\
 		typedef Port32<registerChar> Port ## registerLetter;\
 		static Port ## registerLetter port ## registerLetter;
 
