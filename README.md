@@ -62,7 +62,7 @@ The typedef `pin_number` was created for this purpose, and can be used for conso
 
 You can either define a pin as in `InputPin<>` or an `OutputPin<>`, which provides a minor performance gain and also provides some compile-time checks to prevent you from use a pin the wrong way. 
 
-For normal `Pin` objects, you pass `kInput` or `kOutput` to the constructor, and you set the mode with `Pin<>.setMode(`_mode_`)` during runtime. ** Note: The `Pin`_X_ predefined types and the `pin`_X_ predefined objects are normal, bidirectional `Pin`s, and default to being output pins. **
+For normal `Pin` objects, you pass `kInput` or `kOutput` to the constructor, and you set the mode with `Pin<>.setMode(` _mode_ `)` during runtime. ** Note: The `Pin`X predefined types and the `pin`X predefined objects are normal, bidirectional `Pin`s, and default to being output pins. **
 
 ```c++
 	ledPin.setMode(kOutput);
