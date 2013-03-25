@@ -109,11 +109,36 @@ namespace Motate {
 		};
 		bool isNull() { return true; };
 	};
+
 	template<int8_t pinNum>
-	struct InputPin {
+	struct InputPin : Pin<pinNum> {
+		InputPin() : Pin<pinNum>(kInput) {};
+		InputPin(const PinOptions options) : Pin<pinNum>(kInput, options) {};
+		void init(const PinOptions options = kNormal  ) {Pin<pinNum>::init(kInput, options);};
+		uint8_t get() {
+			return Pin<pinNum>::getInputValue();
+		};
+		/*Override these to pick up new methods */
+		operator bool() { return (get() != 0); };
+	private: /* Make these private to catch them early. These are intentionally not defined. */
+		void init(const PinMode type, const PinOptions options = kNormal);
+		void operator=(const bool value) { Pin<pinNum>::write(value); };
+		void write(const bool);
 	};
+
 	template<int8_t pinNum>
-	struct OutputPin {
+	struct OutputPin : Pin<pinNum> {
+		OutputPin() : Pin<pinNum>(kOutput) {};
+		OutputPin(const PinOptions options) : Pin<pinNum>(kOutput, options) {};
+		void init(const PinOptions options = kNormal) {Pin<pinNum>::init(kOutput, options);};
+		uint8_t get() {
+			return Pin<pinNum>::getOutputValue();
+		};
+		void operator=(const bool value) { Pin<pinNum>::write(value); };
+		/*Override these to pick up new methods */
+		operator bool() { return (get() != 0); };
+	private: /* Make these private to catch them early. */
+		void init(const PinMode type, const PinOptions options = kNormal); /* Intentially not defined. */
 	};	
 	
 	typedef const int8_t pin_number;
@@ -220,35 +245,6 @@ namespace Motate {
 			static uint8_t maskForPort(const uint8_t otherPortLetter) {\
 				return portLetter == otherPortLetter ? mask : 0x00;\
 			};\
-		};\
-		template<>\
-		struct InputPin<pinNum> : Pin<pinNum> {\
-			InputPin() : Pin<pinNum>(kInput) {};\
-			InputPin(const PinOptions options) : Pin<pinNum>(kOutput, options) {};\
-			void init(const PinOptions options = kNormal  ) {Pin<pinNum>::init(kInput, options);};\
-			uint8_t get() {\
-				return ((PORT ## registerLetter).IN & mask);\
-			};\
-			/*Override these to pick up new methods */\
-			operator bool() { return (get() != 0); };\
-		private: /* Make these private to catch them early. These are intentionally not defined. */\
-			void init(const PinMode type, const PinOptions options = kNormal);\
-			void operator=(const bool value) { write(value); };\
-			void write(const bool);\
-		};\
-		template<>\
-		struct OutputPin<pinNum> : Pin<pinNum> {\
-			OutputPin() : Pin<pinNum>(kOutput) {};\
-			OutputPin(const PinOptions options) : Pin<pinNum>(kOutput, options) {};\
-			void init(const PinOptions options = kNormal) {Pin<pinNum>::init(kOutput, options);};\
-			uint8_t get() {\
-				return ((PORT ## registerLetter).OUT & mask);\
-			};\
-			void operator=(const bool value) { write(value); };\
-			/*Override these to pick up new methods */\
-			operator bool() { return (get() != 0); };\
-		private: /* Make these private to catch them early. */\
-			void init(const PinMode type, const PinOptions options = kNormal); /* Intentially not defined. */\
 		};\
 		typedef Pin<pinNum> Pin ## pinNum;\
 		static Pin<pinNum> pin ## pinNum(kOutput);\

@@ -27,19 +27,19 @@ At the top of the file, you need to pull in the header:
 ```
 
 ### Creating `Pin`s
-Creating a `Pin` (uppercase P) object is easy. You can use the pre-defined types `Pin`X or the template syntax `Pin<`X`>`.
+Creating a `Pin` (uppercase P) object is easy. You can use the pre-defined types `Pin`_X_ or the template syntax `Pin<`_X_`>`. Specify in the constructor if the pin will be used as an input (`kInput`) or an output (`kOutput`). If you don't provide a value, the pine will be setup as an output.
 
 ```c++
 	// create the led Pin object, setup as an output
-	Pin13 ledPin = Output;
+	Pin13 ledPin(kOutput);
 	// OR
-	Pin<13> ledPin = Output; // is acceptable as well.
+	Pin<13> ledPin(kOutput); // is acceptable as well.
 ```
 
-Also as a convenience you can use the predefined objects `pin`N (lowercase p).
+Also as a convenience you can use the predefined objects `pin`_N_ (lowercase p).
 
 ```c++
-	pin13 = Output;
+	pin13.setMode(kOutput);
 	pin13 = HIGH;
 	if (pin13) {
 		// something
@@ -48,42 +48,56 @@ Also as a convenience you can use the predefined objects `pin`N (lowercase p).
 
 You generally cannot use `Pin<variableName>` since `variableName` cannot be changed after compiling.
 	
-However, `const uint8_t` variables can be used as the pin number, since they cannot be changed and must be set when they're defined.
+However, `const ` variables can be used as the pin number, since they cannot be changed and must be set when they're defined.
 
-The typedef `pin_number` was created as a more readable shortcut, and can be used for consolidating configuration of pins, for example.
+The typedef `pin_number` was created for this purpose, and can be used for consolidating configuration of pins, for example.
 
 ```c++
 	pin_number led_num = 13;
 	// ... later ...
-	Pin<led_num> ledPin = Output;
+	Pin<led_num> ledPin(kOutput);
 ```
 
 ### Configuring `Pin`s
 
-Setting the pin direction is easy. You assign one of the special values `Input`, `InputWithPullup`, and `Output` to the pin at any time.
+You can either define a pin as in `InputPin<>` or an `OutputPin<>`, which provides a minor performance gain and also provides some compile-time checks to prevent you from use a pin the wrong way. 
+
+For normal `Pin` objects, you pass `kInput` or `kOutput` to the constructor, and you set the mode with `Pin<>.setMode(`_mode_`)` during runtime. ** Note: The `Pin`_X_ predefined types and the `pin`_X_ predefined objects are normal, bidirectional `Pin`s, and default to being output pins. **
 
 ```c++
-	ledPin = Output;
-	Pin3 inputPin = Input;
-	Pin4 input2 = InputWithPullup;
+	ledPin.setMode(kOutput);
+	Pin3 inputPin(kInput);
 ```
 
-The `InputWithPullup` is a convenience value for `Input` followed by setting the pin to `HIGH`.
+You can also set addition options for pins, depending on the hardware options available. All platforms support `kNormal` (no options) and `kPullUp` (to turn on the internal pull-up resistor).
+
+```c++
+	// For normal Pins, pass the mode then the option parameter
+	Pin<13> buttonPin1(kInput, kPullUp);
+	
+	// For InputPins or OutputPins, pass the option as the only parameter
+	InputPin<13> buttonPin2(kPullUp);
+	
+	// Set the options at any time:
+	buttonPin2.setOptions(kNormal); // disable the pullup
+```
 
 ### Setting `Pin`s
 
 Setting the pin value is easy:
 
 ```c++
+	// Use the Arduino defined constants HIGH or LOW.
 	ledPin = HIGH;
-	// OR
+	// OR, use 0 or 1
 	ledPin = 1;
 	
-	// Non-zero is HIGH, so you can use the result of bit-math:
+	// Anything that not zero is HIGH.
+	// This allows such things as using the result of bit-math:
 	ledPin = input_value & test_mask;
 	
-	// Warning, negative is high too!
-	int bad_value = -1;
+	// Warning, negative is HIGH too!
+	int bad_value = -1; // -1 is not zero!
 	ledPin = badValue; // <- turns the led ON
 ```
 
@@ -100,7 +114,7 @@ This is **not** valid:
 Reading the pin is just as easy:
 
 ```c++
-	Pin3 inputPin = InputWithPullup;
+	InputPin<3> inputPin(kPullup);
 	if (inputPin) {
 		// it's HIGH
 	} else {
@@ -114,19 +128,21 @@ A Pin is a pin, so every Pin that refers to the same physical pin will have the 
 
 ```c++
 	// Set pin 5 to an input
-	pin5 = Input; 
+	pin5.setMode(kInput);
 	
 	// Create a new pin 5 and make in an output
-	Pin<5> otherPin = Output;
-	
+	Pin<5> otherPin(kOutput);
 ```
-`pin5` and `otherPin` are both Outputs at the end.
 
-Also, `Pin` objects don't set their `Input`/`Output` state automatically. A `Pin` set to `Input` and set to `HIGH` will turn on the pull-up. A `Pin` set to `Output` then read will simply return the value it was last set to.
+This leaves `pin5` and `otherPin` both as outputs.
 
-### Interaction with `digitalWrite()` and `digitalRead()`
+_On some architectures:_ If all of the pins on the same physical port are outputs, then normal `Pin` objects will **read** as an undefined value, since the input clock of that port is disabled. To prevent this, either use an `OutputPin` or read the value with `getOutputValue()`.
 
-`digitalRead()` and `digitalWrite()` are completely compatible with Pin changes. They work differently, but are both changing the same internal pin registers.
+Also, `Pin` objects don't set their input/output state automatically. A `Pin` set to `kInput` and then assigned an output value will have different results on different architectures. `InputPin` objects will not allow setting the value for this reason.
+
+### Interaction with Arduino `digitalWrite()` and `digitalRead()`
+
+`digitalRead()` and `digitalWrite()` are completely compatible with `Pin` objects. They work differently, but are both changing the same internal pin registers.
 
 ### Analog values
 

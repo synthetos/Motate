@@ -33,8 +33,8 @@ using namespace Motate;
 
 
 // create the Pin objects
-Pin<2> buttonPin = Input;     // the number of the pushbutton pin
-Pin<13> ledPin = Output;      // the number of the LED pin
+InputPin<2> buttonPin;     // the number of the pushbutton pin
+OutputPin<13> ledPin;      // the number of the LED pin
 
 // Variables will change:
 int buttonPushCounter = 0;   // counter for the number of button presses

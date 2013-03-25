@@ -29,7 +29,7 @@
 using namespace Motate; 
 
 // create the led Pin object, setup as an output
-Pin<13> ledPin = Output;
+OutputPin<13> ledPin;
 
 // Variables will change:
 long previousMillis = 0;        // will store last time LED was updated

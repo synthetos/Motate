@@ -113,12 +113,37 @@ namespace Motate {
 		};
 		bool isNull() { return true; };
 	};
+
 	template<int8_t pinNum>
-	struct InputPin {
+	struct InputPin : Pin<pinNum> {
+		InputPin() : Pin<pinNum>(kInput) {};
+		InputPin(const PinOptions options) : Pin<pinNum>(kInput, options) {};
+		void init(const PinOptions options = kNormal  ) {Pin<pinNum>::init(kInput, options);};
+		uint8_t get() {
+			return Pin<pinNum>::getInputValue();
+		};
+		/*Override these to pick up new methods */
+		operator bool() { return (get() != 0); };
+	private: /* Make these private to catch them early. These are intentionally not defined. */
+		void init(const PinMode type, const PinOptions options = kNormal);
+		void operator=(const bool value) { Pin<pinNum>::write(value); };
+		void write(const bool);
 	};
+
 	template<int8_t pinNum>
-	struct OutputPin {
-	};
+	struct OutputPin : Pin<pinNum> {
+		OutputPin() : Pin<pinNum>(kOutput) {};
+		OutputPin(const PinOptions options) : Pin<pinNum>(kOutput, options) {};
+		void init(const PinOptions options = kNormal) {Pin<pinNum>::init(kOutput, options);};
+		uint8_t get() {
+			return Pin<pinNum>::getOutputValue();
+		};
+		void operator=(const bool value) { Pin<pinNum>::write(value); };
+		/*Override these to pick up new methods */
+		operator bool() { return (get() != 0); };
+	private: /* Make these private to catch them early. */
+		void init(const PinMode type, const PinOptions options = kNormal); /* Intentially not defined. */
+	};	
 	
 	typedef const int8_t pin_number;
 	
@@ -229,7 +254,7 @@ namespace Motate {
 			void toggle()  {\
 				portPtr->PIO_ODSR ^= mask;\
 			};\
-			uint8_t get() { /* WARNING: This will fail if the input buffer is disabled for this pin!!! Use getOutputValue() instead. */\
+			uint8_t get() { /* WARNING: This will fail if the peripheral clock is disabled for this pin!!! Use getOutputValue() instead. */\
 				return portPtr->PIO_PDSR & mask;\
 			};\
 			uint8_t getInputValue() {\
