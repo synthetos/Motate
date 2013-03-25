@@ -27,7 +27,7 @@ At the top of the file, you need to pull in the header:
 ```
 
 ### Creating `Pin`s
-Creating a `Pin` (uppercase P) object is easy. You can use the pre-defined types `Pin`_X_ or the template syntax `Pin<`_X_`>`. Specify in the constructor if the pin will be used as an input (`kInput`) or an output (`kOutput`). If you don't provide a value, the pine will be setup as an output.
+Creating a `Pin` (uppercase P) object is easy. You can use the pre-defined types `Pin`X or the template syntax `Pin<`X`>`. Specify in the constructor if the pin will be used as an input (`kInput`) or an output (`kOutput`). If you don't provide a value, the pine will be setup as an output.
 
 ```c++
 	// create the led Pin object, setup as an output
@@ -36,7 +36,7 @@ Creating a `Pin` (uppercase P) object is easy. You can use the pre-defined types
 	Pin<13> ledPin(kOutput); // is acceptable as well.
 ```
 
-Also as a convenience you can use the predefined objects `pin`_N_ (lowercase p).
+Also as a convenience you can use the predefined objects `pin`N (lowercase p).
 
 ```c++
 	pin13.setMode(kOutput);
