@@ -73,7 +73,7 @@ namespace implementation {
 		Pin<d7> _data_pin7;
 		PinHolder8<d7, d6, d5, d4, d3, d2, d1, d0> _data;
 
-		LiquidCrystal() : _rs_pin(Output), _rw_pin(Output), _enable_pin(Output), _data_pin0(Output), _data_pin1(Output), _data_pin2(Output), _data_pin3(Output), _data_pin4(Output), _data_pin5(Output), _data_pin6(Output), _data_pin7(Output) {
+		LiquidCrystal() : _rs_pin(kOutput), _rw_pin(kOutput), _enable_pin(kOutput), _data_pin0(kOutput), _data_pin1(kOutput), _data_pin2(kOutput), _data_pin3(kOutput), _data_pin4(kOutput), _data_pin5(kOutput), _data_pin6(kOutput), _data_pin7(kOutput) {
 		// if there is a RW pin indicated, set it low to Write
 			_rw_pin = LOW; // non-op if this is set to NullPin
 
@@ -102,7 +102,7 @@ namespace implementation {
 	Pin<d2> _data_pin2;
 	Pin<d3> _data_pin3;
 
-	LiquidCrystal() : _rs_pin(Output), _rw_pin(Output), _enable_pin(Output), _data_pin0(Output), _data_pin1(Output), _data_pin2(Output), _data_pin3(Output) {
+	LiquidCrystal() : _rs_pin(kOutput), _rw_pin(kOutput), _enable_pin(kOutput), _data_pin0(kOutput), _data_pin1(kOutput), _data_pin2(kOutput), _data_pin3(kOutput) {
 		// if there is a RW pin indicated, set it low to Write
 		_rw_pin = LOW; // non-op if this is set to NullPin
 
@@ -209,7 +209,7 @@ namespace implementation {
 		// _data_pin2 = value & 0x01;
 		// value >>= 1;
 		// _data_pin3 = value & 0x01;
-		_data_low.set(value);
+		_data_low.write(value);
 
 		_enable_pin = LOW;
 		delayMicroseconds(1);    
@@ -233,7 +233,7 @@ namespace implementation {
 		// // value_high_4 >>= 1;
 		// _data_pin3 = value_high_4 & 0x08;
 
-		_data_high.set(value);
+		_data_high.write(value);
 
 		_enable_pin = LOW;
 		delayMicroseconds(1);    
@@ -251,7 +251,7 @@ namespace implementation {
 		// // value >>= 1;
 		// _data_pin3 = value & 0x08;
 
-		_data_low.set(value);
+		_data_low.write(value);
 
 		_enable_pin = LOW;
 		delayMicroseconds(1);    
@@ -313,7 +313,7 @@ namespace implementation {
 		// value >>= 1;
 		// 	  _data_pin7 = value & 0x01;
 		
-		_data.set(value);
+		_data.write(value);
 		
 	  _enable_pin = LOW;
 	  delayMicroseconds(1);    
