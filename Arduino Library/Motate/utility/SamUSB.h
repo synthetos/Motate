@@ -31,6 +31,8 @@
 #ifndef SAMUSB_ONCE
 #define SAMUSB_ONCE
 
+#include "utility/MotateUSBHelpers.h"
+
 #include "sam.h"
 
 // TEMPORARY!! Grab samlib stuff.
@@ -42,15 +44,44 @@ namespace Motate {
 	static const uint16_t kUSBControlEnpointSize = 0x10;
 	static const uint16_t kUSBNormalEnpointSize = 0x200;
 
+	struct USBProxy_t {
+		void (*sendConfig)();
+		void (*sendDescriptor)();
+		void (*sendString)(const uint8_t string_num);
+	};
+	extern USBProxy_t USBProxy;
+
+	const uint16_t *getUSBVendorString(uint8_t &length) ATTR_WEAK;
+	const uint16_t *getUSBProductString(uint8_t &length) ATTR_WEAK;
+
+	// We break the rules here, sortof, by providing a macro shortcut that gets used in userland.
+	// I apologize, but this also opens it up to later optimization without changing user code.
+#define MOTATE_SET_USB_VENDOR_STRING(...)\
+	const uint16_t MOTATE_USBVendorString[] = __VA_ARGS__;\
+	const uint16_t *Motate::getUSBVendorString(uint8_t &length) {\
+		length = sizeof(MOTATE_USBVendorString);\
+		return MOTATE_USBVendorString;\
+	}
+
+#define MOTATE_SET_USB_PRODUCT_STRING(...)\
+	const uint16_t MOTATE_USBProductString[] = __VA_ARGS__;\
+	const uint16_t *Motate::getUSBProductString(uint8_t &length) {\
+		length = sizeof(MOTATE_USBProductString);\
+		return MOTATE_USBProductString;\
+	}
+
 	// USBDeviceHardware actually talks to the hardware, and marshalls data to/from the interfaces.
+	template< typename parent >
 	class USBDeviceHardware
 	{
+		parent* const parent_this;
+
 		uint32_t _inited;
 		uint32_t _configuration;
 
 	public:
 		// Init
-		USBDeviceHardware()
+		USBDeviceHardware() : parent_this(static_cast< parent* >(this))
 		{
 			if (UDD_Init() == 0UL)
 			{
@@ -131,7 +162,23 @@ namespace Motate {
 
 			return r;
 		};
-	};
+		
+		static void sendString(const uint8_t string_num) {
+			uint8_t length = 0;
+			const uint16_t *string;
+			if (kManufacturerStringId == string_num && getUSBVendorString) {
+				string = getUSBVendorString(length);
+			} else
+			if (kProductStringId == string_num && getUSBProductString) {
+				string = getUSBProductString(length);
+			}
+
+			USBDescriptorStringHeader_t string_header(length);
+			write(0, (const uint8_t *)(&string_header), sizeof(string_header));
+			write(0, (const uint8_t *)(string), length);
+		};
+	}; //class USBDeviceHardware
+
 }
 
 #endif

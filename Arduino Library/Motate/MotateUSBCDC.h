@@ -149,19 +149,19 @@ namespace Motate {
 	{
 		USBDescriptorHeader_t   Header; /*   Regular descriptor header containing the descriptor's type and length. */
 		uint8_t                 Subtype; /*   Sub type value used to distinguish between CDC class-specific descriptors,
-										  *   must be \ref CDC_DSUBTYPE_CSInterface_Header.
-										  */
-		uint16_t                CDCSpecification; /*   Version number of the CDC specification implemented by the device,
-												   *   encoded in BCD format.
-												   *
-												   *   \see \ref VERSION_BCD() utility macro.
-												   */
+								          *   must be \ref CDC_DSUBTYPE_CSInterface_Header.
+								          */
+		uint16_t                CDCSpecificationBCD; /*   Version number of the CDC specification implemented by the device,
+								                      *   encoded in BCD format.
+								                      *
+								                      *   \see \ref VERSION_BCD() utility macro.
+								                      */
 		USBCDCDescriptorFunctionalHeader_t(
-										   float  _CDCSpecification = 1.10
+										   uint16_t  _CDCSpecificationBCD = USBFloatToBCD(1.10)
 										   )
 		: Header(sizeof(USBCDCDescriptorFunctionalHeader_t), kCSInterfaceDescriptor),
 		Subtype(kCDCCSInterfaceHeader),
-		CDCSpecification(USBFloatToBCD(_CDCSpecification))
+		CDCSpecificationBCD(_CDCSpecificationBCD)
 		{};
 	} ATTR_PACKED;
 
@@ -233,18 +233,26 @@ namespace Motate {
 	template <typename usb_parent_type>
 	struct USBCDC_impl {
 		usb_parent_type &usb;
-		const uint8_t endpoint_offset;
+		const uint8_t control_endpoint;
+		const uint8_t read_endpoint;
+		const uint8_t write_endpoint;
 
 		USBCDC_impl(usb_parent_type &usb_parent,
 					const uint8_t new_endpoint_offset
 					)
 		: usb(usb_parent),
-		endpoint_offset(new_endpoint_offset)
+		control_endpoint(new_endpoint_offset),
+		read_endpoint(new_endpoint_offset+1),
+		write_endpoint(new_endpoint_offset+2)
 		{};
 
-		uint16_t read(char * buffer, uint16_t len) {
-			return usb.read(endpoint_offset, buffer, len);
+		uint16_t read(const uint8_t * buffer, const uint16_t len) {
+			return usb.read(read_endpoint, buffer, len);
 		};
+
+		int32_t write(const uint8_t * data, const uint16_t length) {
+			return usb.write(write_endpoint, data, length);
+		}
 	};
 
 #pragma mark USBMixin< USBCDC, usbIFB, usbIFC, 0 >
@@ -299,9 +307,9 @@ namespace Motate {
 	// Case 1, we have one CDC interface and the other two are USBNullInterfaces
 	template <  >
 	struct USBDefaultDescriptor < USBCDC, USBNullInterface, USBNullInterface > : USBDescriptorDevice_t {
-		USBDefaultDescriptor(const uint16_t vendorID, const uint16_t productID, const float productVersion) :
+		USBDefaultDescriptor(const uint16_t vendorID, const uint16_t productID, const uint16_t productVersion) :
 		USBDescriptorDevice_t(
-							  /*       USBSpecification = */ 2.0,
+							  /*    USBSpecificationBCD = */ USBFloatToBCD(2.0),
 							  /*                  Class = */ kCDCClass,
 							  /*               SubClass = */ kNoSpecificSubclass,
 							  /*               Protocol = */ kNoSpecificProtocol,
@@ -326,9 +334,9 @@ namespace Motate {
 	// Case 2, we have one CDC interface and at least one other non-null interface
 	// Since this is actually four different combinations of template, we make a base class and inherit from it.
 	struct USBCDCIADDescriptor : USBDescriptorDevice_t {
-		USBCDCIADDescriptor(const uint16_t vendorID, const uint16_t productID, const float productVersion) :
+		USBCDCIADDescriptor(const uint16_t vendorID, const uint16_t productID, const uint16_t productVersion) :
 		USBDescriptorDevice_t(
-							  /*       USBSpecification = */ 2.0,
+							  /*    USBSpecificationBCD = */ USBFloatToBCD(2.0),
 							  /*                  Class = */ kIADDeviceClass,
 							  /*               SubClass = */ kIADDeviceSubclass,
 							  /*               Protocol = */ kIADDeviceProtocol,
@@ -351,7 +359,7 @@ namespace Motate {
 	// CDC is the first interface...
 	template < typename usbIFB, typename usbIFC >
 	struct USBDefaultDescriptor < USBCDC, usbIFB, usbIFC > : USBCDCIADDescriptor {
-		USBDefaultDescriptor(const uint16_t vendorID, const uint16_t productID, const float productVersion) :
+		USBDefaultDescriptor(const uint16_t vendorID, const uint16_t productID, const uint16_t productVersion) :
 		USBCDCIADDescriptor(vendorID, productID, productVersion)
 		{};
 	};
@@ -359,7 +367,7 @@ namespace Motate {
 	// CDC is the second interface...
 	template < typename usbIFA, typename usbIFC >
 	struct USBDefaultDescriptor < usbIFA, USBCDC, usbIFC > : USBCDCIADDescriptor {
-		USBDefaultDescriptor(const uint16_t vendorID, const uint16_t productID, const float productVersion) :
+		USBDefaultDescriptor(const uint16_t vendorID, const uint16_t productID, const uint16_t productVersion) :
 		USBCDCIADDescriptor(vendorID, productID, productVersion)
 		{};
 	};
@@ -367,7 +375,7 @@ namespace Motate {
 	// CDC is the third interface...
 	template < typename usbIFA, typename usbIFB >
 	struct USBDefaultDescriptor < usbIFA, usbIFB, USBCDC > : USBCDCIADDescriptor {
-		USBDefaultDescriptor(const uint16_t vendorID, const uint16_t productID, const float productVersion) :
+		USBDefaultDescriptor(const uint16_t vendorID, const uint16_t productID, const uint16_t productVersion) :
 		USBCDCIADDescriptor(vendorID, productID, productVersion)
 		{};
 	};
@@ -375,14 +383,14 @@ namespace Motate {
 	// CDC is the first and second interface...
 	template < typename usbIFC >
 	struct USBDefaultDescriptor < USBCDC, USBCDC, usbIFC > : USBCDCIADDescriptor {
-		USBDefaultDescriptor(const uint16_t vendorID, const uint16_t productID, const float productVersion) :
+		USBDefaultDescriptor(const uint16_t vendorID, const uint16_t productID, const uint16_t productVersion) :
 		USBCDCIADDescriptor(vendorID, productID, productVersion)
 		{};
 	};
 	// CDC is the second and third interface...
 	template < typename usbIFA >
 	struct USBDefaultDescriptor < usbIFA, USBCDC, USBCDC > : USBCDCIADDescriptor {
-		USBDefaultDescriptor(const uint16_t vendorID, const uint16_t productID, const float productVersion) :
+		USBDefaultDescriptor(const uint16_t vendorID, const uint16_t productID, const uint16_t productVersion) :
 		USBCDCIADDescriptor(vendorID, productID, productVersion)
 		{};
 	};

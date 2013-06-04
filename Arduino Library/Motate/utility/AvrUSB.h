@@ -31,22 +31,59 @@
 #ifndef AVRUSB_ONCE
 #define AVRUSB_ONCE
 
+#include "utility/MotateUSBHelpers.h"
+
+// NOOOOOOOOOOO!
+#include "Arduino.h"
 
 namespace Motate {
 
 	static const uint16_t kUSBControlEnpointSize = 0x10;
 	static const uint16_t kUSBNormalEnpointSize = 0x200;
+	
+	struct USBProxy_t {
+		void (*sendConfig)();
+		void (*sendDescriptor)();
+		void (*sendString)(const uint8_t string_num);
+	};
+	extern USBProxy_t USBProxy;
+	
+	const uint16_t *getUSBVendorString(uint8_t &length) ATTR_WEAK;
+	const uint16_t *getUSBProductString(uint8_t &length) ATTR_WEAK;
+	
+	// We break the rules here, sortof, by providing a macro shortcut that gets used in userland.
+	// I apologize, but this also opens it up to later optimization without changing user code.
+#define MOTATE_SET_USB_VENDOR_STRING(...)\
+	const uint16_t MOTATE_USBVendorString[] = __VA_ARGS__;\
+	const uint16_t *Motate::getUSBVendorString(uint8_t &length) {\
+		length = sizeof(MOTATE_USBVendorString);\
+		return MOTATE_USBVendorString;\
+	}
+
+#define MOTATE_SET_USB_PRODUCT_STRING(...)\
+	const uint16_t MOTATE_USBProductString[] = __VA_ARGS__;\
+	const uint16_t *Motate::getUSBProductString(uint8_t &length) {\
+		length = sizeof(MOTATE_USBProductString);\
+		return MOTATE_USBProductString;\
+	}
 
 	// USBDeviceHardware actually talks to the hardware, and marshalls data to/from the interfaces.
+	template< typename parent >
 	class USBDeviceHardware
 	{
-		uint32_t _inited;
-		uint32_t _configuration;
+		parent* const parent_this;
+		
+		static uint32_t _inited;
+		static uint32_t _configuration;
 
 	public:
 		// Init
-		USBDeviceHardware()
+		USBDeviceHardware() : parent_this(static_cast< parent* >(this))
 		{
+			USBProxy.sendConfig = parent::sendConfig;
+			USBProxy.sendDescriptor = parent::sendDescriptor;
+			USBProxy.sendString = parent::sendString;
+			
 			// if (UDD_Init() == 0UL)
 			// {
 			// 	_inited = 1UL;
@@ -54,7 +91,7 @@ namespace Motate {
 			// _configuration = 0UL;
 		};
 
-		bool attach() {
+		static bool attach() {
 			// if (_inited) {
 			// 	UDD_Attach();
 			// 	_configuration = 0;
@@ -63,7 +100,7 @@ namespace Motate {
 			return false;
 		};
 
-		bool detach() {
+		static bool detach() {
 			// if (_inited) {
 			// 	UDD_Detach();
 			// 	return true;
@@ -71,12 +108,12 @@ namespace Motate {
 			return false;
 		};
 
-		int32_t available(const uint8_t ep) {
+		static int32_t available(const uint8_t ep) {
 			// return UDD_FifoByteCount(ep & 0xF);
 			return 0;
 		}
 
-		int32_t readByte(const uint8_t ep) {
+		static int32_t readByte(const uint8_t ep) {
 			// uint8_t c;
 			// if (USBD_Recv(ep & 0xF, &c, 1) == 1)
 			// 	return c;
@@ -84,7 +121,7 @@ namespace Motate {
 		};
 
 		/* Data is const. The pointer to data is not. */
-		int32_t read(const uint8_t ep, const uint8_t * buffer, uint16_t length) {
+		static int32_t read(const uint8_t ep, const uint8_t * buffer, uint16_t length) {
 //			if (!_usbConfiguration || len < 0)
 //				return -1;
 //
@@ -103,7 +140,7 @@ namespace Motate {
 		};
 
 		/* Data is const. The pointer to data is not. */
-		int32_t write(const uint8_t ep, const uint8_t * data, uint16_t length) {
+		static int32_t write(const uint8_t ep, const uint8_t * data, uint16_t length) {
 // 			uint32_t n;
 // 			int r = length;
 // 			const uint8_t* data = (const uint8_t*)d;
@@ -127,9 +164,25 @@ namespace Motate {
 // 			}
 // 
 // 			return r;
+			Serial.write(data, length);
 			return 0;
 		};
-	};
+
+		static void sendString(const uint8_t string_num) {
+			uint8_t length = 0;
+			const uint16_t *string;
+			if (kManufacturerStringId == string_num && getUSBVendorString) {
+				string = getUSBVendorString(length);
+			} else
+			if (kProductStringId == string_num && getUSBProductString) {
+				string = getUSBProductString(length);
+			}
+
+			USBDescriptorStringHeader_t string_header(length);
+			write(0, (const uint8_t *)(&string_header), sizeof(string_header));
+			write(0, (const uint8_t *)(string), length);
+		};
+	}; // class USBDeviceHardware
 }
 
 #endif

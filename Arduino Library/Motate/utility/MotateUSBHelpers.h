@@ -32,26 +32,15 @@
 #ifndef MOTATEUSBHELPERS_ONCE
 #define MOTATEUSBHELPERS_ONCE
 
-#ifdef __AVR_XMEGA__
-
-#include <utility/AvrXUSB.h>
-
-#else
-
-#ifdef __AVR__
-#include <utility/AvrUSB.h>
-#endif
-
-#endif
-
-#ifdef __SAM3X8E__
-#include <utility/SamUSB.h>
-#endif
+#include <inttypes.h>
 
 namespace Motate {
 
 #ifndef ATTR_PACKED
 	#define ATTR_PACKED  __attribute__ ((packed))
+#endif
+#ifndef ATTR_WEAK
+	#define ATTR_WEAK  __attribute__ ((weak))
 #endif
 	
 	/* ############################################# */
@@ -240,7 +229,7 @@ namespace Motate {
 	{
 		USBDescriptorHeader_t Header; /* Descriptor header, including type and size. */
 
-		uint16_t USBSpecification; /* BCD of the supported USB specification. */
+		uint16_t USBSpecificationBCD; /* BCD of the supported USB specification. */
 		uint8_t  Class;            /* USB device class. */
 		uint8_t  SubClass;         /* USB device subclass. */
 		uint8_t  Protocol;         /* USB device protocol. */
@@ -264,7 +253,7 @@ namespace Motate {
 		/* Initialization */
 
 		USBDescriptorDevice_t(
-						 float _USBSpecification,
+						 uint16_t _USBSpecificationBCD,
 						 uint8_t  _Class,
 						 uint8_t  _SubClass,
 
@@ -283,7 +272,7 @@ namespace Motate {
 						 uint8_t  _NumberOfConfigurations
 						 )
 		: Header(sizeof(USBDescriptorDevice_t), kDeviceDescriptor),
-		USBSpecification(USBFloatToBCD(_USBSpecification)),
+		USBSpecificationBCD(_USBSpecificationBCD),
 		Class(_Class),
 		SubClass(_SubClass),
 
@@ -293,7 +282,7 @@ namespace Motate {
 
 		VendorID(_VendorID),
 		ProductID(_ProductID),
-		ReleaseNumber(USBFloatToBCD(_ReleaseNumber)),
+		ReleaseNumber(_ReleaseNumber),
 
 		ManufacturerStrIndex(_ManufacturerStrIndex),
 		ProductStrIndex(_ProductStrIndex),
@@ -616,33 +605,17 @@ namespace Motate {
 	} ATTR_PACKED;
 
 #pragma mark template <uint8_t size> USBDescriptorString_t
-	template <uint8_t size>
-	struct USBDescriptorString_t
+	struct USBDescriptorStringHeader_t
 	{
 		USBDescriptorHeader_t Header; /**< Descriptor header, including type and size. */
 
-		uint16_t UnicodeString[size]; // wchar_t may not be 16-bits wide
-		/* String data, as unicode characters (alternatively,
-		 *   string language IDs). If normal ASCII characters are
-		 *   to be used, they must be added as an array of characters
-		 *   rather than a normal C string so that they are widened to
-		 *   Unicode size.
-		 */
-
 		/* Initialization */
 
-		USBDescriptorString_t(
-							  const uint16_t _UnicodeString[size]
+		USBDescriptorStringHeader_t(
+							  const uint8_t size
 							  )
-		: Header(sizeof(USBDescriptorHeader_t) + (size << 1), kStringDescriptor)
+		: Header(sizeof(USBDescriptorHeader_t) + size, kStringDescriptor)
 		{
-			// This is simple enough that the optimizer eats it:
-			uint8_t c = size;
-			const uint16_t *from = _UnicodeString;
-			uint16_t *to = UnicodeString;
-			do {
-				*to++ = *from++;
-			} while (c--);
         };
 	} ATTR_PACKED;
 

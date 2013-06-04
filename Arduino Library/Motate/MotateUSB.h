@@ -31,7 +31,7 @@
 #ifndef MOTATEUSB_ONCE
 #define MOTATEUSB_ONCE
 
-#include <inttypes.h>
+#include "utility/MotateUSBHelpers.h"
 
 #ifdef __AVR_XMEGA__
 
@@ -49,8 +49,6 @@
 #include <utility/SamUSB.h>
 #endif
 
-#include "utility/MotateUSBHelpers.h"
-
 namespace Motate {
 
 	/* ############################################ */
@@ -59,17 +57,42 @@ namespace Motate {
 	/* #                                          # */
 	/* ############################################ */
 
+	struct USBSettings_t {
+		const uint16_t vendorID;
+		const uint16_t productID;
+		const float productVersion;
+		const uint8_t  attributes;
+		const uint16_t powerConsumption;
+	};
+
+	extern const USBSettings_t USBSettings;
+
+	// You will need to have something like this in your project (in a .cpp file):
+	//
+	// const USBSettings_t Motate::USBSettings = {
+	// 	/* vendorID         = */ 0x1d50,
+	// 	/* productID        = */ 0x606d,
+	// 	/* productVersion   = */ 0.1,
+	// 	/* attributes       = */ kUSBConfigAttributeSelfPowered,
+	// 	/* powerConsumption = */ 500
+	// };
+
 	// USBController is our primary controller class, and "owns" the interfaces.
 	// USBController actually talks to the hardware, and marshalls data to/from the interfaces.
 	// There should only be one USBController per hardware USB device -- there will almost always be just one.
 	template<class interface0type, class interface1type = USBNullInterface, class interface2type = USBNullInterface>
 	class USBDevice :
-		USBDeviceHardware,
-		USBMixin<interface0type, interface1type, interface2type, 0>,
-		USBMixin<interface0type, interface1type, interface2type, 1>,
-		USBMixin<interface0type, interface1type, interface2type, 2>
+		public USBDeviceHardware< USBDevice<interface0type, interface1type, interface2type> >,
+		public USBMixin<interface0type, interface1type, interface2type, 0>,
+		public USBMixin<interface0type, interface1type, interface2type, 1>,
+		public USBMixin<interface0type, interface1type, interface2type, 2>
 	{
+	public:
 		// Shortcut typedefs
+		typedef USBDevice<interface0type, interface1type, interface2type> _this_type;
+
+		typedef USBDeviceHardware< USBDevice<interface0type, interface1type, interface2type> > _hardware_type;
+		
 		typedef USBMixin<interface0type, interface1type, interface2type, 0> _mixin_0_type;
 		typedef USBMixin<interface0type, interface1type, interface2type, 1> _mixin_1_type;
 		typedef USBMixin<interface0type, interface1type, interface2type, 2> _mixin_2_type;
@@ -88,27 +111,26 @@ namespace Motate {
 		static const uint16_t _interface_1_descriptor_size = _mixin_1_type::descriptor_size;
 		static const uint16_t _interface_2_descriptor_size = _mixin_2_type::descriptor_size;
 		static const uint16_t _total_interface_descriptor_size = _interface_0_descriptor_size + _interface_1_descriptor_size + _interface_2_descriptor_size;
-
-	public:
-
-		const _descriptor_type descriptor;
-		const _config_type config;
-		
+				
 		// Init
-		USBDevice(const uint16_t vendorID, const uint16_t productID, const float productVersion, const uint8_t attributes, uint16_t powerConsumption) :
-			USBDeviceHardware(),
+		USBDevice() :
+			_hardware_type(),
 			_mixin_0_type(*this, _interface_0_first_endpoint),
 			_mixin_1_type(*this, _interface_1_first_endpoint),
-			_mixin_2_type(*this, _interface_2_first_endpoint),
-			descriptor(vendorID, productID, productVersion),
-			config(attributes, powerConsumption)
+			_mixin_2_type(*this, _interface_2_first_endpoint)
 		{
-			// USBDeviceHardware should handle all of the init
+			// USBDeviceHardware should handle all of the rest of the init
 		};
 
-		int32_t sendDescriptors() {
-			write(descriptor, sizeof(descriptor));
-		};
+		static void sendDescriptor() {
+			const _descriptor_type descriptor(USBSettings.vendorID, USBSettings.productID, USBFloatToBCD(USBSettings.productVersion));
+			_this_type::write(0, (const uint8_t *)(&descriptor), sizeof(_descriptor_type));
+		}
+
+		static void sendConfig() {
+			const _config_type config(USBSettings.attributes, USBSettings.powerConsumption);
+			_this_type::write(0, (const uint8_t *)(&config), sizeof(_config_type));
+		}
 
 	};
 
@@ -129,9 +151,9 @@ namespace Motate {
 
 	template < typename interface0type, typename interface1type, typename interface2type >
 	struct USBDefaultDescriptor : USBDescriptorDevice_t {
-		USBDefaultDescriptor(const uint16_t vendorID, const uint16_t productID, const float productVersion) :
+		USBDefaultDescriptor(const uint16_t vendorID, const uint16_t productID, const uint16_t productVersionBCD) :
 			USBDescriptorDevice_t(
-								  /*       USBSpecification = */ 2.0,
+								  /*    USBSpecificationBCD = */ USBFloatToBCD(2.0),
 								  /*                  Class = */ kNoDeviceClass,
 								  /*               SubClass = */ kNoDeviceSubclass,
 								  /*               Protocol = */ kNoDeviceProtocol,
@@ -140,7 +162,7 @@ namespace Motate {
 
 								  /*               VendorID = */ vendorID,
 								  /*              ProductID = */ productID,
-								  /*          ReleaseNumber = */ productVersion,
+								  /*          ReleaseNumber = */ productVersionBCD,
 
 								  /*   ManufacturerStrIndex = */ kManufacturerStringId,
 								  /*        ProductStrIndex = */ kProductStringId,
