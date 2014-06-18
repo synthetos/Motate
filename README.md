@@ -1,16 +1,18 @@
 # Motate
 
-Motate: An Arduino-compatible board and software designed with movement in mind.
+Motate: An high-performance hardware abstraction layer that is easy to learn and easy to use.
 
 # Status
 
-Currently the hardware is still in prototyping, but as the software components are closer to ready I'll release them here for review.
+Motate is shaping up quickly, but is still in heavy development. It is currently being developed and tested inside the [Synthetos G2 project](https://github.com/synthetos/g2/).
 
 **The interface for this code is still in flux.** Before the Motate system is completed I'll freeze the interface.
 
 Please share any suggestions for changes. Pull requests welcome as well.
 
 # Usage
+
+**This needs updated.**
 
 The contents of the Arduino Library folder can be placed the appropriate arduino libraries folder for your system, and the arduino IDE reloaded. The examples will show up in your File-> Examples submenu.
 

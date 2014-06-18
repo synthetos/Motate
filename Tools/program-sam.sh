@@ -62,6 +62,8 @@ echo "Forcing reset using 1200bps open/close on port ${port}"
 
 stty -f "${port}" 1200
 
+sleep 1
+
 echo "Starting programming of file ${file} -> ${file/.elf/.bin} on port ${port/\/dev\//}"
 "${BOSSAC}" -e -w -v -b "${file/.elf/.bin}"
 

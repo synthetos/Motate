@@ -81,9 +81,9 @@ extern "C"{
 	// These two routines are defined with C linkage:
 
 	void _init() __attribute__ ((weak));
-	void _init() {;}
-
-	void __libc_init_array(void);
+	void _init() {
+		SystemInit();
+	}
 
 #ifdef __cplusplus
 }
@@ -96,15 +96,11 @@ extern "C"{
 
 void _system_init(void)
 {
-	SystemInit();
-
 	// WHAT!?!
 	// Disable watchdog
 	WDT->WDT_MR = WDT_MR_WDDIS;
 
 	// Initialize C library
-	__libc_init_array();
-
 #ifdef MOTATE_CONFIG_HAS_USBSERIAL
 	usb.attach();					// USB setup
 #endif

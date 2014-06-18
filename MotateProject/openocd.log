@@ -9,9 +9,37 @@ Info : accepting 'gdb' connection from pipe
 undefined debug reason 7 - target needs reset
 target state: halted
 target halted due to debug-request, current mode: Thread 
-xPSR: 0x01000000 pc: 0x00084420 msp: 0x20088000
+xPSR: 0x01000000 pc: 0x00084350 msp: 0x20088000
 target state: halted
 target halted due to debug-request, current mode: Thread 
-xPSR: 0x01000000 pc: 0x00084420 msp: 0x20088000
+xPSR: 0x01000000 pc: 0x00084350 msp: 0x20088000
 Warn : negative acknowledgment, but no packet pending
+Error: CMSIS-DAP: Write Error (0x04)
+Error: address + size wrapped(0xffffffff, 0x00000004)
+Error: address + size wrapped(0xffffffff, 0x00000004)
+target state: halted
+target halted due to debug-request, current mode: Thread 
+xPSR: 0x01000000 pc: 0x00084350 msp: 0x20088000
+Warn : negative acknowledgment, but no packet pending
+target state: halted
+target halted due to debug-request, current mode: Thread 
+xPSR: 0x01000000 pc: 0x00084350 msp: 0x20088000
+target state: halted
+target halted due to debug-request, current mode: Thread 
+xPSR: 0x01000000 pc: 0x00084350 msp: 0x20088000
+Error: CMSIS-DAP: Read Error (0x07)
+Error: CMSIS-DAP: Write Error (0x07)
+Polling target sam3.cpu failed, GDB will be halted. Polling again in 100ms
+Error: CMSIS-DAP: Read Error (0x07)
+Error: CMSIS-DAP: Write Error (0x07)
+Polling target sam3.cpu failed, GDB will be halted. Polling again in 300ms
+Error: CMSIS-DAP: Read Error (0x07)
+Error: CMSIS-DAP: Write Error (0x07)
+Polling target sam3.cpu failed, GDB will be halted. Polling again in 700ms
+Error: CMSIS-DAP: Read Error (0x07)
+Error: CMSIS-DAP: Write Error (0x07)
+Polling target sam3.cpu failed, GDB will be halted. Polling again in 1500ms
+Error: CMSIS-DAP: Read Error (0x07)
+Error: CMSIS-DAP: Write Error (0x07)
+Polling target sam3.cpu failed, GDB will be halted. Polling again in 3100ms
 Info : dropped 'gdb' connection

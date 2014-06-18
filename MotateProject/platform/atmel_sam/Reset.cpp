@@ -29,13 +29,11 @@ void banzai() {
 	__disable_irq();
 
 	// Set bootflag to run SAM-BA bootloader at restart
-	const int EEFC_FCMD_CGPB = 0x0C;
-	const int EEFC_KEY = 0x5A;
 	while ((EFC0->EEFC_FSR & EEFC_FSR_FRDY) == 0);		// ASH: added parentheses to make compiler happy
 	EFC0->EEFC_FCR =
-		EEFC_FCR_FCMD(EEFC_FCMD_CGPB) |
+		EEFC_FCR_FCMD_CGPB |
 		EEFC_FCR_FARG(1) |
-		EEFC_FCR_FKEY(EEFC_KEY);
+		EEFC_FCR_FKEY_PASSWD;
 	while ((EFC0->EEFC_FSR & EEFC_FSR_FRDY) == 0);		// ASH: added parentheses to make compiler happy
 
 	// From here flash memory is no more available.
@@ -46,9 +44,8 @@ void banzai() {
 		__asm__ __volatile__("");
 
 	// BANZAIIIIIII!!!
-	const int RSTC_KEY = 0xA5;
 	RSTC->RSTC_CR =
-		RSTC_CR_KEY(RSTC_KEY) |
+		RSTC_CR_KEY_PASSWD |
 		RSTC_CR_PROCRST |
 		RSTC_CR_PERRST;
 

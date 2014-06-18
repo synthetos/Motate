@@ -189,12 +189,12 @@ namespace Motate {
 		}
 
 		void unlock() {
-			tc()->TC_WPMR = TC_WPMR_WPKEY(0x54494D);
+			tc()->TC_WPMR = TC_WPMR_WPKEY_PASSWD;
 		}
 
 		/* WHOA!! Only do this if you know what you're doing!! */
 		void lock() {
-			tc()->TC_WPMR = TC_WPMR_WPEN | TC_WPMR_WPKEY(0x54494D);
+			tc()->TC_WPMR = TC_WPMR_WPEN | TC_WPMR_WPKEY_PASSWD;
 		}
 
 		// Set the mode and frequency.
@@ -537,7 +537,7 @@ namespace Motate {
 		/* WHOA!! Only do this if you know what you're doing!! */
 		void lock() {
 			// This locks EVERYTHING!!!
-			pwm()->PWM_WPCR = PWM_WPCR_WPCMD(1) | PWM_WPCR_WPRG0 | PWM_WPCR_WPRG1 | PWM_WPCR_WPRG2 | PWM_WPCR_WPRG3 | PWM_WPCR_WPRG4 | PWM_WPCR_WPRG5 | TC_WPMR_WPKEY(0x54494D);
+			pwm()->PWM_WPCR = PWM_WPCR_WPCMD(1) | PWM_WPCR_WPRG0 | PWM_WPCR_WPRG1 | PWM_WPCR_WPRG2 | PWM_WPCR_WPRG3 | PWM_WPCR_WPRG4 | PWM_WPCR_WPRG5 | TC_WPMR_WPKEY_PASSWD;
 		}
 #else
 		// Non-ops to keep the compiler happy.

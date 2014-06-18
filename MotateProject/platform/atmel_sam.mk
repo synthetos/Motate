@@ -84,6 +84,7 @@ SAM_PATH    = $(CMSIS_ROOT)/TARGET_Atmel
 DEVICE_PATH = $(SAM_PATH)/$(SERIES)
 
 SAM_SOURCE_DIRS += $(DEVICE_PATH)/include
+SAM_SOURCE_DIRS += $(DEVICE_PATH)/source
 SAM_SOURCE_DIRS += $(DEVICE_PATH)/source/$(GCC_TOOLCHAIN)
 SAM_SOURCE_DIRS += platform/atmel_sam
 FIRST_LINK_SOURCES += platform/atmel_sam/syscalls_sam3.c
