@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDESourceControlProjectFavoriteDictionaryKey</key>
+	<false/>
+	<key>IDESourceControlProjectIdentifier</key>
+	<string>4A246018-F5AE-432A-A88F-8ABADB0B56CA</string>
+	<key>IDESourceControlProjectName</key>
+	<string>TinyG2</string>
+	<key>IDESourceControlProjectOriginsDictionary</key>
+	<dict>
+		<key>D30190E0-B9E5-4BBA-87E1-5A07266EDA73</key>
+		<string>https://github.com/synthetos/g2.git</string>
+	</dict>
+	<key>IDESourceControlProjectPath</key>
+	<string>TinyG2/TinyG2.xcodeproj/project.xcworkspace</string>
+	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
+	<dict>
+		<key>D30190E0-B9E5-4BBA-87E1-5A07266EDA73</key>
+		<string>../../..</string>
+	</dict>
+	<key>IDESourceControlProjectURL</key>
+	<string>https://github.com/synthetos/g2.git</string>
+	<key>IDESourceControlProjectVersion</key>
+	<integer>110</integer>
+	<key>IDESourceControlProjectWCCIdentifier</key>
+	<string>D30190E0-B9E5-4BBA-87E1-5A07266EDA73</string>
+	<key>IDESourceControlProjectWCConfigurations</key>
+	<array>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>D30190E0-B9E5-4BBA-87E1-5A07266EDA73</string>
+			<key>IDESourceControlWCCName</key>
+			<string>TinyG2</string>
+		</dict>
+	</array>
+</dict>
+</plist>

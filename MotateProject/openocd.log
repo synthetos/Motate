@@ -1,0 +1,17 @@
+Info : CMSIS-DAP: FW Version = 01.0D.0030
+Info : SWCLK/TCK = 1 SWDIO/TMS = 1 TDI = 1 TDO = 0 nTRST = 0 nRESET = 1
+Info : DAP_SWJ Sequence (reset: 50+ '1' followed by 0)
+Info : CMSIS-DAP: Interface ready
+Info : clock speed 500 kHz
+Info : IDCODE 0x2ba01477
+Info : sam3.cpu: hardware has 6 breakpoints, 4 watchpoints
+Info : accepting 'gdb' connection from pipe
+undefined debug reason 7 - target needs reset
+target state: halted
+target halted due to debug-request, current mode: Thread 
+xPSR: 0x01000000 pc: 0x00084420 msp: 0x20088000
+target state: halted
+target halted due to debug-request, current mode: Thread 
+xPSR: 0x01000000 pc: 0x00084420 msp: 0x20088000
+Warn : negative acknowledgment, but no packet pending
+Info : dropped 'gdb' connection
