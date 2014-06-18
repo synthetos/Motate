@@ -7,20 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		D4021F9B175DA4610099576C /* SamUSB.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4021F9A175DA4610099576C /* SamUSB.cpp */; };
-		D4021F9D175DA4690099576C /* AvrUSB.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4021F9C175DA4690099576C /* AvrUSB.cpp */; };
 		D4021FA3175E37BF0099576C /* cortex_handlers.c in Sources */ = {isa = PBXBuildFile; fileRef = D4021F9E175E37BF0099576C /* cortex_handlers.c */; };
 		D4021FA4175E37BF0099576C /* Reset.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4021F9F175E37BF0099576C /* Reset.cpp */; };
 		D4021FA5175E37BF0099576C /* syscalls_sam3.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4021FA1175E37BF0099576C /* syscalls_sam3.cpp */; };
 		D4021FA7175E388B0099576C /* hooks.c in Sources */ = {isa = PBXBuildFile; fileRef = D4021FA6175E388B0099576C /* hooks.c */; };
-		D43A458B185A4AF600B3C134 /* SamSPI.h in Sources */ = {isa = PBXBuildFile; fileRef = D41FC0631826F29F003D66C2 /* SamSPI.h */; };
-		D43CAF9E187BABDB0042B58F /* SamPins.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D43CAF9C187BABDB0042B58F /* SamPins.cpp */; };
-		D457113017053C3A00EA19A8 /* MotateTimers.h in Sources */ = {isa = PBXBuildFile; fileRef = D45710C91705334000EA19A8 /* MotateTimers.h */; };
-		D457113117053C3A00EA19A8 /* AvrPins.h in Sources */ = {isa = PBXBuildFile; fileRef = D45710D61705334100EA19A8 /* AvrPins.h */; };
-		D457113217053C3A00EA19A8 /* AvrXPins.h in Sources */ = {isa = PBXBuildFile; fileRef = D45710D71705334100EA19A8 /* AvrXPins.h */; };
-		D457113317053C3A00EA19A8 /* SamPins.h in Sources */ = {isa = PBXBuildFile; fileRef = D45710D81705334100EA19A8 /* SamPins.h */; };
 		D457117C17053EFA00EA19A8 /* Makefile in Sources */ = {isa = PBXBuildFile; fileRef = D457117B17053EFA00EA19A8 /* Makefile */; };
-		D478FB87185D7FD1004E35D2 /* SamSPI.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D478FB85185D7FD1004E35D2 /* SamSPI.cpp */; };
 		D48F5A61172CB1FA00D0E055 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D48F5A4B172CB1FA00D0E055 /* main.cpp */; };
 		D4C1281D18144890002A898C /* motate_pin_assignments.h in Sources */ = {isa = PBXBuildFile; fileRef = D4C1281A180F17D3002A898C /* motate_pin_assignments.h */; };
 		D4C77F73195093ED00A1BE28 /* blink_demo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C77F71195093ED00A1BE28 /* blink_demo.cpp */; };
@@ -64,8 +55,6 @@
 		D4C78D1A1951D32500A1BE28 /* system_samg53.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C786FD1951D32400A1BE28 /* system_samg53.c */; };
 		D4C78D1B1951D32500A1BE28 /* startup_samr21.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C7875A1951D32400A1BE28 /* startup_samr21.c */; };
 		D4C78D1C1951D32500A1BE28 /* system_samr21.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C7875B1951D32400A1BE28 /* system_samr21.c */; };
-		D4C78D1D1951D32500A1BE28 /* system_sam3xa.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C787BC1951D32400A1BE28 /* system_sam3xa.c */; };
-		D4C78D1E1951D32500A1BE28 /* startup_sam3xa.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C787D61951D32400A1BE28 /* startup_sam3xa.c */; };
 		D4C78D1F1951D32500A1BE28 /* cmsis_nvic.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C787DA1951D32400A1BE28 /* cmsis_nvic.c */; };
 		D4C78D201951D32500A1BE28 /* system_MK20D5.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C787DD1951D32400A1BE28 /* system_MK20D5.c */; };
 		D4C78D211951D32500A1BE28 /* startup_MK20D5.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C787E11951D32400A1BE28 /* startup_MK20D5.s */; };
@@ -629,7 +618,11 @@
 		D4C78F4F1951D32600A1BE28 /* startup_STM32F40x.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C78CEF1951D32500A1BE28 /* startup_STM32F40x.s */; };
 		D4C78F501951D32600A1BE28 /* sys.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C78CF11951D32500A1BE28 /* sys.cpp */; };
 		D4C78F511951D32600A1BE28 /* startup_STM32F40x.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C78CF31951D32500A1BE28 /* startup_STM32F40x.s */; };
-		D4CFA6D9172B65AD00D29A02 /* SamTimers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4CFA6D8172B65AD00D29A02 /* SamTimers.cpp */; };
+		D4C78F69195201A900A1BE28 /* AvrUSB.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C78F56195201A900A1BE28 /* AvrUSB.cpp */; };
+		D4C78F6A195201A900A1BE28 /* SamPins.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C78F5B195201A900A1BE28 /* SamPins.cpp */; };
+		D4C78F6B195201A900A1BE28 /* SamSPI.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C78F5D195201A900A1BE28 /* SamSPI.cpp */; };
+		D4C78F6C195201A900A1BE28 /* SamTimers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C78F5F195201A900A1BE28 /* SamTimers.cpp */; };
+		D4C78F6D195201A900A1BE28 /* SamUSB.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C78F61195201A900A1BE28 /* SamUSB.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -645,31 +638,13 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		D4021F9A175DA4610099576C /* SamUSB.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SamUSB.cpp; sourceTree = "<group>"; };
-		D4021F9C175DA4690099576C /* AvrUSB.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AvrUSB.cpp; sourceTree = "<group>"; };
 		D4021F9E175E37BF0099576C /* cortex_handlers.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cortex_handlers.c; sourceTree = "<group>"; };
 		D4021F9F175E37BF0099576C /* Reset.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Reset.cpp; sourceTree = "<group>"; };
 		D4021FA0175E37BF0099576C /* Reset.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Reset.h; sourceTree = "<group>"; };
 		D4021FA1175E37BF0099576C /* syscalls_sam3.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = syscalls_sam3.cpp; sourceTree = "<group>"; };
 		D4021FA2175E37BF0099576C /* syscalls.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = syscalls.h; sourceTree = "<group>"; };
 		D4021FA6175E388B0099576C /* hooks.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = hooks.c; sourceTree = "<group>"; };
-		D406801B1759B71100C593A3 /* AvrUSB.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AvrUSB.h; sourceTree = "<group>"; };
-		D41D14021737528200D522D9 /* SamUSB.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SamUSB.h; sourceTree = "<group>"; };
-		D41FC0621826F21C003D66C2 /* MotateSPI.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotateSPI.h; sourceTree = "<group>"; };
-		D41FC0631826F29F003D66C2 /* SamSPI.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SamSPI.h; sourceTree = "<group>"; };
-		D43CAF9C187BABDB0042B58F /* SamPins.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SamPins.cpp; sourceTree = "<group>"; };
-		D4550F5E175536DD006BDBA0 /* MotateUSB.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotateUSB.h; sourceTree = "<group>"; };
-		D4550F5F175545F5006BDBA0 /* MotateUSBHelpers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotateUSBHelpers.h; sourceTree = "<group>"; };
-		D4550F60175549FD006BDBA0 /* MotateUSBCDC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotateUSBCDC.h; sourceTree = "<group>"; };
-		D45710C71705334000EA19A8 /* keywords.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = keywords.txt; sourceTree = "<group>"; };
-		D45710C81705334000EA19A8 /* MotatePins.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotatePins.h; sourceTree = "<group>"; };
-		D45710C91705334000EA19A8 /* MotateTimers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotateTimers.h; sourceTree = "<group>"; };
-		D45710D61705334100EA19A8 /* AvrPins.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AvrPins.h; sourceTree = "<group>"; };
-		D45710D71705334100EA19A8 /* AvrXPins.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AvrXPins.h; sourceTree = "<group>"; };
-		D45710D81705334100EA19A8 /* SamPins.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SamPins.h; sourceTree = "<group>"; };
 		D457117B17053EFA00EA19A8 /* Makefile */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = Makefile; sourceTree = "<group>"; usesTabs = 1; xcLanguageSpecificationIdentifier = xcode.lang.sh; };
-		D478FB84185D7C86004E35D2 /* SamCommon.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SamCommon.h; sourceTree = "<group>"; };
-		D478FB85185D7FD1004E35D2 /* SamSPI.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SamSPI.cpp; sourceTree = "<group>"; };
 		D48F5A4B172CB1FA00D0E055 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		D49EB85417054C4000F2BF9B /* index */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = index; sourceTree = BUILT_PRODUCTS_DIR; };
 		D49EC43517054FDF00F2BF9B /* atmel_sam.mk */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = atmel_sam.mk; sourceTree = "<group>"; };
@@ -2558,121 +2533,6 @@
 		D4C7875A1951D32400A1BE28 /* startup_samr21.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = startup_samr21.c; sourceTree = "<group>"; };
 		D4C7875B1951D32400A1BE28 /* system_samr21.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = system_samr21.c; sourceTree = "<group>"; };
 		D4C7875C1951D32400A1BE28 /* wisc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = wisc.h; sourceTree = "<group>"; };
-		D4C7875E1951D32400A1BE28 /* sam.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sam.h; sourceTree = "<group>"; };
-		D4C7875F1951D32400A1BE28 /* sam3.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sam3.h; sourceTree = "<group>"; };
-		D4C787631951D32400A1BE28 /* component_adc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = component_adc.h; sourceTree = "<group>"; };
-		D4C787641951D32400A1BE28 /* component_can.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = component_can.h; sourceTree = "<group>"; };
-		D4C787651951D32400A1BE28 /* component_chipid.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = component_chipid.h; sourceTree = "<group>"; };
-		D4C787661951D32400A1BE28 /* component_dacc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = component_dacc.h; sourceTree = "<group>"; };
-		D4C787671951D32400A1BE28 /* component_dmac.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = component_dmac.h; sourceTree = "<group>"; };
-		D4C787681951D32400A1BE28 /* component_efc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = component_efc.h; sourceTree = "<group>"; };
-		D4C787691951D32400A1BE28 /* component_emac.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = component_emac.h; sourceTree = "<group>"; };
-		D4C7876A1951D32400A1BE28 /* component_gpbr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = component_gpbr.h; sourceTree = "<group>"; };
-		D4C7876B1951D32400A1BE28 /* component_hsmci.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = component_hsmci.h; sourceTree = "<group>"; };
-		D4C7876C1951D32400A1BE28 /* component_matrix.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = component_matrix.h; sourceTree = "<group>"; };
-		D4C7876D1951D32400A1BE28 /* component_pdc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = component_pdc.h; sourceTree = "<group>"; };
-		D4C7876E1951D32400A1BE28 /* component_pio.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = component_pio.h; sourceTree = "<group>"; };
-		D4C7876F1951D32400A1BE28 /* component_pmc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = component_pmc.h; sourceTree = "<group>"; };
-		D4C787701951D32400A1BE28 /* component_pwm.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = component_pwm.h; sourceTree = "<group>"; };
-		D4C787711951D32400A1BE28 /* component_rstc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = component_rstc.h; sourceTree = "<group>"; };
-		D4C787721951D32400A1BE28 /* component_rtc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = component_rtc.h; sourceTree = "<group>"; };
-		D4C787731951D32400A1BE28 /* component_rtt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = component_rtt.h; sourceTree = "<group>"; };
-		D4C787741951D32400A1BE28 /* component_sdramc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = component_sdramc.h; sourceTree = "<group>"; };
-		D4C787751951D32400A1BE28 /* component_smc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = component_smc.h; sourceTree = "<group>"; };
-		D4C787761951D32400A1BE28 /* component_spi.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = component_spi.h; sourceTree = "<group>"; };
-		D4C787771951D32400A1BE28 /* component_ssc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = component_ssc.h; sourceTree = "<group>"; };
-		D4C787781951D32400A1BE28 /* component_supc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = component_supc.h; sourceTree = "<group>"; };
-		D4C787791951D32400A1BE28 /* component_tc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = component_tc.h; sourceTree = "<group>"; };
-		D4C7877A1951D32400A1BE28 /* component_trng.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = component_trng.h; sourceTree = "<group>"; };
-		D4C7877B1951D32400A1BE28 /* component_twi.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = component_twi.h; sourceTree = "<group>"; };
-		D4C7877C1951D32400A1BE28 /* component_uart.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = component_uart.h; sourceTree = "<group>"; };
-		D4C7877D1951D32400A1BE28 /* component_uotghs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = component_uotghs.h; sourceTree = "<group>"; };
-		D4C7877E1951D32400A1BE28 /* component_usart.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = component_usart.h; sourceTree = "<group>"; };
-		D4C7877F1951D32400A1BE28 /* component_wdt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = component_wdt.h; sourceTree = "<group>"; };
-		D4C787811951D32400A1BE28 /* instance_adc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = instance_adc.h; sourceTree = "<group>"; };
-		D4C787821951D32400A1BE28 /* instance_can0.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = instance_can0.h; sourceTree = "<group>"; };
-		D4C787831951D32400A1BE28 /* instance_can1.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = instance_can1.h; sourceTree = "<group>"; };
-		D4C787841951D32400A1BE28 /* instance_chipid.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = instance_chipid.h; sourceTree = "<group>"; };
-		D4C787851951D32400A1BE28 /* instance_dacc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = instance_dacc.h; sourceTree = "<group>"; };
-		D4C787861951D32400A1BE28 /* instance_dmac.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = instance_dmac.h; sourceTree = "<group>"; };
-		D4C787871951D32400A1BE28 /* instance_efc0.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = instance_efc0.h; sourceTree = "<group>"; };
-		D4C787881951D32400A1BE28 /* instance_efc1.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = instance_efc1.h; sourceTree = "<group>"; };
-		D4C787891951D32400A1BE28 /* instance_emac.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = instance_emac.h; sourceTree = "<group>"; };
-		D4C7878A1951D32400A1BE28 /* instance_gpbr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = instance_gpbr.h; sourceTree = "<group>"; };
-		D4C7878B1951D32400A1BE28 /* instance_hsmci.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = instance_hsmci.h; sourceTree = "<group>"; };
-		D4C7878C1951D32400A1BE28 /* instance_matrix.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = instance_matrix.h; sourceTree = "<group>"; };
-		D4C7878D1951D32400A1BE28 /* instance_pioa.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = instance_pioa.h; sourceTree = "<group>"; };
-		D4C7878E1951D32400A1BE28 /* instance_piob.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = instance_piob.h; sourceTree = "<group>"; };
-		D4C7878F1951D32400A1BE28 /* instance_pioc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = instance_pioc.h; sourceTree = "<group>"; };
-		D4C787901951D32400A1BE28 /* instance_piod.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = instance_piod.h; sourceTree = "<group>"; };
-		D4C787911951D32400A1BE28 /* instance_pioe.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = instance_pioe.h; sourceTree = "<group>"; };
-		D4C787921951D32400A1BE28 /* instance_piof.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = instance_piof.h; sourceTree = "<group>"; };
-		D4C787931951D32400A1BE28 /* instance_pmc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = instance_pmc.h; sourceTree = "<group>"; };
-		D4C787941951D32400A1BE28 /* instance_pwm.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = instance_pwm.h; sourceTree = "<group>"; };
-		D4C787951951D32400A1BE28 /* instance_rstc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = instance_rstc.h; sourceTree = "<group>"; };
-		D4C787961951D32400A1BE28 /* instance_rtc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = instance_rtc.h; sourceTree = "<group>"; };
-		D4C787971951D32400A1BE28 /* instance_rtt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = instance_rtt.h; sourceTree = "<group>"; };
-		D4C787981951D32400A1BE28 /* instance_sdramc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = instance_sdramc.h; sourceTree = "<group>"; };
-		D4C787991951D32400A1BE28 /* instance_smc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = instance_smc.h; sourceTree = "<group>"; };
-		D4C7879A1951D32400A1BE28 /* instance_spi0.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = instance_spi0.h; sourceTree = "<group>"; };
-		D4C7879B1951D32400A1BE28 /* instance_spi1.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = instance_spi1.h; sourceTree = "<group>"; };
-		D4C7879C1951D32400A1BE28 /* instance_ssc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = instance_ssc.h; sourceTree = "<group>"; };
-		D4C7879D1951D32400A1BE28 /* instance_supc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = instance_supc.h; sourceTree = "<group>"; };
-		D4C7879E1951D32400A1BE28 /* instance_tc0.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = instance_tc0.h; sourceTree = "<group>"; };
-		D4C7879F1951D32400A1BE28 /* instance_tc1.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = instance_tc1.h; sourceTree = "<group>"; };
-		D4C787A01951D32400A1BE28 /* instance_tc2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = instance_tc2.h; sourceTree = "<group>"; };
-		D4C787A11951D32400A1BE28 /* instance_trng.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = instance_trng.h; sourceTree = "<group>"; };
-		D4C787A21951D32400A1BE28 /* instance_twi0.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = instance_twi0.h; sourceTree = "<group>"; };
-		D4C787A31951D32400A1BE28 /* instance_twi1.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = instance_twi1.h; sourceTree = "<group>"; };
-		D4C787A41951D32400A1BE28 /* instance_uart.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = instance_uart.h; sourceTree = "<group>"; };
-		D4C787A51951D32400A1BE28 /* instance_uotghs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = instance_uotghs.h; sourceTree = "<group>"; };
-		D4C787A61951D32400A1BE28 /* instance_usart0.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = instance_usart0.h; sourceTree = "<group>"; };
-		D4C787A71951D32400A1BE28 /* instance_usart1.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = instance_usart1.h; sourceTree = "<group>"; };
-		D4C787A81951D32400A1BE28 /* instance_usart2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = instance_usart2.h; sourceTree = "<group>"; };
-		D4C787A91951D32400A1BE28 /* instance_usart3.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = instance_usart3.h; sourceTree = "<group>"; };
-		D4C787AA1951D32400A1BE28 /* instance_wdt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = instance_wdt.h; sourceTree = "<group>"; };
-		D4C787AC1951D32400A1BE28 /* pio_sam3a4c.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pio_sam3a4c.h; sourceTree = "<group>"; };
-		D4C787AD1951D32400A1BE28 /* pio_sam3a8c.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pio_sam3a8c.h; sourceTree = "<group>"; };
-		D4C787AE1951D32400A1BE28 /* pio_sam3x4c.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pio_sam3x4c.h; sourceTree = "<group>"; };
-		D4C787AF1951D32400A1BE28 /* pio_sam3x4e.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pio_sam3x4e.h; sourceTree = "<group>"; };
-		D4C787B01951D32400A1BE28 /* pio_sam3x8c.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pio_sam3x8c.h; sourceTree = "<group>"; };
-		D4C787B11951D32400A1BE28 /* pio_sam3x8e.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pio_sam3x8e.h; sourceTree = "<group>"; };
-		D4C787B21951D32400A1BE28 /* pio_sam3x8h.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pio_sam3x8h.h; sourceTree = "<group>"; };
-		D4C787B31951D32400A1BE28 /* sam3a4c.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sam3a4c.h; sourceTree = "<group>"; };
-		D4C787B41951D32400A1BE28 /* sam3a8c.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sam3a8c.h; sourceTree = "<group>"; };
-		D4C787B51951D32400A1BE28 /* sam3x4c.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sam3x4c.h; sourceTree = "<group>"; };
-		D4C787B61951D32400A1BE28 /* sam3x4e.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sam3x4e.h; sourceTree = "<group>"; };
-		D4C787B71951D32400A1BE28 /* sam3x8c.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sam3x8c.h; sourceTree = "<group>"; };
-		D4C787B81951D32400A1BE28 /* sam3x8e.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sam3x8e.h; sourceTree = "<group>"; };
-		D4C787B91951D32400A1BE28 /* sam3x8h.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sam3x8h.h; sourceTree = "<group>"; };
-		D4C787BA1951D32400A1BE28 /* sam3xa.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sam3xa.h; sourceTree = "<group>"; };
-		D4C787BB1951D32400A1BE28 /* system_sam3xa.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = system_sam3xa.h; sourceTree = "<group>"; };
-		D4C787BC1951D32400A1BE28 /* system_sam3xa.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = system_sam3xa.c; sourceTree = "<group>"; };
-		D4C787BE1951D32400A1BE28 /* sam3a4_flash.ld */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = sam3a4_flash.ld; sourceTree = "<group>"; };
-		D4C787BF1951D32400A1BE28 /* sam3a4_sram.ld */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = sam3a4_sram.ld; sourceTree = "<group>"; };
-		D4C787C01951D32400A1BE28 /* sam3a4c_flash.ld */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = sam3a4c_flash.ld; sourceTree = "<group>"; };
-		D4C787C11951D32400A1BE28 /* sam3a4c_sram.ld */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = sam3a4c_sram.ld; sourceTree = "<group>"; };
-		D4C787C21951D32400A1BE28 /* sam3a8_flash.ld */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = sam3a8_flash.ld; sourceTree = "<group>"; };
-		D4C787C31951D32400A1BE28 /* sam3a8_sram.ld */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = sam3a8_sram.ld; sourceTree = "<group>"; };
-		D4C787C41951D32400A1BE28 /* sam3a8c_flash.ld */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = sam3a8c_flash.ld; sourceTree = "<group>"; };
-		D4C787C51951D32400A1BE28 /* sam3a8c_sram.ld */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = sam3a8c_sram.ld; sourceTree = "<group>"; };
-		D4C787C61951D32400A1BE28 /* sam3a_flash.ld */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = sam3a_flash.ld; sourceTree = "<group>"; };
-		D4C787C71951D32400A1BE28 /* sam3a_sram.ld */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = sam3a_sram.ld; sourceTree = "<group>"; };
-		D4C787C81951D32400A1BE28 /* sam3x4_flash.ld */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = sam3x4_flash.ld; sourceTree = "<group>"; };
-		D4C787C91951D32400A1BE28 /* sam3x4_sram.ld */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = sam3x4_sram.ld; sourceTree = "<group>"; };
-		D4C787CA1951D32400A1BE28 /* sam3x4c_flash.ld */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = sam3x4c_flash.ld; sourceTree = "<group>"; };
-		D4C787CB1951D32400A1BE28 /* sam3x4c_sram.ld */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = sam3x4c_sram.ld; sourceTree = "<group>"; };
-		D4C787CC1951D32400A1BE28 /* sam3x4e_flash.ld */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = sam3x4e_flash.ld; sourceTree = "<group>"; };
-		D4C787CD1951D32400A1BE28 /* sam3x4e_sram.ld */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = sam3x4e_sram.ld; sourceTree = "<group>"; };
-		D4C787CE1951D32400A1BE28 /* sam3x8_flash.ld */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = sam3x8_flash.ld; sourceTree = "<group>"; };
-		D4C787CF1951D32400A1BE28 /* sam3x8_sram.ld */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = sam3x8_sram.ld; sourceTree = "<group>"; };
-		D4C787D01951D32400A1BE28 /* sam3x8c_flash.ld */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = sam3x8c_flash.ld; sourceTree = "<group>"; };
-		D4C787D11951D32400A1BE28 /* sam3x8c_sram.ld */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = sam3x8c_sram.ld; sourceTree = "<group>"; };
-		D4C787D21951D32400A1BE28 /* sam3x8e_flash.ld */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = sam3x8e_flash.ld; sourceTree = "<group>"; };
-		D4C787D31951D32400A1BE28 /* sam3x8e_sram.ld */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = sam3x8e_sram.ld; sourceTree = "<group>"; };
-		D4C787D41951D32400A1BE28 /* sam3x8h_flash.ld */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = sam3x8h_flash.ld; sourceTree = "<group>"; };
-		D4C787D51951D32400A1BE28 /* sam3x8h_sram.ld */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = sam3x8h_sram.ld; sourceTree = "<group>"; };
-		D4C787D61951D32400A1BE28 /* startup_sam3xa.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = startup_sam3xa.c; sourceTree = "<group>"; };
 		D4C787D91951D32400A1BE28 /* cmsis.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = cmsis.h; sourceTree = "<group>"; };
 		D4C787DA1951D32400A1BE28 /* cmsis_nvic.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cmsis_nvic.c; sourceTree = "<group>"; };
 		D4C787DB1951D32400A1BE28 /* cmsis_nvic.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = cmsis_nvic.h; sourceTree = "<group>"; };
@@ -3850,9 +3710,26 @@
 		D4C78CF11951D32500A1BE28 /* sys.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = sys.cpp; sourceTree = "<group>"; };
 		D4C78CF31951D32500A1BE28 /* startup_STM32F40x.s */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm; path = startup_STM32F40x.s; sourceTree = "<group>"; };
 		D4C78CF41951D32500A1BE28 /* STM32F407.ld */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = STM32F407.ld; sourceTree = "<group>"; };
-		D4CFA6D8172B65AD00D29A02 /* SamTimers.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SamTimers.cpp; sourceTree = "<group>"; };
-		D4E2B2F017223FCB004A5C70 /* AvrTimers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AvrTimers.h; sourceTree = "<group>"; };
-		D4E2B2F117223FCB004A5C70 /* SamTimers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SamTimers.h; sourceTree = "<group>"; };
+		D4C78F54195201A900A1BE28 /* AvrPins.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AvrPins.h; sourceTree = "<group>"; };
+		D4C78F55195201A900A1BE28 /* AvrTimers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AvrTimers.h; sourceTree = "<group>"; };
+		D4C78F56195201A900A1BE28 /* AvrUSB.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AvrUSB.cpp; sourceTree = "<group>"; };
+		D4C78F57195201A900A1BE28 /* AvrUSB.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AvrUSB.h; sourceTree = "<group>"; };
+		D4C78F58195201A900A1BE28 /* AvrXPins.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AvrXPins.h; sourceTree = "<group>"; };
+		D4C78F5A195201A900A1BE28 /* SamCommon.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SamCommon.h; sourceTree = "<group>"; };
+		D4C78F5B195201A900A1BE28 /* SamPins.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SamPins.cpp; sourceTree = "<group>"; };
+		D4C78F5C195201A900A1BE28 /* SamPins.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SamPins.h; sourceTree = "<group>"; };
+		D4C78F5D195201A900A1BE28 /* SamSPI.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SamSPI.cpp; sourceTree = "<group>"; };
+		D4C78F5E195201A900A1BE28 /* SamSPI.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SamSPI.h; sourceTree = "<group>"; };
+		D4C78F5F195201A900A1BE28 /* SamTimers.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SamTimers.cpp; sourceTree = "<group>"; };
+		D4C78F60195201A900A1BE28 /* SamTimers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SamTimers.h; sourceTree = "<group>"; };
+		D4C78F61195201A900A1BE28 /* SamUSB.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SamUSB.cpp; sourceTree = "<group>"; };
+		D4C78F62195201A900A1BE28 /* SamUSB.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SamUSB.h; sourceTree = "<group>"; };
+		D4C78F63195201A900A1BE28 /* MotatePins.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotatePins.h; sourceTree = "<group>"; };
+		D4C78F64195201A900A1BE28 /* MotateSPI.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotateSPI.h; sourceTree = "<group>"; };
+		D4C78F65195201A900A1BE28 /* MotateTimers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotateTimers.h; sourceTree = "<group>"; };
+		D4C78F66195201A900A1BE28 /* MotateUSB.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotateUSB.h; sourceTree = "<group>"; };
+		D4C78F67195201A900A1BE28 /* MotateUSBCDC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotateUSBCDC.h; sourceTree = "<group>"; };
+		D4C78F68195201A900A1BE28 /* MotateUSBHelpers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotateUSBHelpers.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -3873,47 +3750,11 @@
 				D4C77F71195093ED00A1BE28 /* blink_demo.cpp */,
 				D4C77F72195093ED00A1BE28 /* blink_demo.h */,
 				D48F5A4B172CB1FA00D0E055 /* main.cpp */,
+				D4C78F52195201A900A1BE28 /* motate */,
 				D4C77F7B1951D32300A1BE28 /* cmsis */,
-				D45710C61705334000EA19A8 /* motate */,
 				D49EC3FB17054FDF00F2BF9B /* platform */,
 				D4C77F6D1950912300A1BE28 /* Tools.xcodeproj */,
 			);
-			sourceTree = "<group>";
-		};
-		D45710C61705334000EA19A8 /* motate */ = {
-			isa = PBXGroup;
-			children = (
-				D45710C71705334000EA19A8 /* keywords.txt */,
-				D4021F9C175DA4690099576C /* AvrUSB.cpp */,
-				D4550F5E175536DD006BDBA0 /* MotateUSB.h */,
-				D4550F60175549FD006BDBA0 /* MotateUSBCDC.h */,
-				D45710C81705334000EA19A8 /* MotatePins.h */,
-				D41FC0621826F21C003D66C2 /* MotateSPI.h */,
-				D45710C91705334000EA19A8 /* MotateTimers.h */,
-				D4CFA6D8172B65AD00D29A02 /* SamTimers.cpp */,
-				D43CAF9C187BABDB0042B58F /* SamPins.cpp */,
-				D4021F9A175DA4610099576C /* SamUSB.cpp */,
-				D478FB85185D7FD1004E35D2 /* SamSPI.cpp */,
-				D45710D51705334100EA19A8 /* utility */,
-			);
-			path = motate;
-			sourceTree = "<group>";
-		};
-		D45710D51705334100EA19A8 /* utility */ = {
-			isa = PBXGroup;
-			children = (
-				D4E2B2F017223FCB004A5C70 /* AvrTimers.h */,
-				D4E2B2F117223FCB004A5C70 /* SamTimers.h */,
-				D478FB84185D7C86004E35D2 /* SamCommon.h */,
-				D45710D61705334100EA19A8 /* AvrPins.h */,
-				D41FC0631826F29F003D66C2 /* SamSPI.h */,
-				D406801B1759B71100C593A3 /* AvrUSB.h */,
-				D45710D71705334100EA19A8 /* AvrXPins.h */,
-				D45710D81705334100EA19A8 /* SamPins.h */,
-				D41D14021737528200D522D9 /* SamUSB.h */,
-				D4550F5F175545F5006BDBA0 /* MotateUSBHelpers.h */,
-			);
-			path = utility;
 			sourceTree = "<group>";
 		};
 		D49EC3FB17054FDF00F2BF9B /* platform */ = {
@@ -3979,7 +3820,6 @@
 				D4C77F811951D32300A1BE28 /* core_cmFunc.h */,
 				D4C77F821951D32300A1BE28 /* core_cmInstr.h */,
 				D4C77F831951D32300A1BE28 /* TARGET_Atmel */,
-				D4C7875D1951D32400A1BE28 /* TARGET_Atmel-old */,
 				D4C787D71951D32400A1BE28 /* TARGET_Freescale */,
 				D4C7881A1951D32400A1BE28 /* TARGET_NORDIC */,
 				D4C7882A1951D32400A1BE28 /* TARGET_NXP */,
@@ -6984,176 +6824,6 @@
 			path = as_gcc;
 			sourceTree = "<group>";
 		};
-		D4C7875D1951D32400A1BE28 /* TARGET_Atmel-old */ = {
-			isa = PBXGroup;
-			children = (
-				D4C7875E1951D32400A1BE28 /* sam.h */,
-				D4C7875F1951D32400A1BE28 /* sam3.h */,
-				D4C787601951D32400A1BE28 /* sam3xa */,
-			);
-			path = "TARGET_Atmel-old";
-			sourceTree = "<group>";
-		};
-		D4C787601951D32400A1BE28 /* sam3xa */ = {
-			isa = PBXGroup;
-			children = (
-				D4C787611951D32400A1BE28 /* include */,
-				D4C787BC1951D32400A1BE28 /* system_sam3xa.c */,
-				D4C787BD1951D32400A1BE28 /* TOOLCHAIN_GCC_ARM */,
-			);
-			path = sam3xa;
-			sourceTree = "<group>";
-		};
-		D4C787611951D32400A1BE28 /* include */ = {
-			isa = PBXGroup;
-			children = (
-				D4C787621951D32400A1BE28 /* component */,
-				D4C787801951D32400A1BE28 /* instance */,
-				D4C787AB1951D32400A1BE28 /* pio */,
-				D4C787B31951D32400A1BE28 /* sam3a4c.h */,
-				D4C787B41951D32400A1BE28 /* sam3a8c.h */,
-				D4C787B51951D32400A1BE28 /* sam3x4c.h */,
-				D4C787B61951D32400A1BE28 /* sam3x4e.h */,
-				D4C787B71951D32400A1BE28 /* sam3x8c.h */,
-				D4C787B81951D32400A1BE28 /* sam3x8e.h */,
-				D4C787B91951D32400A1BE28 /* sam3x8h.h */,
-				D4C787BA1951D32400A1BE28 /* sam3xa.h */,
-				D4C787BB1951D32400A1BE28 /* system_sam3xa.h */,
-			);
-			path = include;
-			sourceTree = "<group>";
-		};
-		D4C787621951D32400A1BE28 /* component */ = {
-			isa = PBXGroup;
-			children = (
-				D4C787631951D32400A1BE28 /* component_adc.h */,
-				D4C787641951D32400A1BE28 /* component_can.h */,
-				D4C787651951D32400A1BE28 /* component_chipid.h */,
-				D4C787661951D32400A1BE28 /* component_dacc.h */,
-				D4C787671951D32400A1BE28 /* component_dmac.h */,
-				D4C787681951D32400A1BE28 /* component_efc.h */,
-				D4C787691951D32400A1BE28 /* component_emac.h */,
-				D4C7876A1951D32400A1BE28 /* component_gpbr.h */,
-				D4C7876B1951D32400A1BE28 /* component_hsmci.h */,
-				D4C7876C1951D32400A1BE28 /* component_matrix.h */,
-				D4C7876D1951D32400A1BE28 /* component_pdc.h */,
-				D4C7876E1951D32400A1BE28 /* component_pio.h */,
-				D4C7876F1951D32400A1BE28 /* component_pmc.h */,
-				D4C787701951D32400A1BE28 /* component_pwm.h */,
-				D4C787711951D32400A1BE28 /* component_rstc.h */,
-				D4C787721951D32400A1BE28 /* component_rtc.h */,
-				D4C787731951D32400A1BE28 /* component_rtt.h */,
-				D4C787741951D32400A1BE28 /* component_sdramc.h */,
-				D4C787751951D32400A1BE28 /* component_smc.h */,
-				D4C787761951D32400A1BE28 /* component_spi.h */,
-				D4C787771951D32400A1BE28 /* component_ssc.h */,
-				D4C787781951D32400A1BE28 /* component_supc.h */,
-				D4C787791951D32400A1BE28 /* component_tc.h */,
-				D4C7877A1951D32400A1BE28 /* component_trng.h */,
-				D4C7877B1951D32400A1BE28 /* component_twi.h */,
-				D4C7877C1951D32400A1BE28 /* component_uart.h */,
-				D4C7877D1951D32400A1BE28 /* component_uotghs.h */,
-				D4C7877E1951D32400A1BE28 /* component_usart.h */,
-				D4C7877F1951D32400A1BE28 /* component_wdt.h */,
-			);
-			path = component;
-			sourceTree = "<group>";
-		};
-		D4C787801951D32400A1BE28 /* instance */ = {
-			isa = PBXGroup;
-			children = (
-				D4C787811951D32400A1BE28 /* instance_adc.h */,
-				D4C787821951D32400A1BE28 /* instance_can0.h */,
-				D4C787831951D32400A1BE28 /* instance_can1.h */,
-				D4C787841951D32400A1BE28 /* instance_chipid.h */,
-				D4C787851951D32400A1BE28 /* instance_dacc.h */,
-				D4C787861951D32400A1BE28 /* instance_dmac.h */,
-				D4C787871951D32400A1BE28 /* instance_efc0.h */,
-				D4C787881951D32400A1BE28 /* instance_efc1.h */,
-				D4C787891951D32400A1BE28 /* instance_emac.h */,
-				D4C7878A1951D32400A1BE28 /* instance_gpbr.h */,
-				D4C7878B1951D32400A1BE28 /* instance_hsmci.h */,
-				D4C7878C1951D32400A1BE28 /* instance_matrix.h */,
-				D4C7878D1951D32400A1BE28 /* instance_pioa.h */,
-				D4C7878E1951D32400A1BE28 /* instance_piob.h */,
-				D4C7878F1951D32400A1BE28 /* instance_pioc.h */,
-				D4C787901951D32400A1BE28 /* instance_piod.h */,
-				D4C787911951D32400A1BE28 /* instance_pioe.h */,
-				D4C787921951D32400A1BE28 /* instance_piof.h */,
-				D4C787931951D32400A1BE28 /* instance_pmc.h */,
-				D4C787941951D32400A1BE28 /* instance_pwm.h */,
-				D4C787951951D32400A1BE28 /* instance_rstc.h */,
-				D4C787961951D32400A1BE28 /* instance_rtc.h */,
-				D4C787971951D32400A1BE28 /* instance_rtt.h */,
-				D4C787981951D32400A1BE28 /* instance_sdramc.h */,
-				D4C787991951D32400A1BE28 /* instance_smc.h */,
-				D4C7879A1951D32400A1BE28 /* instance_spi0.h */,
-				D4C7879B1951D32400A1BE28 /* instance_spi1.h */,
-				D4C7879C1951D32400A1BE28 /* instance_ssc.h */,
-				D4C7879D1951D32400A1BE28 /* instance_supc.h */,
-				D4C7879E1951D32400A1BE28 /* instance_tc0.h */,
-				D4C7879F1951D32400A1BE28 /* instance_tc1.h */,
-				D4C787A01951D32400A1BE28 /* instance_tc2.h */,
-				D4C787A11951D32400A1BE28 /* instance_trng.h */,
-				D4C787A21951D32400A1BE28 /* instance_twi0.h */,
-				D4C787A31951D32400A1BE28 /* instance_twi1.h */,
-				D4C787A41951D32400A1BE28 /* instance_uart.h */,
-				D4C787A51951D32400A1BE28 /* instance_uotghs.h */,
-				D4C787A61951D32400A1BE28 /* instance_usart0.h */,
-				D4C787A71951D32400A1BE28 /* instance_usart1.h */,
-				D4C787A81951D32400A1BE28 /* instance_usart2.h */,
-				D4C787A91951D32400A1BE28 /* instance_usart3.h */,
-				D4C787AA1951D32400A1BE28 /* instance_wdt.h */,
-			);
-			path = instance;
-			sourceTree = "<group>";
-		};
-		D4C787AB1951D32400A1BE28 /* pio */ = {
-			isa = PBXGroup;
-			children = (
-				D4C787AC1951D32400A1BE28 /* pio_sam3a4c.h */,
-				D4C787AD1951D32400A1BE28 /* pio_sam3a8c.h */,
-				D4C787AE1951D32400A1BE28 /* pio_sam3x4c.h */,
-				D4C787AF1951D32400A1BE28 /* pio_sam3x4e.h */,
-				D4C787B01951D32400A1BE28 /* pio_sam3x8c.h */,
-				D4C787B11951D32400A1BE28 /* pio_sam3x8e.h */,
-				D4C787B21951D32400A1BE28 /* pio_sam3x8h.h */,
-			);
-			path = pio;
-			sourceTree = "<group>";
-		};
-		D4C787BD1951D32400A1BE28 /* TOOLCHAIN_GCC_ARM */ = {
-			isa = PBXGroup;
-			children = (
-				D4C787BE1951D32400A1BE28 /* sam3a4_flash.ld */,
-				D4C787BF1951D32400A1BE28 /* sam3a4_sram.ld */,
-				D4C787C01951D32400A1BE28 /* sam3a4c_flash.ld */,
-				D4C787C11951D32400A1BE28 /* sam3a4c_sram.ld */,
-				D4C787C21951D32400A1BE28 /* sam3a8_flash.ld */,
-				D4C787C31951D32400A1BE28 /* sam3a8_sram.ld */,
-				D4C787C41951D32400A1BE28 /* sam3a8c_flash.ld */,
-				D4C787C51951D32400A1BE28 /* sam3a8c_sram.ld */,
-				D4C787C61951D32400A1BE28 /* sam3a_flash.ld */,
-				D4C787C71951D32400A1BE28 /* sam3a_sram.ld */,
-				D4C787C81951D32400A1BE28 /* sam3x4_flash.ld */,
-				D4C787C91951D32400A1BE28 /* sam3x4_sram.ld */,
-				D4C787CA1951D32400A1BE28 /* sam3x4c_flash.ld */,
-				D4C787CB1951D32400A1BE28 /* sam3x4c_sram.ld */,
-				D4C787CC1951D32400A1BE28 /* sam3x4e_flash.ld */,
-				D4C787CD1951D32400A1BE28 /* sam3x4e_sram.ld */,
-				D4C787CE1951D32400A1BE28 /* sam3x8_flash.ld */,
-				D4C787CF1951D32400A1BE28 /* sam3x8_sram.ld */,
-				D4C787D01951D32400A1BE28 /* sam3x8c_flash.ld */,
-				D4C787D11951D32400A1BE28 /* sam3x8c_sram.ld */,
-				D4C787D21951D32400A1BE28 /* sam3x8e_flash.ld */,
-				D4C787D31951D32400A1BE28 /* sam3x8e_sram.ld */,
-				D4C787D41951D32400A1BE28 /* sam3x8h_flash.ld */,
-				D4C787D51951D32400A1BE28 /* sam3x8h_sram.ld */,
-				D4C787D61951D32400A1BE28 /* startup_sam3xa.c */,
-			);
-			path = TOOLCHAIN_GCC_ARM;
-			sourceTree = "<group>";
-		};
 		D4C787D71951D32400A1BE28 /* TARGET_Freescale */ = {
 			isa = PBXGroup;
 			children = (
@@ -9391,6 +9061,49 @@
 			path = TOOLCHAIN_GCC_ARM;
 			sourceTree = "<group>";
 		};
+		D4C78F52195201A900A1BE28 /* motate */ = {
+			isa = PBXGroup;
+			children = (
+				D4C78F53195201A900A1BE28 /* Atmel_avr */,
+				D4C78F59195201A900A1BE28 /* Atmel_sam3xa */,
+				D4C78F63195201A900A1BE28 /* MotatePins.h */,
+				D4C78F64195201A900A1BE28 /* MotateSPI.h */,
+				D4C78F65195201A900A1BE28 /* MotateTimers.h */,
+				D4C78F66195201A900A1BE28 /* MotateUSB.h */,
+				D4C78F67195201A900A1BE28 /* MotateUSBCDC.h */,
+				D4C78F68195201A900A1BE28 /* MotateUSBHelpers.h */,
+			);
+			path = motate;
+			sourceTree = "<group>";
+		};
+		D4C78F53195201A900A1BE28 /* Atmel_avr */ = {
+			isa = PBXGroup;
+			children = (
+				D4C78F54195201A900A1BE28 /* AvrPins.h */,
+				D4C78F55195201A900A1BE28 /* AvrTimers.h */,
+				D4C78F56195201A900A1BE28 /* AvrUSB.cpp */,
+				D4C78F57195201A900A1BE28 /* AvrUSB.h */,
+				D4C78F58195201A900A1BE28 /* AvrXPins.h */,
+			);
+			path = Atmel_avr;
+			sourceTree = "<group>";
+		};
+		D4C78F59195201A900A1BE28 /* Atmel_sam3xa */ = {
+			isa = PBXGroup;
+			children = (
+				D4C78F5A195201A900A1BE28 /* SamCommon.h */,
+				D4C78F5B195201A900A1BE28 /* SamPins.cpp */,
+				D4C78F5C195201A900A1BE28 /* SamPins.h */,
+				D4C78F5D195201A900A1BE28 /* SamSPI.cpp */,
+				D4C78F5E195201A900A1BE28 /* SamSPI.h */,
+				D4C78F5F195201A900A1BE28 /* SamTimers.cpp */,
+				D4C78F60195201A900A1BE28 /* SamTimers.h */,
+				D4C78F61195201A900A1BE28 /* SamUSB.cpp */,
+				D4C78F62195201A900A1BE28 /* SamUSB.h */,
+			);
+			path = Atmel_sam3xa;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXLegacyTarget section */
@@ -9469,7 +9182,6 @@
 				D4C78D451951D32500A1BE28 /* startup_LPC11xx.s in Sources */,
 				D4C78CF71951D32500A1BE28 /* startup_sam3s.c in Sources */,
 				D4C78EA21951D32600A1BE28 /* stm32f4xx_hal_adc.c in Sources */,
-				D4021F9B175DA4610099576C /* SamUSB.cpp in Sources */,
 				D4C78D6E1951D32500A1BE28 /* sys.cpp in Sources */,
 				D4C78DC71951D32600A1BE28 /* startup_stm32f10x_md_vl.s in Sources */,
 				D4C78EF11951D32600A1BE28 /* stm32l0xx_hal_irda.c in Sources */,
@@ -9499,11 +9211,11 @@
 				D4C78D591951D32500A1BE28 /* sys.cpp in Sources */,
 				D4C78E491951D32600A1BE28 /* stm32f0xx_hal_i2c_ex.c in Sources */,
 				D4C78DDC1951D32600A1BE28 /* stm32f30x_syscfg.c in Sources */,
+				D4C78F6B195201A900A1BE28 /* SamSPI.cpp in Sources */,
 				D4C78EB41951D32600A1BE28 /* stm32f4xx_hal_hash_ex.c in Sources */,
 				D4C78E081951D32600A1BE28 /* stm32f4xx_hal_rtc.c in Sources */,
 				D4C78DA51951D32500A1BE28 /* stm32f0xx_rcc.c in Sources */,
 				D4C78D021951D32500A1BE28 /* system_sam4c32.c in Sources */,
-				D43A458B185A4AF600B3C134 /* SamSPI.h in Sources */,
 				D4C78EE91951D32600A1BE28 /* stm32l0xx_hal_dma.c in Sources */,
 				D4C78DDF1951D32600A1BE28 /* stm32f30x_wwdg.c in Sources */,
 				D4C78D571951D32500A1BE28 /* startup_LPC11xx.cpp in Sources */,
@@ -9573,6 +9285,7 @@
 				D4C78E981951D32600A1BE28 /* stm32f30x_tim.c in Sources */,
 				D4C78D911951D32500A1BE28 /* system_LPC8xx.c in Sources */,
 				D4C78ED11951D32600A1BE28 /* stm32f4xx_hal_usart.c in Sources */,
+				D4C78F6A195201A900A1BE28 /* SamPins.cpp in Sources */,
 				D4C78DFC1951D32600A1BE28 /* stm32f4xx_hal_irda.c in Sources */,
 				D4C78EB61951D32600A1BE28 /* stm32f4xx_hal_i2c.c in Sources */,
 				D4C78E131951D32600A1BE28 /* stm32f4xx_hal_usart.c in Sources */,
@@ -9602,13 +9315,13 @@
 				D4C78D8C1951D32500A1BE28 /* startup_LPC43xx.cpp in Sources */,
 				D4C78F1C1951D32600A1BE28 /* stm32l1xx_gpio.c in Sources */,
 				D4C78F131951D32600A1BE28 /* stm32l1xx_comp.c in Sources */,
-				D478FB87185D7FD1004E35D2 /* SamSPI.cpp in Sources */,
 				D4C78EAA1951D32600A1BE28 /* stm32f4xx_hal_dac_ex.c in Sources */,
 				D4C78D841951D32500A1BE28 /* sys_helper.cpp in Sources */,
 				D4C78EA51951D32600A1BE28 /* stm32f4xx_hal_cortex.c in Sources */,
 				D4C78EB01951D32600A1BE28 /* stm32f4xx_hal_flash.c in Sources */,
 				D4C78E3F1951D32600A1BE28 /* stm32f0xx_hal_cortex.c in Sources */,
 				D4C78E661951D32600A1BE28 /* misc.c in Sources */,
+				D4C78F6D195201A900A1BE28 /* SamUSB.cpp in Sources */,
 				D4C78EE11951D32600A1BE28 /* stm32l0xx_hal_adc_ex.c in Sources */,
 				D4C78EBD1951D32600A1BE28 /* stm32f4xx_hal_nand.c in Sources */,
 				D4C78F1F1951D32600A1BE28 /* stm32l1xx_lcd.c in Sources */,
@@ -9625,7 +9338,6 @@
 				D4C78D421951D32500A1BE28 /* startup_LPC11xx.s in Sources */,
 				D4C78E2F1951D32600A1BE28 /* stm32f0xx_syscfg.c in Sources */,
 				D4C78E6D1951D32600A1BE28 /* stm32f10x_dbgmcu.c in Sources */,
-				D4C78D1E1951D32500A1BE28 /* startup_sam3xa.c in Sources */,
 				D4C78ED21951D32600A1BE28 /* stm32f4xx_hal_wwdg.c in Sources */,
 				D4C78F4F1951D32600A1BE28 /* startup_STM32F40x.s in Sources */,
 				D4C78E911951D32600A1BE28 /* stm32f30x_misc.c in Sources */,
@@ -9673,7 +9385,6 @@
 				D4C78E541951D32600A1BE28 /* stm32f0xx_hal_rtc_ex.c in Sources */,
 				D4C78DE51951D32600A1BE28 /* stm32f4xx_hal_adc_ex.c in Sources */,
 				D4C78ED41951D32600A1BE28 /* stm32f4xx_ll_fsmc.c in Sources */,
-				D457113017053C3A00EA19A8 /* MotateTimers.h in Sources */,
 				D4C78D601951D32500A1BE28 /* startup_LPC13xx.s in Sources */,
 				D4C78D501951D32500A1BE28 /* sys.cpp in Sources */,
 				D4C78DCB1951D32600A1BE28 /* stm32f30x_comp.c in Sources */,
@@ -9692,7 +9403,6 @@
 				D4C78DA81951D32500A1BE28 /* stm32f0xx_syscfg.c in Sources */,
 				D4C78EDA1951D32600A1BE28 /* startup_stm32f401xe.s in Sources */,
 				D4C78D7B1951D32500A1BE28 /* vector_functions.s in Sources */,
-				D457113117053C3A00EA19A8 /* AvrPins.h in Sources */,
 				D4C78E141951D32600A1BE28 /* stm32f4xx_hal_wwdg.c in Sources */,
 				D4C78D5E1951D32500A1BE28 /* startup_LPC13xx.s in Sources */,
 				D4C78D311951D32500A1BE28 /* system_MKL46Z4.c in Sources */,
@@ -9768,7 +9478,6 @@
 				D4C78E811951D32600A1BE28 /* sys.cpp in Sources */,
 				D4C78D291951D32500A1BE28 /* system_MKL05Z4.c in Sources */,
 				D4C78E0F1951D32600A1BE28 /* stm32f4xx_hal_sram.c in Sources */,
-				D457113217053C3A00EA19A8 /* AvrXPins.h in Sources */,
 				D4C78F461951D32600A1BE28 /* stm32f30x_wwdg.c in Sources */,
 				D4C78D0B1951D32500A1BE28 /* startup_sam4l.c in Sources */,
 				D4C78DE91951D32600A1BE28 /* stm32f4xx_hal_cryp.c in Sources */,
@@ -9810,6 +9519,7 @@
 				D4C78DBE1951D32500A1BE28 /* stm32f10x_pwr.c in Sources */,
 				D4C78EFF1951D32600A1BE28 /* stm32l0xx_hal_smartcard_ex.c in Sources */,
 				D4C78E121951D32600A1BE28 /* stm32f4xx_hal_uart.c in Sources */,
+				D4C78F69195201A900A1BE28 /* AvrUSB.cpp in Sources */,
 				D4C78E941951D32600A1BE28 /* stm32f30x_rcc.c in Sources */,
 				D4C78EAF1951D32600A1BE28 /* stm32f4xx_hal_eth.c in Sources */,
 				D4C78E371951D32600A1BE28 /* sys.cpp in Sources */,
@@ -9846,8 +9556,8 @@
 				D4C78EC91951D32600A1BE28 /* stm32f4xx_hal_sd.c in Sources */,
 				D4C78E021951D32600A1BE28 /* stm32f4xx_hal_pcd.c in Sources */,
 				D4C78F171951D32600A1BE28 /* stm32l1xx_dma.c in Sources */,
-				D457113317053C3A00EA19A8 /* SamPins.h in Sources */,
 				D4C78EAE1951D32600A1BE28 /* stm32f4xx_hal_dma_ex.c in Sources */,
+				D4C78F6C195201A900A1BE28 /* SamTimers.cpp in Sources */,
 				D4C78DA01951D32500A1BE28 /* stm32f0xx_gpio.c in Sources */,
 				D4C78CF81951D32500A1BE28 /* system_sam3s.c in Sources */,
 				D4C78E9F1951D32600A1BE28 /* sys.cpp in Sources */,
@@ -9875,7 +9585,6 @@
 				D4C78DEB1951D32600A1BE28 /* stm32f4xx_hal_dac.c in Sources */,
 				D4C78E951951D32600A1BE28 /* stm32f30x_rtc.c in Sources */,
 				D4C78F221951D32600A1BE28 /* stm32l1xx_rcc.c in Sources */,
-				D43CAF9E187BABDB0042B58F /* SamPins.cpp in Sources */,
 				D4C78D741951D32500A1BE28 /* vector_functions.s in Sources */,
 				D4C78F431951D32600A1BE28 /* stm32f30x_syscfg.c in Sources */,
 				D4C78F281951D32600A1BE28 /* stm32l1xx_usart.c in Sources */,
@@ -9899,7 +9608,6 @@
 				D4C78DF61951D32600A1BE28 /* stm32f4xx_hal_hash_ex.c in Sources */,
 				D4C78F4E1951D32600A1BE28 /* system_stm32f4xx.c in Sources */,
 				D4C78E5A1951D32600A1BE28 /* stm32f0xx_hal_tim_ex.c in Sources */,
-				D4CFA6D9172B65AD00D29A02 /* SamTimers.cpp in Sources */,
 				D4C78DF41951D32600A1BE28 /* stm32f4xx_hal_gpio.c in Sources */,
 				D4C78DB31951D32500A1BE28 /* stm32f10x_cec.c in Sources */,
 				D4C78E071951D32600A1BE28 /* stm32f4xx_hal_rng.c in Sources */,
@@ -9999,7 +9707,6 @@
 				D4C78E3E1951D32600A1BE28 /* stm32f0xx_hal_comp.c in Sources */,
 				D4C78D751951D32500A1BE28 /* vector_table.s in Sources */,
 				D4C78DE71951D32600A1BE28 /* stm32f4xx_hal_cortex.c in Sources */,
-				D4021F9D175DA4690099576C /* AvrUSB.cpp in Sources */,
 				D4C78EE41951D32600A1BE28 /* stm32l0xx_hal_crc.c in Sources */,
 				D4021FA3175E37BF0099576C /* cortex_handlers.c in Sources */,
 				D4C78D801951D32500A1BE28 /* cmsis_nvic.c in Sources */,
@@ -10035,7 +9742,6 @@
 				D4C78D2B1951D32500A1BE28 /* cmsis_nvic.c in Sources */,
 				D4C78E091951D32600A1BE28 /* stm32f4xx_hal_rtc_ex.c in Sources */,
 				D4C78D0A1951D32500A1BE28 /* system_sam4e.c in Sources */,
-				D4C78D1D1951D32500A1BE28 /* system_sam3xa.c in Sources */,
 				D4C78D941951D32500A1BE28 /* cmsis_nvic.c in Sources */,
 				D4C78D401951D32500A1BE28 /* startup_LPC11xx.s in Sources */,
 				D4C78DED1951D32600A1BE28 /* stm32f4xx_hal_dcmi.c in Sources */,
@@ -10148,8 +9854,8 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					"\"$(SRCROOT)/CMSIS/CMSIS/Lib/ARM\"",
-					"\"$(SRCROOT)/CMSIS/CMSIS/Lib/GCC\"",
+					"\"$(SRCROOT)/motate\"",
+					"$(SRCROOT)/motate/Atmel_sam3xa\" \"$(SRCROOT)/cmsis/TARGET_Atmel\" \"$(SRCROOT)/cmsis/TARGET_Atmel/sam3xa\"",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				ONLY_ACTIVE_ARCH = YES;
@@ -10184,8 +9890,8 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					"\"$(SRCROOT)/CMSIS/CMSIS/Lib/ARM\"",
-					"\"$(SRCROOT)/CMSIS/CMSIS/Lib/GCC\"",
+					"\"$(SRCROOT)/motate\"",
+					"$(SRCROOT)/motate/Atmel_sam3xa\" \"$(SRCROOT)/cmsis/TARGET_Atmel\" \"$(SRCROOT)/cmsis/TARGET_Atmel/sam3xa\"",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				OTHER_CFLAGS = (

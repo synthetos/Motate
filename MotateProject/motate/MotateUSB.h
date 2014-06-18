@@ -31,22 +31,22 @@
 #ifndef MOTATEUSB_ONCE
 #define MOTATEUSB_ONCE
 
-#include "utility/MotateUSBHelpers.h"
+#include "MotateUSBHelpers.h"
 
 #ifdef __AVR_XMEGA__
 
-#include <utility/AvrXUSB.h>
+#include <Atmel_avr/AvrXUSB.h>
 
 #else
 
 #ifdef __AVR__
-#include <utility/AvrUSB.h>
+#include <Atmel_avr/AvrUSB.h>
 #endif
 
 #endif
 
 #if defined(__SAM3X8E__) || defined(__SAM3X8C__)
-#include <utility/SamUSB.h>
+#include <Atmel_sam3xa/SamUSB.h>
 #endif
 
 namespace Motate {

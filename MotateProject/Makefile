@@ -31,9 +31,11 @@
 # Start of default section
 #
 
-PROJECT  = TinyG2
+PROJECT  = MotateProject
 
-SOURCE_DIRS = . motate
+MOTATE_PATH ?= motate
+
+SOURCE_DIRS = . "${MOTATE_PATH}"
 # arduino arduino/USB variants
 
 FIRST_LINK_SOURCES :=
@@ -59,6 +61,7 @@ CPPFLAGS :=
 ASRC =
 
 DEFAULT_MEMORY = flash
+
 
 # ---------------------------------------------------------------------------------------
 # C Flags (NOT CPP Flags)
@@ -110,6 +113,7 @@ CPPFLAGS += -Wno-format-nonliteral -Wno-format-security
 # To show actual commands: make [options] VERBOSE=1
 VERBOSE ?= 0
 COLOR ?= 1
+
 ifeq ($(VERBOSE),0)
 QUIET := @
 else
@@ -117,12 +121,12 @@ QUIET :=
 endif
 
 ifeq ($(COLOR),1)
-START_BOLD="\033[1m"
-END_BOLD="\033[0m"
-NO_COLOR="\033[0m"
-OK_COLOR="\033[32;01m"
-ERROR_COLOR="\033[31;01m"
-WARN_COLOR="\033[33;01m"
+START_BOLD=`tput bold`
+END_BOLD=`tput sgr0`
+NO_COLOR=`tput setaf 0`
+OK_COLOR=`tput setaf 2`
+ERROR_COLOR=`tput setaf 1`
+WARN_COLOR=`tput setaf 3`
 else
 QUIET :=
 endif
@@ -171,7 +175,8 @@ endif
 
 ifeq ("$(BASE_PLATFORM)","due")
 	_PLATFORM_FOUND = 1
-	FIRST_LINK_SOURCES += motate/SamTimers.cpp motate/SamUSB.cpp motate/SamPins.cpp
+	#FIRST_LINK_SOURCES += ${MOTATE_PATH}/SamTimers.cpp ${MOTATE_PATH}/SamUSB.cpp ${MOTATE_PATH}/SamPins.cpp
+	FIRST_LINK_SOURCES += $(wildcard ${MOTATE_PATH}/Atmel_sam3xa/*.cpp)
 
 	CHIP = SAM3X8E
     PLATFORM_BASE = platform/atmel_sam
@@ -301,6 +306,7 @@ REQUIRED_DIRS := $(BIN) $(OBJ) $(DEPDIR)
 MK_DIRS =   $(shell                              \
               for d in $(REQUIRED_DIRS);         \
               do                                 \
+				echo "Checking for $${d}"        \
                 [[ -d $$d ]] || mkdir -p $$d;    \
               done)
 
@@ -337,7 +343,7 @@ ALL_ASM_OBJECTS_$(1) += $$(ASM_OBJECTS_$(1))
 $(1): $(OUTPUT_BIN)_$(1).elf
 
 $(OUTPUT_BIN)_$(1).elf: $$(OUTDIR)/core.a $$(DEVICE_OBJECTS_$(1))
-	@echo $(START_BOLD)"Linking $(OUTPUT_BIN)_$(1).elf" $(END_BOLD)
+	@echo $$(START_BOLD)"Linking $(OUTPUT_BIN)_$(1).elf" $$(END_BOLD)
 	@echo $(START_BOLD)"Using linker script: $$(ABS_LINKER_SCRIPT_$(1))" $(END_BOLD)
 	$(QUIET)$(CXX) $(LIB_PATH) -T"$$(ABS_LINKER_SCRIPT_$(1))" -Wl,-Map,"$(OUTPUT_BIN)_$(1).map" -o $$@ $(LDFLAGS) $(LD_OPTIONAL) $(LIBS) -Wl,--start-group $$(FIRST_LINK_OBJECTS_$(1)) $$+ -Wl,--end-group
 	@echo $(START_BOLD)"Exporting symbols $(OUTPUT_BIN)_$(1).elf.txt" $(END_BOLD)

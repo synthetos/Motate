@@ -30,7 +30,7 @@
 
 #if defined(__SAM3X8E__) || defined(__SAM3X8C__)
 
-#include "utility/SamUSB.h"
+#include "Atmel_sam3xa/SamUSB.h"
 
 #define TRACE_CORE(x)
 

@@ -30,7 +30,7 @@
 
 #if defined(__SAM3X8E__) || defined(__SAM3X8C__)
 
-#include "utility/SamTimers.h"
+#include "Atmel_sam3xa/SamTimers.h"
 #include "Reset.h"
 
 namespace Motate {

@@ -63,18 +63,18 @@ namespace Motate {
 
 #ifdef __AVR_XMEGA__
 
-#include <utility/AvrXTimers.h>
+#include <Atmel_avr/AvrXTimers.h>
 
 #else
 
 #ifdef __AVR__
-#include <utility/AvrTimers.h>
+#include <Atmel_avr/AvrTimers.h>
 #endif
 
 #endif
 
 #if defined(__SAM3X8E__) || defined(__SAM3X8C__)
-#include <utility/SamTimers.h>
+#include <Atmel_sam3xa/SamTimers.h>
 #endif
 
 

@@ -30,7 +30,7 @@
 
 #if defined(__SAM3X8E__) || defined(__SAM3X8C__)
 
-#include "utility/SamSPI.h"
+#include "Atmel_sam3xa/SamSPI.h"
 
 namespace Motate {
 //	template<> Spi * const     _SPIHardware<0u, kSPI_MISOPinNumber, kSPI_MOSIPinNumber, kSPI_SCKPinNumber>::spi()          { return SPI0; };

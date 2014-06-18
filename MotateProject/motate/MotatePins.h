@@ -45,18 +45,18 @@ namespace Motate {
 
 #ifdef __AVR_XMEGA__
 
-#include <utility/AvrXPins.h>
+#include <Atmel_avr/AvrXPins.h>
 
 #else
 
 #ifdef __AVR__
-#include <utility/AvrPins.h>
+#include <Atmel_avr/AvrPins.h>
 #endif
 
 #endif
 
 #if defined(__SAM3X8E__) || defined(__SAM3X8C__)
-#include <utility/SamPins.h>
+#include <Atmel_sam3xa/SamPins.h>
 #endif
 
 #endif /* end of include guard: MOTATEPINS_H_ONCE */

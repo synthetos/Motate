@@ -31,7 +31,7 @@
 #ifndef MOTATEUSBCDC_ONCE
 #define MOTATEUSBCDC_ONCE
 
-#include "utility/MotateUSBHelpers.h"
+#include "MotateUSBHelpers.h"
 #include "Reset.h"
 
 namespace Motate {
