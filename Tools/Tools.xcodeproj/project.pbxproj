@@ -43,6 +43,7 @@
 		D4C77F611950912300A1BE28 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
+				LastUpgradeCheck = 0510;
 			};
 			buildConfigurationList = D4C77F641950912300A1BE28 /* Build configuration list for PBXProject "Tools" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -64,6 +65,7 @@
 		D4C77F621950912300A1BE28 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ONLY_ACTIVE_ARCH = YES;
 			};
 			name = Debug;
 		};
