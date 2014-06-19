@@ -68,6 +68,10 @@ else ifeq ($(CHIP),$(findstring $(CHIP), $(SAM4S)))
 BOARD:=SAM4S_EK
 SERIES:=sam4s
 
+else
+
+$(error $(CHIP) is not a known Atmel processor.)
+
 endif
 
 # GCC toolchain provider
@@ -113,9 +117,13 @@ DEVICE_CFLAGS := -D__$(CHIP)__ --param max-inline-insns-single=500 -mcpu=cortex-
 DEVICE_CPPFLAGS := -D__$(CHIP)__ --param max-inline-insns-single=500 -mcpu=cortex-m3 -mthumb -mlong-calls -ffunction-sections -fdata-sections -fno-rtti -fno-exceptions -u _printf_float
 
 # ---------------------------------------------------------------------------------------
-# Linker Flags
-
-DEVICE_LDFLAGS := -nostartfiles -mcpu=cortex-m3 --specs=nano.specs  -u _printf_float  -mthumb 
+# Assembly Flags
 
 DEVICE_ASFLAGS  := -D__$(CHIP)__ -mcpu=cortex-m3 -mthumb
+
+# ---------------------------------------------------------------------------------------
+# Linker Flags
+
+DEVICE_LINKER_SCRIPT = $(DEVICE_PATH)/source/$(GCC_TOOLCHAIN)/$(CHIP_LOWERCASE)_flash.ld
+DEVICE_LDFLAGS := -nostartfiles -mcpu=cortex-m3 --specs=nano.specs -u _printf_float -mthumb -L $(DEVICE_PATH)/source/$(GCC_TOOLCHAIN)/
 

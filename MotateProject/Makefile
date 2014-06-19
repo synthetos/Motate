@@ -179,6 +179,7 @@ ifeq ("$(BASE_PLATFORM)","due")
 	FIRST_LINK_SOURCES += $(wildcard ${MOTATE_PATH}/Atmel_sam3xa/*.cpp)
 
 	CHIP = SAM3X8E
+	CHIP_LOWERCASE = sam3x8e
     PLATFORM_BASE = platform/atmel_sam
 
 	DEVICE_INCLUDE_DIRS += $(PLATFORM_BASE)/board/due
@@ -325,7 +326,9 @@ REQUIRED_DIRS += $(OUTDIR)
 C_OBJECTS_$(1) := $(addprefix $$(OUTDIR)/,$(C_OBJECTS))
 CXX_OBJECTS_$(1) := $(addprefix $$(OUTDIR)/,$(CXX_OBJECTS))
 ASM_OBJECTS_$(1) := $(addprefix $$(OUTDIR)/,$(ASM_OBJECTS))
-LINKER_SCRIPT_$(1) ?= $(PLATFORM_BASE)/gcc_$(1).ld
+#LINKER_SCRIPT_$(1) ?= $(PLATFORM_BASE)/gcc_$(1).ld
+MEMORY_TYPE := $(1)
+LINKER_SCRIPT_$(1) := $(DEVICE_LINKER_SCRIPT)
 ABS_LINKER_SCRIPT_$(1) = $(abspath $$(LINKER_SCRIPT_$(1)))
 FIRST_LINK_OBJECTS_$(1) := $(addprefix $$(OUTDIR)/,$(FIRST_LINK_OBJECTS))
 
