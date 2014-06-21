@@ -417,7 +417,7 @@ namespace Motate {
 						if (!getDTR())
 							initiateReset(250);
 						else
-							 cancelReset();
+							cancelReset();
 					}
 
 					return true;

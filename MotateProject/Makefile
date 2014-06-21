@@ -169,6 +169,13 @@ ifeq ("$(PLATFORM)","Due")
 	DEVICE_DEFINES += MOTATE_CONFIG_HAS_USBSERIAL=1
 endif
 
+ifeq ("$(PLATFORM)","FRDM-KL05Z")
+
+BASE_PLATFORM=frdm-kl05z
+DEVICE_DEFINES += MOTATE_BOARD="FRDM-KL05Z"
+endif
+
+
 ifeq ("$(BASE_PLATFORM)","")
 	BASE_PLATFORM = $(PLATFORM)
 endif
@@ -183,6 +190,19 @@ ifeq ("$(BASE_PLATFORM)","due")
     PLATFORM_BASE = platform/atmel_sam
 
 	DEVICE_INCLUDE_DIRS += $(PLATFORM_BASE)/board/due
+
+	include $(PLATFORM_BASE).mk
+endif
+
+ifeq ("$(BASE_PLATFORM)","frdm-kl05z")
+	_PLATFORM_FOUND = 1
+	FIRST_LINK_SOURCES += $(wildcard ${MOTATE_PATH}/Freescale_klxx/*.cpp)
+
+	CHIP = MKL05Z32VFM4
+	CHIP_LOWERCASE = mkl05z32vfm4
+    PLATFORM_BASE = platform/freescale_klxx
+
+	DEVICE_INCLUDE_DIRS += $(PLATFORM_BASE)/board/frdm
 
 	include $(PLATFORM_BASE).mk
 endif
@@ -260,9 +280,11 @@ LDFLAGS += $(LIBS) $(USER_LIBS) -Wl,--cref -Wl,--check-sections -Wl,--gc-section
 
 C_SOURCES   = $(foreach dir, $(SOURCE_DIRS), $(wildcard $(dir)/*.c) )
 CXX_SOURCES = $(foreach dir, $(SOURCE_DIRS), $(wildcard $(dir)/*.cpp) )
+ASM_SOURCES = $(foreach dir, $(SOURCE_DIRS), $(wildcard $(dir)/*.s) )
 
 C_OBJECTS   := $(addsuffix .o,$(basename $(C_SOURCES)))
 CXX_OBJECTS := $(addsuffix .o,$(basename $(CXX_SOURCES)))
+ASM_OBJECTS := $(addsuffix .o,$(basename $(ASM_SOURCES)))
 FIRST_LINK_OBJECTS = $(addsuffix .o,$(basename $(FIRST_LINK_SOURCES)))
 
 # Append OBJ and BIN directories to output filename

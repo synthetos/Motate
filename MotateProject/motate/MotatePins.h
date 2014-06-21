@@ -59,4 +59,8 @@ namespace Motate {
 #include <Atmel_sam3xa/SamPins.h>
 #endif
 
+#if defined(__KL05Z__)
+#include <Freescale_klxx/KL05ZPins.h>
+#endif
+
 #endif /* end of include guard: MOTATEPINS_H_ONCE */

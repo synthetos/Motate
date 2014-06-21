@@ -98,7 +98,7 @@ void _system_init(void)
 {
 	// WHAT!?!
 	// Disable watchdog
-	WDT->WDT_MR = WDT_MR_WDDIS;
+//	WDT->WDT_MR = WDT_MR_WDDIS;
 
 	// Initialize C library
 #ifdef MOTATE_CONFIG_HAS_USBSERIAL

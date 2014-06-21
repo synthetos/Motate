@@ -15,8 +15,22 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "D45710C21705330C00EA19A8"
-               BuildableName = "TinyG2 Due"
+               BuildableName = "Motate Due"
                BlueprintName = "Motate Due"
+               ReferencedContainer = "container:Motate.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "NO"
+            buildForRunning = "YES"
+            buildForProfiling = "NO"
+            buildForArchiving = "NO"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "D4C78F731954DFAF00A1BE28"
+               BuildableName = "Motate FRDM-KL05Z"
+               BlueprintName = "Motate FRDM-KL05Z"
                ReferencedContainer = "container:Motate.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -29,15 +43,6 @@
       buildConfiguration = "Debug">
       <Testables>
       </Testables>
-      <MacroExpansion>
-         <BuildableReference
-            BuildableIdentifier = "primary"
-            BlueprintIdentifier = "D457112317053BFB00EA19A8"
-            BuildableName = "index"
-            BlueprintName = "index"
-            ReferencedContainer = "container:Motate.xcodeproj">
-         </BuildableReference>
-      </MacroExpansion>
    </TestAction>
    <LaunchAction
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"

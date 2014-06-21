@@ -77,5 +77,8 @@ namespace Motate {
 #include <Atmel_sam3xa/SamTimers.h>
 #endif
 
+#if defined(__KL05Z__)
+#include <Freescale_klxx/KL05ZTimers.h>
+#endif
 
 #endif /* end of include guard: MOTATETIMERS_H_ONCE */

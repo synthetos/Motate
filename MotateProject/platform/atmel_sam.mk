@@ -1,4 +1,8 @@
 # ----------------------------------------------------------------------------
+# This file is part of the Motate project. It is heavily modified from a file
+# that contained this original copyright:
+
+# ----------------------------------------------------------------------------
 #         ATMEL Microcontroller Software Support
 # ----------------------------------------------------------------------------
 # Copyright (c) 2010, Atmel Corporation
