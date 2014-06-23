@@ -39,8 +39,6 @@ KL05Z32 = MKL05Z32VFK4 MKL05Z32VLC4 MKL05Z32VFM4 MKL05Z32VLF4
 
 KL05Z_UNLINKABLE = $(KL05Z8) $(KL05Z16)
 
-include platform/make_utilities.mk
-
 # fill the needed variables
 ifeq ($(CHIP),$(findstring $(CHIP), $(KL05Z_UNLINKABLE)))
 
@@ -57,56 +55,33 @@ $(error $(CHIP) is not a known Atmel processor.)
 
 endif
 
+
+
 # GCC toolchain provider
 GCC_TOOLCHAIN = TOOLCHAIN_GCC_ARM
 
 # Toolchain prefix when cross-compiling
 CROSS_COMPILE = arm-none-eabi
 
-# Defines which are the available memory targets for the device.
-MEMORIES = flash
-
-CMSIS_PATH  = $(CMSIS_ROOT)
 KLXX_PATH   = $(CMSIS_ROOT)/TARGET_Freescale/TARGET_KLXX/TARGET_KL05Z
 DEVICE_PATH = $(KLXX_PATH)
 
 KLXX_SOURCE_DIRS += $(MOTATE_PATH)/Freescale_klxx
 KLXX_SOURCE_DIRS += $(DEVICE_PATH)
 KLXX_SOURCE_DIRS += $(DEVICE_PATH)/$(GCC_TOOLCHAIN)
-KLXX_SOURCE_DIRS += platform/freescale_klxx
-FIRST_LINK_SOURCES += platform/freescale_klxx/syscalls_sam3.c
+KLXX_SOURCE_DIRS += $(MOTATE_PATH)/platform/freescale_klxx
+FIRST_LINK_SOURCES += $(MOTATE_PATH)/platform/freescale_klxx/syscalls.c
 
 DEVICE_RULES = $(call CREATE_DEVICE_LIBRARY,KLXX,cmsis_klxx)
 
 # Flags
-DEVICE_INCLUDE_DIRS += $(CMSIS_PATH)
+DEVICE_INCLUDE_DIRS += $(CMSIS_ROOT)
 DEVICE_INCLUDE_DIRS += $(KLXX_PATH)
 DEVICE_INCLUDE_DIRS += $(MOTATE_PATH)/Freescale_klxx
-#DEVICE_INCLUDE_DIRS += platform/atmel_sam
 
-DEVICE_LIBS          = gcc c
 
 CPU_DEV = cortex-m0plus
 
-# ---------------------------------------------------------------------------------------
-# C Flags (NOT CPP flags)
-
-DEVICE_CFLAGS := -D__$(CHIP)__ -D__$(CHIP_SERIES)__ --param max-inline-insns-single=500 -mcpu=$(CPU_DEV) -mthumb -mlong-calls -ffunction-sections -fdata-sections -nostdlib -std=gnu99 -u _printf_float
-
-
-# ---------------------------------------------------------------------------------------
-# CPP Flags
-
-DEVICE_CPPFLAGS := -D__$(CHIP)__ -D__$(CHIP_SERIES)__ --param max-inline-insns-single=500 -mcpu=$(CPU_DEV) -mthumb -mlong-calls -ffunction-sections -fdata-sections -fno-rtti -fno-exceptions -u _printf_float
-
-# ---------------------------------------------------------------------------------------
-# Assembly Flags
-
-DEVICE_ASFLAGS  := -D__$(CHIP)__ -D__$(CHIP_SERIES)__ -mcpu=$(CPU_DEV) -mthumb
-
-# ---------------------------------------------------------------------------------------
-# Linker Flags
-
 DEVICE_LINKER_SCRIPT = $(DEVICE_PATH)/$(GCC_TOOLCHAIN)/$(LD_SCRIPT_BASENAME).ld
-DEVICE_LDFLAGS := -nostartfiles -mcpu=$(CPU_DEV) --specs=nano.specs -u _printf_float -mthumb
 
+include $(MOTATE_PATH)/arch/arm.mk

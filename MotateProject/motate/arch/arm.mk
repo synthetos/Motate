@@ -1,4 +1,4 @@
-# 
+#
 # Makefile
 # 
 # Copyright (c) 2012 - 2014 Robert Giseburt
@@ -27,14 +27,35 @@
 #	OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 
-##############################################################################################
-# Start of default section
+
+#######
 #
+# These values must be defined before including this file:
+# $(CHIP)
+# $(CHIP_SERIES)
+# $(CPU_DEV)
 
-PROJECT  = MotateProject
 
-MOTATE_PATH ?= motate
+DEVICE_LIBS          = gcc c
 
-include motate/Motate.mk
+# ---------------------------------------------------------------------------------------
+# C Flags (NOT CPP flags)
 
-# *** EOF ***
+DEVICE_CFLAGS := -D__$(CHIP)__ -D__$(CHIP_SERIES)__ --param max-inline-insns-single=500 -mcpu=$(CPU_DEV) -mthumb -mlong-calls -ffunction-sections -fdata-sections -nostdlib -std=gnu99 -u _printf_float
+
+
+# ---------------------------------------------------------------------------------------
+# CPP Flags
+
+DEVICE_CPPFLAGS := -D__$(CHIP)__ -D__$(CHIP_SERIES)__ --param max-inline-insns-single=500 -mcpu=$(CPU_DEV) -mthumb -mlong-calls -ffunction-sections -fdata-sections -nostdlib -std=gnu++11 -fno-rtti -fno-exceptions -u _printf_float
+
+# ---------------------------------------------------------------------------------------
+# Assembly Flags
+
+DEVICE_ASFLAGS  := -D__$(CHIP)__ -D__$(CHIP_SERIES)__ -mcpu=$(CPU_DEV) -mthumb
+
+# ---------------------------------------------------------------------------------------
+# Linker Flags
+
+DEVICE_LDFLAGS := -nostartfiles -mcpu=$(CPU_DEV) --specs=nano.specs -u _printf_float -mthumb -L$(DEVICE_LINKER_SCRIPT_PATH)
+

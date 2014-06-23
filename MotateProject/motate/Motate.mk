@@ -1,0 +1,377 @@
+# 
+# Makefile
+# 
+# Copyright (c) 2012 - 2014 Robert Giseburt
+# Copyright (c) 2013 - 2014 Alden S. Hart Jr.
+# 
+#	This file is part of the Motate Library.
+#
+#	This file ("the software") is free software: you can redistribute it and/or modify
+#	it under the terms of the GNU General Public License, version 2 as published by the
+#	Free Software Foundation. You should have received a copy of the GNU General Public
+#	License, version 2 along with the software. If not, see <http://www.gnu.org/licenses/>.
+#
+#	As a special exception, you may use this file as part of a software library without
+#	restriction. Specifically, if other files instantiate templates or use macros or
+#	inline functions from this file, or you compile this file and link it with  other
+#	files to produce an executable, this file does not by itself cause the resulting
+#	executable to be covered by the GNU General Public License. This exception does not
+#	however invalidate any other reasons why the executable file might be covered by the
+#	GNU General Public License.
+#
+#	THE SOFTWARE IS DISTRIBUTED IN THE HOPE THAT IT WILL BE USEFUL, BUT WITHOUT ANY
+#	WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+#	OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT
+#	SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
+#	OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+
+##############################################################################################
+# Start of default section
+#
+
+BOARD  ?= NONE
+
+ifeq ('$(BOARD)','NONE')
+$(error BOARD not defined - please provide a project name)
+endif
+
+MOTATE_PATH ?= motate
+
+SOURCE_DIRS = . "${MOTATE_PATH}"
+
+FIRST_LINK_SOURCES :=
+
+# List all user directories here
+USER_INCLUDE_DIRS := $(SOURCE_DIRS)
+
+# List the user directory to look for the libraries here
+USER_LIB_DIRS =
+
+# List all user libraries here
+USER_LIBS =
+
+# Define optimisation level here
+#OPTIMIZATION ?= 0
+OPTIMIZATION ?= s
+#OPTIMIZATION ?= 3
+
+CFLAGS   :=
+CPPFLAGS :=
+
+#
+# End of configuration section
+##############################################################################################
+
+##############################################################################################
+# Start of configuration section
+#
+
+# ---------------------------------------------------------------------------------------
+# C Flags (NOT CPP Flags)
+
+# Configure warnings:
+CFLAGS += -Wall -Wchar-subscripts -Wcomment -Wformat=2 -Wimplicit-int
+CFLAGS += -Werror-implicit-function-declaration -Wmain -Wparentheses
+CFLAGS += -Wsequence-point -Wreturn-type -Wswitch -Wtrigraphs -Wunused
+CFLAGS += -Wuninitialized -Wno-unknown-pragmas -Wfloat-equal -Wundef
+CFLAGS += -Wshadow -Wpointer-arith -Wbad-function-cast -Wwrite-strings
+CFLAGS += -Wsign-compare -Waggregate-return
+#CFLAGS += -Wstrict-prototypes
+#CFLAGS += -Wmissing-prototypes -Wmissing-declarations
+CFLAGS += -Wformat -Wmissing-format-attribute -Wno-deprecated-declarations
+CFLAGS += -Wredundant-decls -Wnested-externs -Winline -Wlong-long
+CFLAGS += -Wunreachable-code
+#CFLAGS += -Wcast-align -Wpacked 
+#CFLAGS += -Wmissing-noreturn
+#CFLAGS += -Wconversion
+
+# Turn off printf() format strings. We use late bound FLASH and RAM format strings and this causes warnings
+CFLAGS += -Wno-format-nonliteral -Wno-format-security
+
+# ---------------------------------------------------------------------------------------
+# CPP Flags
+
+CPPFLAGS += -Wall -Wchar-subscripts -Wcomment -Wformat=2
+CPPFLAGS += -Wmain -Wparentheses -Wunreachable-code
+#CPPFLAGS += -Wcast-align
+CPPFLAGS += -Wsequence-point -Wreturn-type -Wswitch -Wtrigraphs -Wunused
+CPPFLAGS += -Wuninitialized -Wno-unknown-pragmas -Wfloat-equal -Wundef
+CPPFLAGS += -Wshadow -Wpointer-arith -Wwrite-strings
+#CPPFLAGS += -Wsign-compare -Waggregate-return -Wmissing-declarations
+CPPFLAGS += -Wformat -Wmissing-format-attribute -Wno-deprecated-declarations
+CPPFLAGS += -Wredundant-decls -Winline -Wlong-long
+#CPPFLAGS += -Wmissing-noreturn -Wpacked 
+#CPPFLAGS += -Wconversion
+
+# Turn off printf() format strings. We use late bound FLASH and RAM format strings and this causes warnings
+CPPFLAGS += -Wno-format-nonliteral -Wno-format-security
+
+#
+# End of configuration section
+##############################################################################################
+
+##############################################################################################
+# Start of build support section
+#
+
+# Default is to compile more quielty.
+# To show actual commands: make [options] VERBOSE=1
+VERBOSE ?= 0
+COLOR ?= 1
+
+ifeq ($(VERBOSE),0)
+QUIET := @
+else
+QUIET :=
+endif
+
+ifeq ($(COLOR),1)
+START_BOLD=`tput bold`
+END_BOLD=`tput sgr0`
+NO_COLOR=`tput setaf 0`
+OK_COLOR=`tput setaf 2`
+ERROR_COLOR=`tput setaf 1`
+WARN_COLOR=`tput setaf 3`
+endif
+
+
+ifeq ($(VERBOSE),2)
+define NEWLINE_ONLY
+
+
+endef
+define NEWLINE_TAB
+
+	
+endef
+endif
+
+#
+# End of build support section
+##############################################################################################
+
+##############################################################################################
+# Output directories (must be before BOARDs section)
+#
+
+BIN = bin/$(BOARD)
+OBJ = build/$(BOARD)
+DEPDIR = $(OBJ)/dep
+
+#
+# End of Output directories
+##############################################################################################
+
+include ${MOTATE_PATH}/MotateUtilities.mk
+
+##############################################################################################
+# Start of BOARDs section
+#
+
+# Available BOARD-specific defines:
+# MOTATE_CONFIG_HAS_USBSERIAL
+#
+
+# Common location for the CMSIS directory (might not be used)
+CMSIS_ROOT = ${MOTATE_PATH}/cmsis
+
+include $(wildcard ${MOTATE_PATH}/board/*.mk)
+
+ifneq ("$(_BOARD_FOUND)", "1")
+# errors cannot be indented
+$(error Unknown board "$(BOARD)")
+endif
+
+#
+# End of BOARDs section
+##############################################################################################
+
+##############################################################################################
+# Start of setup tools
+#
+
+# Output file basename
+OUTPUT_BIN = $(BIN)/$(BOARD)
+
+# Compilation tools
+CC      = $(CROSS_COMPILE)-gcc
+CXX     = $(CROSS_COMPILE)-g++
+LD      = $(CROSS_COMPILE)-ld
+AR      = $(CROSS_COMPILE)-ar
+SIZE    = $(CROSS_COMPILE)-size
+STRIP   = $(CROSS_COMPILE)-strip
+OBJCOPY = $(CROSS_COMPILE)-objcopy
+GDB     = $(CROSS_COMPILE)-gdb
+NM      = $(CROSS_COMPILE)-nm
+RM      = rm
+CP      = cp
+# NOTE: Atmel Studio 6.1 will default to the wrong mkdir that doesn't understand -p.
+#       So, in AS6.1, we have to pass MKDIR=gmkdir in the command line.
+MKDIR   ?= mkdir
+
+SHELL = bash
+export PATH := $(PATH):../Tools/gcc-$(CROSS_COMPILE)/bin
+
+
+# ---------------------------------------------------------------------------------------
+# C Flags (NOT CPP flags)
+
+#CFLAGS +=  $(DEVICE_CFLAGS)
+CFLAGS +=  $(DEVICE_CFLAGS) -DBOARD=$(BOARD)
+
+# ---------------------------------------------------------------------------------------
+# CPP Flags
+
+#CPPFLAGS +=  $(DEVICE_CPPFLAGS)
+CPPFLAGS +=  $(DEVICE_CPPFLAGS) -DBOARD=$(BOARD)
+
+# ---------------------------------------------------------------------------------------
+# ASM Flags
+
+ASFLAGS = $(DEVICE_ASFLAGS)
+
+# ---------------------------------------------------------------------------------------
+# Linker Flags
+
+LDFLAGS += $(LIBS) $(USER_LIBS) -Wl,--cref -Wl,--check-sections -Wl,--gc-sections -Wl,--entry=Reset_Handler -Wl,--unresolved-symbols=report-all -Wl,--warn-common -Wl,--warn-section-align -Wl,--warn-unresolved-symbols $(DEVICE_LDFLAGS)
+
+#
+# End of setup tools
+##############################################################################################
+
+##############################################################################################
+# Start of file paths setup
+#
+
+# Directories where source files can be found
+
+C_SOURCES   = $(foreach dir, $(SOURCE_DIRS), $(wildcard $(dir)/*.c) )
+CXX_SOURCES = $(foreach dir, $(SOURCE_DIRS), $(wildcard $(dir)/*.cpp) )
+ASM_SOURCES = $(foreach dir, $(SOURCE_DIRS), $(wildcard $(dir)/*.s) )
+
+C_OBJECTS   := $(addsuffix .o,$(basename $(C_SOURCES)))
+CXX_OBJECTS := $(addsuffix .o,$(basename $(CXX_SOURCES)))
+ASM_OBJECTS := $(addsuffix .o,$(basename $(ASM_SOURCES)))
+FIRST_LINK_OBJECTS = $(addsuffix .o,$(basename $(FIRST_LINK_SOURCES)))
+
+INCLUDES = $(patsubst %,-I%,$(DEVICE_INCLUDE_DIRS) $(USER_INCLUDE_DIRS))
+LIBS     = $(patsubst %,-l%,$(DEVICE_LIBS) $(USER_LIBS))
+LIBDIR   = $(patsubst %,-L%,$(DEVICE_LIB_DIRS) $(USER_LIB_DIRS))
+
+#
+# End of file paths setup
+##############################################################################################
+
+##############################################################################################
+# Start of RULES
+#
+
+ifeq ($(VERBOSE),2)
+$(info DEVICE_INCLUDE_DIRS+USER_INCLUDE_DIRS:$(patsubst %,$(NEWLINE_TAB)%,$(DEVICE_INCLUDE_DIRS) $(USER_INCLUDE_DIRS)))
+$(info $(NEWLINE_ONLY)DEVICE_LIB_DIRS+USER_LIB_DIRS: $(patsubst %,$(NEWLINE_TAB)%,$(DEVICE_LIB_DIRS) $(USER_LIB_DIRS)))
+$(info $(NEWLINE_ONLY)SOURCE_DIRS: $(patsubst %,$(NEWLINE_TAB)%,$(SOURCE_DIRS)))
+$(info $(NEWLINE_ONLY)C_SOURCES: $(patsubst %,$(NEWLINE_TAB)%,$(C_SOURCES)))
+$(info $(NEWLINE_ONLY)CXX_SOURCES: $(patsubst %,$(NEWLINE_TAB)%,$(CXX_SOURCES)))
+$(info $(NEWLINE_ONLY)FIRST_LINK_SOURCES: $(patsubst %,$(NEWLINE_TAB)%,$(FIRST_LINK_SOURCES)))
+endif
+
+all: TOOLS $(OUTPUT_BIN).elf
+
+REQUIRED_DIRS := $(BIN) $(OBJ) $(DEPDIR)
+
+MK_DIRS =   $(shell                              \
+              for d in $(REQUIRED_DIRS);         \
+              do                                 \
+				echo "Checking for $${d}"        \
+                [[ -d $$d ]] || mkdir -p $$d;    \
+              done)
+
+$(eval $(DEVICE_RULES))
+
+TOOLS:
+if test \! `command -v ${CC}`; then cd ../Tools && make "ARCH=${CROSS_COMPILE}"; fi
+
+
+OUTDIR = $(OBJ)
+REQUIRED_DIRS += $(OUTDIR)
+
+FIRST_LINK_OBJECTS_PATHS := $(addprefix $(OUTDIR)/,$(FIRST_LINK_OBJECTS))
+
+ALL_C_OBJECTS   := $(addprefix $(OUTDIR)/,$(C_OBJECTS))
+ALL_CXX_OBJECTS := $(addprefix $(OUTDIR)/,$(CXX_OBJECTS))
+ALL_ASM_OBJECTS := $(addprefix $(OUTDIR)/,$(ASM_OBJECTS))
+
+
+#
+CFLAGS   += -g3 -O$(OPTIMIZATION) $(INCLUDES) $(patsubst %,-D%,$(DEVICE_DEFINES) $(USER_DEFINES))
+CPPFLAGS += -g3 -O$(OPTIMIZATION) $(INCLUDES) $(patsubst %,-D%,$(DEVICE_DEFINES) $(USER_DEFINES))
+ASFLAGS  += -g3 -O$(OPTIMIZATION) $(INCLUDES) -D__ASSEMBLY__ $(patsubst %,-D%,$(DEVICE_DEFINES) $(USER_DEFINES))
+
+LINKER_SCRIPT := $(DEVICE_LINKER_SCRIPT)
+ABS_LINKER_SCRIPT = $(abspath $(LINKER_SCRIPT))
+
+# Generate dependency information
+DEPFLAGS = -MMD -MF $(OBJ)/dep/$(@F).d -MT $(subst $(OUTDIR),$(OBJ),$@)
+
+$(OUTPUT_BIN).elf: $(ALL_C_OBJECTS) $(ALL_CXX_OBJECTS) $(ALL_ASM_OBJECTS)
+	@echo $(START_BOLD)"Linking $(OUTPUT_BIN).elf" $(END_BOLD)
+	@echo $(START_BOLD)"Using linker script: $(ABS_LINKER_SCRIPT)" $(END_BOLD)
+	$(QUIET)$(CXX) $(LIB_PATH) -T"$(ABS_LINKER_SCRIPT)" -Wl,-Map,"$(OUTPUT_BIN).map" -o $@ $(LDFLAGS) $(LD_OPTIONAL) $(LIBS) -Wl,--start-group $(FIRST_LINK_OBJECTS_PATHS) $(filter-out $(FIRST_LINK_OBJECTS_PATHS),$+) -Wl,--end-group
+	@echo $(START_BOLD)"Exporting symbols $(OUTPUT_BIN).elf.txt" $(END_BOLD)
+	$(QUIET)$(NM) "$(OUTPUT_BIN).elf" >"$(OUTPUT_BIN).elf.txt"
+	@echo $(START_BOLD)"Making binary $(OUTPUT_BIN).bin" $(END_BOLD)
+	$(QUIET)$(OBJCOPY) -O binary "$(OUTPUT_BIN).elf" "$(OUTPUT_BIN).bin"
+	@echo "--- SIZE INFO ---"
+	$(QUIET)$(SIZE) "$(OUTPUT_BIN).elf"
+
+$(ALL_CXX_OBJECTS): $(OUTDIR)/%.o: %.cpp
+	$(QUIET)$(MKDIR) -p "$(@D)" "$(DEPDIR)" "$(BIN)"
+	@echo $(START_BOLD)"Compiling cpp $<"; echo "    -> $@" $(END_BOLD)
+	$(QUIET)$(CXX) $(CPPFLAGS) $(DEPFLAGS) -xc++ -c -o $@ $<
+
+$(ALL_C_OBJECTS): $(OUTDIR)/%.o: %.c
+	$(QUIET)$(MKDIR) -p "$(@D)" "$(DEPDIR)" "$(BIN)"
+	@echo $(START_BOLD)"Compiling c $<"; echo "    -> $@" $(END_BOLD)
+	$(QUIET)$(CC) $(CFLAGS) $(DEPFLAGS) -c -o $@ $<
+
+$(ALL_ASM_OBJECTS): $(OUTDIR)/%.o: %.S
+	$(QUIET)$(MKDIR) -p "$(@D)" "$(DEPDIR)" "$(BIN)"
+	@echo $(START_BOLD)"Compiling $<"; echo "    -> $@"  $(END_BOLD)
+	$(QUIET)$(CC) $(ASFLAGS) $(DEPFLAGS) -c -o $@ $<
+
+debug: $(1)
+	$(GDB) -x "$(MOTATE_PATH)/$(BOARD).gdb" -ex "reset" -readnow -se "$(OUTPUT_BIN)_$(1).elf"
+
+
+#-------------------------------------------------------------------------------
+#		Default $(PROJECT).elf, and clean
+#-------------------------------------------------------------------------------
+
+$(BOARD).elf: $(OUTPUT_BIN).elf
+	$(CP) $< $@
+
+$(BOARD).map: $(OUTPUT_BIN).map
+	$(CP) $< $@
+
+$(BOARD).hex: $(OUTPUT_BIN).elf
+	$(QUIET)$(OBJCOPY) -O ihex $< $@
+
+$(BOARD).bin: $(OUTPUT_BIN).elf
+	$(QUIET)$(OBJCOPY) -O binary $< $@
+
+clean:
+	-$(RM) -fR $(OBJ) $(BIN) $(BOARD).elf $(BOARD).map $(BOARD).hex $(BOARD).bin
+
+
+# 
+# Include the dependency files, should be the last of the makefile
+#
+-include $(shell mkdir $(OBJ)/dep 2>/dev/null) $(wildcard $(OBJ)/dep/*.d)
+
+#
+# End of RULES
+##############################################################################################
+
+# *** EOF ***

@@ -38,39 +38,38 @@ ifeq ('$(CHIP)','')
 $(error CHIP not defined)
 endif
 
-include platform/atmel_sam/atmel_sam_series.mk
-include platform/make_utilities.mk
+include $(MOTATE_PATH)/platform/atmel_sam/atmel_sam_series.mk
 
 # fill the needed variables
 ifeq ($(CHIP),$(findstring $(CHIP), $(SAM3N)))
 
-BOARD:=SAM3N_EK
-SERIES:=sam3n
+#BOARD:=SAM3N_EK
+CHIP_SERIES:=sam3n
 
 else ifeq ($(CHIP),$(findstring $(CHIP), $(SAM3S)))
 
-BOARD:=SAM3S_EK
-SERIES:=sam3s
+#BOARD:=SAM3S_EK
+CHIP_SERIES:=sam3s
 
 else ifeq ($(CHIP),$(findstring $(CHIP), $(SAM3SD8)))
 
-BOARD:=SAM3S_EK2
-SERIES:=sam3sd8
+#BOARD:=SAM3S_EK2
+CHIP_SERIES:=sam3sd8
 
 else ifeq ($(CHIP),$(findstring $(CHIP), $(SAM3U)))
 
-BOARD:=SAM3U_EK
-SERIES:=sam3u
+#BOARD:=SAM3U_EK
+CHIP_SERIES:=sam3u
 
 else ifeq ($(CHIP),$(findstring $(CHIP), $(SAM3XA)))
 
-BOARD:=SAM3X_EK
-SERIES:=sam3xa
+#BOARD:=SAM3X_EK
+CHIP_SERIES:=sam3xa
 
 else ifeq ($(CHIP),$(findstring $(CHIP), $(SAM4S)))
 
-BOARD:=SAM4S_EK
-SERIES:=sam4s
+#BOARD:=SAM4S_EK
+CHIP_SERIES:=sam4s
 
 else
 
@@ -78,56 +77,36 @@ $(error $(CHIP) is not a known Atmel processor.)
 
 endif
 
+
+
 # GCC toolchain provider
 GCC_TOOLCHAIN = as_gcc
 
 # Toolchain prefix when cross-compiling
 CROSS_COMPILE = arm-none-eabi
 
-# Defines which are the available memory targets for the device.
-MEMORIES = sram flash
-
-CMSIS_PATH  = $(CMSIS_ROOT)
 SAM_PATH    = $(CMSIS_ROOT)/TARGET_Atmel
-DEVICE_PATH = $(SAM_PATH)/$(SERIES)
+DEVICE_PATH = $(SAM_PATH)/$(CHIP_SERIES)
 
-SAM_SOURCE_DIRS += $(MOTATE_PATH)/Atmel_$(SERIES)
+SAM_SOURCE_DIRS += $(MOTATE_PATH)/Atmel_$(CHIP_SERIES)
 SAM_SOURCE_DIRS += $(DEVICE_PATH)/source
 SAM_SOURCE_DIRS += $(DEVICE_PATH)/source/$(GCC_TOOLCHAIN)
-SAM_SOURCE_DIRS += platform/atmel_sam
-FIRST_LINK_SOURCES += platform/atmel_sam/syscalls_sam3.c
+SAM_SOURCE_DIRS += $(MOTATE_PATH)/platform/atmel_sam
+FIRST_LINK_SOURCES += $(MOTATE_PATH)/platform/atmel_sam/syscalls_sam3.c
 
 DEVICE_RULES = $(call CREATE_DEVICE_LIBRARY,SAM,cmsis_sam)
 
 # Flags
-DEVICE_INCLUDE_DIRS += $(CMSIS_PATH)
+DEVICE_INCLUDE_DIRS += $(CMSIS_ROOT)
 DEVICE_INCLUDE_DIRS += $(DEVICE_PATH)/include
 DEVICE_INCLUDE_DIRS += $(SAM_PATH)
 DEVICE_INCLUDE_DIRS += $(SAM_PATH)/$(SERIES)/include
-DEVICE_INCLUDE_DIRS += $(MOTATE_PATH)/$(SERIES)
-DEVICE_INCLUDE_DIRS += platform/atmel_sam
+DEVICE_INCLUDE_DIRS += $(MOTATE_PATH)/$(CHIP_SERIES)
+DEVICE_INCLUDE_DIRS += $(MOTATE_PATH)/platform/atmel_sam
 
-DEVICE_LIBS          = gcc c
-
-# ---------------------------------------------------------------------------------------
-# C Flags (NOT CPP flags)
-
-DEVICE_CFLAGS := -D__$(CHIP)__ --param max-inline-insns-single=500 -mcpu=cortex-m3 -mthumb -mlong-calls -ffunction-sections -fdata-sections -nostdlib -std=gnu99 -u _printf_float
-
-
-# ---------------------------------------------------------------------------------------
-# CPP Flags
-
-DEVICE_CPPFLAGS := -D__$(CHIP)__ --param max-inline-insns-single=500 -mcpu=cortex-m3 -mthumb -mlong-calls -ffunction-sections -fdata-sections -fno-rtti -fno-exceptions -u _printf_float
-
-# ---------------------------------------------------------------------------------------
-# Assembly Flags
-
-DEVICE_ASFLAGS  := -D__$(CHIP)__ -mcpu=cortex-m3 -mthumb
-
-# ---------------------------------------------------------------------------------------
-# Linker Flags
-
+CPU_DEV = cortex-m3
 DEVICE_LINKER_SCRIPT = $(DEVICE_PATH)/source/$(GCC_TOOLCHAIN)/$(CHIP_LOWERCASE)_flash.ld
-DEVICE_LDFLAGS := -nostartfiles -mcpu=cortex-m3 --specs=nano.specs -u _printf_float -mthumb -L $(DEVICE_PATH)/source/$(GCC_TOOLCHAIN)/
+DEVICE_LINKER_SCRIPT_PATH = $(DEVICE_PATH)/source/$(GCC_TOOLCHAIN)/
 
+
+include $(MOTATE_PATH)/arch/arm.mk
