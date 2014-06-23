@@ -137,6 +137,7 @@ namespace Motate {
 	 */
 
 	Timer<SysTickTimerNum> SysTickTimer;
+	Timer<WatchDogTimerNum> WatchDogTimer;
 
 	volatile uint32_t Timer<SysTickTimerNum>::_motateTickCount = 0;
 

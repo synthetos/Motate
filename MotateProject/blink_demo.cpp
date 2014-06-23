@@ -42,7 +42,7 @@ Motate::OutputPin<kLED_UserPinNumber> led_pin;
 /****** Optional setup() function ******/
 
 void setup() {
-	led_pin = 0;
+	led_pin = 1;
 }
 
 /****** Main run loop() ******/

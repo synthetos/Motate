@@ -241,7 +241,10 @@ namespace Motate {
 			void operator=(const bool value) { write(value); };\
 			operator bool() { return (get() != 0); };\
 			\
-			void init(const PinMode type, const uint16_t options = kNormal, const bool fromConstructor=false) {\
+			void init(const PinMode type, const uint16_t options = kNormal | kDriveStrengthHigh, const bool fromConstructor=false) {\
+				/* Turn on the clock for this peripheral */\
+				/* ASSUMPTION: All ports are in SIM_SCGC5 on this processor */\
+				SIM->SCGC5 |= (SIM_SCGC5_PORT ## registerLetter ##_MASK);\
 				setMode(type, fromConstructor);\
 				setOptions(options, fromConstructor);\
 			};\

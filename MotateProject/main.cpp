@@ -74,6 +74,8 @@ void setup() __attribute__ ((weak));
 
 extern void loop();
 
+int main(void);
+
 #ifdef __cplusplus
 extern "C"{
 #endif // __cplusplus
@@ -83,6 +85,15 @@ extern "C"{
 	void _init() __attribute__ ((weak));
 	void _init() {
 		SystemInit();
+	}
+
+	void __libc_init_array(void);
+
+	void _start() __attribute__ ((weak));
+	void _start() {
+		SystemInit();
+		__libc_init_array();
+		main();
 	}
 
 #ifdef __cplusplus
@@ -96,9 +107,7 @@ extern "C"{
 
 void _system_init(void)
 {
-	// WHAT!?!
-	// Disable watchdog
-//	WDT->WDT_MR = WDT_MR_WDDIS;
+	Motate::WatchDogTimer.disable();
 
 	// Initialize C library
 #ifdef MOTATE_CONFIG_HAS_USBSERIAL

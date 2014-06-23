@@ -87,7 +87,7 @@ namespace Motate {
 // We're putting this in to make the autocomplete work for XCode,
 // since it doesn't understand the special syntax coming up.
 #ifdef XCODE_INDEX
-#include <Due-pinout.h>
+#include <FRDM-KL05Z-pinout.h>
 #endif
 
 #ifdef MOTATE_BOARD

@@ -828,6 +828,33 @@ namespace Motate {
 	};
 	extern Timer<SysTickTimerNum> SysTickTimer;
 
+
+	static const timer_number WatchDogTimerNum = 0xFE;
+	template <>
+	struct Timer<WatchDogTimerNum> {
+
+		Timer() { init(); };
+		Timer(const TimerMode mode, const uint32_t freq) {
+			init();
+			//			setModeAndFrequency(mode, freq);
+		};
+
+		void init() {
+		};
+
+		void disable() {
+			SIM->COPC = SIM_COPC_COPT(0);
+		};
+
+		void checkIn() {
+
+		};
+
+		// Placeholder for user code.
+		static void interrupt() __attribute__ ((weak));
+	};
+	extern Timer<WatchDogTimerNum> WatchDogTimer;
+
 	// Provide a Arduino-compatible blocking-delay function
 	inline void delay( uint32_t microseconds )
 	{
