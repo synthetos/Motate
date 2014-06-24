@@ -58,7 +58,9 @@ namespace Motate {
     pin_number kSPI0_MISOPinNumber              =  12;
     pin_number kSPI0_MOSIPinNumber              =  11;
 
-    pin_number kLED_UserPinNumber               =   8;
+    pin_number kLED1_PinNumber                  =  16;
+    pin_number kLED2_PinNumber                  =  17;
+    pin_number kLED3_PinNumber                  =   8;
 
 	pin_number kLED_USBRXPinNumber              =  -1;
     pin_number kLED_USBTXPinNumber              =  -1;

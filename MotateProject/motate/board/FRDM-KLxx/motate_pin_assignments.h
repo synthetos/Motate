@@ -32,6 +32,7 @@
 #define motate_pin_assignments_h
 
 #include <MotateTimers.h>
+#include <MotatePins.h>
 
 namespace Motate {
 
@@ -39,8 +40,6 @@ namespace Motate {
 	_MAKE_MOTATE_PORT32(A, 'A');
 	_MAKE_MOTATE_PORT32(B, 'B');
 
-//	Kept as an example:
-//	_MAKE_MOTATE_PWM_PIN(1, Motate::PWMTimer<3>, /*Channel:*/ A, /*Peripheral:*/ B, /*Inverted:*/ true); // INVERTED!
 
 	// Arduino pin name & function
 	_MAKE_MOTATE_PIN( 0, B, 'B',  2);	// D0, RX0
@@ -80,7 +79,23 @@ namespace Motate {
 	_MAKE_MOTATE_PIN(19, A, 'A',  0);	// A3
 	_MAKE_MOTATE_PIN(20, A, 'A',  9);	// A4
 	_MAKE_MOTATE_PIN(21, B, 'B', 13);	// A5
-    
+
+
+	// PWM Pins (in the order they are in the KL05* Reference Manual, pages 147-149 (rougly pin order):
+	_MAKE_MOTATE_PWM_PIN( 'B',  6, Timer<0>, /*Channel:*/ 3, /*PinMux:*/ 2, /*Inverted:*/ false);
+	_MAKE_MOTATE_PWM_PIN( 'B',  7, Timer<0>, /*Channel:*/ 2, /*PinMux:*/ 2, /*Inverted:*/ false);
+	_MAKE_MOTATE_PWM_PIN( 'A',  5, Timer<0>, /*Channel:*/ 5, /*PinMux:*/ 2, /*Inverted:*/ false);
+	_MAKE_MOTATE_PWM_PIN( 'A',  6, Timer<0>, /*Channel:*/ 4, /*PinMux:*/ 2, /*Inverted:*/ false);
+	_MAKE_MOTATE_PWM_PIN( 'B',  8, Timer<0>, /*Channel:*/ 3, /*PinMux:*/ 2, /*Inverted:*/ false);
+	_MAKE_MOTATE_PWM_PIN( 'B',  9, Timer<0>, /*Channel:*/ 2, /*PinMux:*/ 2, /*Inverted:*/ false);
+	_MAKE_MOTATE_PWM_PIN( 'B', 10, Timer<0>, /*Channel:*/ 1, /*PinMux:*/ 2, /*Inverted:*/ false);
+	_MAKE_MOTATE_PWM_PIN( 'B', 11, Timer<0>, /*Channel:*/ 0, /*PinMux:*/ 2, /*Inverted:*/ false);
+	_MAKE_MOTATE_PWM_PIN( 'B',  5, Timer<1>, /*Channel:*/ 1, /*PinMux:*/ 2, /*Inverted:*/ false);
+	_MAKE_MOTATE_PWM_PIN( 'A', 12, Timer<1>, /*Channel:*/ 0, /*PinMux:*/ 2, /*Inverted:*/ false);
+	_MAKE_MOTATE_PWM_PIN( 'B', 13, Timer<1>, /*Channel:*/ 1, /*PinMux:*/ 2, /*Inverted:*/ false);
+	_MAKE_MOTATE_PWM_PIN( 'A',  0, Timer<1>, /*Channel:*/ 0, /*PinMux:*/ 2, /*Inverted:*/ false);
+
+
 } // namespace Motate
 
 

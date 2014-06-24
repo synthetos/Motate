@@ -37,18 +37,75 @@ using namespace Motate;
 
 /****** Create file-global objects ******/
 
-Motate::OutputPin<kLED_UserPinNumber> led_pin;
+PWMOutputPin<kLED1_PinNumber> led1_pin(kPWMPinInverted);
+PWMOutputPin<kLED2_PinNumber> led2_pin(kPWMPinInverted);
+PWMOutputPin<kLED3_PinNumber> led3_pin(kPWMPinInverted);
+
+static const float change_per_cycle = 0.05;
+
+float red_pwm     = 1.0;
+float red_pwm_d   = 0.0;
+
+float green_pwm   = 0.0;
+float green_pwm_d = change_per_cycle;
+
+float blue_pwm    = 0.0;
+float blue_pwm_d  = 0.0;
 
 /****** Optional setup() function ******/
 
 void setup() {
-	led_pin = 1;
+	led1_pin = blue_pwm;
+	led2_pin = green_pwm;
+	led3_pin = red_pwm;
 }
 
 /****** Main run loop() ******/
 
 void loop() {
-	delay(1000);
+	led3_pin = red_pwm;
+	led2_pin = green_pwm;
+	led1_pin = blue_pwm;
 
-	led_pin.toggle();
+	red_pwm += red_pwm_d;
+	green_pwm += green_pwm_d;
+	blue_pwm += blue_pwm_d;
+
+	// This is the dnace for color cycles through all hues.
+	// see http://en.wikipedia.org/wiki/HSV_color_space#mediaviewer/File:HSV-RGB-comparison.svg
+	// via http://en.wikipedia.org/wiki/HSV_color_space#Converting_to_RGB
+	if (red_pwm > 1.0) {
+		red_pwm = 1.0;
+		red_pwm_d = 0.0;
+		blue_pwm_d = -change_per_cycle;
+	}
+	else if (red_pwm < 0.0) {
+		red_pwm = 0.0;
+		red_pwm_d = 0.0;
+		blue_pwm_d = change_per_cycle;
+	}
+	else if (blue_pwm > 1.0) {
+		blue_pwm = 1.0;
+		blue_pwm_d = 0.0;
+		green_pwm_d = -change_per_cycle;
+	}
+	else if (blue_pwm < 0.0) {
+		blue_pwm = 0.0;
+		blue_pwm_d = 0.0;
+		green_pwm_d = change_per_cycle;
+	}
+	else if (green_pwm > 1.0) {
+		green_pwm = 1.0;
+		green_pwm_d = 0.0;
+		red_pwm_d = -change_per_cycle;
+	}
+	else if (green_pwm < 0.0) {
+		green_pwm = 0.0;
+		green_pwm_d = 0.0;
+		red_pwm_d = change_per_cycle;
+	}
+
+	delay(100);
+
+//	led1_pin.toggle();
 }
