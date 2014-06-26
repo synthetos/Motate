@@ -353,6 +353,13 @@ namespace Motate {
 		static void interrupt() __attribute__ ((weak));
 	};
 
+	template<> inline TPM_Type * const  Timer<0>::tc()           { return TPM0; };
+	template<> inline const IRQn_Type   Timer<0>::tcIRQ()        { return TPM0_IRQn; };
+	template<> inline void Timer<0>::_enablePeripheralClock()    { SIM->SCGC6 |= SIM_SCGC6_TPM0_MASK; };
+
+	template<> inline TPM_Type * const  Timer<1>::tc()           { return TPM1; };
+	template<> inline const IRQn_Type   Timer<1>::tcIRQ()        { return TPM1_IRQn; };
+	template<> inline void Timer<1>::_enablePeripheralClock()    { SIM->SCGC6 |= SIM_SCGC6_TPM1_MASK; };
 
 
 	template<uint8_t timerNum, uint8_t channelNum>

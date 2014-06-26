@@ -34,16 +34,6 @@
 //#include "Reset.h"
 
 namespace Motate {
-	template<> TPM_Type * const        Timer<0>::tc()           { return TPM0; };
-	template<> const IRQn_Type   Timer<0>::tcIRQ()        { return TPM0_IRQn; };
-	template<> void Timer<0>::_enablePeripheralClock() { SIM->SCGC6 |= SIM_SCGC6_TPM0_MASK; };
-	//    static Timer<0> timer0;
-
-	template<> TPM_Type * const        Timer<1>::tc()           { return TPM1; };
-	template<> const IRQn_Type   Timer<1>::tcIRQ()        { return TPM1_IRQn; };
-	template<> void Timer<1>::_enablePeripheralClock() { SIM->SCGC6 |= SIM_SCGC6_TPM1_MASK; };
-	//    static Timer<1> timer1;
-
 	/* System-wide tick counter */
 	/*  Inspired by code from Atmel and Arduino.
 	 *  Some of which is:   Copyright (c) 2012 Arduino. All right reserved.
