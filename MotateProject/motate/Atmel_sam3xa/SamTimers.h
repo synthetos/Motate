@@ -89,35 +89,18 @@ namespace Motate {
 	enum TimerChannelOutputOptions {
 		kOutputDisconnected = 0,
 
-		/* ACPA (TC_CMR) RA Compare Effect on TIOA */
-		kToggleAOnCompareA  = TC_CMR_ACPA_TOGGLE,
-		kClearAOnCompareA   = TC_CMR_ACPA_CLEAR,
-		kSetAOnCompareA     = TC_CMR_ACPA_SET,
+		kToggleOnMatch     = 1<<0,
+		kClearOnMatch      = 1<<1,
+		kSetOnMatch        = 1<<2,
 
-		/* BCPB (TC_CMR) RB Compare Effect on TIOB */
-		/* See note below about TC_CMR_EEVT_XC0 */
-		kToggleBOnCompareB  = TC_CMR_BCPB_TOGGLE | TC_CMR_EEVT_XC0,
-		kClearBOnCompareB   = TC_CMR_BCPB_CLEAR | TC_CMR_EEVT_XC0,
-		kSetBOnCompareB     = TC_CMR_BCPB_SET | TC_CMR_EEVT_XC0,
-
-		/* We use "match" the same as the mode -- RC Compare */
-		/* ACPC (TC_CMR) RC Compare Effect on TIOA */
-		kToggleAOnMatch     = TC_CMR_ACPC_TOGGLE,
-		kClearAOnMatch      = TC_CMR_ACPC_CLEAR,
-		kSetAOnMatch        = TC_CMR_ACPC_SET,
-
-		/* BCPC (TC_CMR) RC Compare Effect on TIOB */
-		kToggleBOnMatch     = TC_CMR_BCPC_TOGGLE | TC_CMR_EEVT_XC0,
-		kClearBOnMatch      = TC_CMR_BCPC_CLEAR | TC_CMR_EEVT_XC0,
-		kSetBOnMatch        = TC_CMR_BCPC_SET | TC_CMR_EEVT_XC0,
+		kToggleOnOverflow  = 1<<3,
+		kClearOnOverflow   = 1<<4,
+		kSetOnOverflow     = 1<<5,
 
 
 		/* Aliases for use with PWM */
-		kPWMOnA             = kClearAOnCompareA | kSetAOnMatch,
-		kPWMOnAInverted     = kSetAOnCompareA | kClearAOnMatch,
-
-		kPWMOnB             = kClearBOnCompareB | kSetBOnMatch,
-		kPWMOnBInverted     = kSetBOnCompareB | kClearBOnMatch
+		kPWMOn             = kClearOnMatch | kSetOnOverflow,
+		kPWMOnInverted     = kSetOnMatch | kClearOnOverflow,
 };
 
 	/* We use TC_CMR_EEVT_XC0 in the above to allow TIOB to be an output.
@@ -321,98 +304,111 @@ namespace Motate {
 		// Motate channel B = Sam channel B.
 
 		// Specify the duty cycle as a value from 0.0 .. 1.0;
-		void setDutyCycleA(const float ratio) {
-			setExactDutyCycleA(getTopValue() * ratio);
-		};
-
-		void setDutyCycleB(const float ratio) {
-			setExactDutyCycleB(getTopValue() * ratio);
+		void setExactDutyCycleForChannel(const uint8_t channel, const float ratio) {
+			setExactDutyCycle(channel, getTopValue() * ratio);
 		};
 
 		// Specify channel A/B duty cycle as a integer value from 0 .. TOP.
 		// TOP in this case is either RC_RC or 0xFFFF.
-		void setExactDutyCycleA(const uint32_t absolute) {
-			tcChan()->TC_RA = absolute;
+		void setExactDutyCycle(const uint8_t channel, const uint32_t absolute) {
+			if (channel == 0) {
+				tcChan()->TC_RA = absolute;
+			} else if (channel == 1) {
+				tcChan()->TC_RB = absolute;
+			}
 		};
 
-		void setExactDutyCycleB(const uint32_t absolute) {
-			tcChan()->TC_RB = absolute;
+		void setOutputOptions(const uint8_t channel, const uint32_t options) {
+			uint32_t bitfield = 0;
+			if (channel == 0) {
+				if (options & kToggleOnMatch) {
+					bitfield |= TC_CMR_ACPA_TOGGLE;
+				}
+				if (options & kClearOnMatch) {
+					bitfield |= TC_CMR_ACPA_CLEAR;
+				}
+				if (options & kSetOnMatch) {
+					bitfield |= TC_CMR_ACPA_SET;
+				}
+				if (options & kToggleOnOverflow) {
+					bitfield |= TC_CMR_ACPC_TOGGLE;
+				}
+				if (options & kClearOnOverflow) {
+					bitfield |= TC_CMR_ACPC_CLEAR;
+				}
+				if (options & kSetOnOverflow) {
+					bitfield |= TC_CMR_ACPC_SET;
+				}
+
+				tcChan()->TC_CMR = (tcChan()->TC_CMR & ~(
+														 TC_CMR_ACPA_Msk |
+														 TC_CMR_ACPC_Msk
+														 )) | bitfield;
+			} else if (channel == 1) {
+
+				if (options & kToggleOnMatch) {
+					bitfield |= TC_CMR_BCPB_TOGGLE;
+				}
+				if (options & kClearOnMatch) {
+					bitfield |= TC_CMR_BCPB_CLEAR;
+				}
+				if (options & kSetOnMatch) {
+					bitfield |= TC_CMR_BCPB_SET;
+				}
+				if (options & kToggleOnOverflow) {
+					bitfield |= TC_CMR_BCPC_TOGGLE;
+				}
+				if (options & kClearOnOverflow) {
+					bitfield |= TC_CMR_BCPC_CLEAR;
+				}
+				if (options & kSetOnOverflow) {
+					bitfield |= TC_CMR_BCPC_SET;
+				}
+
+				tcChan()->TC_CMR = (tcChan()->TC_CMR & ~(
+														 TC_CMR_BCPB_Msk |
+														 TC_CMR_BCPC_Msk
+														 )) | bitfield | TC_CMR_EEVT_XC0;
+			}
 		};
 
-		void setOutputOptions(const uint32_t options) {
-
-			// Note that we carefully crafted the TimerChannelOutputOptions
-			// to match the bits in CMR, so we just mask and set!
-			tcChan()->TC_CMR = (tcChan()->TC_CMR & ~(
-													 TC_CMR_ACPA_Msk |
-													 TC_CMR_BCPB_Msk |
-													 TC_CMR_ACPC_Msk |
-													 TC_CMR_BCPC_Msk |
-													 TC_CMR_EEVT_XC0
-													)
-								) | options;
-		};
-
-		// Use this to leave the OutputB options alone.
-		void setOutputAOptions(const uint32_t options) {
-
-			// Note that we carefully crafted the TimerChannelOutputOptions
-			// to match the bits in CMR, so we just mask and set!
-			tcChan()->TC_CMR = (tcChan()->TC_CMR & ~(
-													 TC_CMR_ACPA_Msk |
-													 TC_CMR_ACPC_Msk
-													 )
-								) | options;
-		};
-		// Use this to leave the OutputA options alone.
-		void setOutputBOptions(const uint32_t options) {
-			// Note that we carefully crafted the TimerChannelOutputOptions
-			// to match the bits in CMR, so we just mask and set!
-			tcChan()->TC_CMR = (tcChan()->TC_CMR & ~(
-													 TC_CMR_BCPB_Msk |
-													 TC_CMR_BCPC_Msk |
-													 TC_CMR_EEVT_XC0
-													 )
-								) | options;
-		};
-
-		// These are special function for stopping output waveforms.
-		// This is defferent from stopping the timer, which kill both channels and
-		// all interrupts. This simply stops the pin output from changing, and is used
-		// to set the duty cycle to 0.
-
-		// ASSUMPTION: The pin is not in Toggle mode.
-		void stopPWMOutputA() {
-			if ((tcChan()->TC_CMR & TC_CMR_ACPA_Msk) == kSetAOnCompareA)
-				tcChan()->TC_CMR = (tcChan()->TC_CMR & ~(TC_CMR_ACPC_Msk)) | kSetAOnMatch;
-			else
-				tcChan()->TC_CMR = (tcChan()->TC_CMR & ~(TC_CMR_ACPC_Msk)) | kClearAOnMatch;
-		};
-
-		void stopPWMOutputB() {
-			if ((tcChan()->TC_CMR & TC_CMR_BCPB_Msk) == kSetBOnCompareB)
-				tcChan()->TC_CMR = (tcChan()->TC_CMR & ~(TC_CMR_BCPC_Msk)) | kSetBOnMatch;
-			else
-				tcChan()->TC_CMR = (tcChan()->TC_CMR & ~(TC_CMR_BCPC_Msk)) | kClearBOnMatch;
-		};
 
 		// These two start the waveform. We try to be as fast as we can.
 		// ASSUMPTION: We stopped it with the corresponding function.
 		// ASSUMPTION: The pin is not and was not in Toggle mode.
-		void startPWMOutputA() {
-			if ((tcChan()->TC_CMR & TC_CMR_ACPA_Msk) == kSetAOnCompareA)
-				tcChan()->TC_CMR = (tcChan()->TC_CMR & ~(TC_CMR_ACPC_Msk)) | kClearAOnMatch;
-			else
-				tcChan()->TC_CMR = (tcChan()->TC_CMR & ~(TC_CMR_ACPC_Msk)) | kSetAOnMatch;
+		void startPWMOutput(const uint8_t channel) {
+			if (channel == 0) {
+				if ((tcChan()->TC_CMR & TC_CMR_ACPA_Msk) == TC_CMR_ACPA_SET)
+					tcChan()->TC_CMR = (tcChan()->TC_CMR & ~(TC_CMR_ACPC_Msk)) | TC_CMR_ACPC_CLEAR;
+				else
+					tcChan()->TC_CMR = (tcChan()->TC_CMR & ~(TC_CMR_ACPC_Msk)) | TC_CMR_ACPC_SET;
+			} else if (channel == 1) {
+				if ((tcChan()->TC_CMR & TC_CMR_BCPB_Msk) == TC_CMR_BCPB_SET)
+					tcChan()->TC_CMR = (tcChan()->TC_CMR & ~(TC_CMR_BCPC_Msk)) | TC_CMR_BCPC_CLEAR;
+				else
+					tcChan()->TC_CMR = (tcChan()->TC_CMR & ~(TC_CMR_BCPC_Msk)) | TC_CMR_BCPC_SET;
+			}
 		};
 
-		void startPWMOutputB() {
-			if ((tcChan()->TC_CMR & TC_CMR_BCPB_Msk) == kSetBOnCompareB)
-				tcChan()->TC_CMR = (tcChan()->TC_CMR & ~(TC_CMR_BCPC_Msk)) | kClearBOnMatch;
-			else
-				tcChan()->TC_CMR = (tcChan()->TC_CMR & ~(TC_CMR_BCPC_Msk)) | kSetBOnMatch;
-		};
+		// These are special function for stopping output waveforms.
+		// This is different from stopping the timer, which kill both channels and
+		// all interrupts. This simply stops the pin output from changing, and is used
+		// to set the duty cycle to 0.
 
+		// ASSUMPTION: The pin is not in Toggle mode.
+		void stopPWMOutput(const uint8_t channel) {
+			if (channel == 0) {
+				if ((tcChan()->TC_CMR & TC_CMR_ACPA_Msk) == TC_CMR_ACPA_SET)
+					tcChan()->TC_CMR = (tcChan()->TC_CMR & ~(TC_CMR_ACPC_Msk)) | TC_CMR_ACPC_SET;
+				else
+					tcChan()->TC_CMR = (tcChan()->TC_CMR & ~(TC_CMR_ACPC_Msk)) | TC_CMR_ACPC_CLEAR;
+			} else if (channel == 1) {
+				if ((tcChan()->TC_CMR & TC_CMR_BCPB_Msk) == TC_CMR_BCPB_SET)
+					tcChan()->TC_CMR = (tcChan()->TC_CMR & ~(TC_CMR_BCPC_Msk)) | TC_CMR_BCPC_SET;
+				else
+					tcChan()->TC_CMR = (tcChan()->TC_CMR & ~(TC_CMR_BCPC_Msk)) | TC_CMR_BCPC_CLEAR;
+			}
+		};
 
 		void setInterrupts(const uint32_t interrupts) {
 			if (interrupts != kInterruptsOff) {
@@ -497,6 +493,30 @@ namespace Motate {
 		static void interrupt() __attribute__ ((weak));
 	};
 
+	template<uint8_t timerNum, uint8_t channelNum>
+	struct TimerChannel : Timer<timerNum> {
+		TimerChannel() : Timer<timerNum>() {};
+
+		void setDutyCycle(const float ratio) {
+			Timer<timerNum>::setDutyCycleForChannel(channelNum, ratio);
+		};
+
+		void setExactDutyCycle(const uint32_t absolute) {
+			Timer<timerNum>::setExactDutyCycle(channelNum, absolute);
+		};
+
+		void setOutputOptions(const uint32_t options) {
+			Timer<timerNum>::setOutputOptions(channelNum, options);
+		};
+
+		void startPWMOutput() {
+			Timer<timerNum>::startPWMOutput(channelNum);
+		};
+
+		void stopPWMOutput() {
+			Timer<timerNum>::stopPWMOutput(channelNum);
+		}
+	};
 
 	template <uint8_t timerNum>
 	struct PWMTimer {
@@ -694,7 +714,10 @@ namespace Motate {
 		// Channel-specific functions. These are Motate channels, but they happen to line-up.
 
 		// Specify the duty cycle as a value from 0.0 .. 1.0;
-		void setDutyCycleA(const float ratio, bool setOnNext = true) {
+		void setDutyCycle(const uint8_t channel, const float ratio, bool setOnNext = true) {
+			setExactDutyCycle(ratio, setOnNext);
+		};
+		void setDutyCycle(const float ratio, bool setOnNext = true) {
 			if (setOnNext)
 				pwmChan()->PWM_CDTYUPD = getTopValue() * ratio;
 			else
@@ -704,7 +727,10 @@ namespace Motate {
 
 		// Specify channel A/B duty cycle as a integer value from 0 .. TOP.
 		// TOP in this case is either RC_RC or 0xFFFF.
-		void setExactDutyCycleA(const uint32_t absolute, bool setOnNext = true) {
+		void setExactDutyCycleForChannel(const uint8_t channel, const uint32_t absolute, bool setOnNext = true) {
+			setExactDutyCycle(absolute, setOnNext);
+		};
+		void setExactDutyCycle(const uint32_t absolute, bool setOnNext = true) {
 			if (setOnNext)
 				pwmChan()->PWM_CDTYUPD = absolute;
 			else
@@ -712,29 +738,35 @@ namespace Motate {
 
 		};
 
-		void setOutputOptions(const uint32_t options) {
-			setOutputAOptions(options);
+		void setOutputOptions(const uint32_t channel, const uint32_t options) {
+			setOutputOptions(options);
 		};
 
-		void setOutputAOptions(const uint32_t options) {
-			if (options == kPWMOnAInverted) {
+		void setOutputOptions(const uint32_t options) {
+			if (options == kPWMOnInverted) {
 				pwmChan()->PWM_CMR |= PWM_CMR_CPOL;
 			}
-			else if (options == kPWMOnA) {
+			else if (options == kPWMOn) {
 				pwmChan()->PWM_CMR &= ~PWM_CMR_CPOL;
 			}
 		};
 
 
 		// ASSUMPTION: The pin is not in Toggle mode.
-		void stopPWMOutputA() {
+		void stopPWMOutput(const uint32_t channel) {
+			stopPWMOutput();
+		};
+		void stopPWMOutput() {
 //			stop();
 		};
 
 		// These two start the waveform. We try to be as fast as we can.
 		// ASSUMPTION: We stopped it with the corresponding function.
 		// ASSUMPTION: The pin is not and was not in Toggle mode.
-		void startPWMOutputA() {
+		void startPWMOutput(const uint32_t channel) {
+			startPWMOutput();
+		};
+		void startPWMOutput() {
 //			start();
 		};
 
@@ -810,6 +842,38 @@ namespace Motate {
 		
 		// Placeholder for user code.
 		static void interrupt() __attribute__ ((weak));
+	}; // struct PWMTimer
+
+	template<uint8_t timerNum, uint8_t channelNum>
+	struct PWMTimerChannel : PWMTimer<timerNum> {
+		//Intentionally empty
+	};
+
+	template<uint8_t timerNum>
+	struct PWMTimerChannel<timerNum, 0> : PWMTimer<timerNum> {
+		PWMTimerChannel() : PWMTimer<timerNum>() {};
+
+/* Redundant:
+		void setDutyCycle(const float ratio) {
+			PWMTimer<timerNum>::setDutyCycle(ratio);
+		};
+
+		void setExactDutyCycle(const uint32_t absolute) {
+			PWMTimer<timerNum>::setExactDutyCycle(absolute);
+		};
+
+		void setOutputOptions(const uint32_t options) {
+			PWMTimer<timerNum>::setOutputOptions(options);
+		};
+
+		void startPWMOutput() {
+			PWMTimer<timerNum>::startPWMOutput();
+		};
+
+		void stopPWMOutput() {
+			PWMTimer<timerNum>::stopPWMOutput();
+		}
+ */
 	};
 
 	static const timer_number SysTickTimerNum = 0xFF;

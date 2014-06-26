@@ -374,9 +374,10 @@ namespace Motate {
 		operator bool();
 	};
 
-	#define _MAKE_MOTATE_PWM_PIN(pinNum, timerOrPWM, channelAorB, peripheralAorB, invertedByDefault)\
+#define _MAKE_MOTATE_PWM_PIN(registerChar, registerPin, timerOrPWM, channel, peripheralAorB, invertedByDefault)\
 		template<>\
-		struct PWMOutputPin<pinNum> : Pin<pinNum>, timerOrPWM {\
+		struct PWMOutputPin< ReversePinLookup<registerChar, registerPin>::number > : Pin< ReversePinLookup<registerChar, registerPin>::number >, timerOrPWM {\
+			static const pin_number pinNum = ReversePinLookup<registerChar, registerPin>::number;\
 			PWMOutputPin() : Pin<pinNum>(kPeripheral ## peripheralAorB), timerOrPWM(Motate::kTimerUpToMatch, kDefaultPWMFrequency) { pwmpin_init(kNormal);};\
 			PWMOutputPin(const PinOptions options, const uint32_t freq = kDefaultPWMFrequency) :\
 				Pin<pinNum>(kPeripheral ## peripheralAorB, options), timerOrPWM(Motate::kTimerUpToMatch, freq)\
@@ -385,7 +386,7 @@ namespace Motate {
 				Pin<pinNum>(kPeripheral ## peripheralAorB, kNormal), timerOrPWM(Motate::kTimerUpToMatch, freq)\
 				{pwmpin_init(kNormal);};\
 			void pwmpin_init(const PinOptions options) {\
-				timerOrPWM::setOutput ## channelAorB ## Options((invertedByDefault ^ ((options & kPWMPinInverted)?true:false)) ? kPWMOn ## channelAorB ## Inverted : kPWMOn ## channelAorB);\
+				timerOrPWM::setOutputOptions(channel, (invertedByDefault ^ ((options & kPWMPinInverted)?true:false)) ? kPWMOnInverted : kPWMOn);\
 				timerOrPWM::start();\
 			};\
 			void setFrequency(const uint32_t freq) {\
@@ -396,10 +397,10 @@ namespace Motate {
 			void write(const float value) {\
 				uint16_t duty = getTopValue() * value;\
 				if (duty < 2)\
-					stopPWMOutput ## channelAorB ();\
+					stopPWMOutput(channel);\
 				else\
-					startPWMOutput ## channelAorB ();\
-				timerOrPWM::setExactDutyCycle ## channelAorB(duty);\
+					startPWMOutput(channel);\
+				timerOrPWM::setExactDutyCycleForChannel(channel, duty);\
 			};\
 			bool canPWM() { return true; };\
 			/*Override these to pick up new methods */\
