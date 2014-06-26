@@ -33,8 +33,8 @@
 
 PROJECT  = BlinkDemo
 
-#MOTATE_PATH ?= motate
+MOTATE_PATH ?= ../../motate
 
-include ../motate/Motate.mk
+include $(MOTATE_PATH)/Motate.mk
 
 # *** EOF ***

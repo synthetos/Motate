@@ -31,10 +31,12 @@
 # Start of default section
 #
 
-PROJECT  = MotateProject
+PROJECTS = $(wildcard ./demos/*)
 
-MOTATE_PATH ?= motate
+all: ${PROJECTS}
+	for n in $^; do cd "$$n" && make; done
 
-include motate/Motate.mk
+clean: ${PROJECTS}
+	for n in $^; do cd "$$n" && make clean; done
 
 # *** EOF ***

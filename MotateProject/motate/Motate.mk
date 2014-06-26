@@ -37,9 +37,9 @@ ifeq ('$(BOARD)','NONE')
 $(error BOARD not defined - please provide a project name)
 endif
 
-MOTATE_PATH ?= motate
+MOTATE_PATH ?= $(dir $(CURDIR)/$(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST)))
 
-SOURCE_DIRS = . "${MOTATE_PATH}"
+SOURCE_DIRS = . ${MOTATE_PATH}
 
 FIRST_LINK_SOURCES :=
 
@@ -177,6 +177,7 @@ include ${MOTATE_PATH}/MotateUtilities.mk
 # Common location for the CMSIS directory (might not be used)
 CMSIS_ROOT = ${MOTATE_PATH}/cmsis
 
+
 include $(wildcard ${MOTATE_PATH}/board/*.mk)
 
 ifneq ("$(_BOARD_FOUND)", "1")
@@ -297,11 +298,19 @@ if test \! `command -v ${CC}`; then cd ../Tools && make "ARCH=${CROSS_COMPILE}";
 OUTDIR = $(OBJ)
 REQUIRED_DIRS += $(OUTDIR)
 
-FIRST_LINK_OBJECTS_PATHS := $(addprefix $(OUTDIR)/,$(FIRST_LINK_OBJECTS))
+FIRST_LINK_OBJECTS_PATHS := $(addprefix $(OUTDIR)/,$(subst $(MOTATE_PATH),motate,$(FIRST_LINK_OBJECTS)))
 
-ALL_C_OBJECTS   := $(addprefix $(OUTDIR)/,$(C_OBJECTS))
-ALL_CXX_OBJECTS := $(addprefix $(OUTDIR)/,$(CXX_OBJECTS))
-ALL_ASM_OBJECTS := $(addprefix $(OUTDIR)/,$(ASM_OBJECTS))
+MOTATE_C_OBJECTS   := $(addprefix $(OUTDIR)/,$(subst $(MOTATE_PATH),motate,$(filter $(MOTATE_PATH)/%,$(C_OBJECTS))))
+MOTATE_CXX_OBJECTS := $(addprefix $(OUTDIR)/,$(subst $(MOTATE_PATH),motate,$(filter $(MOTATE_PATH)/%,$(CXX_OBJECTS))))
+MOTATE_ASM_OBJECTS := $(addprefix $(OUTDIR)/,$(subst $(MOTATE_PATH),motate,$(filter $(MOTATE_PATH)/%,$(ASM_OBJECTS))))
+
+ALL_OTHER_C_OBJECTS   := $(addprefix $(OUTDIR)/,$(filter-out $(MOTATE_PATH)/%,$(C_OBJECTS)))
+ALL_OTHER_CXX_OBJECTS := $(addprefix $(OUTDIR)/,$(filter-out $(MOTATE_PATH)/%,$(CXX_OBJECTS)))
+ALL_OTHER_ASM_OBJECTS := $(addprefix $(OUTDIR)/,$(filter-out $(MOTATE_PATH)/%,$(ASM_OBJECTS)))
+
+ALL_C_OBJECTS   := $(MOTATE_C_OBJECTS) $(ALL_OTHER_C_OBJECTS)
+ALL_CXX_OBJECTS := $(MOTATE_CXX_OBJECTS) $(ALL_OTHER_CXX_OBJECTS)
+ALL_ASM_OBJECTS := $(MOTATE_ASM_OBJECTS) $(ALL_OTHER_ASM_OBJECTS)
 
 
 #
@@ -326,17 +335,34 @@ $(OUTPUT_BIN).elf: $(ALL_C_OBJECTS) $(ALL_CXX_OBJECTS) $(ALL_ASM_OBJECTS)
 	@echo "--- SIZE INFO ---"
 	$(QUIET)$(SIZE) "$(OUTPUT_BIN).elf"
 
-$(ALL_CXX_OBJECTS): $(OUTDIR)/%.o: %.cpp
+## Note: The motate paths are seperated doe to MOTATE_PATH having multple ../ in it.
+
+$(MOTATE_CXX_OBJECTS): $(OUTDIR)/motate/%.o: $(MOTATE_PATH)/%.cpp
 	$(QUIET)$(MKDIR) -p "$(@D)" "$(DEPDIR)" "$(BIN)"
 	@echo $(START_BOLD)"Compiling cpp $<"; echo "    -> $@" $(END_BOLD)
 	$(QUIET)$(CXX) $(CPPFLAGS) $(DEPFLAGS) -xc++ -c -o $@ $<
 
-$(ALL_C_OBJECTS): $(OUTDIR)/%.o: %.c
+$(ALL_OTHER_CXX_OBJECTS): $(OUTDIR)/%.o: %.cpp
+	$(QUIET)$(MKDIR) -p "$(@D)" "$(DEPDIR)" "$(BIN)"
+	@echo $(START_BOLD)"Compiling cpp $<"; echo "    -> $@" $(END_BOLD)
+	$(QUIET)$(CXX) $(CPPFLAGS) $(DEPFLAGS) -xc++ -c -o $@ $<
+
+$(MOTATE_C_OBJECTS): $(OUTDIR)/motate/%.o: $(MOTATE_PATH)/%.c
 	$(QUIET)$(MKDIR) -p "$(@D)" "$(DEPDIR)" "$(BIN)"
 	@echo $(START_BOLD)"Compiling c $<"; echo "    -> $@" $(END_BOLD)
 	$(QUIET)$(CC) $(CFLAGS) $(DEPFLAGS) -c -o $@ $<
 
-$(ALL_ASM_OBJECTS): $(OUTDIR)/%.o: %.S
+$(ALL_OTHER_C_OBJECTS): $(OUTDIR)/%.o: %.c
+	$(QUIET)$(MKDIR) -p "$(@D)" "$(DEPDIR)" "$(BIN)"
+	@echo $(START_BOLD)"Compiling c $<"; echo "    -> $@" $(END_BOLD)
+	$(QUIET)$(CC) $(CFLAGS) $(DEPFLAGS) -c -o $@ $<
+
+$(MOTATE_ASM_OBJECTS): $(OUTDIR)/motate/%.o: $(MOTATE_PATH)/%.S
+	$(QUIET)$(MKDIR) -p "$(@D)" "$(DEPDIR)" "$(BIN)"
+	@echo $(START_BOLD)"Compiling $<"; echo "    -> $@"  $(END_BOLD)
+	$(QUIET)$(CC) $(ASFLAGS) $(DEPFLAGS) -c -o $@ $<
+
+$(ALL_OTHER_ASM_OBJECTS): $(OUTDIR)/%.o: %.S
 	$(QUIET)$(MKDIR) -p "$(@D)" "$(DEPDIR)" "$(BIN)"
 	@echo $(START_BOLD)"Compiling $<"; echo "    -> $@"  $(END_BOLD)
 	$(QUIET)$(CC) $(ASFLAGS) $(DEPFLAGS) -c -o $@ $<
