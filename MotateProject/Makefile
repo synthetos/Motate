@@ -34,9 +34,9 @@
 PROJECTS = $(wildcard ./demos/*)
 
 all: ${PROJECTS}
-	for n in $^; do cd "$$n" && make; done
+	for project_name in $^; do { make -C "$$project_name"; } ; done
 
 clean: ${PROJECTS}
-	for n in $^; do cd "$$n" && make clean; done
+	for project_name in $^; do { make -C "$$project_name" clean; } ; done
 
 # *** EOF ***

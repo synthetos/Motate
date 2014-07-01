@@ -35,6 +35,7 @@
 
 #include "MotatePins.h"
 #include "SamCommon.h"
+#include <type_traits>
 
 namespace Motate {
     
@@ -74,23 +75,28 @@ namespace Motate {
         kSPI15Bit              = SPI_CSR_BITS_15_BIT,
         kSPI16Bit              = SPI_CSR_BITS_16_BIT
 	};
-    
+
+	enum class _SPI_HARDWARE_ENABLED { _SPI_HARDWARE_DUMMY };
+	constexpr auto _SPI_HARDWARE_DUMMY = _SPI_HARDWARE_ENABLED::_SPI_HARDWARE_DUMMY;
+
     // This is an internal representation of the peripheral.
     // This is *not* to be used externally.
-	template<uint8_t spiPeripheralNum, int8_t spiMISOPinNumber, int8_t spiMOSIPinNumber, int8_t spSCKSPinNumber>
+
+	template<uint8_t spiPeripheralNum, int8_t spiMISOPinNumber, int8_t spiMOSIPinNumber, int8_t spSCKSPinNumber, typename = void>
     struct _SPIHardware {
         // BITBANG HERE!
     };
     
-    template<>
-    struct _SPIHardware<0u, kSPI_MISOPinNumber, kSPI_MOSIPinNumber, kSPI_SCKPinNumber> : SamCommon< _SPIHardware<0u, kSPI_MISOPinNumber, kSPI_MOSIPinNumber, kSPI_SCKPinNumber> > {
+    template<int8_t spiMISOPinNumber, int8_t spiMOSIPinNumber, int8_t spiSCKSPinNumber>
+    struct _SPIHardware<0u, spiMISOPinNumber, spiMOSIPinNumber, spiSCKSPinNumber, typename std::enable_if<IsSPIMISOPin<spiMISOPinNumber>() && IsSPIMOSIPin<spiMOSIPinNumber>() && IsSPISCKPin<spiSCKSPinNumber>() >::type>
+	: SamCommon< _SPIHardware<0u, spiMISOPinNumber, spiMOSIPinNumber, spiSCKSPinNumber> > {
 		static Spi * const spi() { return SPI0; };
         static const uint32_t peripheralId() { return ID_SPI0; }; // ID_SPI0 .. ID_SPI1
 		static const IRQn_Type spiIRQ() { return SPI0_IRQn; };
         
         static const uint8_t spiPeripheralNum=0;
         
-        typedef _SPIHardware<0u, kSPI_MISOPinNumber, kSPI_MOSIPinNumber, kSPI_SCKPinNumber> this_type_t;
+        typedef _SPIHardware<0u, spiMISOPinNumber, spiMOSIPinNumber, spiSCKSPinNumber> this_type_t;
         typedef SamCommon< this_type_t > common;
 
         /* We have to play some tricks here, because templates and static members are tricky.
@@ -217,14 +223,14 @@ namespace Motate {
         };
     };
     
-	template<int8_t spiCSPinNumber, int8_t spiMISOPinNumber=kSPI_MISOPinNumber, int8_t spiMOSIPinNumber=kSPI_MOSIPinNumber, int8_t spiSCKSPinNumber=kSPI_SCKPinNumber>
+	template<int8_t spiCSPinNumber, int8_t spiMISOPinNumber=kSPI0_MISOPinNumber, int8_t spiMOSIPinNumber=kSPI0_MOSIPinNumber, int8_t spiSCKSPinNumber=kSPI0_SCKPinNumber>
 	struct SPI {
         typedef SPIChipSelectPin<spiCSPinNumber> csPinType;
         csPinType csPin;
         
-        SPIOtherPin<spiMISOPinNumber> misoPin;
-        SPIOtherPin<spiMOSIPinNumber> mosiPin;
-        SPIOtherPin<spiSCKSPinNumber> sckPin;
+        SPIMISOPin<spiMISOPinNumber> misoPin;
+        SPIMOSIPin<spiMOSIPinNumber> mosiPin;
+        SPISCKPin<spiSCKSPinNumber> sckPin;
         
         static _SPIHardware< csPinType::moduleId, spiMISOPinNumber, spiMOSIPinNumber, spiSCKSPinNumber > hardware;
         static const uint8_t spiPeripheralNum() { return csPinType::moduleId; };

@@ -119,15 +119,15 @@ namespace Motate {
 			setModeAndFrequency(mode, freq);
 		};
 
-		void init() {
+		void init() const {
 			/* Unlock this thing */
 			unlock();
 		};
 
-		void unlock() {
+		void unlock() const {
 		};
 
-		void lock() {
+		void lock() const {
 			/* No locking this one...*/
 		};
 
@@ -188,28 +188,28 @@ namespace Motate {
 
 		// Set the TOP value for modes that use it.
 		// WARNING: No sanity checking is done to verify that you are, indeed, in a mode that uses it.
-		void setTop(const uint32_t topValue) {
+		constexpr void setTop(const uint32_t topValue) const {
 			tc()->MOD = topValue & 0xFFFF;
 		};
 
-		uint32_t getTopValue() {
+		constexpr uint32_t getTopValue() const {
 			return tc()->MOD;
 		};
 
 		// Return the current value of the counter. This is a fleeting thing...
-		uint32_t getValue() {
+		constexpr uint32_t getValue() const {
 			return tc()->CNT;
 		}
 
-		void start() {
+		constexpr void start() const {
 			tc()->SC = (tc()->SC & ~TPM_SC_CMOD_MASK) | TPM_SC_CMOD(0b01 /* LPTPM counter increments on every LPTPM counter clock */);
 		};
 
-		void stop() {
+		constexpr void stop() const {
 			tc()->SC = (tc()->SC & ~TPM_SC_CMOD_MASK) | TPM_SC_CMOD(0b00 /* LPTPM counter is disabled */);
 		};
 
-		void stopOnMatch() {
+		constexpr void stopOnMatch() const {
 			tc()->CONF |= TPM_CONF_CSOO_MASK;
 		};
 
@@ -224,7 +224,7 @@ namespace Motate {
 
 		// Specify channel duty cycle as a integer value from 0 .. TOP (a.k.a MOD).
 		// WARNING: There are no checks on the bounds of channel!
-		void setExactDutyCycle(const uint8_t channel, const uint32_t absolute) {
+		constexpr void setExactDutyCycle(const uint8_t channel, const uint32_t absolute) {
 			tc()->CONTROLS[channel].CnV = absolute;
 		};
 
@@ -261,7 +261,7 @@ namespace Motate {
 		// These two start the waveform. We try to be as fast as we can.
 		// ASSUMPTION: We stopped it with the corresponding function.
 		// ASSUMPTION: The pin is not and was not in Toggle mode.
-		void startPWMOutput(const uint8_t channel) {
+		constexpr void startPWMOutput(const uint8_t channel) {
 			tc()->CONTROLS[channel].CnSC = (tc()->CONTROLS[channel].CnSC & ~(
 																			 TPM_CnSC_ELSA_MASK |
 																			 TPM_CnSC_ELSB_MASK
@@ -271,7 +271,7 @@ namespace Motate {
 		// These are special function for stopping output waveforms.
 		// This disables the channel.
 		// ASSUMPTION: The pin is not in Toggle mode.
-		void stopPWMOutput(const uint8_t channel) {
+		constexpr void stopPWMOutput(const uint8_t channel) {
 			tc()->CONTROLS[channel].CnSC = (tc()->CONTROLS[channel].CnSC & ~(
 																			 TPM_CnSC_ELSA_MASK |
 																			 TPM_CnSC_ELSB_MASK
@@ -316,7 +316,7 @@ namespace Motate {
 			}
 		}
 
-		void setInterruptPending() {
+		constexpr void setInterruptPending() {
 			NVIC_SetPendingIRQ(tcIRQ());
 		}
 
@@ -445,7 +445,6 @@ namespace Motate {
 		};
 
 		void checkIn() {
-
 		};
 
 		// Placeholder for user code.

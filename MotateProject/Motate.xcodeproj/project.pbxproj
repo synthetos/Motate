@@ -624,9 +624,633 @@
 		D4C79EFD1957C0B700A1BE28 /* Reset.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C79EED1957C0B700A1BE28 /* Reset.cpp */; };
 		D4C79EFE1957C0B700A1BE28 /* syscalls_sam3.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C79EF01957C0B700A1BE28 /* syscalls_sam3.cpp */; };
 		D4C79EFF1957C0B700A1BE28 /* syscalls.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C79EF81957C0B700A1BE28 /* syscalls.cpp */; };
-		D4C79F1E195BC80800A1BE28 /* blink_demo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C79F1B195BC80800A1BE28 /* blink_demo.cpp */; };
-		D4C79F1F195BC80800A1BE28 /* Makefile in Sources */ = {isa = PBXBuildFile; fileRef = D4C79F1D195BC80800A1BE28 /* Makefile */; };
 		D4C79F21195BCC9A00A1BE28 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C79F20195BCC9A00A1BE28 /* main.cpp */; };
+		D4C79F2A196216A300A1BE28 /* blink_demo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C79F23196216A300A1BE28 /* blink_demo.cpp */; };
+		D4C79F2B196216A300A1BE28 /* Makefile in Sources */ = {isa = PBXBuildFile; fileRef = D4C79F25196216A300A1BE28 /* Makefile */; };
+		D4C79F2C196216A300A1BE28 /* fade_demo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C79F27196216A300A1BE28 /* fade_demo.cpp */; };
+		D4C79F2D196216A300A1BE28 /* Makefile in Sources */ = {isa = PBXBuildFile; fileRef = D4C79F29196216A300A1BE28 /* Makefile */; };
+		D4C79F3119630FA000A1BE28 /* startup_sam4cm.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C792BA1957C0AB00A1BE28 /* startup_sam4cm.c */; };
+		D4C79F3219630FA000A1BE28 /* stm32f30x_tim.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C7995D1957C0AD00A1BE28 /* stm32f30x_tim.c */; };
+		D4C79F3319630FA000A1BE28 /* stm32l0xx_hal_smartcard_ex.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79BD21957C0AD00A1BE28 /* stm32l0xx_hal_smartcard_ex.c */; };
+		D4C79F3419630FA000A1BE28 /* stm32f4xx_hal_tim.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799CB1957C0AD00A1BE28 /* stm32f4xx_hal_tim.c */; };
+		D4C79F3519630FA000A1BE28 /* stm32f4xx_hal_dac.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C7997F1957C0AD00A1BE28 /* stm32f4xx_hal_dac.c */; };
+		D4C79F3619630FA000A1BE28 /* startup_sam4l.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C794731957C0AC00A1BE28 /* startup_sam4l.c */; };
+		D4C79F3719630FA000A1BE28 /* startup_sam3n.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C790001957C0AB00A1BE28 /* startup_sam3n.c */; };
+		D4C79F3819630FA000A1BE28 /* sys.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C797CF1957C0AC00A1BE28 /* sys.cpp */; };
+		D4C79F3919630FA000A1BE28 /* stm32f4xx_hal_usart.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B6C1957C0AD00A1BE28 /* stm32f4xx_hal_usart.c */; };
+		D4C79F3A19630FA000A1BE28 /* startup_MKL25Z4.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C797941957C0AC00A1BE28 /* startup_MKL25Z4.s */; };
+		D4C79F3B19630FA000A1BE28 /* stm32f4xx_hal_crc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B141957C0AD00A1BE28 /* stm32f4xx_hal_crc.c */; };
+		D4C79F3C19630FA000A1BE28 /* vector_table.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C7986E1957C0AD00A1BE28 /* vector_table.s */; };
+		D4C79F3D19630FA000A1BE28 /* stm32f0xx_comp.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C798C71957C0AD00A1BE28 /* stm32f0xx_comp.c */; };
+		D4C79F3E19630FA000A1BE28 /* sys.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C7977F1957C0AC00A1BE28 /* sys.cpp */; };
+		D4C79F3F19630FA000A1BE28 /* stm32f30x_usart.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79C651957C0AD00A1BE28 /* stm32f30x_usart.c */; };
+		D4C79F4019630FA000A1BE28 /* stm32l1xx_rtc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79C1D1957C0AD00A1BE28 /* stm32l1xx_rtc.c */; };
+		D4C79F4119630FA000A1BE28 /* stm32l1xx_syscfg.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79C231957C0AD00A1BE28 /* stm32l1xx_syscfg.c */; };
+		D4C79F4219630FA000A1BE28 /* stm32l0xx_hal_pcd.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79BBE1957C0AD00A1BE28 /* stm32l0xx_hal_pcd.c */; };
+		D4C79F4319630FA000A1BE28 /* stm32f0xx_can.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C798C31957C0AD00A1BE28 /* stm32f0xx_can.c */; };
+		D4C79F4419630FA000A1BE28 /* stm32f30x_misc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79C551957C0AD00A1BE28 /* stm32f30x_misc.c */; };
+		D4C79F4519630FA000A1BE28 /* stm32f10x_sdio.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799201957C0AD00A1BE28 /* stm32f10x_sdio.c */; };
+		D4C79F4619630FA000A1BE28 /* stm32f10x_dac.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799081957C0AD00A1BE28 /* stm32f10x_dac.c */; };
+		D4C79F4719630FA000A1BE28 /* system_stm32f0xx.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A161957C0AD00A1BE28 /* system_stm32f0xx.c */; };
+		D4C79F4819630FA000A1BE28 /* sys.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C79C721957C0AD00A1BE28 /* sys.cpp */; };
+		D4C79F4919630FA000A1BE28 /* startup_stm32f030.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A1D1957C0AD00A1BE28 /* startup_stm32f030.s */; };
+		D4C79F4A19630FA000A1BE28 /* stm32f30x_iwdg.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C7994D1957C0AD00A1BE28 /* stm32f30x_iwdg.c */; };
+		D4C79F4B19630FA000A1BE28 /* sys.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C797DD1957C0AC00A1BE28 /* sys.cpp */; };
+		D4C79F4C19630FA000A1BE28 /* stm32f4xx_hal_rcc_ex.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799B71957C0AD00A1BE28 /* stm32f4xx_hal_rcc_ex.c */; };
+		D4C79F4D19630FA000A1BE28 /* stm32f4xx_hal_sd.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799C11957C0AD00A1BE28 /* stm32f4xx_hal_sd.c */; };
+		D4C79F4E19630FA000A1BE28 /* startup_stm32l1xx_hd.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C79C2E1957C0AD00A1BE28 /* startup_stm32l1xx_hd.s */; };
+		D4C79F4F19630FA000A1BE28 /* stm32f4xx_hal_cortex.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799771957C0AD00A1BE28 /* stm32f4xx_hal_cortex.c */; };
+		D4C79F5019630FA000A1BE28 /* startup_MK64F12.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C7977E1957C0AC00A1BE28 /* startup_MK64F12.s */; };
+		D4C79F5119630FA000A1BE28 /* stm32f0xx_hal_cortex.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A331957C0AD00A1BE28 /* stm32f0xx_hal_cortex.c */; };
+		D4C79F5219630FA000A1BE28 /* startup_samg53.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C797051957C0AC00A1BE28 /* startup_samg53.c */; };
+		D4C79F5319630FA000A1BE28 /* stm32l0xx_hal_gpio.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79BAC1957C0AD00A1BE28 /* stm32l0xx_hal_gpio.c */; };
+		D4C79F5419630FA000A1BE28 /* cmsis_nvic.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79BF31957C0AD00A1BE28 /* cmsis_nvic.c */; };
+		D4C79F5519630FA000A1BE28 /* stm32l1xx_rcc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79C1B1957C0AD00A1BE28 /* stm32l1xx_rcc.c */; };
+		D4C79F5619630FA000A1BE28 /* stm32f30x_rtc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79AED1957C0AD00A1BE28 /* stm32f30x_rtc.c */; };
+		D4C79F5719630FA000A1BE28 /* stm32f4xx_hal_adc_ex.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B0D1957C0AD00A1BE28 /* stm32f4xx_hal_adc_ex.c */; };
+		D4C79F5819630FA000A1BE28 /* cmsis_nvic.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79C781957C0AD00A1BE28 /* cmsis_nvic.c */; };
+		D4C79F5919630FA000A1BE28 /* stm32f10x_iwdg.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799181957C0AD00A1BE28 /* stm32f10x_iwdg.c */; };
+		D4C79F5A19630FA000A1BE28 /* stm32f4xx_hal_pwr.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799B11957C0AD00A1BE28 /* stm32f4xx_hal_pwr.c */; };
+		D4C79F5B19630FA000A1BE28 /* stm32f0xx_hal_spi.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A691957C0AD00A1BE28 /* stm32f0xx_hal_spi.c */; };
+		D4C79F5C19630FA000A1BE28 /* stm32f4xx_hal_wwdg.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B6E1957C0AD00A1BE28 /* stm32f4xx_hal_wwdg.c */; };
+		D4C79F5D19630FA000A1BE28 /* stm32f0xx_pwr.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A061957C0AD00A1BE28 /* stm32f0xx_pwr.c */; };
+		D4C79F5E19630FA000A1BE28 /* startup_LPC17xx.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C798521957C0AD00A1BE28 /* startup_LPC17xx.s */; };
+		D4C79F5F19630FA000A1BE28 /* sys.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C798531957C0AD00A1BE28 /* sys.cpp */; };
+		D4C79F6019630FA000A1BE28 /* stm32l0xx_hal_rtc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79BCC1957C0AD00A1BE28 /* stm32l0xx_hal_rtc.c */; };
+		D4C79F6119630FA000A1BE28 /* startup_stm32f10x_md.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C79ABB1957C0AD00A1BE28 /* startup_stm32f10x_md.s */; };
+		D4C79F6219630FA000A1BE28 /* stm32l1xx_opamp.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79C171957C0AD00A1BE28 /* stm32l1xx_opamp.c */; };
+		D4C79F6319630FA000A1BE28 /* stm32f0xx_exti.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799FA1957C0AD00A1BE28 /* stm32f0xx_exti.c */; };
+		D4C79F6419630FA000A1BE28 /* sys.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C7989F1957C0AD00A1BE28 /* sys.cpp */; };
+		D4C79F6519630FA000A1BE28 /* stm32f30x_dac.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79AD31957C0AD00A1BE28 /* stm32f30x_dac.c */; };
+		D4C79F6619630FA000A1BE28 /* startup_LPC11xx.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C7981A1957C0AC00A1BE28 /* startup_LPC11xx.s */; };
+		D4C79F6719630FA000A1BE28 /* stm32f30x_comp.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79C3E1957C0AD00A1BE28 /* stm32f30x_comp.c */; };
+		D4C79F6819630FA000A1BE28 /* stm32f4xx_hal_irda.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B3E1957C0AD00A1BE28 /* stm32f4xx_hal_irda.c */; };
+		D4C79F6919630FA000A1BE28 /* stm32f4xx_hal_pwr.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B4C1957C0AD00A1BE28 /* stm32f4xx_hal_pwr.c */; };
+		D4C79F6A19630FA000A1BE28 /* startup_LPC11xx.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C797E01957C0AC00A1BE28 /* startup_LPC11xx.s */; };
+		D4C79F6B19630FA000A1BE28 /* system_MKL25Z4.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C797901957C0AC00A1BE28 /* system_MKL25Z4.c */; };
+		D4C79F6C19630FA000A1BE28 /* stm32f4xx_hal_rcc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B501957C0AD00A1BE28 /* stm32f4xx_hal_rcc.c */; };
+		D4C79F6D19630FA000A1BE28 /* system_samd20.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C7960E1957C0AC00A1BE28 /* system_samd20.c */; };
+		D4C79F6E19630FA000A1BE28 /* sys.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A1B1957C0AD00A1BE28 /* sys.cpp */; };
+		D4C79F6F19630FA000A1BE28 /* stm32f0xx_adc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799E71957C0AD00A1BE28 /* stm32f0xx_adc.c */; };
+		D4C79F7019630FA000A1BE28 /* stm32f4xx_ll_sdmmc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799D91957C0AD00A1BE28 /* stm32f4xx_ll_sdmmc.c */; };
+		D4C79F7119630FA000A1BE28 /* stm32f0xx_hal_gpio.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A451957C0AD00A1BE28 /* stm32f0xx_hal_gpio.c */; };
+		D4C79F7219630FA000A1BE28 /* startup_stm32f302x8.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C79C701957C0AD00A1BE28 /* startup_stm32f302x8.s */; };
+		D4C79F7319630FA000A1BE28 /* system_samr21.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C797641957C0AC00A1BE28 /* system_samr21.c */; };
+		D4C79F7419630FA000A1BE28 /* startup_MK20D5.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C797741957C0AC00A1BE28 /* startup_MK20D5.s */; };
+		D4C79F7519630FA000A1BE28 /* startup_LPC11xx.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C797D81957C0AC00A1BE28 /* startup_LPC11xx.s */; };
+		D4C79F7619630FA000A1BE28 /* stm32f30x_dbgmcu.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C7993F1957C0AD00A1BE28 /* stm32f30x_dbgmcu.c */; };
+		D4C79F7719630FA000A1BE28 /* stm32f4xx_hal_cryp.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B161957C0AD00A1BE28 /* stm32f4xx_hal_cryp.c */; };
+		D4C79F7819630FA000A1BE28 /* stm32f10x_adc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C798FD1957C0AD00A1BE28 /* stm32f10x_adc.c */; };
+		D4C79F7919630FA000A1BE28 /* stm32f4xx_hal_flash.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C7998E1957C0AD00A1BE28 /* stm32f4xx_hal_flash.c */; };
+		D4C79F7A19630FA000A1BE28 /* stm32l0xx_hal_rcc_ex.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79BC81957C0AD00A1BE28 /* stm32l0xx_hal_rcc_ex.c */; };
+		D4C79F7B19630FA000A1BE28 /* stm32f30x_flash.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799451957C0AD00A1BE28 /* stm32f30x_flash.c */; };
+		D4C79F7C19630FA000A1BE28 /* stm32f4xx_ll_fmc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B701957C0AD00A1BE28 /* stm32f4xx_ll_fmc.c */; };
+		D4C79F7D19630FA000A1BE28 /* stm32f10x_crc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A941957C0AD00A1BE28 /* stm32f10x_crc.c */; };
+		D4C79F7E19630FA000A1BE28 /* stm32f0xx_hal_tim_ex.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A6D1957C0AD00A1BE28 /* stm32f0xx_hal_tim_ex.c */; };
+		D4C79F7F19630FA000A1BE28 /* cmsis_nvic.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C7982A1957C0AD00A1BE28 /* cmsis_nvic.c */; };
+		D4C79F8019630FA000A1BE28 /* stm32f4xx_hal_can.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799741957C0AD00A1BE28 /* stm32f4xx_hal_can.c */; };
+		D4C79F8119630FA000A1BE28 /* stm32f4xx_hal_crc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799791957C0AD00A1BE28 /* stm32f4xx_hal_crc.c */; };
+		D4C79F8219630FA000A1BE28 /* startup_LPC8xx.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C798B81957C0AD00A1BE28 /* startup_LPC8xx.s */; };
+		D4C79F8319630FA000A1BE28 /* stm32f4xx_hal_gpio.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B2D1957C0AD00A1BE28 /* stm32f4xx_hal_gpio.c */; };
+		D4C79F8419630FA000A1BE28 /* stm32f4xx_hal_uart.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B6A1957C0AD00A1BE28 /* stm32f4xx_hal_uart.c */; };
+		D4C79F8519630FA000A1BE28 /* SamSPI.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C78F5D195201A900A1BE28 /* SamSPI.cpp */; };
+		D4C79F8619630FA000A1BE28 /* system_sam4cp.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C793701957C0AB00A1BE28 /* system_sam4cp.c */; };
+		D4C79F8719630FA000A1BE28 /* vector_functions.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C798721957C0AD00A1BE28 /* vector_functions.s */; };
+		D4C79F8819630FA000A1BE28 /* stm32f10x_pwr.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79AA81957C0AD00A1BE28 /* stm32f10x_pwr.c */; };
+		D4C79F8919630FA000A1BE28 /* stm32f10x_fsmc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799121957C0AD00A1BE28 /* stm32f10x_fsmc.c */; };
+		D4C79F8A19630FA000A1BE28 /* stm32l0xx_hal_tim_ex.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79BDA1957C0AD00A1BE28 /* stm32l0xx_hal_tim_ex.c */; };
+		D4C79F8B19630FA000A1BE28 /* Makefile in Sources */ = {isa = PBXBuildFile; fileRef = D4C79F25196216A300A1BE28 /* Makefile */; };
+		D4C79F8C19630FA000A1BE28 /* sys.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C79AC11957C0AD00A1BE28 /* sys.cpp */; };
+		D4C79F8D19630FA000A1BE28 /* stm32f4xx_hal_rng.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B541957C0AD00A1BE28 /* stm32f4xx_hal_rng.c */; };
+		D4C79F8E19630FA000A1BE28 /* sys.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C7988C1957C0AD00A1BE28 /* sys.cpp */; };
+		D4C79F8F19630FA000A1BE28 /* cmsis_nvic.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C798BE1957C0AD00A1BE28 /* cmsis_nvic.c */; };
+		D4C79F9019630FA000A1BE28 /* stm32f0xx_hal_adc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A281957C0AD00A1BE28 /* stm32f0xx_hal_adc.c */; };
+		D4C79F9119630FA000A1BE28 /* stm32l1xx_dbgmcu.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79C041957C0AD00A1BE28 /* stm32l1xx_dbgmcu.c */; };
+		D4C79F9219630FA000A1BE28 /* stm32l0xx_hal_cryp.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B9D1957C0AD00A1BE28 /* stm32l0xx_hal_cryp.c */; };
+		D4C79F9319630FA000A1BE28 /* stm32f0xx_hal_usart.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A751957C0AD00A1BE28 /* stm32f0xx_hal_usart.c */; };
+		D4C79F9419630FA000A1BE28 /* cmsis_nvic.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C797BC1957C0AC00A1BE28 /* cmsis_nvic.c */; };
+		D4C79F9519630FA000A1BE28 /* startup_LPC11U6x.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C797C51957C0AC00A1BE28 /* startup_LPC11U6x.s */; };
+		D4C79F9619630FA000A1BE28 /* stm32f4xx_hal_dma2d.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799881957C0AD00A1BE28 /* stm32f4xx_hal_dma2d.c */; };
+		D4C79F9719630FA000A1BE28 /* stm32f4xx_hal_cryp_ex.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C7997D1957C0AD00A1BE28 /* stm32f4xx_hal_cryp_ex.c */; };
+		D4C79F9819630FA000A1BE28 /* stm32f4xx_hal_i2c.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C7999B1957C0AD00A1BE28 /* stm32f4xx_hal_i2c.c */; };
+		D4C79F9919630FA000A1BE28 /* cmsis_nvic.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C7978D1957C0AC00A1BE28 /* cmsis_nvic.c */; };
+		D4C79F9A19630FA000A1BE28 /* sys.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C798441957C0AD00A1BE28 /* sys.cpp */; };
+		D4C79F9B19630FA000A1BE28 /* stm32f4xx_ll_fmc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799D51957C0AD00A1BE28 /* stm32f4xx_ll_fmc.c */; };
+		D4C79F9C19630FA000A1BE28 /* system_sam3n.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C790011957C0AB00A1BE28 /* system_sam3n.c */; };
+		D4C79F9D19630FA000A1BE28 /* stm32f10x_dbgmcu.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C7990A1957C0AD00A1BE28 /* stm32f10x_dbgmcu.c */; };
+		D4C79F9E19630FA000A1BE28 /* startup_LPC11xx.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C797FE1957C0AC00A1BE28 /* startup_LPC11xx.s */; };
+		D4C79F9F19630FA000A1BE28 /* stm32f10x_tim.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799241957C0AD00A1BE28 /* stm32f10x_tim.c */; };
+		D4C79FA019630FA000A1BE28 /* stm32f10x_rcc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79AAA1957C0AD00A1BE28 /* stm32f10x_rcc.c */; };
+		D4C79FA119630FA000A1BE28 /* stm32l1xx_dac.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79C021957C0AD00A1BE28 /* stm32l1xx_dac.c */; };
+		D4C79FA219630FA000A1BE28 /* stm32f10x_gpio.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799141957C0AD00A1BE28 /* stm32f10x_gpio.c */; };
+		D4C79FA319630FA000A1BE28 /* cmsis_nvic.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C797C81957C0AC00A1BE28 /* cmsis_nvic.c */; };
+		D4C79FA419630FA000A1BE28 /* startup_samd21.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C7967F1957C0AC00A1BE28 /* startup_samd21.c */; };
+		D4C79FA519630FA000A1BE28 /* stm32f4xx_hal_i2s.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B3A1957C0AD00A1BE28 /* stm32f4xx_hal_i2s.c */; };
+		D4C79FA619630FA000A1BE28 /* stm32l1xx_aes_util.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79BFC1957C0AD00A1BE28 /* stm32l1xx_aes_util.c */; };
+		D4C79FA719630FA000A1BE28 /* sys.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C79ABD1957C0AD00A1BE28 /* sys.cpp */; };
+		D4C79FA819630FA000A1BE28 /* stm32f4xx_hal_dma_ex.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C7998A1957C0AD00A1BE28 /* stm32f4xx_hal_dma_ex.c */; };
+		D4C79FA919630FA000A1BE28 /* Makefile in Sources */ = {isa = PBXBuildFile; fileRef = D4C79F29196216A300A1BE28 /* Makefile */; };
+		D4C79FAA19630FA000A1BE28 /* stm32f4xx_hal_i2s_ex.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B3C1957C0AD00A1BE28 /* stm32f4xx_hal_i2s_ex.c */; };
+		D4C79FAB19630FA000A1BE28 /* startup_stm32f401xe.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B7B1957C0AD00A1BE28 /* startup_stm32f401xe.s */; };
+		D4C79FAC19630FA000A1BE28 /* stm32f4xx_hal_ltdc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799A71957C0AD00A1BE28 /* stm32f4xx_hal_ltdc.c */; };
+		D4C79FAD19630FA000A1BE28 /* stm32f30x_exti.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79AD91957C0AD00A1BE28 /* stm32f30x_exti.c */; };
+		D4C79FAE19630FA000A1BE28 /* startup_sam3u.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C7911E1957C0AB00A1BE28 /* startup_sam3u.c */; };
+		D4C79FAF19630FA000A1BE28 /* Motate.mk in Sources */ = {isa = PBXBuildFile; fileRef = D4C78F821957BF8400A1BE28 /* Motate.mk */; };
+		D4C79FB019630FA000A1BE28 /* system_stm32f10x.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C7992A1957C0AD00A1BE28 /* system_stm32f10x.c */; };
+		D4C79FB119630FA000A1BE28 /* stm32l1xx_usart.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79C271957C0AD00A1BE28 /* stm32l1xx_usart.c */; };
+		D4C79FB219630FA000A1BE28 /* system_sam4e.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C793D31957C0AB00A1BE28 /* system_sam4e.c */; };
+		D4C79FB319630FA000A1BE28 /* stm32f0xx_hal_dac_ex.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A3B1957C0AD00A1BE28 /* stm32f0xx_hal_dac_ex.c */; };
+		D4C79FB419630FA000A1BE28 /* system_sam4c.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C791EE1957C0AB00A1BE28 /* system_sam4c.c */; };
+		D4C79FB519630FA000A1BE28 /* misc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79BF51957C0AD00A1BE28 /* misc.c */; };
+		D4C79FB619630FA000A1BE28 /* startup_LPC13xx.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C798391957C0AD00A1BE28 /* startup_LPC13xx.s */; };
+		D4C79FB719630FA000A1BE28 /* stm32f4xx_hal_hash_ex.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B321957C0AD00A1BE28 /* stm32f4xx_hal_hash_ex.c */; };
+		D4C79FB819630FA000A1BE28 /* stm32f10x_i2c.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79AA41957C0AD00A1BE28 /* stm32f10x_i2c.c */; };
+		D4C79FB919630FA000A1BE28 /* stm32f4xx_hal.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C7996E1957C0AD00A1BE28 /* stm32f4xx_hal.c */; };
+		D4C79FBA19630FA000A1BE28 /* startup_MKL25Z4.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C797971957C0AC00A1BE28 /* startup_MKL25Z4.c */; };
+		D4C79FBB19630FA000A1BE28 /* stm32f0xx_hal_pwr_ex.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A591957C0AD00A1BE28 /* stm32f0xx_hal_pwr_ex.c */; };
+		D4C79FBC19630FA000A1BE28 /* stm32f4xx_hal_cortex.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B121957C0AD00A1BE28 /* stm32f4xx_hal_cortex.c */; };
+		D4C79FBD19630FA000A1BE28 /* startup_stm32l1xx_hd.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C79C321957C0AD00A1BE28 /* startup_stm32l1xx_hd.s */; };
+		D4C79FBE19630FA000A1BE28 /* stm32f4xx_hal_rcc_ex.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B521957C0AD00A1BE28 /* stm32f4xx_hal_rcc_ex.c */; };
+		D4C79FBF19630FA000A1BE28 /* stm32f0xx_comp.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799ED1957C0AD00A1BE28 /* stm32f0xx_comp.c */; };
+		D4C79FC019630FA000A1BE28 /* stm32f0xx_misc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C798DE1957C0AD00A1BE28 /* stm32f0xx_misc.c */; };
+		D4C79FC119630FA000A1BE28 /* startup_MKL25Z4.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C7979A1957C0AC00A1BE28 /* startup_MKL25Z4.s */; };
+		D4C79FC219630FA000A1BE28 /* stm32f4xx_hal_nor.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799AB1957C0AD00A1BE28 /* stm32f4xx_hal_nor.c */; };
+		D4C79FC319630FA000A1BE28 /* stm32f4xx_ll_usb.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B761957C0AD00A1BE28 /* stm32f4xx_ll_usb.c */; };
+		D4C79FC419630FA000A1BE28 /* stm32f4xx_hal_sram.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B641957C0AD00A1BE28 /* stm32f4xx_hal_sram.c */; };
+		D4C79FC519630FA000A1BE28 /* system_stm32f10x.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79AB81957C0AD00A1BE28 /* system_stm32f10x.c */; };
+		D4C79FC619630FA000A1BE28 /* stm32f4xx_hal_sai.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799BF1957C0AD00A1BE28 /* stm32f4xx_hal_sai.c */; };
+		D4C79FC719630FA000A1BE28 /* stm32l0xx_hal_crc_ex.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B9B1957C0AD00A1BE28 /* stm32l0xx_hal_crc_ex.c */; };
+		D4C79FC819630FA000A1BE28 /* startup_stm32f072xb.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A7D1957C0AD00A1BE28 /* startup_stm32f072xb.s */; };
+		D4C79FC919630FA000A1BE28 /* stm32l0xx_hal_cortex.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B971957C0AD00A1BE28 /* stm32l0xx_hal_cortex.c */; };
+		D4C79FCA19630FA000A1BE28 /* sys.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C797C21957C0AC00A1BE28 /* sys.cpp */; };
+		D4C79FCB19630FA000A1BE28 /* startup_stm32f10x_md.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C79ABF1957C0AD00A1BE28 /* startup_stm32f10x_md.s */; };
+		D4C79FCC19630FA000A1BE28 /* stm32f0xx_tim.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C798EA1957C0AD00A1BE28 /* stm32f0xx_tim.c */; };
+		D4C79FCD19630FA000A1BE28 /* stm32f30x_rcc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79C5B1957C0AD00A1BE28 /* stm32f30x_rcc.c */; };
+		D4C79FCE19630FA000A1BE28 /* core_arm7.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C798651957C0AD00A1BE28 /* core_arm7.c */; };
+		D4C79FCF19630FA000A1BE28 /* stm32f0xx_hal.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A261957C0AD00A1BE28 /* stm32f0xx_hal.c */; };
+		D4C79FD019630FA000A1BE28 /* stm32f10x_spi.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79AB01957C0AD00A1BE28 /* stm32f10x_spi.c */; };
+		D4C79FD119630FA000A1BE28 /* cmsis_nvic.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B051957C0AD00A1BE28 /* cmsis_nvic.c */; };
+		D4C79FD219630FA000A1BE28 /* stm32f30x_crc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79C411957C0AD00A1BE28 /* stm32f30x_crc.c */; };
+		D4C79FD319630FA000A1BE28 /* sys.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C798141957C0AC00A1BE28 /* sys.cpp */; };
+		D4C79FD419630FA000A1BE28 /* startup_STM32F40x.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C79C7E1957C0AD00A1BE28 /* startup_STM32F40x.s */; };
+		D4C79FD519630FA000A1BE28 /* stm32f10x_bkp.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C798FF1957C0AD00A1BE28 /* stm32f10x_bkp.c */; };
+		D4C79FD619630FA000A1BE28 /* stm32f30x_dma.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79AD71957C0AD00A1BE28 /* stm32f30x_dma.c */; };
+		D4C79FD719630FA000A1BE28 /* stm32f0xx_crs.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C798CC1957C0AD00A1BE28 /* stm32f0xx_crs.c */; };
+		D4C79FD819630FA000A1BE28 /* stm32l0xx_hal_flash.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79BA61957C0AD00A1BE28 /* stm32l0xx_hal_flash.c */; };
+		D4C79FD919630FA000A1BE28 /* sys.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C798271957C0AD00A1BE28 /* sys.cpp */; };
+		D4C79FDA19630FA000A1BE28 /* startup_STM32F40x.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B841957C0AD00A1BE28 /* startup_STM32F40x.s */; };
+		D4C79FDB19630FA000A1BE28 /* stm32f10x_dbgmcu.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A981957C0AD00A1BE28 /* stm32f10x_dbgmcu.c */; };
+		D4C79FDC19630FA000A1BE28 /* SamPins.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C78F5B195201A900A1BE28 /* SamPins.cpp */; };
+		D4C79FDD19630FA000A1BE28 /* stm32l0xx_hal_spi.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79BD61957C0AD00A1BE28 /* stm32l0xx_hal_spi.c */; };
+		D4C79FDE19630FA000A1BE28 /* stm32f0xx_hal_smbus.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A671957C0AD00A1BE28 /* stm32f0xx_hal_smbus.c */; };
+		D4C79FDF19630FA000A1BE28 /* stm32f4xx_hal_pcd.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799AF1957C0AD00A1BE28 /* stm32f4xx_hal_pcd.c */; };
+		D4C79FE019630FA000A1BE28 /* stm32f30x_exti.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799431957C0AD00A1BE28 /* stm32f30x_exti.c */; };
+		D4C79FE119630FA000A1BE28 /* stm32f0xx_hal_i2c_ex.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A4A1957C0AD00A1BE28 /* stm32f0xx_hal_i2c_ex.c */; };
+		D4C79FE219630FA000A1BE28 /* stm32f30x_dma.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799411957C0AD00A1BE28 /* stm32f30x_dma.c */; };
+		D4C79FE319630FA000A1BE28 /* SamUSB.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C78F61195201A900A1BE28 /* SamUSB.cpp */; };
+		D4C79FE419630FA000A1BE28 /* sys.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A7F1957C0AD00A1BE28 /* sys.cpp */; };
+		D4C79FE519630FA000A1BE28 /* stm32f4xx_hal_flash.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B291957C0AD00A1BE28 /* stm32f4xx_hal_flash.c */; };
+		D4C79FE619630FA000A1BE28 /* stm32f4xx_hal_eth.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C7998C1957C0AD00A1BE28 /* stm32f4xx_hal_eth.c */; };
+		D4C79FE719630FA000A1BE28 /* stm32f4xx_hal_dac.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B1A1957C0AD00A1BE28 /* stm32f4xx_hal_dac.c */; };
+		D4C79FE819630FA000A1BE28 /* startup_STM32F30x.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C79C741957C0AD00A1BE28 /* startup_STM32F30x.s */; };
+		D4C79FE919630FA000A1BE28 /* cmsis_nvic.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C798471957C0AD00A1BE28 /* cmsis_nvic.c */; };
+		D4C79FEA19630FA000A1BE28 /* cmsis_nvic.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799E41957C0AD00A1BE28 /* cmsis_nvic.c */; };
+		D4C79FEB19630FA000A1BE28 /* stm32f30x_spi.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799591957C0AD00A1BE28 /* stm32f30x_spi.c */; };
+		D4C79FEC19630FA000A1BE28 /* stm32f0xx_spi.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A0C1957C0AD00A1BE28 /* stm32f0xx_spi.c */; };
+		D4C79FED19630FA000A1BE28 /* startup_LPC11xx.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C7980F1957C0AC00A1BE28 /* startup_LPC11xx.s */; };
+		D4C79FEE19630FA000A1BE28 /* stm32f4xx_hal_sdram.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799C31957C0AD00A1BE28 /* stm32f4xx_hal_sdram.c */; };
+		D4C79FEF19630FA000A1BE28 /* stm32f0xx_iwdg.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A021957C0AD00A1BE28 /* stm32f0xx_iwdg.c */; };
+		D4C79FF019630FA000A1BE28 /* stm32f30x_hrtim.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79ADF1957C0AD00A1BE28 /* stm32f30x_hrtim.c */; };
+		D4C79FF119630FA000A1BE28 /* stm32l0xx_hal_tim.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79BD81957C0AD00A1BE28 /* stm32l0xx_hal_tim.c */; };
+		D4C79FF219630FA000A1BE28 /* startup_MKL46Z4.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C797A81957C0AC00A1BE28 /* startup_MKL46Z4.s */; };
+		D4C79FF319630FA000A1BE28 /* stm32f0xx_hal_pcd.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A531957C0AD00A1BE28 /* stm32f0xx_hal_pcd.c */; };
+		D4C79FF419630FA000A1BE28 /* startup_stm32l053xx.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C79BEA1957C0AD00A1BE28 /* startup_stm32l053xx.s */; };
+		D4C79FF519630FA000A1BE28 /* stm32f4xx_hal_dma.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B211957C0AD00A1BE28 /* stm32f4xx_hal_dma.c */; };
+		D4C79FF619630FA000A1BE28 /* stm32f0xx_wwdg.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C798EE1957C0AD00A1BE28 /* stm32f0xx_wwdg.c */; };
+		D4C79FF719630FA000A1BE28 /* stm32f4xx_hal_pcd.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B4A1957C0AD00A1BE28 /* stm32f4xx_hal_pcd.c */; };
+		D4C79FF819630FA000A1BE28 /* stm32f0xx_dac.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C798CE1957C0AD00A1BE28 /* stm32f0xx_dac.c */; };
+		D4C79FF919630FA000A1BE28 /* stm32f30x_misc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79AE51957C0AD00A1BE28 /* stm32f30x_misc.c */; };
+		D4C79FFA19630FA000A1BE28 /* stm32f0xx_syscfg.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A0E1957C0AD00A1BE28 /* stm32f0xx_syscfg.c */; };
+		D4C79FFB19630FA000A1BE28 /* stm32f4xx_hal_nand.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B441957C0AD00A1BE28 /* stm32f4xx_hal_nand.c */; };
+		D4C79FFC19630FA000A1BE28 /* stm32f4xx_hal_sram.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799C91957C0AD00A1BE28 /* stm32f4xx_hal_sram.c */; };
+		D4C79FFD19630FA000A1BE28 /* startup_LPC11xx.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C797E61957C0AC00A1BE28 /* startup_LPC11xx.s */; };
+		D4C79FFE19630FA000A1BE28 /* KL05ZPins.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C78F6F19538E6B00A1BE28 /* KL05ZPins.cpp */; };
+		D4C79FFF19630FA000A1BE28 /* startup_sam4c32.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C7924F1957C0AB00A1BE28 /* startup_sam4c32.c */; };
+		D4C7A00019630FA000A1BE28 /* stm32f0xx_usart.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A121957C0AD00A1BE28 /* stm32f0xx_usart.c */; };
+		D4C7A00119630FA000A1BE28 /* startup_MKL05Z4.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C7978A1957C0AC00A1BE28 /* startup_MKL05Z4.s */; };
+		D4C7A00219630FA000A1BE28 /* startup_stm32f302x8.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C79AFC1957C0AD00A1BE28 /* startup_stm32f302x8.s */; };
+		D4C7A00319630FA000A1BE28 /* stm32l0xx_hal_dac.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B9F1957C0AD00A1BE28 /* stm32l0xx_hal_dac.c */; };
+		D4C7A00419630FA000A1BE28 /* cortex_handlers.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79EE81957C0B700A1BE28 /* cortex_handlers.c */; };
+		D4C7A00519630FA000A1BE28 /* startup_LPC11xx.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C797D51957C0AC00A1BE28 /* startup_LPC11xx.s */; };
+		D4C7A00619630FA000A1BE28 /* sys.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A1F1957C0AD00A1BE28 /* sys.cpp */; };
+		D4C7A00719630FA000A1BE28 /* stm32f30x_opamp.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79C571957C0AD00A1BE28 /* stm32f30x_opamp.c */; };
+		D4C7A00819630FA000A1BE28 /* system_stm32f30x.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799631957C0AD00A1BE28 /* system_stm32f30x.c */; };
+		D4C7A00919630FA000A1BE28 /* stm32f0xx_hal_uart_ex.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A731957C0AD00A1BE28 /* stm32f0xx_hal_uart_ex.c */; };
+		D4C7A00A19630FA000A1BE28 /* startup_stm32f407xx.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C799E01957C0AD00A1BE28 /* startup_stm32f407xx.s */; };
+		D4C7A00B19630FA000A1BE28 /* stm32f10x_iwdg.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79AA61957C0AD00A1BE28 /* stm32f10x_iwdg.c */; };
+		D4C7A00C19630FA000A1BE28 /* stm32f0xx_exti.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C798D41957C0AD00A1BE28 /* stm32f0xx_exti.c */; };
+		D4C7A00D19630FA000A1BE28 /* stm32f10x_bkp.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A8D1957C0AD00A1BE28 /* stm32f10x_bkp.c */; };
+		D4C7A00E19630FA000A1BE28 /* cmsis_nvic.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C7983C1957C0AD00A1BE28 /* cmsis_nvic.c */; };
+		D4C7A00F19630FA000A1BE28 /* system_sam4s.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C7954F1957C0AC00A1BE28 /* system_sam4s.c */; };
+		D4C7A01019630FA000A1BE28 /* system_samg51.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C796C01957C0AC00A1BE28 /* system_samg51.c */; };
+		D4C7A01119630FA000A1BE28 /* system_LPC11Uxx.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C797CC1957C0AC00A1BE28 /* system_LPC11Uxx.c */; };
+		D4C7A01219630FA000A1BE28 /* vector_table.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C798771957C0AD00A1BE28 /* vector_table.s */; };
+		D4C7A01319630FA000A1BE28 /* stm32f10x_exti.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A9C1957C0AD00A1BE28 /* stm32f10x_exti.c */; };
+		D4C7A01419630FA000A1BE28 /* startup_LPC11xx.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C797E31957C0AC00A1BE28 /* startup_LPC11xx.s */; };
+		D4C7A01519630FA000A1BE28 /* stm32f10x_can.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799011957C0AD00A1BE28 /* stm32f10x_can.c */; };
+		D4C7A01619630FA000A1BE28 /* system_LPC17xx.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C7984A1957C0AD00A1BE28 /* system_LPC17xx.c */; };
+		D4C7A01719630FA000A1BE28 /* stm32f4xx_hal_pwr_ex.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799B31957C0AD00A1BE28 /* stm32f4xx_hal_pwr_ex.c */; };
+		D4C7A01819630FA000A1BE28 /* stm32f0xx_hal_dma.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A3E1957C0AD00A1BE28 /* stm32f0xx_hal_dma.c */; };
+		D4C7A01919630FA000A1BE28 /* startup_lpc407x_8x.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C798941957C0AD00A1BE28 /* startup_lpc407x_8x.cpp */; };
+		D4C7A01A19630FA000A1BE28 /* cmsis_nvic.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C7996A1957C0AD00A1BE28 /* cmsis_nvic.c */; };
+		D4C7A01B19630FA000A1BE28 /* stm32f10x_gpio.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79AA21957C0AD00A1BE28 /* stm32f10x_gpio.c */; };
+		D4C7A01C19630FA000A1BE28 /* stm32f30x_adc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79ACA1957C0AD00A1BE28 /* stm32f30x_adc.c */; };
+		D4C7A01D19630FA000A1BE28 /* startup_stm32f072xb.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A811957C0AD00A1BE28 /* startup_stm32f072xb.s */; };
+		D4C7A01E19630FA000A1BE28 /* stm32f4xx_hal_nand.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799A91957C0AD00A1BE28 /* stm32f4xx_hal_nand.c */; };
+		D4C7A01F19630FA000A1BE28 /* stm32f0xx_hal_dac.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A391957C0AD00A1BE28 /* stm32f0xx_hal_dac.c */; };
+		D4C7A02019630FA000A1BE28 /* stm32f30x_adc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79C3A1957C0AD00A1BE28 /* stm32f30x_adc.c */; };
+		D4C7A02119630FA000A1BE28 /* sys.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C79BF01957C0AD00A1BE28 /* sys.cpp */; };
+		D4C7A02219630FA000A1BE28 /* Reset.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C79EED1957C0B700A1BE28 /* Reset.cpp */; };
+		D4C7A02319630FA000A1BE28 /* stm32f0xx_flash.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799FC1957C0AD00A1BE28 /* stm32f0xx_flash.c */; };
+		D4C7A02419630FA000A1BE28 /* system_sam4n.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C794C61957C0AC00A1BE28 /* system_sam4n.c */; };
+		D4C7A02519630FA000A1BE28 /* stm32f30x_i2c.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79C511957C0AD00A1BE28 /* stm32f30x_i2c.c */; };
+		D4C7A02619630FA000A1BE28 /* startup_sam4e.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C793D21957C0AB00A1BE28 /* startup_sam4e.c */; };
+		D4C7A02719630FA000A1BE28 /* stm32f4xx_hal_ltdc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B421957C0AD00A1BE28 /* stm32f4xx_hal_ltdc.c */; };
+		D4C7A02819630FA000A1BE28 /* stm32l0xx_hal_flash_ramfunc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79BAA1957C0AD00A1BE28 /* stm32l0xx_hal_flash_ramfunc.c */; };
+		D4C7A02919630FA000A1BE28 /* stm32f4xx_hal_pccard.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799AD1957C0AD00A1BE28 /* stm32f4xx_hal_pccard.c */; };
+		D4C7A02A19630FA000A1BE28 /* stm32f30x_crc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79AD11957C0AD00A1BE28 /* stm32f30x_crc.c */; };
+		D4C7A02B19630FA000A1BE28 /* stm32l0xx_hal_uart.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79BDE1957C0AD00A1BE28 /* stm32l0xx_hal_uart.c */; };
+		D4C7A02C19630FA000A1BE28 /* stm32f0xx_usart.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C798EC1957C0AD00A1BE28 /* stm32f0xx_usart.c */; };
+		D4C7A02D19630FA000A1BE28 /* stm32f0xx_can.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799E91957C0AD00A1BE28 /* stm32f0xx_can.c */; };
+		D4C7A02E19630FA000A1BE28 /* stm32l0xx_hal_comp.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B941957C0AD00A1BE28 /* stm32l0xx_hal_comp.c */; };
+		D4C7A02F19630FA000A1BE28 /* startup_sam4c.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C791ED1957C0AB00A1BE28 /* startup_sam4c.c */; };
+		D4C7A03019630FA000A1BE28 /* stm32l0xx_hal_pcd_ex.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79BC01957C0AD00A1BE28 /* stm32l0xx_hal_pcd_ex.c */; };
+		D4C7A03119630FA000A1BE28 /* stm32f30x_rcc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79AEB1957C0AD00A1BE28 /* stm32f30x_rcc.c */; };
+		D4C7A03219630FA000A1BE28 /* stm32f30x_dac.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79C431957C0AD00A1BE28 /* stm32f30x_dac.c */; };
+		D4C7A03319630FA000A1BE28 /* stm32f4xx_hal_i2c_ex.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B381957C0AD00A1BE28 /* stm32f4xx_hal_i2c_ex.c */; };
+		D4C7A03419630FA000A1BE28 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C79F20195BCC9A00A1BE28 /* main.cpp */; };
+		D4C7A03519630FA000A1BE28 /* startup_LPC17xx.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C798591957C0AD00A1BE28 /* startup_LPC17xx.cpp */; };
+		D4C7A03619630FA000A1BE28 /* stm32f0xx_crc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C798CA1957C0AD00A1BE28 /* stm32f0xx_crc.c */; };
+		D4C7A03719630FA000A1BE28 /* system_LPC11xx.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C7980A1957C0AC00A1BE28 /* system_LPC11xx.c */; };
+		D4C7A03819630FA000A1BE28 /* stm32f4xx_hal_uart.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799CF1957C0AD00A1BE28 /* stm32f4xx_hal_uart.c */; };
+		D4C7A03919630FA000A1BE28 /* sys.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B7D1957C0AD00A1BE28 /* sys.cpp */; };
+		D4C7A03A19630FA000A1BE28 /* stm32f30x_dma.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79C471957C0AD00A1BE28 /* stm32f30x_dma.c */; };
+		D4C7A03B19630FA000A1BE28 /* stm32l0xx_hal_adc_ex.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B921957C0AD00A1BE28 /* stm32l0xx_hal_adc_ex.c */; };
+		D4C7A03C19630FA000A1BE28 /* system_stm32f30x.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79C691957C0AD00A1BE28 /* system_stm32f30x.c */; };
+		D4C7A03D19630FA000A1BE28 /* stm32f30x_flash.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79ADB1957C0AD00A1BE28 /* stm32f30x_flash.c */; };
+		D4C7A03E19630FA000A1BE28 /* system_stm32f4xx.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799DD1957C0AD00A1BE28 /* system_stm32f4xx.c */; };
+		D4C7A03F19630FA000A1BE28 /* stm32f30x_usart.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79AF51957C0AD00A1BE28 /* stm32f30x_usart.c */; };
+		D4C7A04019630FA000A1BE28 /* startup_LPC43xx.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C798A51957C0AD00A1BE28 /* startup_LPC43xx.cpp */; };
+		D4C7A04119630FA000A1BE28 /* stm32f30x_iwdg.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79AE31957C0AD00A1BE28 /* stm32f30x_iwdg.c */; };
+		D4C7A04219630FA000A1BE28 /* stm32f0xx_syscfg.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C798E81957C0AD00A1BE28 /* stm32f0xx_syscfg.c */; };
+		D4C7A04319630FA000A1BE28 /* stm32l0xx_hal_smbus.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79BD41957C0AD00A1BE28 /* stm32l0xx_hal_smbus.c */; };
+		D4C7A04419630FA000A1BE28 /* startup_samd20.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C7960D1957C0AC00A1BE28 /* startup_samd20.c */; };
+		D4C7A04519630FA000A1BE28 /* startup_stm32f030.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A191957C0AD00A1BE28 /* startup_stm32f030.s */; };
+		D4C7A04619630FA000A1BE28 /* sys.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C7985D1957C0AD00A1BE28 /* sys.cpp */; };
+		D4C7A04719630FA000A1BE28 /* stm32f4xx_hal_iwdg.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799A51957C0AD00A1BE28 /* stm32f4xx_hal_iwdg.c */; };
+		D4C7A04819630FA000A1BE28 /* startup_samr21.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C797631957C0AC00A1BE28 /* startup_samr21.c */; };
+		D4C7A04919630FA000A1BE28 /* stm32f30x_opamp.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79AE71957C0AD00A1BE28 /* stm32f30x_opamp.c */; };
+		D4C7A04A19630FA000A1BE28 /* stm32f10x_dma.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C7990C1957C0AD00A1BE28 /* stm32f10x_dma.c */; };
+		D4C7A04B19630FA000A1BE28 /* system_MK64F12.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C7977A1957C0AC00A1BE28 /* system_MK64F12.c */; };
+		D4C7A04C19630FA000A1BE28 /* stm32f30x_pwr.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79C591957C0AD00A1BE28 /* stm32f30x_pwr.c */; };
+		D4C7A04D19630FA000A1BE28 /* stm32l1xx_tim.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79C251957C0AD00A1BE28 /* stm32l1xx_tim.c */; };
+		D4C7A04E19630FA000A1BE28 /* stm32l1xx_fsmc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79C0D1957C0AD00A1BE28 /* stm32l1xx_fsmc.c */; };
+		D4C7A04F19630FA000A1BE28 /* stm32l1xx_comp.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79BFD1957C0AD00A1BE28 /* stm32l1xx_comp.c */; };
+		D4C7A05019630FA000A1BE28 /* startup_stm32f302x8.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C79C6C1957C0AD00A1BE28 /* startup_stm32f302x8.s */; };
+		D4C7A05119630FA000A1BE28 /* startup_LPC13xx.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C798351957C0AD00A1BE28 /* startup_LPC13xx.s */; };
+		D4C7A05219630FA000A1BE28 /* stm32f4xx_hal_iwdg.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B401957C0AD00A1BE28 /* stm32f4xx_hal_iwdg.c */; };
+		D4C7A05319630FA000A1BE28 /* stm32f30x_i2c.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C7994B1957C0AD00A1BE28 /* stm32f30x_i2c.c */; };
+		D4C7A05419630FA000A1BE28 /* sys.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C798711957C0AD00A1BE28 /* sys.cpp */; };
+		D4C7A05519630FA000A1BE28 /* system_nrf51822.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C797B31957C0AC00A1BE28 /* system_nrf51822.c */; };
+		D4C7A05619630FA000A1BE28 /* system_LPC11U6x.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C797BF1957C0AC00A1BE28 /* system_LPC11U6x.c */; };
+		D4C7A05719630FA000A1BE28 /* startup_LPC11xx.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C798171957C0AC00A1BE28 /* startup_LPC11xx.s */; };
+		D4C7A05819630FA000A1BE28 /* sys.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C798361957C0AD00A1BE28 /* sys.cpp */; };
+		D4C7A05919630FA000A1BE28 /* stm32l1xx_crc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79C001957C0AD00A1BE28 /* stm32l1xx_crc.c */; };
+		D4C7A05A19630FA000A1BE28 /* stm32f0xx_adc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C798C11957C0AD00A1BE28 /* stm32f0xx_adc.c */; };
+		D4C7A05B19630FA000A1BE28 /* stm32f0xx_wwdg.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A141957C0AD00A1BE28 /* stm32f0xx_wwdg.c */; };
+		D4C7A05C19630FA000A1BE28 /* stm32f10x_usart.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799261957C0AD00A1BE28 /* stm32f10x_usart.c */; };
+		D4C7A05D19630FA000A1BE28 /* syscalls_sam3.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C79EF01957C0B700A1BE28 /* syscalls_sam3.cpp */; };
+		D4C7A05E19630FA000A1BE28 /* blink_demo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C79F23196216A300A1BE28 /* blink_demo.cpp */; };
+		D4C7A05F19630FA000A1BE28 /* stm32f0xx_dac.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799F41957C0AD00A1BE28 /* stm32f0xx_dac.c */; };
+		D4C7A06019630FA000A1BE28 /* cmsis_nvic.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C798031957C0AC00A1BE28 /* cmsis_nvic.c */; };
+		D4C7A06119630FA000A1BE28 /* stm32f30x_wwdg.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79C671957C0AD00A1BE28 /* stm32f30x_wwdg.c */; };
+		D4C7A06219630FA000A1BE28 /* stm32l0xx_hal_iwdg.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79BB81957C0AD00A1BE28 /* stm32l0xx_hal_iwdg.c */; };
+		D4C7A06319630FA000A1BE28 /* system_MK20D5.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C7976C1957C0AC00A1BE28 /* system_MK20D5.c */; };
+		D4C7A06419630FA000A1BE28 /* stm32l1xx_wwdg.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79C291957C0AD00A1BE28 /* stm32l1xx_wwdg.c */; };
+		D4C7A06519630FA000A1BE28 /* stm32f4xx_hal_pwr_ex.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B4E1957C0AD00A1BE28 /* stm32f4xx_hal_pwr_ex.c */; };
+		D4C7A06619630FA000A1BE28 /* system_stm32f0xx.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A7A1957C0AD00A1BE28 /* system_stm32f0xx.c */; };
+		D4C7A06719630FA000A1BE28 /* startup_LPC11xx.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C798121957C0AC00A1BE28 /* startup_LPC11xx.s */; };
+		D4C7A06819630FA000A1BE28 /* stm32f4xx_hal_dma_ex.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B251957C0AD00A1BE28 /* stm32f4xx_hal_dma_ex.c */; };
+		D4C7A06919630FA000A1BE28 /* stm32f4xx_hal_adc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B0B1957C0AD00A1BE28 /* stm32f4xx_hal_adc.c */; };
+		D4C7A06A19630FA000A1BE28 /* stm32f4xx_hal_eth.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B271957C0AD00A1BE28 /* stm32f4xx_hal_eth.c */; };
+		D4C7A06B19630FA000A1BE28 /* stm32f10x_cec.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799031957C0AD00A1BE28 /* stm32f10x_cec.c */; };
+		D4C7A06C19630FA000A1BE28 /* stm32f4xx_hal_dac_ex.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B1C1957C0AD00A1BE28 /* stm32f4xx_hal_dac_ex.c */; };
+		D4C7A06D19630FA000A1BE28 /* stm32f4xx_hal_tim_ex.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B681957C0AD00A1BE28 /* stm32f4xx_hal_tim_ex.c */; };
+		D4C7A06E19630FA000A1BE28 /* stm32f4xx_hal_rtc_ex.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B581957C0AD00A1BE28 /* stm32f4xx_hal_rtc_ex.c */; };
+		D4C7A06F19630FA000A1BE28 /* stm32f0xx_hal_uart.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A711957C0AD00A1BE28 /* stm32f0xx_hal_uart.c */; };
+		D4C7A07019630FA000A1BE28 /* stm32f4xx_hal_i2s.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C7999F1957C0AD00A1BE28 /* stm32f4xx_hal_i2s.c */; };
+		D4C7A07119630FA000A1BE28 /* stm32f0xx_hal_flash.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A411957C0AD00A1BE28 /* stm32f0xx_hal_flash.c */; };
+		D4C7A07219630FA000A1BE28 /* stm32f4xx_hal_hash.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B301957C0AD00A1BE28 /* stm32f4xx_hal_hash.c */; };
+		D4C7A07319630FA000A1BE28 /* stm32f4xx_hal_dac_ex.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799811957C0AD00A1BE28 /* stm32f4xx_hal_dac_ex.c */; };
+		D4C7A07419630FA000A1BE28 /* cmsis_nvic.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C798631957C0AD00A1BE28 /* cmsis_nvic.c */; };
+		D4C7A07519630FA000A1BE28 /* stm32f10x_pwr.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C7991A1957C0AD00A1BE28 /* stm32f10x_pwr.c */; };
+		D4C7A07619630FA000A1BE28 /* sys.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C79C301957C0AD00A1BE28 /* sys.cpp */; };
+		D4C7A07719630FA000A1BE28 /* stm32f0xx_hal_rtc_ex.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A611957C0AD00A1BE28 /* stm32f0xx_hal_rtc_ex.c */; };
+		D4C7A07819630FA000A1BE28 /* stm32l1xx_exti.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79C081957C0AD00A1BE28 /* stm32l1xx_exti.c */; };
+		D4C7A07919630FA000A1BE28 /* stm32f10x_flash.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799101957C0AD00A1BE28 /* stm32f10x_flash.c */; };
+		D4C7A07A19630FA000A1BE28 /* system_stm32f4xx.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79C7B1957C0AD00A1BE28 /* system_stm32f4xx.c */; };
+		D4C7A07B19630FA000A1BE28 /* stm32f4xx_hal_i2s_ex.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799A11957C0AD00A1BE28 /* stm32f4xx_hal_i2s_ex.c */; };
+		D4C7A07C19630FA000A1BE28 /* stm32f4xx_hal_rcc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799B51957C0AD00A1BE28 /* stm32f4xx_hal_rcc.c */; };
+		D4C7A07D19630FA000A1BE28 /* vector_functions.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C7987A1957C0AD00A1BE28 /* vector_functions.s */; };
+		D4C7A07E19630FA000A1BE28 /* stm32f4xx_hal.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B091957C0AD00A1BE28 /* stm32f4xx_hal.c */; };
+		D4C7A07F19630FA000A1BE28 /* stm32f4xx_hal_gpio.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799921957C0AD00A1BE28 /* stm32f4xx_hal_gpio.c */; };
+		D4C7A08019630FA000A1BE28 /* stm32f4xx_hal_dma.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799861957C0AD00A1BE28 /* stm32f4xx_hal_dma.c */; };
+		D4C7A08119630FA000A1BE28 /* stm32l0xx_hal_lptim.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79BBC1957C0AD00A1BE28 /* stm32l0xx_hal_lptim.c */; };
+		D4C7A08219630FA000A1BE28 /* stm32f0xx_hal_pwr.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A571957C0AD00A1BE28 /* stm32f0xx_hal_pwr.c */; };
+		D4C7A08319630FA000A1BE28 /* sys_helper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C7988D1957C0AD00A1BE28 /* sys_helper.cpp */; };
+		D4C7A08419630FA000A1BE28 /* startup_sam3sd8.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C790C11957C0AB00A1BE28 /* startup_sam3sd8.c */; };
+		D4C7A08519630FA000A1BE28 /* system_sam3sd8.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C790C21957C0AB00A1BE28 /* system_sam3sd8.c */; };
+		D4C7A08619630FA000A1BE28 /* stm32f0xx_hal_crc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A351957C0AD00A1BE28 /* stm32f0xx_hal_crc.c */; };
+		D4C7A08719630FA000A1BE28 /* stm32f4xx_hal_smartcard.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799C51957C0AD00A1BE28 /* stm32f4xx_hal_smartcard.c */; };
+		D4C7A08819630FA000A1BE28 /* stm32f0xx_hal_smartcard_ex.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A651957C0AD00A1BE28 /* stm32f0xx_hal_smartcard_ex.c */; };
+		D4C7A08919630FA000A1BE28 /* sys.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C798BA1957C0AD00A1BE28 /* sys.cpp */; };
+		D4C7A08A19630FA000A1BE28 /* stm32l0xx_hal_i2c_ex.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79BB11957C0AD00A1BE28 /* stm32l0xx_hal_i2c_ex.c */; };
+		D4C7A08B19630FA000A1BE28 /* system_sam4cm.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C792BB1957C0AB00A1BE28 /* system_sam4cm.c */; };
+		D4C7A08C19630FA000A1BE28 /* stm32f30x_gpio.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79ADD1957C0AD00A1BE28 /* stm32f30x_gpio.c */; };
+		D4C7A08D19630FA000A1BE28 /* stm32f0xx_hal_cec.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A2E1957C0AD00A1BE28 /* stm32f0xx_hal_cec.c */; };
+		D4C7A08E19630FA000A1BE28 /* stm32l1xx_spi.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79C211957C0AD00A1BE28 /* stm32l1xx_spi.c */; };
+		D4C7A08F19630FA000A1BE28 /* stm32f4xx_hal_dcmi.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B1E1957C0AD00A1BE28 /* stm32f4xx_hal_dcmi.c */; };
+		D4C7A09019630FA000A1BE28 /* startup_LPC17xx.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C7984E1957C0AD00A1BE28 /* startup_LPC17xx.s */; };
+		D4C7A09119630FA000A1BE28 /* stm32f0xx_hal_i2c.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A481957C0AD00A1BE28 /* stm32f0xx_hal_i2c.c */; };
+		D4C7A09219630FA000A1BE28 /* stm32f30x_can.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79C3C1957C0AD00A1BE28 /* stm32f30x_can.c */; };
+		D4C7A09319630FA000A1BE28 /* system_sam4sp.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C795981957C0AC00A1BE28 /* system_sam4sp.c */; };
+		D4C7A09419630FA000A1BE28 /* stm32f30x_dbgmcu.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79AD51957C0AD00A1BE28 /* stm32f30x_dbgmcu.c */; };
+		D4C7A09519630FA000A1BE28 /* system_sam4cm32.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C793191957C0AB00A1BE28 /* system_sam4cm32.c */; };
+		D4C7A09619630FA000A1BE28 /* stm32f0xx_hal_flash_ex.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A431957C0AD00A1BE28 /* stm32f0xx_hal_flash_ex.c */; };
+		D4C7A09719630FA000A1BE28 /* stm32l1xx_iwdg.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79C131957C0AD00A1BE28 /* stm32l1xx_iwdg.c */; };
+		D4C7A09819630FA000A1BE28 /* stm32f30x_tim.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79AF31957C0AD00A1BE28 /* stm32f30x_tim.c */; };
+		D4C7A09919630FA000A1BE28 /* stm32f4xx_hal_adc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799701957C0AD00A1BE28 /* stm32f4xx_hal_adc.c */; };
+		D4C7A09A19630FA000A1BE28 /* stm32f0xx_hal_adc_ex.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A2A1957C0AD00A1BE28 /* stm32f0xx_hal_adc_ex.c */; };
+		D4C7A09B19630FA000A1BE28 /* stm32f30x_rcc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799551957C0AD00A1BE28 /* stm32f30x_rcc.c */; };
+		D4C7A09C19630FA000A1BE28 /* startup_sam4cm32.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C793181957C0AB00A1BE28 /* startup_sam4cm32.c */; };
+		D4C7A09D19630FA000A1BE28 /* stm32f0xx_gpio.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799FE1957C0AD00A1BE28 /* stm32f0xx_gpio.c */; };
+		D4C7A09E19630FA000A1BE28 /* stm32l0xx_hal_flash_ex.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79BA81957C0AD00A1BE28 /* stm32l0xx_hal_flash_ex.c */; };
+		D4C7A09F19630FA000A1BE28 /* stm32f4xx_hal_rtc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B561957C0AD00A1BE28 /* stm32f4xx_hal_rtc.c */; };
+		D4C7A0A019630FA000A1BE28 /* sys.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C79C801957C0AD00A1BE28 /* sys.cpp */; };
+		D4C7A0A119630FA000A1BE28 /* stm32l0xx_hal_dac_ex.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79BA11957C0AD00A1BE28 /* stm32l0xx_hal_dac_ex.c */; };
+		D4C7A0A219630FA000A1BE28 /* stm32l0xx_hal_i2s.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79BB31957C0AD00A1BE28 /* stm32l0xx_hal_i2s.c */; };
+		D4C7A0A319630FA000A1BE28 /* startup_LPC43xx.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C798A21957C0AD00A1BE28 /* startup_LPC43xx.s */; };
+		D4C7A0A419630FA000A1BE28 /* startup_stm32f0xx.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C798F41957C0AD00A1BE28 /* startup_stm32f0xx.s */; };
+		D4C7A0A519630FA000A1BE28 /* startup_sam4n.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C794C51957C0AC00A1BE28 /* startup_sam4n.c */; };
+		D4C7A0A619630FA000A1BE28 /* startup_stm32f10x_md_vl.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C7992D1957C0AD00A1BE28 /* startup_stm32f10x_md_vl.s */; };
+		D4C7A0A719630FA000A1BE28 /* cmsis_nvic.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C797771957C0AC00A1BE28 /* cmsis_nvic.c */; };
+		D4C7A0A819630FA000A1BE28 /* cmsis_nvic.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C798AB1957C0AD00A1BE28 /* cmsis_nvic.c */; };
+		D4C7A0A919630FA000A1BE28 /* cmsis_nvic.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C798971957C0AD00A1BE28 /* cmsis_nvic.c */; };
+		D4C7A0AA19630FA000A1BE28 /* stm32f30x_pwr.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799531957C0AD00A1BE28 /* stm32f30x_pwr.c */; };
+		D4C7A0AB19630FA000A1BE28 /* startup_stm32f10x.S in Sources */ = {isa = PBXBuildFile; fileRef = D4C79AC31957C0AD00A1BE28 /* startup_stm32f10x.S */; };
+		D4C7A0AC19630FA000A1BE28 /* system_stm32f0xx.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C798F01957C0AD00A1BE28 /* system_stm32f0xx.c */; };
+		D4C7A0AD19630FA000A1BE28 /* stm32f0xx_cec.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C798C51957C0AD00A1BE28 /* stm32f0xx_cec.c */; };
+		D4C7A0AE19630FA000A1BE28 /* stm32f4xx_hal_rtc_ex.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799BD1957C0AD00A1BE28 /* stm32f4xx_hal_rtc_ex.c */; };
+		D4C7A0AF19630FA000A1BE28 /* stm32l0xx_hal_lcd.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79BBA1957C0AD00A1BE28 /* stm32l0xx_hal_lcd.c */; };
+		D4C7A0B019630FA000A1BE28 /* stm32f0xx_dma.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C798D21957C0AD00A1BE28 /* stm32f0xx_dma.c */; };
+		D4C7A0B119630FA000A1BE28 /* stm32l1xx_i2c.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79C111957C0AD00A1BE28 /* stm32l1xx_i2c.c */; };
+		D4C7A0B219630FA000A1BE28 /* sys.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C797711957C0AC00A1BE28 /* sys.cpp */; };
+		D4C7A0B319630FA000A1BE28 /* stm32l0xx_hal_i2c.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79BAF1957C0AD00A1BE28 /* stm32l0xx_hal_i2c.c */; };
+		D4C7A0B419630FA000A1BE28 /* stm32f0xx_hal_crc_ex.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A371957C0AD00A1BE28 /* stm32f0xx_hal_crc_ex.c */; };
+		D4C7A0B519630FA000A1BE28 /* stm32f4xx_hal_sd.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B5C1957C0AD00A1BE28 /* stm32f4xx_hal_sd.c */; };
+		D4C7A0B619630FA000A1BE28 /* stm32f4xx_hal_cryp_ex.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B181957C0AD00A1BE28 /* stm32f4xx_hal_cryp_ex.c */; };
+		D4C7A0B719630FA000A1BE28 /* startup_LPC11xx.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C797E91957C0AC00A1BE28 /* startup_LPC11xx.s */; };
+		D4C7A0B819630FA000A1BE28 /* stm32f0xx_hal_iwdg.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A511957C0AD00A1BE28 /* stm32f0xx_hal_iwdg.c */; };
+		D4C7A0B919630FA000A1BE28 /* sys.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B811957C0AD00A1BE28 /* sys.cpp */; };
+		D4C7A0BA19630FA000A1BE28 /* stm32l0xx_hal_uart_ex.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79BE01957C0AD00A1BE28 /* stm32l0xx_hal_uart_ex.c */; };
+		D4C7A0BB19630FA000A1BE28 /* stm32f0xx_hal_i2s.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A4C1957C0AD00A1BE28 /* stm32f0xx_hal_i2s.c */; };
+		D4C7A0BC19630FA000A1BE28 /* cmsis_nvic.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C797831957C0AC00A1BE28 /* cmsis_nvic.c */; };
+		D4C7A0BD19630FA000A1BE28 /* stm32l0xx_hal_rcc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79BC61957C0AD00A1BE28 /* stm32l0xx_hal_rcc.c */; };
+		D4C7A0BE19630FA000A1BE28 /* system_sam3s.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C7906B1957C0AB00A1BE28 /* system_sam3s.c */; };
+		D4C7A0BF19630FA000A1BE28 /* stm32f10x_rcc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C7991C1957C0AD00A1BE28 /* stm32f10x_rcc.c */; };
+		D4C7A0C019630FA000A1BE28 /* stm32l1xx_pwr.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79C191957C0AD00A1BE28 /* stm32l1xx_pwr.c */; };
+		D4C7A0C119630FA000A1BE28 /* stm32f4xx_hal_nor.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B461957C0AD00A1BE28 /* stm32f4xx_hal_nor.c */; };
+		D4C7A0C219630FA000A1BE28 /* stm32f10x_rtc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79AAC1957C0AD00A1BE28 /* stm32f10x_rtc.c */; };
+		D4C7A0C319630FA000A1BE28 /* vector_functions.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C7987E1957C0AD00A1BE28 /* vector_functions.s */; };
+		D4C7A0C419630FA000A1BE28 /* system_stm32f30x.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79AF91957C0AD00A1BE28 /* system_stm32f30x.c */; };
+		D4C7A0C519630FA000A1BE28 /* stm32l1xx_adc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79BF81957C0AD00A1BE28 /* stm32l1xx_adc.c */; };
+		D4C7A0C619630FA000A1BE28 /* startup_nRF51822.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C797B71957C0AC00A1BE28 /* startup_nRF51822.s */; };
+		D4C7A0C719630FA000A1BE28 /* stm32l0xx_hal_adc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B901957C0AD00A1BE28 /* stm32l0xx_hal_adc.c */; };
+		D4C7A0C819630FA000A1BE28 /* stm32f30x_hrtim.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799491957C0AD00A1BE28 /* stm32f30x_hrtim.c */; };
+		D4C7A0C919630FA000A1BE28 /* cmsis_nvic.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79C371957C0AD00A1BE28 /* cmsis_nvic.c */; };
+		D4C7A0CA19630FA000A1BE28 /* cmsis_nvic.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79AC71957C0AD00A1BE28 /* cmsis_nvic.c */; };
+		D4C7A0CB19630FA000A1BE28 /* stm32f30x_hrtim.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79C4F1957C0AD00A1BE28 /* stm32f30x_hrtim.c */; };
+		D4C7A0CC19630FA000A1BE28 /* system_LPC43xx.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C7989A1957C0AD00A1BE28 /* system_LPC43xx.c */; };
+		D4C7A0CD19630FA000A1BE28 /* vector_functions.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C7986D1957C0AD00A1BE28 /* vector_functions.s */; };
+		D4C7A0CE19630FA000A1BE28 /* stm32f10x_wwdg.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799281957C0AD00A1BE28 /* stm32f10x_wwdg.c */; };
+		D4C7A0CF19630FA000A1BE28 /* stm32f10x_exti.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C7990E1957C0AD00A1BE28 /* stm32f10x_exti.c */; };
+		D4C7A0D019630FA000A1BE28 /* stm32f4xx_ll_fsmc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B721957C0AD00A1BE28 /* stm32f4xx_ll_fsmc.c */; };
+		D4C7A0D119630FA000A1BE28 /* stm32f10x_rtc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C7991E1957C0AD00A1BE28 /* stm32f10x_rtc.c */; };
+		D4C7A0D219630FA000A1BE28 /* stm32f0xx_hal_tsc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A6F1957C0AD00A1BE28 /* stm32f0xx_hal_tsc.c */; };
+		D4C7A0D319630FA000A1BE28 /* startup_LPC13xx.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C798311957C0AD00A1BE28 /* startup_LPC13xx.s */; };
+		D4C7A0D419630FA000A1BE28 /* stm32f10x_spi.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799221957C0AD00A1BE28 /* stm32f10x_spi.c */; };
+		D4C7A0D519630FA000A1BE28 /* stm32f4xx_hal_rtc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799BB1957C0AD00A1BE28 /* stm32f4xx_hal_rtc.c */; };
+		D4C7A0D619630FA000A1BE28 /* startup_MKL46Z4.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C797A41957C0AC00A1BE28 /* startup_MKL46Z4.s */; };
+		D4C7A0D719630FA000A1BE28 /* stm32f0xx_dbgmcu.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C798D01957C0AD00A1BE28 /* stm32f0xx_dbgmcu.c */; };
+		D4C7A0D819630FA000A1BE28 /* stm32l0xx_hal_tsc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79BDC1957C0AD00A1BE28 /* stm32l0xx_hal_tsc.c */; };
+		D4C7A0D919630FA000A1BE28 /* stm32f30x_gpio.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799471957C0AD00A1BE28 /* stm32f30x_gpio.c */; };
+		D4C7A0DA19630FA000A1BE28 /* startup_sam3s.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C7906A1957C0AB00A1BE28 /* startup_sam3s.c */; };
+		D4C7A0DB19630FA000A1BE28 /* system_LPC8xx.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C798B01957C0AD00A1BE28 /* system_LPC8xx.c */; };
+		D4C7A0DC19630FA000A1BE28 /* stm32f4xx_hal_irda.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799A31957C0AD00A1BE28 /* stm32f4xx_hal_irda.c */; };
+		D4C7A0DD19630FA000A1BE28 /* startup_LPC15xx.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C798431957C0AD00A1BE28 /* startup_LPC15xx.s */; };
+		D4C7A0DE19630FA000A1BE28 /* stm32f4xx_hal_wwdg.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799D31957C0AD00A1BE28 /* stm32f4xx_hal_wwdg.c */; };
+		D4C7A0DF19630FA000A1BE28 /* stm32f0xx_flash.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C798D61957C0AD00A1BE28 /* stm32f0xx_flash.c */; };
+		D4C7A0E019630FA000A1BE28 /* stm32f10x_crc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799061957C0AD00A1BE28 /* stm32f10x_crc.c */; };
+		D4C7A0E119630FA000A1BE28 /* startup_sam3xa.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C7918E1957C0AB00A1BE28 /* startup_sam3xa.c */; };
+		D4C7A0E219630FA000A1BE28 /* sys.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C79C341957C0AD00A1BE28 /* sys.cpp */; };
+		D4C7A0E319630FA000A1BE28 /* startup_LPC11xx.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C798241957C0AD00A1BE28 /* startup_LPC11xx.cpp */; };
+		D4C7A0E419630FA000A1BE28 /* stm32f10x_adc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A8B1957C0AD00A1BE28 /* stm32f10x_adc.c */; };
+		D4C7A0E519630FA000A1BE28 /* stm32f30x_wwdg.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799611957C0AD00A1BE28 /* stm32f30x_wwdg.c */; };
+		D4C7A0E619630FA000A1BE28 /* startup_sam4sp.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C795971957C0AC00A1BE28 /* startup_sam4sp.c */; };
+		D4C7A0E719630FA000A1BE28 /* sys.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C7986C1957C0AD00A1BE28 /* sys.cpp */; };
+		D4C7A0E819630FA000A1BE28 /* syscalls.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C79EF81957C0B700A1BE28 /* syscalls.cpp */; };
+		D4C7A0E919630FA000A1BE28 /* stm32f0xx_pwr.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C798E01957C0AD00A1BE28 /* stm32f0xx_pwr.c */; };
+		D4C7A0EA19630FA000A1BE28 /* stm32f10x_flash.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A9E1957C0AD00A1BE28 /* stm32f10x_flash.c */; };
+		D4C7A0EB19630FA000A1BE28 /* system_LPC8xx.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C798B51957C0AD00A1BE28 /* system_LPC8xx.c */; };
+		D4C7A0EC19630FA000A1BE28 /* stm32f30x_rtc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79C5D1957C0AD00A1BE28 /* stm32f30x_rtc.c */; };
+		D4C7A0ED19630FA000A1BE28 /* stm32f0xx_dma.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799F81957C0AD00A1BE28 /* stm32f0xx_dma.c */; };
+		D4C7A0EE19630FA000A1BE28 /* stm32f0xx_spi.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C798E61957C0AD00A1BE28 /* stm32f0xx_spi.c */; };
+		D4C7A0EF19630FA000A1BE28 /* vector_realmonitor.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C798811957C0AD00A1BE28 /* vector_realmonitor.c */; };
+		D4C7A0F019630FA000A1BE28 /* stm32f4xx_hal_hcd.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B341957C0AD00A1BE28 /* stm32f4xx_hal_hcd.c */; };
+		D4C7A0F119630FA000A1BE28 /* stm32f10x_sdio.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79AAE1957C0AD00A1BE28 /* stm32f10x_sdio.c */; };
+		D4C7A0F219630FA000A1BE28 /* cmsis_nvic.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A221957C0AD00A1BE28 /* cmsis_nvic.c */; };
+		D4C7A0F319630FA000A1BE28 /* sys.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C79AFE1957C0AD00A1BE28 /* sys.cpp */; };
+		D4C7A0F419630FA000A1BE28 /* startup_stm32f302x8.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B001957C0AD00A1BE28 /* startup_stm32f302x8.s */; };
+		D4C7A0F519630FA000A1BE28 /* startup_LPC17xx.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C798561957C0AD00A1BE28 /* startup_LPC17xx.s */; };
+		D4C7A0F619630FA000A1BE28 /* stm32f0xx_hal_tim.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A6B1957C0AD00A1BE28 /* stm32f0xx_hal_tim.c */; };
+		D4C7A0F719630FA000A1BE28 /* stm32f0xx_misc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A041957C0AD00A1BE28 /* stm32f0xx_misc.c */; };
+		D4C7A0F819630FA000A1BE28 /* stm32f4xx_hal_sai.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B5A1957C0AD00A1BE28 /* stm32f4xx_hal_sai.c */; };
+		D4C7A0F919630FA000A1BE28 /* system_MKL05Z4.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C797861957C0AC00A1BE28 /* system_MKL05Z4.c */; };
+		D4C7A0FA19630FA000A1BE28 /* stm32f30x_spi.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79C5F1957C0AD00A1BE28 /* stm32f30x_spi.c */; };
+		D4C7A0FB19630FA000A1BE28 /* stm32l0xx_hal_usart.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79BE21957C0AD00A1BE28 /* stm32l0xx_hal_usart.c */; };
+		D4C7A0FC19630FA000A1BE28 /* system_stm32f4xx.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B781957C0AD00A1BE28 /* system_stm32f4xx.c */; };
+		D4C7A0FD19630FA000A1BE28 /* cmsis_nvic.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C797AC1957C0AC00A1BE28 /* cmsis_nvic.c */; };
+		D4C7A0FE19630FA000A1BE28 /* stm32f4xx_hal_hash.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799951957C0AD00A1BE28 /* stm32f4xx_hal_hash.c */; };
+		D4C7A0FF19630FA000A1BE28 /* system_MKL46Z4.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C797A01957C0AC00A1BE28 /* system_MKL46Z4.c */; };
+		D4C7A10019630FA000A1BE28 /* stm32f4xx_hal_flash_ex.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799901957C0AD00A1BE28 /* stm32f4xx_hal_flash_ex.c */; };
+		D4C7A10119630FA000A1BE28 /* system_samd21.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C796801957C0AC00A1BE28 /* system_samd21.c */; };
+		D4C7A10219630FA000A1BE28 /* stm32f0xx_rcc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C798E21957C0AD00A1BE28 /* stm32f0xx_rcc.c */; };
+		D4C7A10319630FA000A1BE28 /* stm32f0xx_iwdg.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C798DC1957C0AD00A1BE28 /* stm32f0xx_iwdg.c */; };
+		D4C7A10419630FA000A1BE28 /* stm32f4xx_hal_adc_ex.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799721957C0AD00A1BE28 /* stm32f4xx_hal_adc_ex.c */; };
+		D4C7A10519630FA000A1BE28 /* startup_MK20D5.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C797701957C0AC00A1BE28 /* startup_MK20D5.s */; };
+		D4C7A10619630FA000A1BE28 /* stm32f10x_cec.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A911957C0AD00A1BE28 /* stm32f10x_cec.c */; };
+		D4C7A10719630FA000A1BE28 /* system_sam4c32.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C792501957C0AB00A1BE28 /* system_sam4c32.c */; };
+		D4C7A10819630FA000A1BE28 /* vector_table.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C798731957C0AD00A1BE28 /* vector_table.s */; };
+		D4C7A10919630FA000A1BE28 /* startup_LPC407x_8x_177x_8x.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C7988B1957C0AD00A1BE28 /* startup_LPC407x_8x_177x_8x.s */; };
+		D4C7A10A19630FA000A1BE28 /* stm32l1xx_gpio.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79C0F1957C0AD00A1BE28 /* stm32l1xx_gpio.c */; };
+		D4C7A10B19630FA000A1BE28 /* stm32f30x_iwdg.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79C531957C0AD00A1BE28 /* stm32f30x_iwdg.c */; };
+		D4C7A10C19630FA000A1BE28 /* stm32f0xx_hal_wwdg.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A781957C0AD00A1BE28 /* stm32f0xx_hal_wwdg.c */; };
+		D4C7A10D19630FA000A1BE28 /* stm32f4xx_hal_usart.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799D11957C0AD00A1BE28 /* stm32f4xx_hal_usart.c */; };
+		D4C7A10E19630FA000A1BE28 /* stm32f30x_wwdg.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79AF71957C0AD00A1BE28 /* stm32f30x_wwdg.c */; };
+		D4C7A10F19630FA000A1BE28 /* stm32f30x_tim.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79C631957C0AD00A1BE28 /* stm32f30x_tim.c */; };
+		D4C7A11019630FA000A1BE28 /* stm32f0xx_hal_can.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A2C1957C0AD00A1BE28 /* stm32f0xx_hal_can.c */; };
+		D4C7A11119630FA000A1BE28 /* sys.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A831957C0AD00A1BE28 /* sys.cpp */; };
+		D4C7A11219630FA000A1BE28 /* stm32f4xx_hal_pccard.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B481957C0AD00A1BE28 /* stm32f4xx_hal_pccard.c */; };
+		D4C7A11319630FA000A1BE28 /* stm32l0xx_hal_dma.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79BA41957C0AD00A1BE28 /* stm32l0xx_hal_dma.c */; };
+		D4C7A11419630FA000A1BE28 /* startup_sam4cp.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C7936F1957C0AB00A1BE28 /* startup_sam4cp.c */; };
+		D4C7A11519630FA000A1BE28 /* system_LPC15xx.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C7983F1957C0AD00A1BE28 /* system_LPC15xx.c */; };
+		D4C7A11619630FA000A1BE28 /* cmsis_nvic.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C797691957C0AC00A1BE28 /* cmsis_nvic.c */; };
+		D4C7A11719630FA000A1BE28 /* stm32f0xx_hal_rtc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A5F1957C0AD00A1BE28 /* stm32f0xx_hal_rtc.c */; };
+		D4C7A11819630FA000A1BE28 /* stm32f30x_syscfg.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79C611957C0AD00A1BE28 /* stm32f30x_syscfg.c */; };
+		D4C7A11919630FA000A1BE28 /* sys.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C7980C1957C0AC00A1BE28 /* sys.cpp */; };
+		D4C7A11A19630FA000A1BE28 /* system_LPC23xx.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C798681957C0AD00A1BE28 /* system_LPC23xx.c */; };
+		D4C7A11B19630FA000A1BE28 /* stm32f10x_fsmc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79AA01957C0AD00A1BE28 /* stm32f10x_fsmc.c */; };
+		D4C7A11C19630FA000A1BE28 /* system_stm32l0xx.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79BE71957C0AD00A1BE28 /* system_stm32l0xx.c */; };
+		D4C7A11D19630FA000A1BE28 /* startup_samg51.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C796BF1957C0AC00A1BE28 /* startup_samg51.c */; };
+		D4C7A11E19630FA000A1BE28 /* vector_functions.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C798761957C0AD00A1BE28 /* vector_functions.s */; };
+		D4C7A11F19630FA000A1BE28 /* stm32f4xx_hal_i2c.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B361957C0AD00A1BE28 /* stm32f4xx_hal_i2c.c */; };
+		D4C7A12019630FA000A1BE28 /* stm32f0xx_hal_irda.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A4E1957C0AD00A1BE28 /* stm32f0xx_hal_irda.c */; };
+		D4C7A12119630FA000A1BE28 /* system_LPC11xx.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C798081957C0AC00A1BE28 /* system_LPC11xx.c */; };
+		D4C7A12219630FA000A1BE28 /* stm32f4xx_hal_smartcard.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B601957C0AD00A1BE28 /* stm32f4xx_hal_smartcard.c */; };
+		D4C7A12319630FA000A1BE28 /* sys.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C79C6E1957C0AD00A1BE28 /* sys.cpp */; };
+		D4C7A12419630FA000A1BE28 /* startup_LPC408x.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C798911957C0AD00A1BE28 /* startup_LPC408x.s */; };
+		D4C7A12519630FA000A1BE28 /* misc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A881957C0AD00A1BE28 /* misc.c */; };
+		D4C7A12619630FA000A1BE28 /* stm32f4xx_hal_tim_ex.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799CD1957C0AD00A1BE28 /* stm32f4xx_hal_tim_ex.c */; };
+		D4C7A12719630FA000A1BE28 /* stm32f30x_dbgmcu.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79C451957C0AD00A1BE28 /* stm32f30x_dbgmcu.c */; };
+		D4C7A12819630FA000A1BE28 /* startup_LPC8xx.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C798B31957C0AD00A1BE28 /* startup_LPC8xx.s */; };
+		D4C7A12919630FA000A1BE28 /* stm32f4xx_ll_usb.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799DB1957C0AD00A1BE28 /* stm32f4xx_ll_usb.c */; };
+		D4C7A12A19630FA000A1BE28 /* stm32f4xx_hal_hash_ex.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799971957C0AD00A1BE28 /* stm32f4xx_hal_hash_ex.c */; };
+		D4C7A12B19630FA000A1BE28 /* cmsis_nvic.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C798841957C0AD00A1BE28 /* cmsis_nvic.c */; };
+		D4C7A12C19630FA000A1BE28 /* stm32f4xx_ll_sdmmc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B741957C0AD00A1BE28 /* stm32f4xx_ll_sdmmc.c */; };
+		D4C7A12D19630FA000A1BE28 /* stm32l1xx_aes.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79BFA1957C0AD00A1BE28 /* stm32l1xx_aes.c */; };
+		D4C7A12E19630FA000A1BE28 /* stm32f0xx_rtc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C798E41957C0AD00A1BE28 /* stm32f0xx_rtc.c */; };
+		D4C7A12F19630FA000A1BE28 /* stm32f10x_dac.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A961957C0AD00A1BE28 /* stm32f10x_dac.c */; };
+		D4C7A13019630FA000A1BE28 /* stm32f0xx_crs.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799F21957C0AD00A1BE28 /* stm32f0xx_crs.c */; };
+		D4C7A13119630FA000A1BE28 /* stm32l1xx_dma.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79C061957C0AD00A1BE28 /* stm32l1xx_dma.c */; };
+		D4C7A13219630FA000A1BE28 /* stm32f4xx_hal_spi.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799C71957C0AD00A1BE28 /* stm32f4xx_hal_spi.c */; };
+		D4C7A13319630FA000A1BE28 /* startup_sam4s.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C7954E1957C0AC00A1BE28 /* startup_sam4s.c */; };
+		D4C7A13419630FA000A1BE28 /* AvrUSB.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C78F56195201A900A1BE28 /* AvrUSB.cpp */; };
+		D4C7A13519630FA000A1BE28 /* stm32f0xx_cec.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799EB1957C0AD00A1BE28 /* stm32f0xx_cec.c */; };
+		D4C7A13619630FA000A1BE28 /* stm32f4xx_hal_spi.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B621957C0AD00A1BE28 /* stm32f4xx_hal_spi.c */; };
+		D4C7A13719630FA000A1BE28 /* startup_LPC11xx.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C797F51957C0AC00A1BE28 /* startup_LPC11xx.cpp */; };
+		D4C7A13819630FA000A1BE28 /* fade_demo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C79F27196216A300A1BE28 /* fade_demo.cpp */; };
+		D4C7A13919630FA000A1BE28 /* vector_table.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C7987F1957C0AD00A1BE28 /* vector_table.s */; };
+		D4C7A13A19630FA000A1BE28 /* startup_LPC11xx.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C798261957C0AD00A1BE28 /* startup_LPC11xx.s */; };
+		D4C7A13B19630FA000A1BE28 /* KL05ZTimers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C78F7F19553EF700A1BE28 /* KL05ZTimers.cpp */; };
+		D4C7A13C19630FA000A1BE28 /* stm32f30x_comp.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79ACE1957C0AD00A1BE28 /* stm32f30x_comp.c */; };
+		D4C7A13D19630FA000A1BE28 /* startup_LPC17xx.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C798601957C0AD00A1BE28 /* startup_LPC17xx.s */; };
+		D4C7A13E19630FA000A1BE28 /* sys.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C797B81957C0AC00A1BE28 /* sys.cpp */; };
+		D4C7A13F19630FA000A1BE28 /* stm32f30x_misc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C7994F1957C0AD00A1BE28 /* stm32f30x_misc.c */; };
+		D4C7A14019630FA000A1BE28 /* stm32f4xx_hal_can.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B0F1957C0AD00A1BE28 /* stm32f4xx_hal_can.c */; };
+		D4C7A14119630FA000A1BE28 /* cmsis_nvic.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C798F81957C0AD00A1BE28 /* cmsis_nvic.c */; };
+		D4C7A14219630FA000A1BE28 /* sys.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C797FF1957C0AC00A1BE28 /* sys.cpp */; };
+		D4C7A14319630FA000A1BE28 /* sys.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C7984F1957C0AD00A1BE28 /* sys.cpp */; };
+		D4C7A14419630FA000A1BE28 /* system_sam3u.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C7911F1957C0AB00A1BE28 /* system_sam3u.c */; };
+		D4C7A14519630FA000A1BE28 /* stm32f0xx_gpio.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C798D81957C0AD00A1BE28 /* stm32f0xx_gpio.c */; };
+		D4C7A14619630FA000A1BE28 /* stm32l1xx_lcd.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79C151957C0AD00A1BE28 /* stm32l1xx_lcd.c */; };
+		D4C7A14719630FA000A1BE28 /* startup_STM32F40x.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C79C821957C0AD00A1BE28 /* startup_STM32F40x.s */; };
+		D4C7A14819630FA000A1BE28 /* stm32f10x_tim.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79AB21957C0AD00A1BE28 /* stm32f10x_tim.c */; };
+		D4C7A14919630FA000A1BE28 /* startup_stm32f401xe.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B7F1957C0AD00A1BE28 /* startup_stm32f401xe.s */; };
+		D4C7A14A19630FA000A1BE28 /* sys.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C798321957C0AD00A1BE28 /* sys.cpp */; };
+		D4C7A14B19630FA000A1BE28 /* stm32l0xx_hal_wwdg.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79BE51957C0AD00A1BE28 /* stm32l0xx_hal_wwdg.c */; };
+		D4C7A14C19630FA000A1BE28 /* stm32f30x_crc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C7993B1957C0AD00A1BE28 /* stm32f30x_crc.c */; };
+		D4C7A14D19630FA000A1BE28 /* stm32l0xx_hal.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B8E1957C0AD00A1BE28 /* stm32l0xx_hal.c */; };
+		D4C7A14E19630FA000A1BE28 /* stm32f4xx_hal_dcmi.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799831957C0AD00A1BE28 /* stm32f4xx_hal_dcmi.c */; };
+		D4C7A14F19630FA000A1BE28 /* stm32f4xx_ll_fsmc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799D71957C0AD00A1BE28 /* stm32f4xx_ll_fsmc.c */; };
+		D4C7A15019630FA000A1BE28 /* stm32f0xx_hal_pcd_ex.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A551957C0AD00A1BE28 /* stm32f0xx_hal_pcd_ex.c */; };
+		D4C7A15119630FA000A1BE28 /* stm32f10x_dma.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A9A1957C0AD00A1BE28 /* stm32f10x_dma.c */; };
+		D4C7A15219630FA000A1BE28 /* stm32f0xx_i2c.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A001957C0AD00A1BE28 /* stm32f0xx_i2c.c */; };
+		D4C7A15319630FA000A1BE28 /* stm32f30x_flash.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79C4B1957C0AD00A1BE28 /* stm32f30x_flash.c */; };
+		D4C7A15419630FA000A1BE28 /* stm32f4xx_hal_dma2d.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B231957C0AD00A1BE28 /* stm32f4xx_hal_dma2d.c */; };
+		D4C7A15519630FA000A1BE28 /* misc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C798FA1957C0AD00A1BE28 /* misc.c */; };
+		D4C7A15619630FA000A1BE28 /* stm32f4xx_hal_flash_ex.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B2B1957C0AD00A1BE28 /* stm32f4xx_hal_flash_ex.c */; };
+		D4C7A15719630FA000A1BE28 /* stm32f0xx_rtc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A0A1957C0AD00A1BE28 /* stm32f0xx_rtc.c */; };
+		D4C7A15819630FA000A1BE28 /* cmsis_nvic.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B8A1957C0AD00A1BE28 /* cmsis_nvic.c */; };
+		D4C7A15919630FA000A1BE28 /* stm32f0xx_dbgmcu.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799F61957C0AD00A1BE28 /* stm32f0xx_dbgmcu.c */; };
+		D4C7A15A19630FA000A1BE28 /* stm32f0xx_i2c.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C798DA1957C0AD00A1BE28 /* stm32f0xx_i2c.c */; };
+		D4C7A15B19630FA000A1BE28 /* stm32f30x_syscfg.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C7995B1957C0AD00A1BE28 /* stm32f30x_syscfg.c */; };
+		D4C7A15C19630FA000A1BE28 /* startup_LPC11xx.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C797DB1957C0AC00A1BE28 /* startup_LPC11xx.s */; };
+		D4C7A15D19630FA000A1BE28 /* stm32f30x_comp.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799381957C0AD00A1BE28 /* stm32f30x_comp.c */; };
+		D4C7A15E19630FA000A1BE28 /* stm32l1xx_flash_ramfunc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79C0C1957C0AD00A1BE28 /* stm32l1xx_flash_ramfunc.c */; };
+		D4C7A15F19630FA000A1BE28 /* stm32l0xx_hal_irda.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79BB51957C0AD00A1BE28 /* stm32l0xx_hal_irda.c */; };
+		D4C7A16019630FA000A1BE28 /* system_LPC407x_8x_177x_8x.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C798871957C0AD00A1BE28 /* system_LPC407x_8x_177x_8x.c */; };
+		D4C7A16119630FA000A1BE28 /* stm32f10x_can.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A8F1957C0AD00A1BE28 /* stm32f10x_can.c */; };
+		D4C7A16219630FA000A1BE28 /* system_stm32l1xx.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79C2B1957C0AD00A1BE28 /* system_stm32l1xx.c */; };
+		D4C7A16319630FA000A1BE28 /* sys.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C797A51957C0AC00A1BE28 /* sys.cpp */; };
+		D4C7A16419630FA000A1BE28 /* stm32f0xx_hal_rcc_ex.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A5D1957C0AD00A1BE28 /* stm32f0xx_hal_rcc_ex.c */; };
+		D4C7A16519630FA000A1BE28 /* SamTimers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C78F5F195201A900A1BE28 /* SamTimers.cpp */; };
+		D4C7A16619630FA000A1BE28 /* stm32f10x_i2c.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799161957C0AD00A1BE28 /* stm32f10x_i2c.c */; };
+		D4C7A16719630FA000A1BE28 /* system_sam3xa.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C7918F1957C0AB00A1BE28 /* system_sam3xa.c */; };
+		D4C7A16819630FA000A1BE28 /* stm32f30x_pwr.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79AE91957C0AD00A1BE28 /* stm32f30x_pwr.c */; };
+		D4C7A16919630FA000A1BE28 /* stm32f4xx_hal_cryp.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C7997B1957C0AD00A1BE28 /* stm32f4xx_hal_cryp.c */; };
+		D4C7A16A19630FA000A1BE28 /* stm32f0xx_crc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799F01957C0AD00A1BE28 /* stm32f0xx_crc.c */; };
+		D4C7A16B19630FA000A1BE28 /* Makefile in Sources */ = {isa = PBXBuildFile; fileRef = D457117B17053EFA00EA19A8 /* Makefile */; };
+		D4C7A16C19630FA000A1BE28 /* stm32f10x_wwdg.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79AB61957C0AD00A1BE28 /* stm32f10x_wwdg.c */; };
+		D4C7A16D19630FA000A1BE28 /* startup_LPC11xx.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C797EB1957C0AC00A1BE28 /* startup_LPC11xx.s */; };
+		D4C7A16E19630FA000A1BE28 /* cmsis_nvic.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799311957C0AD00A1BE28 /* cmsis_nvic.c */; };
+		D4C7A16F19630FA000A1BE28 /* startup_stm32f401xe.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B861957C0AD00A1BE28 /* startup_stm32f401xe.s */; };
+		D4C7A17019630FA000A1BE28 /* stm32f0xx_hal_rcc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A5B1957C0AD00A1BE28 /* stm32f0xx_hal_rcc.c */; };
+		D4C7A17119630FA000A1BE28 /* stm32f0xx_hal_comp.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A301957C0AD00A1BE28 /* stm32f0xx_hal_comp.c */; };
+		D4C7A17219630FA000A1BE28 /* sys.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C79BEC1957C0AD00A1BE28 /* sys.cpp */; };
+		D4C7A17319630FA000A1BE28 /* stm32f30x_opamp.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799511957C0AD00A1BE28 /* stm32f30x_opamp.c */; };
+		D4C7A17419630FA000A1BE28 /* stm32f4xx_hal_hcd.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799991957C0AD00A1BE28 /* stm32f4xx_hal_hcd.c */; };
+		D4C7A17519630FA000A1BE28 /* hooks.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79EEB1957C0B700A1BE28 /* hooks.c */; };
+		D4C7A17619630FA000A1BE28 /* stm32f4xx_hal_i2c_ex.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C7999D1957C0AD00A1BE28 /* stm32f4xx_hal_i2c_ex.c */; };
+		D4C7A17719630FA000A1BE28 /* stm32f4xx_hal_sdram.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B5E1957C0AD00A1BE28 /* stm32f4xx_hal_sdram.c */; };
+		D4C7A17819630FA000A1BE28 /* stm32f4xx_hal_rng.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799B91957C0AD00A1BE28 /* stm32f4xx_hal_rng.c */; };
+		D4C7A17919630FA000A1BE28 /* stm32l1xx_flash.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79C0A1957C0AD00A1BE28 /* stm32l1xx_flash.c */; };
+		D4C7A17A19630FA000A1BE28 /* cmsis_nvic.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C7979D1957C0AC00A1BE28 /* cmsis_nvic.c */; };
+		D4C7A17B19630FA000A1BE28 /* stm32f0xx_tim.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A101957C0AD00A1BE28 /* stm32f0xx_tim.c */; };
+		D4C7A17C19630FA000A1BE28 /* stm32l0xx_hal_crc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B991957C0AD00A1BE28 /* stm32l0xx_hal_crc.c */; };
+		D4C7A17D19630FA000A1BE28 /* system_sam4l.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C794741957C0AC00A1BE28 /* system_sam4l.c */; };
+		D4C7A17E19630FA000A1BE28 /* stm32l0xx_hal_rng.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79BCA1957C0AD00A1BE28 /* stm32l0xx_hal_rng.c */; };
+		D4C7A17F19630FA000A1BE28 /* stm32f30x_exti.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79C491957C0AD00A1BE28 /* stm32f30x_exti.c */; };
+		D4C7A18019630FA000A1BE28 /* stm32f30x_i2c.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79AE11957C0AD00A1BE28 /* stm32f30x_i2c.c */; };
+		D4C7A18119630FA000A1BE28 /* stm32f4xx_hal_tim.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B661957C0AD00A1BE28 /* stm32f4xx_hal_tim.c */; };
+		D4C7A18219630FA000A1BE28 /* stm32l0xx_hal_pwr_ex.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79BC41957C0AD00A1BE28 /* stm32l0xx_hal_pwr_ex.c */; };
+		D4C7A18319630FA000A1BE28 /* stm32f30x_gpio.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79C4D1957C0AD00A1BE28 /* stm32f30x_gpio.c */; };
+		D4C7A18419630FA000A1BE28 /* stm32l0xx_hal_smartcard.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79BD01957C0AD00A1BE28 /* stm32l0xx_hal_smartcard.c */; };
+		D4C7A18519630FA000A1BE28 /* system_samg53.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C797061957C0AC00A1BE28 /* system_samg53.c */; };
+		D4C7A18619630FA000A1BE28 /* startup_stm32f30x.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C799661957C0AD00A1BE28 /* startup_stm32f30x.s */; };
+		D4C7A18719630FA000A1BE28 /* stm32f30x_dac.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C7993D1957C0AD00A1BE28 /* stm32f30x_dac.c */; };
+		D4C7A18819630FA000A1BE28 /* stm32f30x_adc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799341957C0AD00A1BE28 /* stm32f30x_adc.c */; };
+		D4C7A18919630FA000A1BE28 /* startup_LPC11xx.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C7981C1957C0AC00A1BE28 /* startup_LPC11xx.s */; };
+		D4C7A18A19630FA000A1BE28 /* stm32f30x_can.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79ACC1957C0AD00A1BE28 /* stm32f30x_can.c */; };
+		D4C7A18B19630FA000A1BE28 /* stm32f30x_spi.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79AEF1957C0AD00A1BE28 /* stm32f30x_spi.c */; };
+		D4C7A18C19630FA000A1BE28 /* startup_LPC43xx.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C798A81957C0AD00A1BE28 /* startup_LPC43xx.s */; };
+		D4C7A18D19630FA000A1BE28 /* startup_LPC17xx.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C7985C1957C0AD00A1BE28 /* startup_LPC17xx.s */; };
+		D4C7A18E19630FA000A1BE28 /* startup_LPC43xx.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C7989E1957C0AD00A1BE28 /* startup_LPC43xx.s */; };
+		D4C7A18F19630FA000A1BE28 /* system_LPC13Uxx.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C7982D1957C0AD00A1BE28 /* system_LPC13Uxx.c */; };
+		D4C7A19019630FA000A1BE28 /* stm32f30x_rtc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799571957C0AD00A1BE28 /* stm32f30x_rtc.c */; };
+		D4C7A19119630FA000A1BE28 /* stm32l0xx_hal_pwr.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79BC21957C0AD00A1BE28 /* stm32l0xx_hal_pwr.c */; };
+		D4C7A19219630FA000A1BE28 /* stm32f10x_usart.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79AB41957C0AD00A1BE28 /* stm32f10x_usart.c */; };
+		D4C7A19319630FA000A1BE28 /* vector_table.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C7987B1957C0AD00A1BE28 /* vector_table.s */; };
+		D4C7A19419630FA000A1BE28 /* stm32f30x_can.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799361957C0AD00A1BE28 /* stm32f30x_can.c */; };
+		D4C7A19519630FA000A1BE28 /* cmsis_nvic.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A861957C0AD00A1BE28 /* cmsis_nvic.c */; };
+		D4C7A19619630FA000A1BE28 /* startup_LPC11xx.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C797D21957C0AC00A1BE28 /* startup_LPC11xx.s */; };
+		D4C7A19719630FA000A1BE28 /* sys.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B021957C0AD00A1BE28 /* sys.cpp */; };
+		D4C7A19819630FA000A1BE28 /* stm32f0xx_rcc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A081957C0AD00A1BE28 /* stm32f0xx_rcc.c */; };
+		D4C7A19919630FA000A1BE28 /* stm32l1xx_sdio.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79C1F1957C0AD00A1BE28 /* stm32l1xx_sdio.c */; };
+		D4C7A19A19630FA000A1BE28 /* stm32l0xx_hal_rtc_ex.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79BCE1957C0AD00A1BE28 /* stm32l0xx_hal_rtc_ex.c */; };
+		D4C7A19B19630FA000A1BE28 /* stm32f30x_usart.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C7995F1957C0AD00A1BE28 /* stm32f30x_usart.c */; };
+		D4C7A19C19630FA000A1BE28 /* stm32f0xx_hal_smartcard.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A631957C0AD00A1BE28 /* stm32f0xx_hal_smartcard.c */; };
+		D4C7A19D19630FA000A1BE28 /* startup_stm32l053xx.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C79BEE1957C0AD00A1BE28 /* startup_stm32l053xx.s */; };
+		D4C7A19E19630FA000A1BE28 /* stm32f30x_syscfg.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79AF11957C0AD00A1BE28 /* stm32f30x_syscfg.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -639,11 +1263,19 @@
 			);
 			runOnlyForDeploymentPostprocessing = 1;
 		};
+		D4C7A1A019630FA000A1BE28 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		D457117B17053EFA00EA19A8 /* Makefile */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = Makefile; sourceTree = "<group>"; usesTabs = 1; xcLanguageSpecificationIdentifier = xcode.lang.sh; };
-		D49EB85417054C4000F2BF9B /* index */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; name = index; path = /Users/rob/PersonalProjects/Motate/MotateProject/build/Debug/index; sourceTree = "<absolute>"; };
 		D4C77F6D1950912300A1BE28 /* Tools.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Tools.xcodeproj; path = ../Tools/Tools.xcodeproj; sourceTree = "<group>"; };
 		D4C78F54195201A900A1BE28 /* AvrPins.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AvrPins.h; sourceTree = "<group>"; };
 		D4C78F55195201A900A1BE28 /* AvrTimers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AvrTimers.h; sourceTree = "<group>"; };
@@ -3723,7 +4355,6 @@
 		D4C79C801957C0AD00A1BE28 /* sys.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = sys.cpp; sourceTree = "<group>"; };
 		D4C79C821957C0AD00A1BE28 /* startup_STM32F40x.s */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm; path = startup_STM32F40x.s; sourceTree = "<group>"; };
 		D4C79C831957C0AD00A1BE28 /* STM32F407.ld */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = STM32F407.ld; sourceTree = "<group>"; };
-		D4C79EE11957C0B700A1BE28 /* atmel_sam.mk */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = atmel_sam.mk; sourceTree = "<group>"; };
 		D4C79EE21957C0B700A1BE28 /* atmel_sam_series.mk */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = atmel_sam_series.mk; sourceTree = "<group>"; };
 		D4C79EE81957C0B700A1BE28 /* cortex_handlers.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cortex_handlers.c; sourceTree = "<group>"; };
 		D4C79EE91957C0B700A1BE28 /* gcc_flash.ld */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = gcc_flash.ld; sourceTree = "<group>"; };
@@ -3746,14 +4377,26 @@
 		D4C79F0E1957C2A100A1BE28 /* FRDM-KLxx.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "FRDM-KLxx.mk"; sourceTree = "<group>"; };
 		D4C79F0F1957C9E700A1BE28 /* MotateUtilities.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = MotateUtilities.mk; sourceTree = "<group>"; };
 		D4C79F1219588A8600A1BE28 /* arm.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = arm.mk; sourceTree = "<group>"; };
-		D4C79F1B195BC80800A1BE28 /* blink_demo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = blink_demo.cpp; sourceTree = "<group>"; };
-		D4C79F1C195BC80800A1BE28 /* blink_demo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = blink_demo.h; sourceTree = "<group>"; };
-		D4C79F1D195BC80800A1BE28 /* Makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
 		D4C79F20195BCC9A00A1BE28 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		D4C79F23196216A300A1BE28 /* blink_demo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = blink_demo.cpp; sourceTree = "<group>"; };
+		D4C79F24196216A300A1BE28 /* blink_demo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = blink_demo.h; sourceTree = "<group>"; };
+		D4C79F25196216A300A1BE28 /* Makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
+		D4C79F27196216A300A1BE28 /* fade_demo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = fade_demo.cpp; sourceTree = "<group>"; };
+		D4C79F28196216A300A1BE28 /* fade_demo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fade_demo.h; sourceTree = "<group>"; };
+		D4C79F29196216A300A1BE28 /* Makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
+		D4C79F2E19630F7100A1BE28 /* index_sam */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = index_sam; sourceTree = BUILT_PRODUCTS_DIR; };
+		D4C7A1A419630FA000A1BE28 /* index_sam copy */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "index_sam copy"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		D457112117053BFB00EA19A8 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D4C7A19F19630FA000A1BE28 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -3770,6 +4413,8 @@
 				D4C79F19195BC80800A1BE28 /* demos */,
 				D4C78F52195201A900A1BE28 /* motate */,
 				D4C77F6D1950912300A1BE28 /* Tools.xcodeproj */,
+				D4C79F2E19630F7100A1BE28 /* index_sam */,
+				D4C7A1A419630FA000A1BE28 /* index_sam copy */,
 			);
 			sourceTree = "<group>";
 		};
@@ -9108,7 +9753,6 @@
 		D4C79EE01957C0B700A1BE28 /* atmel_sam */ = {
 			isa = PBXGroup;
 			children = (
-				D4C79EE11957C0B700A1BE28 /* atmel_sam.mk */,
 				D4C79EE21957C0B700A1BE28 /* atmel_sam_series.mk */,
 				D4C79EE81957C0B700A1BE28 /* cortex_handlers.c */,
 				D4C79EE91957C0B700A1BE28 /* gcc_flash.ld */,
@@ -9172,19 +9816,30 @@
 		D4C79F19195BC80800A1BE28 /* demos */ = {
 			isa = PBXGroup;
 			children = (
-				D4C79F1A195BC80800A1BE28 /* blink */,
+				D4C79F22196216A300A1BE28 /* blink */,
+				D4C79F26196216A300A1BE28 /* fade */,
 			);
 			path = demos;
 			sourceTree = "<group>";
 		};
-		D4C79F1A195BC80800A1BE28 /* blink */ = {
+		D4C79F22196216A300A1BE28 /* blink */ = {
 			isa = PBXGroup;
 			children = (
-				D4C79F1B195BC80800A1BE28 /* blink_demo.cpp */,
-				D4C79F1C195BC80800A1BE28 /* blink_demo.h */,
-				D4C79F1D195BC80800A1BE28 /* Makefile */,
+				D4C79F23196216A300A1BE28 /* blink_demo.cpp */,
+				D4C79F24196216A300A1BE28 /* blink_demo.h */,
+				D4C79F25196216A300A1BE28 /* Makefile */,
 			);
 			path = blink;
+			sourceTree = "<group>";
+		};
+		D4C79F26196216A300A1BE28 /* fade */ = {
+			isa = PBXGroup;
+			children = (
+				D4C79F27196216A300A1BE28 /* fade_demo.cpp */,
+				D4C79F28196216A300A1BE28 /* fade_demo.h */,
+				D4C79F29196216A300A1BE28 /* Makefile */,
+			);
+			path = fade;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -9197,7 +9852,7 @@
 			buildPhases = (
 			);
 			buildToolPath = /usr/bin/make;
-			buildWorkingDirectory = .;
+			buildWorkingDirectory = ./demos/blink;
 			dependencies = (
 			);
 			name = "Motate Due";
@@ -9211,7 +9866,7 @@
 			buildPhases = (
 			);
 			buildToolPath = /usr/bin/make;
-			buildWorkingDirectory = .;
+			buildWorkingDirectory = ./demos/blink;
 			dependencies = (
 			);
 			name = "Motate FRDM-KL05Z";
@@ -9221,9 +9876,9 @@
 /* End PBXLegacyTarget section */
 
 /* Begin PBXNativeTarget section */
-		D457112317053BFB00EA19A8 /* index */ = {
+		D457112317053BFB00EA19A8 /* index_sam */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = D457112D17053BFB00EA19A8 /* Build configuration list for PBXNativeTarget "index" */;
+			buildConfigurationList = D457112D17053BFB00EA19A8 /* Build configuration list for PBXNativeTarget "index_sam" */;
 			buildPhases = (
 				D457112017053BFB00EA19A8 /* Sources */,
 				D457112117053BFB00EA19A8 /* Frameworks */,
@@ -9233,9 +9888,26 @@
 			);
 			dependencies = (
 			);
-			name = index;
+			name = index_sam;
 			productName = index;
-			productReference = D49EB85417054C4000F2BF9B /* index */;
+			productReference = D4C79F2E19630F7100A1BE28 /* index_sam */;
+			productType = "com.apple.product-type.tool";
+		};
+		D4C79F2F19630FA000A1BE28 /* index_kl05z */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D4C7A1A119630FA000A1BE28 /* Build configuration list for PBXNativeTarget "index_kl05z" */;
+			buildPhases = (
+				D4C79F3019630FA000A1BE28 /* Sources */,
+				D4C7A19F19630FA000A1BE28 /* Frameworks */,
+				D4C7A1A019630FA000A1BE28 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = index_kl05z;
+			productName = index;
+			productReference = D4C7A1A419630FA000A1BE28 /* index_sam copy */;
 			productType = "com.apple.product-type.tool";
 		};
 /* End PBXNativeTarget section */
@@ -9267,7 +9939,8 @@
 			targets = (
 				D45710C21705330C00EA19A8 /* Motate Due */,
 				D4C78F731954DFAF00A1BE28 /* Motate FRDM-KL05Z */,
-				D457112317053BFB00EA19A8 /* index */,
+				D457112317053BFB00EA19A8 /* index_sam */,
+				D4C79F2F19630FA000A1BE28 /* index_kl05z */,
 			);
 		};
 /* End PBXProject section */
@@ -9367,7 +10040,7 @@
 				D4C79E021957C0AE00A1BE28 /* stm32f10x_pwr.c in Sources */,
 				D4C79D471957C0AE00A1BE28 /* stm32f10x_fsmc.c in Sources */,
 				D4C79E901957C0AE00A1BE28 /* stm32l0xx_hal_tim_ex.c in Sources */,
-				D4C79F1F195BC80800A1BE28 /* Makefile in Sources */,
+				D4C79F2B196216A300A1BE28 /* Makefile in Sources */,
 				D4C79E0E1957C0AE00A1BE28 /* sys.cpp in Sources */,
 				D4C79E521957C0AE00A1BE28 /* stm32f4xx_hal_rng.c in Sources */,
 				D4C79D101957C0AE00A1BE28 /* sys.cpp in Sources */,
@@ -9397,6 +10070,7 @@
 				D4C79E9F1957C0AE00A1BE28 /* stm32l1xx_aes_util.c in Sources */,
 				D4C79E0C1957C0AE00A1BE28 /* sys.cpp in Sources */,
 				D4C79D7D1957C0AE00A1BE28 /* stm32f4xx_hal_dma_ex.c in Sources */,
+				D4C79F2D196216A300A1BE28 /* Makefile in Sources */,
 				D4C79E461957C0AE00A1BE28 /* stm32f4xx_hal_i2s_ex.c in Sources */,
 				D4C79E651957C0AE00A1BE28 /* startup_stm32f401xe.s in Sources */,
 				D4C79D8B1957C0AE00A1BE28 /* stm32f4xx_hal_ltdc.c in Sources */,
@@ -9577,8 +10251,8 @@
 				D4C79DBF1957C0AE00A1BE28 /* stm32f0xx_wwdg.c in Sources */,
 				D4C79D511957C0AE00A1BE28 /* stm32f10x_usart.c in Sources */,
 				D4C79EFE1957C0B700A1BE28 /* syscalls_sam3.cpp in Sources */,
+				D4C79F2A196216A300A1BE28 /* blink_demo.cpp in Sources */,
 				D4C79DAF1957C0AE00A1BE28 /* stm32f0xx_dac.c in Sources */,
-				D4C79F1E195BC80800A1BE28 /* blink_demo.cpp in Sources */,
 				D4C79CDA1957C0AE00A1BE28 /* cmsis_nvic.c in Sources */,
 				D4C79ED31957C0AE00A1BE28 /* stm32f30x_wwdg.c in Sources */,
 				D4C79E7F1957C0AE00A1BE28 /* stm32l0xx_hal_iwdg.c in Sources */,
@@ -9795,6 +10469,7 @@
 				D4C79DAB1957C0AE00A1BE28 /* stm32f0xx_cec.c in Sources */,
 				D4C79E591957C0AE00A1BE28 /* stm32f4xx_hal_spi.c in Sources */,
 				D4C79CD71957C0AE00A1BE28 /* startup_LPC11xx.cpp in Sources */,
+				D4C79F2C196216A300A1BE28 /* fade_demo.cpp in Sources */,
 				D4C79D0B1957C0AE00A1BE28 /* vector_table.s in Sources */,
 				D4C79CE51957C0AE00A1BE28 /* startup_LPC11xx.s in Sources */,
 				D4C78F8119553EF700A1BE28 /* KL05ZTimers.cpp in Sources */,
@@ -9900,6 +10575,635 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		D4C79F3019630FA000A1BE28 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D4C79F3119630FA000A1BE28 /* startup_sam4cm.c in Sources */,
+				D4C79F3219630FA000A1BE28 /* stm32f30x_tim.c in Sources */,
+				D4C79F3319630FA000A1BE28 /* stm32l0xx_hal_smartcard_ex.c in Sources */,
+				D4C79F3419630FA000A1BE28 /* stm32f4xx_hal_tim.c in Sources */,
+				D4C79F3519630FA000A1BE28 /* stm32f4xx_hal_dac.c in Sources */,
+				D4C79F3619630FA000A1BE28 /* startup_sam4l.c in Sources */,
+				D4C79F3719630FA000A1BE28 /* startup_sam3n.c in Sources */,
+				D4C79F3819630FA000A1BE28 /* sys.cpp in Sources */,
+				D4C79F3919630FA000A1BE28 /* stm32f4xx_hal_usart.c in Sources */,
+				D4C79F3A19630FA000A1BE28 /* startup_MKL25Z4.s in Sources */,
+				D4C79F3B19630FA000A1BE28 /* stm32f4xx_hal_crc.c in Sources */,
+				D4C79F3C19630FA000A1BE28 /* vector_table.s in Sources */,
+				D4C79F3D19630FA000A1BE28 /* stm32f0xx_comp.c in Sources */,
+				D4C79F3E19630FA000A1BE28 /* sys.cpp in Sources */,
+				D4C79F3F19630FA000A1BE28 /* stm32f30x_usart.c in Sources */,
+				D4C79F4019630FA000A1BE28 /* stm32l1xx_rtc.c in Sources */,
+				D4C79F4119630FA000A1BE28 /* stm32l1xx_syscfg.c in Sources */,
+				D4C79F4219630FA000A1BE28 /* stm32l0xx_hal_pcd.c in Sources */,
+				D4C79F4319630FA000A1BE28 /* stm32f0xx_can.c in Sources */,
+				D4C79F4419630FA000A1BE28 /* stm32f30x_misc.c in Sources */,
+				D4C79F4519630FA000A1BE28 /* stm32f10x_sdio.c in Sources */,
+				D4C79F4619630FA000A1BE28 /* stm32f10x_dac.c in Sources */,
+				D4C79F4719630FA000A1BE28 /* system_stm32f0xx.c in Sources */,
+				D4C79F4819630FA000A1BE28 /* sys.cpp in Sources */,
+				D4C79F4919630FA000A1BE28 /* startup_stm32f030.s in Sources */,
+				D4C79F4A19630FA000A1BE28 /* stm32f30x_iwdg.c in Sources */,
+				D4C79F4B19630FA000A1BE28 /* sys.cpp in Sources */,
+				D4C79F4C19630FA000A1BE28 /* stm32f4xx_hal_rcc_ex.c in Sources */,
+				D4C79F4D19630FA000A1BE28 /* stm32f4xx_hal_sd.c in Sources */,
+				D4C79F4E19630FA000A1BE28 /* startup_stm32l1xx_hd.s in Sources */,
+				D4C79F4F19630FA000A1BE28 /* stm32f4xx_hal_cortex.c in Sources */,
+				D4C79F5019630FA000A1BE28 /* startup_MK64F12.s in Sources */,
+				D4C79F5119630FA000A1BE28 /* stm32f0xx_hal_cortex.c in Sources */,
+				D4C79F5219630FA000A1BE28 /* startup_samg53.c in Sources */,
+				D4C79F5319630FA000A1BE28 /* stm32l0xx_hal_gpio.c in Sources */,
+				D4C79F5419630FA000A1BE28 /* cmsis_nvic.c in Sources */,
+				D4C79F5519630FA000A1BE28 /* stm32l1xx_rcc.c in Sources */,
+				D4C79F5619630FA000A1BE28 /* stm32f30x_rtc.c in Sources */,
+				D4C79F5719630FA000A1BE28 /* stm32f4xx_hal_adc_ex.c in Sources */,
+				D4C79F5819630FA000A1BE28 /* cmsis_nvic.c in Sources */,
+				D4C79F5919630FA000A1BE28 /* stm32f10x_iwdg.c in Sources */,
+				D4C79F5A19630FA000A1BE28 /* stm32f4xx_hal_pwr.c in Sources */,
+				D4C79F5B19630FA000A1BE28 /* stm32f0xx_hal_spi.c in Sources */,
+				D4C79F5C19630FA000A1BE28 /* stm32f4xx_hal_wwdg.c in Sources */,
+				D4C79F5D19630FA000A1BE28 /* stm32f0xx_pwr.c in Sources */,
+				D4C79F5E19630FA000A1BE28 /* startup_LPC17xx.s in Sources */,
+				D4C79F5F19630FA000A1BE28 /* sys.cpp in Sources */,
+				D4C79F6019630FA000A1BE28 /* stm32l0xx_hal_rtc.c in Sources */,
+				D4C79F6119630FA000A1BE28 /* startup_stm32f10x_md.s in Sources */,
+				D4C79F6219630FA000A1BE28 /* stm32l1xx_opamp.c in Sources */,
+				D4C79F6319630FA000A1BE28 /* stm32f0xx_exti.c in Sources */,
+				D4C79F6419630FA000A1BE28 /* sys.cpp in Sources */,
+				D4C79F6519630FA000A1BE28 /* stm32f30x_dac.c in Sources */,
+				D4C79F6619630FA000A1BE28 /* startup_LPC11xx.s in Sources */,
+				D4C79F6719630FA000A1BE28 /* stm32f30x_comp.c in Sources */,
+				D4C79F6819630FA000A1BE28 /* stm32f4xx_hal_irda.c in Sources */,
+				D4C79F6919630FA000A1BE28 /* stm32f4xx_hal_pwr.c in Sources */,
+				D4C79F6A19630FA000A1BE28 /* startup_LPC11xx.s in Sources */,
+				D4C79F6B19630FA000A1BE28 /* system_MKL25Z4.c in Sources */,
+				D4C79F6C19630FA000A1BE28 /* stm32f4xx_hal_rcc.c in Sources */,
+				D4C79F6D19630FA000A1BE28 /* system_samd20.c in Sources */,
+				D4C79F6E19630FA000A1BE28 /* sys.cpp in Sources */,
+				D4C79F6F19630FA000A1BE28 /* stm32f0xx_adc.c in Sources */,
+				D4C79F7019630FA000A1BE28 /* stm32f4xx_ll_sdmmc.c in Sources */,
+				D4C79F7119630FA000A1BE28 /* stm32f0xx_hal_gpio.c in Sources */,
+				D4C79F7219630FA000A1BE28 /* startup_stm32f302x8.s in Sources */,
+				D4C79F7319630FA000A1BE28 /* system_samr21.c in Sources */,
+				D4C79F7419630FA000A1BE28 /* startup_MK20D5.s in Sources */,
+				D4C79F7519630FA000A1BE28 /* startup_LPC11xx.s in Sources */,
+				D4C79F7619630FA000A1BE28 /* stm32f30x_dbgmcu.c in Sources */,
+				D4C79F7719630FA000A1BE28 /* stm32f4xx_hal_cryp.c in Sources */,
+				D4C79F7819630FA000A1BE28 /* stm32f10x_adc.c in Sources */,
+				D4C79F7919630FA000A1BE28 /* stm32f4xx_hal_flash.c in Sources */,
+				D4C79F7A19630FA000A1BE28 /* stm32l0xx_hal_rcc_ex.c in Sources */,
+				D4C79F7B19630FA000A1BE28 /* stm32f30x_flash.c in Sources */,
+				D4C79F7C19630FA000A1BE28 /* stm32f4xx_ll_fmc.c in Sources */,
+				D4C79F7D19630FA000A1BE28 /* stm32f10x_crc.c in Sources */,
+				D4C79F7E19630FA000A1BE28 /* stm32f0xx_hal_tim_ex.c in Sources */,
+				D4C79F7F19630FA000A1BE28 /* cmsis_nvic.c in Sources */,
+				D4C79F8019630FA000A1BE28 /* stm32f4xx_hal_can.c in Sources */,
+				D4C79F8119630FA000A1BE28 /* stm32f4xx_hal_crc.c in Sources */,
+				D4C79F8219630FA000A1BE28 /* startup_LPC8xx.s in Sources */,
+				D4C79F8319630FA000A1BE28 /* stm32f4xx_hal_gpio.c in Sources */,
+				D4C79F8419630FA000A1BE28 /* stm32f4xx_hal_uart.c in Sources */,
+				D4C79F8519630FA000A1BE28 /* SamSPI.cpp in Sources */,
+				D4C79F8619630FA000A1BE28 /* system_sam4cp.c in Sources */,
+				D4C79F8719630FA000A1BE28 /* vector_functions.s in Sources */,
+				D4C79F8819630FA000A1BE28 /* stm32f10x_pwr.c in Sources */,
+				D4C79F8919630FA000A1BE28 /* stm32f10x_fsmc.c in Sources */,
+				D4C79F8A19630FA000A1BE28 /* stm32l0xx_hal_tim_ex.c in Sources */,
+				D4C79F8B19630FA000A1BE28 /* Makefile in Sources */,
+				D4C79F8C19630FA000A1BE28 /* sys.cpp in Sources */,
+				D4C79F8D19630FA000A1BE28 /* stm32f4xx_hal_rng.c in Sources */,
+				D4C79F8E19630FA000A1BE28 /* sys.cpp in Sources */,
+				D4C79F8F19630FA000A1BE28 /* cmsis_nvic.c in Sources */,
+				D4C79F9019630FA000A1BE28 /* stm32f0xx_hal_adc.c in Sources */,
+				D4C79F9119630FA000A1BE28 /* stm32l1xx_dbgmcu.c in Sources */,
+				D4C79F9219630FA000A1BE28 /* stm32l0xx_hal_cryp.c in Sources */,
+				D4C79F9319630FA000A1BE28 /* stm32f0xx_hal_usart.c in Sources */,
+				D4C79F9419630FA000A1BE28 /* cmsis_nvic.c in Sources */,
+				D4C79F9519630FA000A1BE28 /* startup_LPC11U6x.s in Sources */,
+				D4C79F9619630FA000A1BE28 /* stm32f4xx_hal_dma2d.c in Sources */,
+				D4C79F9719630FA000A1BE28 /* stm32f4xx_hal_cryp_ex.c in Sources */,
+				D4C79F9819630FA000A1BE28 /* stm32f4xx_hal_i2c.c in Sources */,
+				D4C79F9919630FA000A1BE28 /* cmsis_nvic.c in Sources */,
+				D4C79F9A19630FA000A1BE28 /* sys.cpp in Sources */,
+				D4C79F9B19630FA000A1BE28 /* stm32f4xx_ll_fmc.c in Sources */,
+				D4C79F9C19630FA000A1BE28 /* system_sam3n.c in Sources */,
+				D4C79F9D19630FA000A1BE28 /* stm32f10x_dbgmcu.c in Sources */,
+				D4C79F9E19630FA000A1BE28 /* startup_LPC11xx.s in Sources */,
+				D4C79F9F19630FA000A1BE28 /* stm32f10x_tim.c in Sources */,
+				D4C79FA019630FA000A1BE28 /* stm32f10x_rcc.c in Sources */,
+				D4C79FA119630FA000A1BE28 /* stm32l1xx_dac.c in Sources */,
+				D4C79FA219630FA000A1BE28 /* stm32f10x_gpio.c in Sources */,
+				D4C79FA319630FA000A1BE28 /* cmsis_nvic.c in Sources */,
+				D4C79FA419630FA000A1BE28 /* startup_samd21.c in Sources */,
+				D4C79FA519630FA000A1BE28 /* stm32f4xx_hal_i2s.c in Sources */,
+				D4C79FA619630FA000A1BE28 /* stm32l1xx_aes_util.c in Sources */,
+				D4C79FA719630FA000A1BE28 /* sys.cpp in Sources */,
+				D4C79FA819630FA000A1BE28 /* stm32f4xx_hal_dma_ex.c in Sources */,
+				D4C79FA919630FA000A1BE28 /* Makefile in Sources */,
+				D4C79FAA19630FA000A1BE28 /* stm32f4xx_hal_i2s_ex.c in Sources */,
+				D4C79FAB19630FA000A1BE28 /* startup_stm32f401xe.s in Sources */,
+				D4C79FAC19630FA000A1BE28 /* stm32f4xx_hal_ltdc.c in Sources */,
+				D4C79FAD19630FA000A1BE28 /* stm32f30x_exti.c in Sources */,
+				D4C79FAE19630FA000A1BE28 /* startup_sam3u.c in Sources */,
+				D4C79FAF19630FA000A1BE28 /* Motate.mk in Sources */,
+				D4C79FB019630FA000A1BE28 /* system_stm32f10x.c in Sources */,
+				D4C79FB119630FA000A1BE28 /* stm32l1xx_usart.c in Sources */,
+				D4C79FB219630FA000A1BE28 /* system_sam4e.c in Sources */,
+				D4C79FB319630FA000A1BE28 /* stm32f0xx_hal_dac_ex.c in Sources */,
+				D4C79FB419630FA000A1BE28 /* system_sam4c.c in Sources */,
+				D4C79FB519630FA000A1BE28 /* misc.c in Sources */,
+				D4C79FB619630FA000A1BE28 /* startup_LPC13xx.s in Sources */,
+				D4C79FB719630FA000A1BE28 /* stm32f4xx_hal_hash_ex.c in Sources */,
+				D4C79FB819630FA000A1BE28 /* stm32f10x_i2c.c in Sources */,
+				D4C79FB919630FA000A1BE28 /* stm32f4xx_hal.c in Sources */,
+				D4C79FBA19630FA000A1BE28 /* startup_MKL25Z4.c in Sources */,
+				D4C79FBB19630FA000A1BE28 /* stm32f0xx_hal_pwr_ex.c in Sources */,
+				D4C79FBC19630FA000A1BE28 /* stm32f4xx_hal_cortex.c in Sources */,
+				D4C79FBD19630FA000A1BE28 /* startup_stm32l1xx_hd.s in Sources */,
+				D4C79FBE19630FA000A1BE28 /* stm32f4xx_hal_rcc_ex.c in Sources */,
+				D4C79FBF19630FA000A1BE28 /* stm32f0xx_comp.c in Sources */,
+				D4C79FC019630FA000A1BE28 /* stm32f0xx_misc.c in Sources */,
+				D4C79FC119630FA000A1BE28 /* startup_MKL25Z4.s in Sources */,
+				D4C79FC219630FA000A1BE28 /* stm32f4xx_hal_nor.c in Sources */,
+				D4C79FC319630FA000A1BE28 /* stm32f4xx_ll_usb.c in Sources */,
+				D4C79FC419630FA000A1BE28 /* stm32f4xx_hal_sram.c in Sources */,
+				D4C79FC519630FA000A1BE28 /* system_stm32f10x.c in Sources */,
+				D4C79FC619630FA000A1BE28 /* stm32f4xx_hal_sai.c in Sources */,
+				D4C79FC719630FA000A1BE28 /* stm32l0xx_hal_crc_ex.c in Sources */,
+				D4C79FC819630FA000A1BE28 /* startup_stm32f072xb.s in Sources */,
+				D4C79FC919630FA000A1BE28 /* stm32l0xx_hal_cortex.c in Sources */,
+				D4C79FCA19630FA000A1BE28 /* sys.cpp in Sources */,
+				D4C79FCB19630FA000A1BE28 /* startup_stm32f10x_md.s in Sources */,
+				D4C79FCC19630FA000A1BE28 /* stm32f0xx_tim.c in Sources */,
+				D4C79FCD19630FA000A1BE28 /* stm32f30x_rcc.c in Sources */,
+				D4C79FCE19630FA000A1BE28 /* core_arm7.c in Sources */,
+				D4C79FCF19630FA000A1BE28 /* stm32f0xx_hal.c in Sources */,
+				D4C79FD019630FA000A1BE28 /* stm32f10x_spi.c in Sources */,
+				D4C79FD119630FA000A1BE28 /* cmsis_nvic.c in Sources */,
+				D4C79FD219630FA000A1BE28 /* stm32f30x_crc.c in Sources */,
+				D4C79FD319630FA000A1BE28 /* sys.cpp in Sources */,
+				D4C79FD419630FA000A1BE28 /* startup_STM32F40x.s in Sources */,
+				D4C79FD519630FA000A1BE28 /* stm32f10x_bkp.c in Sources */,
+				D4C79FD619630FA000A1BE28 /* stm32f30x_dma.c in Sources */,
+				D4C79FD719630FA000A1BE28 /* stm32f0xx_crs.c in Sources */,
+				D4C79FD819630FA000A1BE28 /* stm32l0xx_hal_flash.c in Sources */,
+				D4C79FD919630FA000A1BE28 /* sys.cpp in Sources */,
+				D4C79FDA19630FA000A1BE28 /* startup_STM32F40x.s in Sources */,
+				D4C79FDB19630FA000A1BE28 /* stm32f10x_dbgmcu.c in Sources */,
+				D4C79FDC19630FA000A1BE28 /* SamPins.cpp in Sources */,
+				D4C79FDD19630FA000A1BE28 /* stm32l0xx_hal_spi.c in Sources */,
+				D4C79FDE19630FA000A1BE28 /* stm32f0xx_hal_smbus.c in Sources */,
+				D4C79FDF19630FA000A1BE28 /* stm32f4xx_hal_pcd.c in Sources */,
+				D4C79FE019630FA000A1BE28 /* stm32f30x_exti.c in Sources */,
+				D4C79FE119630FA000A1BE28 /* stm32f0xx_hal_i2c_ex.c in Sources */,
+				D4C79FE219630FA000A1BE28 /* stm32f30x_dma.c in Sources */,
+				D4C79FE319630FA000A1BE28 /* SamUSB.cpp in Sources */,
+				D4C79FE419630FA000A1BE28 /* sys.cpp in Sources */,
+				D4C79FE519630FA000A1BE28 /* stm32f4xx_hal_flash.c in Sources */,
+				D4C79FE619630FA000A1BE28 /* stm32f4xx_hal_eth.c in Sources */,
+				D4C79FE719630FA000A1BE28 /* stm32f4xx_hal_dac.c in Sources */,
+				D4C79FE819630FA000A1BE28 /* startup_STM32F30x.s in Sources */,
+				D4C79FE919630FA000A1BE28 /* cmsis_nvic.c in Sources */,
+				D4C79FEA19630FA000A1BE28 /* cmsis_nvic.c in Sources */,
+				D4C79FEB19630FA000A1BE28 /* stm32f30x_spi.c in Sources */,
+				D4C79FEC19630FA000A1BE28 /* stm32f0xx_spi.c in Sources */,
+				D4C79FED19630FA000A1BE28 /* startup_LPC11xx.s in Sources */,
+				D4C79FEE19630FA000A1BE28 /* stm32f4xx_hal_sdram.c in Sources */,
+				D4C79FEF19630FA000A1BE28 /* stm32f0xx_iwdg.c in Sources */,
+				D4C79FF019630FA000A1BE28 /* stm32f30x_hrtim.c in Sources */,
+				D4C79FF119630FA000A1BE28 /* stm32l0xx_hal_tim.c in Sources */,
+				D4C79FF219630FA000A1BE28 /* startup_MKL46Z4.s in Sources */,
+				D4C79FF319630FA000A1BE28 /* stm32f0xx_hal_pcd.c in Sources */,
+				D4C79FF419630FA000A1BE28 /* startup_stm32l053xx.s in Sources */,
+				D4C79FF519630FA000A1BE28 /* stm32f4xx_hal_dma.c in Sources */,
+				D4C79FF619630FA000A1BE28 /* stm32f0xx_wwdg.c in Sources */,
+				D4C79FF719630FA000A1BE28 /* stm32f4xx_hal_pcd.c in Sources */,
+				D4C79FF819630FA000A1BE28 /* stm32f0xx_dac.c in Sources */,
+				D4C79FF919630FA000A1BE28 /* stm32f30x_misc.c in Sources */,
+				D4C79FFA19630FA000A1BE28 /* stm32f0xx_syscfg.c in Sources */,
+				D4C79FFB19630FA000A1BE28 /* stm32f4xx_hal_nand.c in Sources */,
+				D4C79FFC19630FA000A1BE28 /* stm32f4xx_hal_sram.c in Sources */,
+				D4C79FFD19630FA000A1BE28 /* startup_LPC11xx.s in Sources */,
+				D4C79FFE19630FA000A1BE28 /* KL05ZPins.cpp in Sources */,
+				D4C79FFF19630FA000A1BE28 /* startup_sam4c32.c in Sources */,
+				D4C7A00019630FA000A1BE28 /* stm32f0xx_usart.c in Sources */,
+				D4C7A00119630FA000A1BE28 /* startup_MKL05Z4.s in Sources */,
+				D4C7A00219630FA000A1BE28 /* startup_stm32f302x8.s in Sources */,
+				D4C7A00319630FA000A1BE28 /* stm32l0xx_hal_dac.c in Sources */,
+				D4C7A00419630FA000A1BE28 /* cortex_handlers.c in Sources */,
+				D4C7A00519630FA000A1BE28 /* startup_LPC11xx.s in Sources */,
+				D4C7A00619630FA000A1BE28 /* sys.cpp in Sources */,
+				D4C7A00719630FA000A1BE28 /* stm32f30x_opamp.c in Sources */,
+				D4C7A00819630FA000A1BE28 /* system_stm32f30x.c in Sources */,
+				D4C7A00919630FA000A1BE28 /* stm32f0xx_hal_uart_ex.c in Sources */,
+				D4C7A00A19630FA000A1BE28 /* startup_stm32f407xx.s in Sources */,
+				D4C7A00B19630FA000A1BE28 /* stm32f10x_iwdg.c in Sources */,
+				D4C7A00C19630FA000A1BE28 /* stm32f0xx_exti.c in Sources */,
+				D4C7A00D19630FA000A1BE28 /* stm32f10x_bkp.c in Sources */,
+				D4C7A00E19630FA000A1BE28 /* cmsis_nvic.c in Sources */,
+				D4C7A00F19630FA000A1BE28 /* system_sam4s.c in Sources */,
+				D4C7A01019630FA000A1BE28 /* system_samg51.c in Sources */,
+				D4C7A01119630FA000A1BE28 /* system_LPC11Uxx.c in Sources */,
+				D4C7A01219630FA000A1BE28 /* vector_table.s in Sources */,
+				D4C7A01319630FA000A1BE28 /* stm32f10x_exti.c in Sources */,
+				D4C7A01419630FA000A1BE28 /* startup_LPC11xx.s in Sources */,
+				D4C7A01519630FA000A1BE28 /* stm32f10x_can.c in Sources */,
+				D4C7A01619630FA000A1BE28 /* system_LPC17xx.c in Sources */,
+				D4C7A01719630FA000A1BE28 /* stm32f4xx_hal_pwr_ex.c in Sources */,
+				D4C7A01819630FA000A1BE28 /* stm32f0xx_hal_dma.c in Sources */,
+				D4C7A01919630FA000A1BE28 /* startup_lpc407x_8x.cpp in Sources */,
+				D4C7A01A19630FA000A1BE28 /* cmsis_nvic.c in Sources */,
+				D4C7A01B19630FA000A1BE28 /* stm32f10x_gpio.c in Sources */,
+				D4C7A01C19630FA000A1BE28 /* stm32f30x_adc.c in Sources */,
+				D4C7A01D19630FA000A1BE28 /* startup_stm32f072xb.s in Sources */,
+				D4C7A01E19630FA000A1BE28 /* stm32f4xx_hal_nand.c in Sources */,
+				D4C7A01F19630FA000A1BE28 /* stm32f0xx_hal_dac.c in Sources */,
+				D4C7A02019630FA000A1BE28 /* stm32f30x_adc.c in Sources */,
+				D4C7A02119630FA000A1BE28 /* sys.cpp in Sources */,
+				D4C7A02219630FA000A1BE28 /* Reset.cpp in Sources */,
+				D4C7A02319630FA000A1BE28 /* stm32f0xx_flash.c in Sources */,
+				D4C7A02419630FA000A1BE28 /* system_sam4n.c in Sources */,
+				D4C7A02519630FA000A1BE28 /* stm32f30x_i2c.c in Sources */,
+				D4C7A02619630FA000A1BE28 /* startup_sam4e.c in Sources */,
+				D4C7A02719630FA000A1BE28 /* stm32f4xx_hal_ltdc.c in Sources */,
+				D4C7A02819630FA000A1BE28 /* stm32l0xx_hal_flash_ramfunc.c in Sources */,
+				D4C7A02919630FA000A1BE28 /* stm32f4xx_hal_pccard.c in Sources */,
+				D4C7A02A19630FA000A1BE28 /* stm32f30x_crc.c in Sources */,
+				D4C7A02B19630FA000A1BE28 /* stm32l0xx_hal_uart.c in Sources */,
+				D4C7A02C19630FA000A1BE28 /* stm32f0xx_usart.c in Sources */,
+				D4C7A02D19630FA000A1BE28 /* stm32f0xx_can.c in Sources */,
+				D4C7A02E19630FA000A1BE28 /* stm32l0xx_hal_comp.c in Sources */,
+				D4C7A02F19630FA000A1BE28 /* startup_sam4c.c in Sources */,
+				D4C7A03019630FA000A1BE28 /* stm32l0xx_hal_pcd_ex.c in Sources */,
+				D4C7A03119630FA000A1BE28 /* stm32f30x_rcc.c in Sources */,
+				D4C7A03219630FA000A1BE28 /* stm32f30x_dac.c in Sources */,
+				D4C7A03319630FA000A1BE28 /* stm32f4xx_hal_i2c_ex.c in Sources */,
+				D4C7A03419630FA000A1BE28 /* main.cpp in Sources */,
+				D4C7A03519630FA000A1BE28 /* startup_LPC17xx.cpp in Sources */,
+				D4C7A03619630FA000A1BE28 /* stm32f0xx_crc.c in Sources */,
+				D4C7A03719630FA000A1BE28 /* system_LPC11xx.c in Sources */,
+				D4C7A03819630FA000A1BE28 /* stm32f4xx_hal_uart.c in Sources */,
+				D4C7A03919630FA000A1BE28 /* sys.cpp in Sources */,
+				D4C7A03A19630FA000A1BE28 /* stm32f30x_dma.c in Sources */,
+				D4C7A03B19630FA000A1BE28 /* stm32l0xx_hal_adc_ex.c in Sources */,
+				D4C7A03C19630FA000A1BE28 /* system_stm32f30x.c in Sources */,
+				D4C7A03D19630FA000A1BE28 /* stm32f30x_flash.c in Sources */,
+				D4C7A03E19630FA000A1BE28 /* system_stm32f4xx.c in Sources */,
+				D4C7A03F19630FA000A1BE28 /* stm32f30x_usart.c in Sources */,
+				D4C7A04019630FA000A1BE28 /* startup_LPC43xx.cpp in Sources */,
+				D4C7A04119630FA000A1BE28 /* stm32f30x_iwdg.c in Sources */,
+				D4C7A04219630FA000A1BE28 /* stm32f0xx_syscfg.c in Sources */,
+				D4C7A04319630FA000A1BE28 /* stm32l0xx_hal_smbus.c in Sources */,
+				D4C7A04419630FA000A1BE28 /* startup_samd20.c in Sources */,
+				D4C7A04519630FA000A1BE28 /* startup_stm32f030.s in Sources */,
+				D4C7A04619630FA000A1BE28 /* sys.cpp in Sources */,
+				D4C7A04719630FA000A1BE28 /* stm32f4xx_hal_iwdg.c in Sources */,
+				D4C7A04819630FA000A1BE28 /* startup_samr21.c in Sources */,
+				D4C7A04919630FA000A1BE28 /* stm32f30x_opamp.c in Sources */,
+				D4C7A04A19630FA000A1BE28 /* stm32f10x_dma.c in Sources */,
+				D4C7A04B19630FA000A1BE28 /* system_MK64F12.c in Sources */,
+				D4C7A04C19630FA000A1BE28 /* stm32f30x_pwr.c in Sources */,
+				D4C7A04D19630FA000A1BE28 /* stm32l1xx_tim.c in Sources */,
+				D4C7A04E19630FA000A1BE28 /* stm32l1xx_fsmc.c in Sources */,
+				D4C7A04F19630FA000A1BE28 /* stm32l1xx_comp.c in Sources */,
+				D4C7A05019630FA000A1BE28 /* startup_stm32f302x8.s in Sources */,
+				D4C7A05119630FA000A1BE28 /* startup_LPC13xx.s in Sources */,
+				D4C7A05219630FA000A1BE28 /* stm32f4xx_hal_iwdg.c in Sources */,
+				D4C7A05319630FA000A1BE28 /* stm32f30x_i2c.c in Sources */,
+				D4C7A05419630FA000A1BE28 /* sys.cpp in Sources */,
+				D4C7A05519630FA000A1BE28 /* system_nrf51822.c in Sources */,
+				D4C7A05619630FA000A1BE28 /* system_LPC11U6x.c in Sources */,
+				D4C7A05719630FA000A1BE28 /* startup_LPC11xx.s in Sources */,
+				D4C7A05819630FA000A1BE28 /* sys.cpp in Sources */,
+				D4C7A05919630FA000A1BE28 /* stm32l1xx_crc.c in Sources */,
+				D4C7A05A19630FA000A1BE28 /* stm32f0xx_adc.c in Sources */,
+				D4C7A05B19630FA000A1BE28 /* stm32f0xx_wwdg.c in Sources */,
+				D4C7A05C19630FA000A1BE28 /* stm32f10x_usart.c in Sources */,
+				D4C7A05D19630FA000A1BE28 /* syscalls_sam3.cpp in Sources */,
+				D4C7A05E19630FA000A1BE28 /* blink_demo.cpp in Sources */,
+				D4C7A05F19630FA000A1BE28 /* stm32f0xx_dac.c in Sources */,
+				D4C7A06019630FA000A1BE28 /* cmsis_nvic.c in Sources */,
+				D4C7A06119630FA000A1BE28 /* stm32f30x_wwdg.c in Sources */,
+				D4C7A06219630FA000A1BE28 /* stm32l0xx_hal_iwdg.c in Sources */,
+				D4C7A06319630FA000A1BE28 /* system_MK20D5.c in Sources */,
+				D4C7A06419630FA000A1BE28 /* stm32l1xx_wwdg.c in Sources */,
+				D4C7A06519630FA000A1BE28 /* stm32f4xx_hal_pwr_ex.c in Sources */,
+				D4C7A06619630FA000A1BE28 /* system_stm32f0xx.c in Sources */,
+				D4C7A06719630FA000A1BE28 /* startup_LPC11xx.s in Sources */,
+				D4C7A06819630FA000A1BE28 /* stm32f4xx_hal_dma_ex.c in Sources */,
+				D4C7A06919630FA000A1BE28 /* stm32f4xx_hal_adc.c in Sources */,
+				D4C7A06A19630FA000A1BE28 /* stm32f4xx_hal_eth.c in Sources */,
+				D4C7A06B19630FA000A1BE28 /* stm32f10x_cec.c in Sources */,
+				D4C7A06C19630FA000A1BE28 /* stm32f4xx_hal_dac_ex.c in Sources */,
+				D4C7A06D19630FA000A1BE28 /* stm32f4xx_hal_tim_ex.c in Sources */,
+				D4C7A06E19630FA000A1BE28 /* stm32f4xx_hal_rtc_ex.c in Sources */,
+				D4C7A06F19630FA000A1BE28 /* stm32f0xx_hal_uart.c in Sources */,
+				D4C7A07019630FA000A1BE28 /* stm32f4xx_hal_i2s.c in Sources */,
+				D4C7A07119630FA000A1BE28 /* stm32f0xx_hal_flash.c in Sources */,
+				D4C7A07219630FA000A1BE28 /* stm32f4xx_hal_hash.c in Sources */,
+				D4C7A07319630FA000A1BE28 /* stm32f4xx_hal_dac_ex.c in Sources */,
+				D4C7A07419630FA000A1BE28 /* cmsis_nvic.c in Sources */,
+				D4C7A07519630FA000A1BE28 /* stm32f10x_pwr.c in Sources */,
+				D4C7A07619630FA000A1BE28 /* sys.cpp in Sources */,
+				D4C7A07719630FA000A1BE28 /* stm32f0xx_hal_rtc_ex.c in Sources */,
+				D4C7A07819630FA000A1BE28 /* stm32l1xx_exti.c in Sources */,
+				D4C7A07919630FA000A1BE28 /* stm32f10x_flash.c in Sources */,
+				D4C7A07A19630FA000A1BE28 /* system_stm32f4xx.c in Sources */,
+				D4C7A07B19630FA000A1BE28 /* stm32f4xx_hal_i2s_ex.c in Sources */,
+				D4C7A07C19630FA000A1BE28 /* stm32f4xx_hal_rcc.c in Sources */,
+				D4C7A07D19630FA000A1BE28 /* vector_functions.s in Sources */,
+				D4C7A07E19630FA000A1BE28 /* stm32f4xx_hal.c in Sources */,
+				D4C7A07F19630FA000A1BE28 /* stm32f4xx_hal_gpio.c in Sources */,
+				D4C7A08019630FA000A1BE28 /* stm32f4xx_hal_dma.c in Sources */,
+				D4C7A08119630FA000A1BE28 /* stm32l0xx_hal_lptim.c in Sources */,
+				D4C7A08219630FA000A1BE28 /* stm32f0xx_hal_pwr.c in Sources */,
+				D4C7A08319630FA000A1BE28 /* sys_helper.cpp in Sources */,
+				D4C7A08419630FA000A1BE28 /* startup_sam3sd8.c in Sources */,
+				D4C7A08519630FA000A1BE28 /* system_sam3sd8.c in Sources */,
+				D4C7A08619630FA000A1BE28 /* stm32f0xx_hal_crc.c in Sources */,
+				D4C7A08719630FA000A1BE28 /* stm32f4xx_hal_smartcard.c in Sources */,
+				D4C7A08819630FA000A1BE28 /* stm32f0xx_hal_smartcard_ex.c in Sources */,
+				D4C7A08919630FA000A1BE28 /* sys.cpp in Sources */,
+				D4C7A08A19630FA000A1BE28 /* stm32l0xx_hal_i2c_ex.c in Sources */,
+				D4C7A08B19630FA000A1BE28 /* system_sam4cm.c in Sources */,
+				D4C7A08C19630FA000A1BE28 /* stm32f30x_gpio.c in Sources */,
+				D4C7A08D19630FA000A1BE28 /* stm32f0xx_hal_cec.c in Sources */,
+				D4C7A08E19630FA000A1BE28 /* stm32l1xx_spi.c in Sources */,
+				D4C7A08F19630FA000A1BE28 /* stm32f4xx_hal_dcmi.c in Sources */,
+				D4C7A09019630FA000A1BE28 /* startup_LPC17xx.s in Sources */,
+				D4C7A09119630FA000A1BE28 /* stm32f0xx_hal_i2c.c in Sources */,
+				D4C7A09219630FA000A1BE28 /* stm32f30x_can.c in Sources */,
+				D4C7A09319630FA000A1BE28 /* system_sam4sp.c in Sources */,
+				D4C7A09419630FA000A1BE28 /* stm32f30x_dbgmcu.c in Sources */,
+				D4C7A09519630FA000A1BE28 /* system_sam4cm32.c in Sources */,
+				D4C7A09619630FA000A1BE28 /* stm32f0xx_hal_flash_ex.c in Sources */,
+				D4C7A09719630FA000A1BE28 /* stm32l1xx_iwdg.c in Sources */,
+				D4C7A09819630FA000A1BE28 /* stm32f30x_tim.c in Sources */,
+				D4C7A09919630FA000A1BE28 /* stm32f4xx_hal_adc.c in Sources */,
+				D4C7A09A19630FA000A1BE28 /* stm32f0xx_hal_adc_ex.c in Sources */,
+				D4C7A09B19630FA000A1BE28 /* stm32f30x_rcc.c in Sources */,
+				D4C7A09C19630FA000A1BE28 /* startup_sam4cm32.c in Sources */,
+				D4C7A09D19630FA000A1BE28 /* stm32f0xx_gpio.c in Sources */,
+				D4C7A09E19630FA000A1BE28 /* stm32l0xx_hal_flash_ex.c in Sources */,
+				D4C7A09F19630FA000A1BE28 /* stm32f4xx_hal_rtc.c in Sources */,
+				D4C7A0A019630FA000A1BE28 /* sys.cpp in Sources */,
+				D4C7A0A119630FA000A1BE28 /* stm32l0xx_hal_dac_ex.c in Sources */,
+				D4C7A0A219630FA000A1BE28 /* stm32l0xx_hal_i2s.c in Sources */,
+				D4C7A0A319630FA000A1BE28 /* startup_LPC43xx.s in Sources */,
+				D4C7A0A419630FA000A1BE28 /* startup_stm32f0xx.s in Sources */,
+				D4C7A0A519630FA000A1BE28 /* startup_sam4n.c in Sources */,
+				D4C7A0A619630FA000A1BE28 /* startup_stm32f10x_md_vl.s in Sources */,
+				D4C7A0A719630FA000A1BE28 /* cmsis_nvic.c in Sources */,
+				D4C7A0A819630FA000A1BE28 /* cmsis_nvic.c in Sources */,
+				D4C7A0A919630FA000A1BE28 /* cmsis_nvic.c in Sources */,
+				D4C7A0AA19630FA000A1BE28 /* stm32f30x_pwr.c in Sources */,
+				D4C7A0AB19630FA000A1BE28 /* startup_stm32f10x.S in Sources */,
+				D4C7A0AC19630FA000A1BE28 /* system_stm32f0xx.c in Sources */,
+				D4C7A0AD19630FA000A1BE28 /* stm32f0xx_cec.c in Sources */,
+				D4C7A0AE19630FA000A1BE28 /* stm32f4xx_hal_rtc_ex.c in Sources */,
+				D4C7A0AF19630FA000A1BE28 /* stm32l0xx_hal_lcd.c in Sources */,
+				D4C7A0B019630FA000A1BE28 /* stm32f0xx_dma.c in Sources */,
+				D4C7A0B119630FA000A1BE28 /* stm32l1xx_i2c.c in Sources */,
+				D4C7A0B219630FA000A1BE28 /* sys.cpp in Sources */,
+				D4C7A0B319630FA000A1BE28 /* stm32l0xx_hal_i2c.c in Sources */,
+				D4C7A0B419630FA000A1BE28 /* stm32f0xx_hal_crc_ex.c in Sources */,
+				D4C7A0B519630FA000A1BE28 /* stm32f4xx_hal_sd.c in Sources */,
+				D4C7A0B619630FA000A1BE28 /* stm32f4xx_hal_cryp_ex.c in Sources */,
+				D4C7A0B719630FA000A1BE28 /* startup_LPC11xx.s in Sources */,
+				D4C7A0B819630FA000A1BE28 /* stm32f0xx_hal_iwdg.c in Sources */,
+				D4C7A0B919630FA000A1BE28 /* sys.cpp in Sources */,
+				D4C7A0BA19630FA000A1BE28 /* stm32l0xx_hal_uart_ex.c in Sources */,
+				D4C7A0BB19630FA000A1BE28 /* stm32f0xx_hal_i2s.c in Sources */,
+				D4C7A0BC19630FA000A1BE28 /* cmsis_nvic.c in Sources */,
+				D4C7A0BD19630FA000A1BE28 /* stm32l0xx_hal_rcc.c in Sources */,
+				D4C7A0BE19630FA000A1BE28 /* system_sam3s.c in Sources */,
+				D4C7A0BF19630FA000A1BE28 /* stm32f10x_rcc.c in Sources */,
+				D4C7A0C019630FA000A1BE28 /* stm32l1xx_pwr.c in Sources */,
+				D4C7A0C119630FA000A1BE28 /* stm32f4xx_hal_nor.c in Sources */,
+				D4C7A0C219630FA000A1BE28 /* stm32f10x_rtc.c in Sources */,
+				D4C7A0C319630FA000A1BE28 /* vector_functions.s in Sources */,
+				D4C7A0C419630FA000A1BE28 /* system_stm32f30x.c in Sources */,
+				D4C7A0C519630FA000A1BE28 /* stm32l1xx_adc.c in Sources */,
+				D4C7A0C619630FA000A1BE28 /* startup_nRF51822.s in Sources */,
+				D4C7A0C719630FA000A1BE28 /* stm32l0xx_hal_adc.c in Sources */,
+				D4C7A0C819630FA000A1BE28 /* stm32f30x_hrtim.c in Sources */,
+				D4C7A0C919630FA000A1BE28 /* cmsis_nvic.c in Sources */,
+				D4C7A0CA19630FA000A1BE28 /* cmsis_nvic.c in Sources */,
+				D4C7A0CB19630FA000A1BE28 /* stm32f30x_hrtim.c in Sources */,
+				D4C7A0CC19630FA000A1BE28 /* system_LPC43xx.c in Sources */,
+				D4C7A0CD19630FA000A1BE28 /* vector_functions.s in Sources */,
+				D4C7A0CE19630FA000A1BE28 /* stm32f10x_wwdg.c in Sources */,
+				D4C7A0CF19630FA000A1BE28 /* stm32f10x_exti.c in Sources */,
+				D4C7A0D019630FA000A1BE28 /* stm32f4xx_ll_fsmc.c in Sources */,
+				D4C7A0D119630FA000A1BE28 /* stm32f10x_rtc.c in Sources */,
+				D4C7A0D219630FA000A1BE28 /* stm32f0xx_hal_tsc.c in Sources */,
+				D4C7A0D319630FA000A1BE28 /* startup_LPC13xx.s in Sources */,
+				D4C7A0D419630FA000A1BE28 /* stm32f10x_spi.c in Sources */,
+				D4C7A0D519630FA000A1BE28 /* stm32f4xx_hal_rtc.c in Sources */,
+				D4C7A0D619630FA000A1BE28 /* startup_MKL46Z4.s in Sources */,
+				D4C7A0D719630FA000A1BE28 /* stm32f0xx_dbgmcu.c in Sources */,
+				D4C7A0D819630FA000A1BE28 /* stm32l0xx_hal_tsc.c in Sources */,
+				D4C7A0D919630FA000A1BE28 /* stm32f30x_gpio.c in Sources */,
+				D4C7A0DA19630FA000A1BE28 /* startup_sam3s.c in Sources */,
+				D4C7A0DB19630FA000A1BE28 /* system_LPC8xx.c in Sources */,
+				D4C7A0DC19630FA000A1BE28 /* stm32f4xx_hal_irda.c in Sources */,
+				D4C7A0DD19630FA000A1BE28 /* startup_LPC15xx.s in Sources */,
+				D4C7A0DE19630FA000A1BE28 /* stm32f4xx_hal_wwdg.c in Sources */,
+				D4C7A0DF19630FA000A1BE28 /* stm32f0xx_flash.c in Sources */,
+				D4C7A0E019630FA000A1BE28 /* stm32f10x_crc.c in Sources */,
+				D4C7A0E119630FA000A1BE28 /* startup_sam3xa.c in Sources */,
+				D4C7A0E219630FA000A1BE28 /* sys.cpp in Sources */,
+				D4C7A0E319630FA000A1BE28 /* startup_LPC11xx.cpp in Sources */,
+				D4C7A0E419630FA000A1BE28 /* stm32f10x_adc.c in Sources */,
+				D4C7A0E519630FA000A1BE28 /* stm32f30x_wwdg.c in Sources */,
+				D4C7A0E619630FA000A1BE28 /* startup_sam4sp.c in Sources */,
+				D4C7A0E719630FA000A1BE28 /* sys.cpp in Sources */,
+				D4C7A0E819630FA000A1BE28 /* syscalls.cpp in Sources */,
+				D4C7A0E919630FA000A1BE28 /* stm32f0xx_pwr.c in Sources */,
+				D4C7A0EA19630FA000A1BE28 /* stm32f10x_flash.c in Sources */,
+				D4C7A0EB19630FA000A1BE28 /* system_LPC8xx.c in Sources */,
+				D4C7A0EC19630FA000A1BE28 /* stm32f30x_rtc.c in Sources */,
+				D4C7A0ED19630FA000A1BE28 /* stm32f0xx_dma.c in Sources */,
+				D4C7A0EE19630FA000A1BE28 /* stm32f0xx_spi.c in Sources */,
+				D4C7A0EF19630FA000A1BE28 /* vector_realmonitor.c in Sources */,
+				D4C7A0F019630FA000A1BE28 /* stm32f4xx_hal_hcd.c in Sources */,
+				D4C7A0F119630FA000A1BE28 /* stm32f10x_sdio.c in Sources */,
+				D4C7A0F219630FA000A1BE28 /* cmsis_nvic.c in Sources */,
+				D4C7A0F319630FA000A1BE28 /* sys.cpp in Sources */,
+				D4C7A0F419630FA000A1BE28 /* startup_stm32f302x8.s in Sources */,
+				D4C7A0F519630FA000A1BE28 /* startup_LPC17xx.s in Sources */,
+				D4C7A0F619630FA000A1BE28 /* stm32f0xx_hal_tim.c in Sources */,
+				D4C7A0F719630FA000A1BE28 /* stm32f0xx_misc.c in Sources */,
+				D4C7A0F819630FA000A1BE28 /* stm32f4xx_hal_sai.c in Sources */,
+				D4C7A0F919630FA000A1BE28 /* system_MKL05Z4.c in Sources */,
+				D4C7A0FA19630FA000A1BE28 /* stm32f30x_spi.c in Sources */,
+				D4C7A0FB19630FA000A1BE28 /* stm32l0xx_hal_usart.c in Sources */,
+				D4C7A0FC19630FA000A1BE28 /* system_stm32f4xx.c in Sources */,
+				D4C7A0FD19630FA000A1BE28 /* cmsis_nvic.c in Sources */,
+				D4C7A0FE19630FA000A1BE28 /* stm32f4xx_hal_hash.c in Sources */,
+				D4C7A0FF19630FA000A1BE28 /* system_MKL46Z4.c in Sources */,
+				D4C7A10019630FA000A1BE28 /* stm32f4xx_hal_flash_ex.c in Sources */,
+				D4C7A10119630FA000A1BE28 /* system_samd21.c in Sources */,
+				D4C7A10219630FA000A1BE28 /* stm32f0xx_rcc.c in Sources */,
+				D4C7A10319630FA000A1BE28 /* stm32f0xx_iwdg.c in Sources */,
+				D4C7A10419630FA000A1BE28 /* stm32f4xx_hal_adc_ex.c in Sources */,
+				D4C7A10519630FA000A1BE28 /* startup_MK20D5.s in Sources */,
+				D4C7A10619630FA000A1BE28 /* stm32f10x_cec.c in Sources */,
+				D4C7A10719630FA000A1BE28 /* system_sam4c32.c in Sources */,
+				D4C7A10819630FA000A1BE28 /* vector_table.s in Sources */,
+				D4C7A10919630FA000A1BE28 /* startup_LPC407x_8x_177x_8x.s in Sources */,
+				D4C7A10A19630FA000A1BE28 /* stm32l1xx_gpio.c in Sources */,
+				D4C7A10B19630FA000A1BE28 /* stm32f30x_iwdg.c in Sources */,
+				D4C7A10C19630FA000A1BE28 /* stm32f0xx_hal_wwdg.c in Sources */,
+				D4C7A10D19630FA000A1BE28 /* stm32f4xx_hal_usart.c in Sources */,
+				D4C7A10E19630FA000A1BE28 /* stm32f30x_wwdg.c in Sources */,
+				D4C7A10F19630FA000A1BE28 /* stm32f30x_tim.c in Sources */,
+				D4C7A11019630FA000A1BE28 /* stm32f0xx_hal_can.c in Sources */,
+				D4C7A11119630FA000A1BE28 /* sys.cpp in Sources */,
+				D4C7A11219630FA000A1BE28 /* stm32f4xx_hal_pccard.c in Sources */,
+				D4C7A11319630FA000A1BE28 /* stm32l0xx_hal_dma.c in Sources */,
+				D4C7A11419630FA000A1BE28 /* startup_sam4cp.c in Sources */,
+				D4C7A11519630FA000A1BE28 /* system_LPC15xx.c in Sources */,
+				D4C7A11619630FA000A1BE28 /* cmsis_nvic.c in Sources */,
+				D4C7A11719630FA000A1BE28 /* stm32f0xx_hal_rtc.c in Sources */,
+				D4C7A11819630FA000A1BE28 /* stm32f30x_syscfg.c in Sources */,
+				D4C7A11919630FA000A1BE28 /* sys.cpp in Sources */,
+				D4C7A11A19630FA000A1BE28 /* system_LPC23xx.c in Sources */,
+				D4C7A11B19630FA000A1BE28 /* stm32f10x_fsmc.c in Sources */,
+				D4C7A11C19630FA000A1BE28 /* system_stm32l0xx.c in Sources */,
+				D4C7A11D19630FA000A1BE28 /* startup_samg51.c in Sources */,
+				D4C7A11E19630FA000A1BE28 /* vector_functions.s in Sources */,
+				D4C7A11F19630FA000A1BE28 /* stm32f4xx_hal_i2c.c in Sources */,
+				D4C7A12019630FA000A1BE28 /* stm32f0xx_hal_irda.c in Sources */,
+				D4C7A12119630FA000A1BE28 /* system_LPC11xx.c in Sources */,
+				D4C7A12219630FA000A1BE28 /* stm32f4xx_hal_smartcard.c in Sources */,
+				D4C7A12319630FA000A1BE28 /* sys.cpp in Sources */,
+				D4C7A12419630FA000A1BE28 /* startup_LPC408x.s in Sources */,
+				D4C7A12519630FA000A1BE28 /* misc.c in Sources */,
+				D4C7A12619630FA000A1BE28 /* stm32f4xx_hal_tim_ex.c in Sources */,
+				D4C7A12719630FA000A1BE28 /* stm32f30x_dbgmcu.c in Sources */,
+				D4C7A12819630FA000A1BE28 /* startup_LPC8xx.s in Sources */,
+				D4C7A12919630FA000A1BE28 /* stm32f4xx_ll_usb.c in Sources */,
+				D4C7A12A19630FA000A1BE28 /* stm32f4xx_hal_hash_ex.c in Sources */,
+				D4C7A12B19630FA000A1BE28 /* cmsis_nvic.c in Sources */,
+				D4C7A12C19630FA000A1BE28 /* stm32f4xx_ll_sdmmc.c in Sources */,
+				D4C7A12D19630FA000A1BE28 /* stm32l1xx_aes.c in Sources */,
+				D4C7A12E19630FA000A1BE28 /* stm32f0xx_rtc.c in Sources */,
+				D4C7A12F19630FA000A1BE28 /* stm32f10x_dac.c in Sources */,
+				D4C7A13019630FA000A1BE28 /* stm32f0xx_crs.c in Sources */,
+				D4C7A13119630FA000A1BE28 /* stm32l1xx_dma.c in Sources */,
+				D4C7A13219630FA000A1BE28 /* stm32f4xx_hal_spi.c in Sources */,
+				D4C7A13319630FA000A1BE28 /* startup_sam4s.c in Sources */,
+				D4C7A13419630FA000A1BE28 /* AvrUSB.cpp in Sources */,
+				D4C7A13519630FA000A1BE28 /* stm32f0xx_cec.c in Sources */,
+				D4C7A13619630FA000A1BE28 /* stm32f4xx_hal_spi.c in Sources */,
+				D4C7A13719630FA000A1BE28 /* startup_LPC11xx.cpp in Sources */,
+				D4C7A13819630FA000A1BE28 /* fade_demo.cpp in Sources */,
+				D4C7A13919630FA000A1BE28 /* vector_table.s in Sources */,
+				D4C7A13A19630FA000A1BE28 /* startup_LPC11xx.s in Sources */,
+				D4C7A13B19630FA000A1BE28 /* KL05ZTimers.cpp in Sources */,
+				D4C7A13C19630FA000A1BE28 /* stm32f30x_comp.c in Sources */,
+				D4C7A13D19630FA000A1BE28 /* startup_LPC17xx.s in Sources */,
+				D4C7A13E19630FA000A1BE28 /* sys.cpp in Sources */,
+				D4C7A13F19630FA000A1BE28 /* stm32f30x_misc.c in Sources */,
+				D4C7A14019630FA000A1BE28 /* stm32f4xx_hal_can.c in Sources */,
+				D4C7A14119630FA000A1BE28 /* cmsis_nvic.c in Sources */,
+				D4C7A14219630FA000A1BE28 /* sys.cpp in Sources */,
+				D4C7A14319630FA000A1BE28 /* sys.cpp in Sources */,
+				D4C7A14419630FA000A1BE28 /* system_sam3u.c in Sources */,
+				D4C7A14519630FA000A1BE28 /* stm32f0xx_gpio.c in Sources */,
+				D4C7A14619630FA000A1BE28 /* stm32l1xx_lcd.c in Sources */,
+				D4C7A14719630FA000A1BE28 /* startup_STM32F40x.s in Sources */,
+				D4C7A14819630FA000A1BE28 /* stm32f10x_tim.c in Sources */,
+				D4C7A14919630FA000A1BE28 /* startup_stm32f401xe.s in Sources */,
+				D4C7A14A19630FA000A1BE28 /* sys.cpp in Sources */,
+				D4C7A14B19630FA000A1BE28 /* stm32l0xx_hal_wwdg.c in Sources */,
+				D4C7A14C19630FA000A1BE28 /* stm32f30x_crc.c in Sources */,
+				D4C7A14D19630FA000A1BE28 /* stm32l0xx_hal.c in Sources */,
+				D4C7A14E19630FA000A1BE28 /* stm32f4xx_hal_dcmi.c in Sources */,
+				D4C7A14F19630FA000A1BE28 /* stm32f4xx_ll_fsmc.c in Sources */,
+				D4C7A15019630FA000A1BE28 /* stm32f0xx_hal_pcd_ex.c in Sources */,
+				D4C7A15119630FA000A1BE28 /* stm32f10x_dma.c in Sources */,
+				D4C7A15219630FA000A1BE28 /* stm32f0xx_i2c.c in Sources */,
+				D4C7A15319630FA000A1BE28 /* stm32f30x_flash.c in Sources */,
+				D4C7A15419630FA000A1BE28 /* stm32f4xx_hal_dma2d.c in Sources */,
+				D4C7A15519630FA000A1BE28 /* misc.c in Sources */,
+				D4C7A15619630FA000A1BE28 /* stm32f4xx_hal_flash_ex.c in Sources */,
+				D4C7A15719630FA000A1BE28 /* stm32f0xx_rtc.c in Sources */,
+				D4C7A15819630FA000A1BE28 /* cmsis_nvic.c in Sources */,
+				D4C7A15919630FA000A1BE28 /* stm32f0xx_dbgmcu.c in Sources */,
+				D4C7A15A19630FA000A1BE28 /* stm32f0xx_i2c.c in Sources */,
+				D4C7A15B19630FA000A1BE28 /* stm32f30x_syscfg.c in Sources */,
+				D4C7A15C19630FA000A1BE28 /* startup_LPC11xx.s in Sources */,
+				D4C7A15D19630FA000A1BE28 /* stm32f30x_comp.c in Sources */,
+				D4C7A15E19630FA000A1BE28 /* stm32l1xx_flash_ramfunc.c in Sources */,
+				D4C7A15F19630FA000A1BE28 /* stm32l0xx_hal_irda.c in Sources */,
+				D4C7A16019630FA000A1BE28 /* system_LPC407x_8x_177x_8x.c in Sources */,
+				D4C7A16119630FA000A1BE28 /* stm32f10x_can.c in Sources */,
+				D4C7A16219630FA000A1BE28 /* system_stm32l1xx.c in Sources */,
+				D4C7A16319630FA000A1BE28 /* sys.cpp in Sources */,
+				D4C7A16419630FA000A1BE28 /* stm32f0xx_hal_rcc_ex.c in Sources */,
+				D4C7A16519630FA000A1BE28 /* SamTimers.cpp in Sources */,
+				D4C7A16619630FA000A1BE28 /* stm32f10x_i2c.c in Sources */,
+				D4C7A16719630FA000A1BE28 /* system_sam3xa.c in Sources */,
+				D4C7A16819630FA000A1BE28 /* stm32f30x_pwr.c in Sources */,
+				D4C7A16919630FA000A1BE28 /* stm32f4xx_hal_cryp.c in Sources */,
+				D4C7A16A19630FA000A1BE28 /* stm32f0xx_crc.c in Sources */,
+				D4C7A16B19630FA000A1BE28 /* Makefile in Sources */,
+				D4C7A16C19630FA000A1BE28 /* stm32f10x_wwdg.c in Sources */,
+				D4C7A16D19630FA000A1BE28 /* startup_LPC11xx.s in Sources */,
+				D4C7A16E19630FA000A1BE28 /* cmsis_nvic.c in Sources */,
+				D4C7A16F19630FA000A1BE28 /* startup_stm32f401xe.s in Sources */,
+				D4C7A17019630FA000A1BE28 /* stm32f0xx_hal_rcc.c in Sources */,
+				D4C7A17119630FA000A1BE28 /* stm32f0xx_hal_comp.c in Sources */,
+				D4C7A17219630FA000A1BE28 /* sys.cpp in Sources */,
+				D4C7A17319630FA000A1BE28 /* stm32f30x_opamp.c in Sources */,
+				D4C7A17419630FA000A1BE28 /* stm32f4xx_hal_hcd.c in Sources */,
+				D4C7A17519630FA000A1BE28 /* hooks.c in Sources */,
+				D4C7A17619630FA000A1BE28 /* stm32f4xx_hal_i2c_ex.c in Sources */,
+				D4C7A17719630FA000A1BE28 /* stm32f4xx_hal_sdram.c in Sources */,
+				D4C7A17819630FA000A1BE28 /* stm32f4xx_hal_rng.c in Sources */,
+				D4C7A17919630FA000A1BE28 /* stm32l1xx_flash.c in Sources */,
+				D4C7A17A19630FA000A1BE28 /* cmsis_nvic.c in Sources */,
+				D4C7A17B19630FA000A1BE28 /* stm32f0xx_tim.c in Sources */,
+				D4C7A17C19630FA000A1BE28 /* stm32l0xx_hal_crc.c in Sources */,
+				D4C7A17D19630FA000A1BE28 /* system_sam4l.c in Sources */,
+				D4C7A17E19630FA000A1BE28 /* stm32l0xx_hal_rng.c in Sources */,
+				D4C7A17F19630FA000A1BE28 /* stm32f30x_exti.c in Sources */,
+				D4C7A18019630FA000A1BE28 /* stm32f30x_i2c.c in Sources */,
+				D4C7A18119630FA000A1BE28 /* stm32f4xx_hal_tim.c in Sources */,
+				D4C7A18219630FA000A1BE28 /* stm32l0xx_hal_pwr_ex.c in Sources */,
+				D4C7A18319630FA000A1BE28 /* stm32f30x_gpio.c in Sources */,
+				D4C7A18419630FA000A1BE28 /* stm32l0xx_hal_smartcard.c in Sources */,
+				D4C7A18519630FA000A1BE28 /* system_samg53.c in Sources */,
+				D4C7A18619630FA000A1BE28 /* startup_stm32f30x.s in Sources */,
+				D4C7A18719630FA000A1BE28 /* stm32f30x_dac.c in Sources */,
+				D4C7A18819630FA000A1BE28 /* stm32f30x_adc.c in Sources */,
+				D4C7A18919630FA000A1BE28 /* startup_LPC11xx.s in Sources */,
+				D4C7A18A19630FA000A1BE28 /* stm32f30x_can.c in Sources */,
+				D4C7A18B19630FA000A1BE28 /* stm32f30x_spi.c in Sources */,
+				D4C7A18C19630FA000A1BE28 /* startup_LPC43xx.s in Sources */,
+				D4C7A18D19630FA000A1BE28 /* startup_LPC17xx.s in Sources */,
+				D4C7A18E19630FA000A1BE28 /* startup_LPC43xx.s in Sources */,
+				D4C7A18F19630FA000A1BE28 /* system_LPC13Uxx.c in Sources */,
+				D4C7A19019630FA000A1BE28 /* stm32f30x_rtc.c in Sources */,
+				D4C7A19119630FA000A1BE28 /* stm32l0xx_hal_pwr.c in Sources */,
+				D4C7A19219630FA000A1BE28 /* stm32f10x_usart.c in Sources */,
+				D4C7A19319630FA000A1BE28 /* vector_table.s in Sources */,
+				D4C7A19419630FA000A1BE28 /* stm32f30x_can.c in Sources */,
+				D4C7A19519630FA000A1BE28 /* cmsis_nvic.c in Sources */,
+				D4C7A19619630FA000A1BE28 /* startup_LPC11xx.s in Sources */,
+				D4C7A19719630FA000A1BE28 /* sys.cpp in Sources */,
+				D4C7A19819630FA000A1BE28 /* stm32f0xx_rcc.c in Sources */,
+				D4C7A19919630FA000A1BE28 /* stm32l1xx_sdio.c in Sources */,
+				D4C7A19A19630FA000A1BE28 /* stm32l0xx_hal_rtc_ex.c in Sources */,
+				D4C7A19B19630FA000A1BE28 /* stm32f30x_usart.c in Sources */,
+				D4C7A19C19630FA000A1BE28 /* stm32f0xx_hal_smartcard.c in Sources */,
+				D4C7A19D19630FA000A1BE28 /* startup_stm32l053xx.s in Sources */,
+				D4C7A19E19630FA000A1BE28 /* stm32f30x_syscfg.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
@@ -9957,7 +11261,7 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/motate\"",
-					"$(SRCROOT)/motate/Atmel_sam3xa\" \"$(SRCROOT)/cmsis/TARGET_Atmel\" \"$(SRCROOT)/cmsis/TARGET_Atmel/sam3xa\"",
+					"$(SRCROOT)/motate/Atmel_sam3xa\" \"$(SRCROOT)/motate/cmsis/TARGET_Atmel\" \"$(SRCROOT)/motate/cmsis/TARGET_Atmel/sam3xa\" \"$(SRCROOT)/motate/platform/ateml_sam\"",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				ONLY_ACTIVE_ARCH = YES;
@@ -9993,7 +11297,7 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/motate\"",
-					"$(SRCROOT)/motate/Atmel_sam3xa\" \"$(SRCROOT)/cmsis/TARGET_Atmel\" \"$(SRCROOT)/cmsis/TARGET_Atmel/sam3xa\"",
+					"$(SRCROOT)/motate/Atmel_sam3xa\" \"$(SRCROOT)/motate/cmsis/TARGET_Atmel\" \"$(SRCROOT)/motate/cmsis/TARGET_Atmel/sam3xa\" \"$(SRCROOT)/motate/platform/ateml_sam\"",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				OTHER_CFLAGS = (
@@ -10022,6 +11326,83 @@
 			};
 			name = Release;
 		};
+		D4C7A1A219630FA000A1BE28 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/motate\"",
+					"$(SRCROOT)/motate/Freescale_klxx\" \"$(SRCROOT)/motate/cmsis/TARGET_Freescale/TARGET_KLXX/TARGET_KL05Z\" \"$(SRCROOT)/motate/platform/freescale_klxx\"",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				ONLY_ACTIVE_ARCH = YES;
+				OTHER_CFLAGS = (
+					"-D__KL05Z__",
+					"-Imotate",
+					"-DXCODE_INDEX",
+				);
+				PRODUCT_NAME = "index_sam copy";
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		D4C7A1A319630FA000A1BE28 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/motate\"",
+					"$(SRCROOT)/motate/Freescale_klxx\" \"$(SRCROOT)/motate/cmsis/TARGET_Freescale/TARGET_KLXX/TARGET_KL05Z\" \"$(SRCROOT)/motate/platform/freescale_klxx\"",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				OTHER_CFLAGS = (
+					"-D__KL05Z__",
+					"-Imotate",
+					"-DXCODE_INDEX",
+				);
+				PRODUCT_NAME = "index_sam copy";
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -10043,7 +11424,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		D457112D17053BFB00EA19A8 /* Build configuration list for PBXNativeTarget "index" */ = {
+		D457112D17053BFB00EA19A8 /* Build configuration list for PBXNativeTarget "index_sam" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				D457112B17053BFB00EA19A8 /* Debug */,
@@ -10057,6 +11438,15 @@
 			buildConfigurations = (
 				D4C78F751954DFAF00A1BE28 /* Debug */,
 				D4C78F761954DFAF00A1BE28 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D4C7A1A119630FA000A1BE28 /* Build configuration list for PBXNativeTarget "index_kl05z" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D4C7A1A219630FA000A1BE28 /* Debug */,
+				D4C7A1A319630FA000A1BE28 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

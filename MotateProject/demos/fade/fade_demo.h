@@ -1,5 +1,5 @@
 /*
- * blink_demo.h - Motate
+ * fade_demo.h - Motate
  * This file is part of the Motate project.
  *
  * Copyright (c) 2014 Robert Giseburt
@@ -27,11 +27,11 @@
  *  OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. *
  */
 
-#ifndef __Motate__blink_demo__
-#define __Motate__blink_demo__
+#ifndef __Motate__fade_demo__
+#define __Motate__fade_demo__
 
 /****** Create externally visible objects here ******/
 
 void loop();
 
-#endif /* defined(__Motate__blink_demo__) */
+#endif /* defined(__Motate__fade_demo__) */

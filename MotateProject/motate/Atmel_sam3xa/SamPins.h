@@ -35,6 +35,8 @@
 #include "sam.h"
 #include "SamCommon.h"
 
+#include <type_traits>
+
 namespace Motate {
 	// Numbering is arbitrary:
 	enum PinMode {
@@ -178,6 +180,8 @@ namespace Motate {
 
     template<uint8_t portChar, uint8_t portPin>
 	struct ReversePinLookup : Pin<-1> {
+		ReversePinLookup() {};
+		ReversePinLookup(const PinMode type, const PinOptions options = kNormal) : Pin<-1>(type, options) {};
     };
     
 	template<int8_t pinNum>
@@ -347,6 +351,8 @@ namespace Motate {
 		static Pin ## pinNum pin ## pinNum;\
         template<>\
         struct ReversePinLookup<registerChar, registerPin> : Pin<pinNum> {\
+			ReversePinLookup() {};\
+			ReversePinLookup(const PinMode type, const PinOptions options = kNormal) : Pin<pinNum>(type, options) {};\
         };
 
 
@@ -361,6 +367,8 @@ namespace Motate {
 		void setFrequency(const uint32_t freq) {};
 		void operator=(const float value) { write(value); };
 		void write(const float value) { Pin<pinNum>::write(value >= 0.5); };
+		void writeRaw(const uint16_t duty) { Pin<pinNum>::write(duty >= 50); };
+		uint16_t getTopValue() { return 100; };
 		bool canPWM() { return false; };
 
 		/*Override these to pick up new methods */
@@ -374,7 +382,7 @@ namespace Motate {
 		operator bool();
 	};
 
-#define _MAKE_MOTATE_PWM_PIN(registerChar, registerPin, timerOrPWM, channel, peripheralAorB, invertedByDefault)\
+	#define _MAKE_MOTATE_PWM_PIN(registerChar, registerPin, timerOrPWM, channel, peripheralAorB, invertedByDefault)\
 		template<>\
 		struct PWMOutputPin< ReversePinLookup<registerChar, registerPin>::number > : Pin< ReversePinLookup<registerChar, registerPin>::number >, timerOrPWM {\
 			static const pin_number pinNum = ReversePinLookup<registerChar, registerPin>::number;\
@@ -402,6 +410,13 @@ namespace Motate {
 					startPWMOutput(channel);\
 				timerOrPWM::setExactDutyCycleForChannel(channel, duty);\
 			};\
+			void writeRaw(const uint16_t duty) {\
+				if (duty < 2)\
+					stopPWMOutput(channel);\
+				else\
+					startPWMOutput(channel);\
+				timerOrPWM::setExactDutyCycleForChannel(channel, duty);\
+			};\
 			bool canPWM() { return true; };\
 			/*Override these to pick up new methods */\
 		private: /* Make these private to catch them early. */\
@@ -415,72 +430,74 @@ namespace Motate {
 
     template<int8_t pinNum>
 	struct SPIChipSelectPin {
-		SPIChipSelectPin() : Pin<pinNum>(kOutput) {};
-        
-//        static const uint8_t moduleId = 255;
-//        static const uint8_t csOffset = 0;
-        
-		/*Override these to pick up new methods */
-        
-	private: /* Make these private to catch them early. */
-		/* These are intentially not defined. */
-//		void init(const PinMode type, const PinOptions options = kNormal);
-        
-		/* WARNING: Covariant return types! */
-		bool get();
-		operator bool();
+		static const bool is_real = std::false_type::value;
 	};
 
-    #define _MAKE_MOTATE_SPI_CS_PIN(pinNum, peripheralAorB, csNum)\
+    template<int8_t pinNum>
+	constexpr const bool IsSPICSPin() { return SPIChipSelectPin<pinNum>::is_real; };
+
+    #define _MAKE_MOTATE_SPI_CS_PIN(registerChar, registerPin, peripheralAorB, csNum)\
         template<>\
-        struct SPIChipSelectPin<pinNum> : Pin<pinNum> {\
-            SPIChipSelectPin() : Pin<pinNum>(kPeripheral ## peripheralAorB) {};\
-            static const uint8_t moduleId = 0; /* Placeholder, bu the SAM3X8s only have SPI0 */\
-            static const uint8_t csOffset = csNum;\
-            /*Override these to pick up new methods */\
-        private: /* Make these private to catch them early. */\
-            /* These are intentially not defined. */\
-            /* WARNING: Covariant return types! */\
-            bool get();\
-            operator bool();\
+        struct SPIChipSelectPin< ReversePinLookup<registerChar, registerPin>::number > : ReversePinLookup<registerChar, registerPin> {\
+            SPIChipSelectPin() : ReversePinLookup<registerChar, registerPin>(kPeripheral ## peripheralAorB) {};\
+            static const uint8_t moduleId = 0; \
+			static const bool is_real = std::true_type::value;\
+			static const uint8_t csOffset = csNum;\
         };
 
     
     template<int8_t pinNum>
-	struct SPIOtherPin {
-		SPIOtherPin() : Pin<pinNum>(kOutput) {};
-        
-//        static const uint16_t moduleId = 255;
-        
-		/*Override these to pick up new methods */
-        
-	private: /* Make these private to catch them early. */
-		/* These are intentially not defined. */
-//		void init(const PinMode type, const PinOptions options = kNormal);
-        
-		/* WARNING: Covariant return types! */
-		bool get();
-		operator bool();
+	struct SPIMISOPin {
+		static const bool is_real = std::false_type::value;
 	};
 
-    
-    #define _MAKE_MOTATE_SPI_OTHER_PIN(pinNum, peripheralAorB)\
+	template <int8_t pinNum>
+	constexpr const bool IsSPIMISOPin() { return SPIMISOPin<pinNum>::is_real; };
+
+    #define _MAKE_MOTATE_SPI_MISO_PIN(registerChar, registerPin, peripheralAorB)\
         template<>\
-        struct SPIOtherPin<pinNum> : Pin<pinNum> {\
-            SPIOtherPin() : Pin<pinNum>(kPeripheral ## peripheralAorB) {};\
-            static const uint16_t moduleId = 0; /* Placeholder, bu the SAM3X8s only have SPI0 */\
-            /*Override these to pick up new methods */\
-        private: /* Make these private to catch them early. */\
-            /* These are intentially not defined. */\
-            /* WARNING: Covariant return types! */\
-            bool get();\
-            operator bool();\
+        struct SPIMISOPin< ReversePinLookup<registerChar, registerPin>::number > : ReversePinLookup<registerChar, registerPin> {\
+            SPIMISOPin() : ReversePinLookup<registerChar, registerPin>(kPeripheral ## peripheralAorB) {};\
+            static const uint8_t moduleId = 0; \
+			static const bool is_real = std::true_type::value;\
         };
+
     
+    template<int8_t pinNum>
+	struct SPIMOSIPin {
+		static const bool is_real = std::false_type::value;
+	};
+
+	template <int8_t pinNum>
+	constexpr const bool IsSPIMOSIPin() { return SPIMOSIPin<pinNum>::is_real; };
+
+    #define _MAKE_MOTATE_SPI_MOSI_PIN(registerChar, registerPin, peripheralAorB)\
+        template<>\
+        struct SPIMOSIPin< ReversePinLookup<registerChar, registerPin>::number > : ReversePinLookup<registerChar, registerPin> {\
+            SPIMOSIPin() : ReversePinLookup<registerChar, registerPin>(kPeripheral ## peripheralAorB) {};\
+            static const uint8_t moduleId = 0; \
+			static const bool is_real = std::true_type::value;\
+        };
+
+	
     
-    
-    
-    
+    template<int8_t pinNum>
+	struct SPISCKPin {
+		static const bool is_real = std::false_type::value;
+	};
+
+	template <int8_t pinNum>
+	constexpr const bool IsSPISCKPin() { return SPISCKPin<pinNum>::is_real; };
+
+    #define _MAKE_MOTATE_SPI_SCK_PIN(registerChar, registerPin, peripheralAorB)\
+        template<>\
+        struct SPISCKPin< ReversePinLookup<registerChar, registerPin>::number > : ReversePinLookup<registerChar, registerPin> {\
+            SPISCKPin() : ReversePinLookup<registerChar, registerPin>(kPeripheral ## peripheralAorB) {};\
+            static const uint8_t moduleId = 0; \
+			static const bool is_real = std::true_type::value;\
+        };
+
+
 
 	#define _MAKE_MOTATE_PORT32(registerLetter, registerChar)\
 		template <>\
@@ -639,7 +656,7 @@ namespace Motate {
 // Note: We end the namespace before including in case the included file need to include
 //   another Motate file. If it does include another Motate file, we end up with
 //   Motate::Motate::* definitions and weird compiler errors.
-#include <motate_pin_assignments.h>
+#include "motate_pin_assignments.h"
 
 namespace Motate {
 

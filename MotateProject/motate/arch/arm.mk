@@ -36,18 +36,29 @@
 # $(CPU_DEV)
 
 
-DEVICE_LIBS          = gcc c
+DEVICE_LIBS          = gcc c m
+
+ifeq ($(NEEDS_PRINTF_FLOAT),1)
+PRINTF_FLOAT_FLAGS = -u _printf_float
+endif
+
+ifeq ($(NEEDS_SCANF_FLOAT),1)
+PRINTF_FLOAT_FLAGS = -u _scanf_float
+endif
+
 
 # ---------------------------------------------------------------------------------------
 # C Flags (NOT CPP flags)
 
-DEVICE_CFLAGS := -D__$(CHIP)__ -D__$(CHIP_SERIES)__ --param max-inline-insns-single=500 -mcpu=$(CPU_DEV) -mthumb -mlong-calls -ffunction-sections -fdata-sections -nostdlib -std=gnu99 -u _printf_float
+DEVICE_CFLAGS := -D__$(CHIP)__ -D__$(CHIP_SERIES)__ -mcpu=$(CPU_DEV) -mthumb -ffunction-sections -fdata-sections -std=gnu99
 
+#--param max-inline-insns-single=500 -mlong-calls
 
 # ---------------------------------------------------------------------------------------
 # CPP Flags
 
-DEVICE_CPPFLAGS := -D__$(CHIP)__ -D__$(CHIP_SERIES)__ --param max-inline-insns-single=500 -mcpu=$(CPU_DEV) -mthumb -mlong-calls -ffunction-sections -fdata-sections -nostdlib -std=gnu++11 -fno-rtti -fno-exceptions -u _printf_float
+DEVICE_CPPFLAGS := -D__$(CHIP)__ -D__$(CHIP_SERIES)__ -mcpu=$(CPU_DEV) -mthumb -ffunction-sections -fdata-sections -std=gnu++11 -fno-rtti -fno-exceptions
+# --param max-inline-insns-single=500 -mlong-calls
 
 # ---------------------------------------------------------------------------------------
 # Assembly Flags
@@ -57,5 +68,5 @@ DEVICE_ASFLAGS  := -D__$(CHIP)__ -D__$(CHIP_SERIES)__ -mcpu=$(CPU_DEV) -mthumb
 # ---------------------------------------------------------------------------------------
 # Linker Flags
 
-DEVICE_LDFLAGS := -nostartfiles -mcpu=$(CPU_DEV) --specs=nano.specs -u _printf_float -mthumb -L$(DEVICE_LINKER_SCRIPT_PATH)
+DEVICE_LDFLAGS := -nostartfiles -mcpu=$(CPU_DEV) --specs=nano.specs ${PRINTF_FLOAT_FLAGS} -mthumb -L$(DEVICE_LINKER_SCRIPT_PATH)
 

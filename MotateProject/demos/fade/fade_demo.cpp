@@ -1,5 +1,5 @@
 /*
- * blink_demo.cpp - Motate
+ * fade_demo.cpp - Motate
  * This file is part of the Motate project.
  *
  * Copyright (c) 2014 Robert Giseburt
@@ -27,55 +27,85 @@
  *  OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. *
  */
 
-#include "blink_demo.h"
+#include "fade_demo.h"
 
 #include "MotatePins.h"
 #include "MotateTimers.h"
-#include "MotateSPI.h"
 
 // This makes the Motate:: prefix unnecessary.
 using namespace Motate;
 
 /****** Create file-global objects ******/
 
-OutputPin<kLED1_PinNumber> led1_pin;
-typedef std::conditional< IsSPISCKPin<kSPI0_CS0PinNumber>(), OutputPin<kLED2_PinNumber>, OutputPin<kLED3_PinNumber> >::type led2_pin_type;
-led2_pin_type led2_pin;
+PWMOutputPin<kLED1_PinNumber> led1_pin(kPWMPinInverted);
+PWMOutputPin<kLED2_PinNumber> led2_pin(kPWMPinInverted);
+PWMOutputPin<kLED3_PinNumber> led3_pin(kPWMPinInverted);
 
-SPI<kSPI0_CS0PinNumber> spi;
+static const float change_per_cycle = 0.05;
+
+float red_pwm     = 1.0;
+float red_pwm_d   = 0.0;
+
+float green_pwm   = 0.0;
+float green_pwm_d = change_per_cycle;
+
+float blue_pwm    = 0.0;
+float blue_pwm_d  = 0.0;
 
 /****** Optional setup() function ******/
 
 void setup() {
-	led1_pin = 1;
-	led2_pin = 0;
+	led1_pin = blue_pwm;
+	led2_pin = green_pwm;
+	led3_pin = red_pwm;
 }
 
 /****** Main run loop() ******/
 
 void loop() {
+	led3_pin = red_pwm;
+	led2_pin = green_pwm;
+	led1_pin = blue_pwm;
 
-	// Fastest version (hardware toggle of the pin):
+	red_pwm += red_pwm_d;
+	green_pwm += green_pwm_d;
+	blue_pwm += blue_pwm_d;
+
+	// This is the dnace for color cycles through all hues.
+	// see http://en.wikipedia.org/wiki/HSV_color_space#mediaviewer/File:HSV-RGB-comparison.svg
+	// via http://en.wikipedia.org/wiki/HSV_color_space#Converting_to_RGB
+	if (red_pwm > 1.0) {
+		red_pwm = 1.0;
+		red_pwm_d = 0.0;
+		green_pwm_d = -change_per_cycle;
+	}
+	else if (red_pwm < 0.0) {
+		red_pwm = 0.0;
+		red_pwm_d = 0.0;
+		green_pwm_d = change_per_cycle;
+	}
+	else if (blue_pwm > 1.0) {
+		blue_pwm = 1.0;
+		blue_pwm_d = 0.0;
+		red_pwm_d = -change_per_cycle;
+	}
+	else if (blue_pwm < 0.0) {
+		blue_pwm = 0.0;
+		blue_pwm_d = 0.0;
+		red_pwm_d = change_per_cycle;
+	}
+	else if (green_pwm > 1.0) {
+		green_pwm = 1.0;
+		green_pwm_d = 0.0;
+		blue_pwm_d = -change_per_cycle;
+	}
+	else if (green_pwm < 0.0) {
+		green_pwm = 0.0;
+		green_pwm_d = 0.0;
+		blue_pwm_d = change_per_cycle;
+	}
+
+	delay(100);
+
 //	led1_pin.toggle();
-
-//	// Alternative version 1:
-//	if (led1_pin) {
-//		led1_pin = 0;
-//	} else {
-//		led1_pin = 1;
-//	}
-
-//	// Alternative version 2:
-//	if (led1_pin.getInputValue()) {
-//		led1_pin.clear();
-//	} else {
-//		led1_pin.set();
-//	}
-
-//	// Alternative version 3:
-//	led1_pin = !led1_pin;
-
-	delay(250);
-
-	spi.write((uint8_t *)"test", 5);
 }

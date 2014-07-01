@@ -62,7 +62,7 @@ namespace Motate {
 
 	_MAKE_MOTATE_PIN( 9, B, 'B', 11);	// D9,
 
-	_MAKE_MOTATE_PIN(10, A, 'A',  5);	// D10,
+	_MAKE_MOTATE_PIN(10, A, 'A',  5);	// D10, SPI_CS
 
 	_MAKE_MOTATE_PIN(11, A, 'A',  7);	// D11, SPI_MOSI
 
@@ -95,6 +95,22 @@ namespace Motate {
 	_MAKE_MOTATE_PWM_PIN( 'B', 13, Timer<1>, /*Channel:*/ 1, /*PinMux:*/ 2, /*Inverted:*/ false);
 	_MAKE_MOTATE_PWM_PIN( 'A',  0, Timer<1>, /*Channel:*/ 0, /*PinMux:*/ 2, /*Inverted:*/ false);
 
+
+	// SPI pins
+	_MAKE_MOTATE_SPI_CS_PIN( 'A',  5, /*PinMux:*/ 3);
+//	_MAKE_MOTATE_SPI_CS_PIN( 'A', 19, /*PinMux:*/ 3); // N.C.
+
+	_MAKE_MOTATE_SPI_MISO_PIN( 'A',  6, /*PinMux:*/ 3);
+	_MAKE_MOTATE_SPI_MISO_PIN( 'A',  7, /*PinMux:*/ 2);
+//	_MAKE_MOTATE_SPI_MISO_PIN( 'B', 15, /*PinMux:*/ 3); // N.C.
+//	_MAKE_MOTATE_SPI_MISO_PIN( 'B', 16, /*PinMux:*/ 2); // N.C.
+
+	_MAKE_MOTATE_SPI_MOSI_PIN( 'A',  7, /*PinMux:*/ 3);
+//	_MAKE_MOTATE_SPI_MOSI_PIN( 'B', 15, /*PinMux:*/ 2); // N.C.
+//	_MAKE_MOTATE_SPI_MOSI_PIN( 'B', 16, /*PinMux:*/ 3); // N.C.
+
+	_MAKE_MOTATE_SPI_SCK_PIN( 'B',  0, /*PinMux:*/ 3);
+//	_MAKE_MOTATE_SPI_SCK_PIN( 'B', 17, /*PinMux:*/ 3); // N.C.
 
 } // namespace Motate
 

@@ -31,7 +31,7 @@
 # Start of default section
 #
 
-PROJECT  = BlinkDemo
+PROJECT  = FadeDemo
 
 MOTATE_PATH ?= ../../motate
 

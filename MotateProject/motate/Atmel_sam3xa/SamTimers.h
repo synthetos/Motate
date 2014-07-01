@@ -171,12 +171,12 @@ namespace Motate {
 			unlock();
 		}
 
-		void unlock() {
+		constexpr void unlock() const {
 			tc()->TC_WPMR = TC_WPMR_WPKEY_PASSWD;
 		}
 
 		/* WHOA!! Only do this if you know what you're doing!! */
-		void lock() {
+		constexpr void lock() const {
 			tc()->TC_WPMR = TC_WPMR_WPEN | TC_WPMR_WPKEY_PASSWD;
 		}
 
