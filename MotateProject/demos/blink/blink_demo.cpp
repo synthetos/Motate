@@ -31,7 +31,7 @@
 
 #include "MotatePins.h"
 #include "MotateTimers.h"
-#include "MotateSPI.h"
+#include "MotateUART.h"
 
 // This makes the Motate:: prefix unnecessary.
 using namespace Motate;
@@ -39,16 +39,27 @@ using namespace Motate;
 /****** Create file-global objects ******/
 
 OutputPin<kLED1_PinNumber> led1_pin;
-typedef std::conditional< IsSPISCKPin<kSPI0_CS0PinNumber>(), OutputPin<kLED2_PinNumber>, OutputPin<kLED3_PinNumber> >::type led2_pin_type;
-led2_pin_type led2_pin;
+//OutputPin<kSerial0_TX> tx_pin;
+//InputPin<kSerial0_RX> rx_pin;
 
-SPI<kSPI0_CS0PinNumber> spi;
+UART<kSerial0_RX, kSerial0_TX> serialPort {9600};
+
+const char test_str[] =
+	"word  1\n"
+	"word  2\n"
+	"word  3\n"
+	"word  4\n"
+	"word  5\n"
+	"word  6\n"
+	"word  7\n"
+	"word  8\n"
+	"word  9\n"
+;
 
 /****** Optional setup() function ******/
 
 void setup() {
 	led1_pin = 1;
-	led2_pin = 0;
 }
 
 /****** Main run loop() ******/
@@ -56,7 +67,7 @@ void setup() {
 void loop() {
 
 	// Fastest version (hardware toggle of the pin):
-//	led1_pin.toggle();
+	led1_pin.toggle();
 
 //	// Alternative version 1:
 //	if (led1_pin) {
@@ -77,5 +88,11 @@ void loop() {
 
 	delay(250);
 
-	spi.write((uint8_t *)"test", 5);
+//	serialPort.write('T'); 	serialPort.flush();
+//	serialPort.write('e'); 	serialPort.flush();
+//	serialPort.write('s'); 	serialPort.flush();
+//	serialPort.write('t'); 	serialPort.flush();
+//	serialPort.write('\n'); 	serialPort.flush();
+//
+	serialPort.write((const uint8_t *)test_str, sizeof(test_str)-1);
 }

@@ -112,6 +112,17 @@ namespace Motate {
 	_MAKE_MOTATE_SPI_SCK_PIN( 'B',  0, /*PinMux:*/ 3);
 //	_MAKE_MOTATE_SPI_SCK_PIN( 'B', 17, /*PinMux:*/ 3); // N.C.
 
+
+	// UART pins
+	_MAKE_MOTATE_UART_TX_PIN( 'B',  2,  /*PinMux:*/ 3); // Pin 0
+	_MAKE_MOTATE_UART_RX_PIN( 'B',  2,  /*PinMux:*/ 2); // Pin 0
+
+	_MAKE_MOTATE_UART_TX_PIN( 'B',  1,  /*PinMux:*/ 2); // Pin 1
+	_MAKE_MOTATE_UART_RX_PIN( 'B',  1,  /*PinMux:*/ 3); // Pin 1
+	
+	_MAKE_MOTATE_UART_TX_PIN( 'B',  3,  /*PinMux:*/ 3); // Pin 15
+	_MAKE_MOTATE_UART_RX_PIN( 'B',  4,  /*PinMux:*/ 3); // Pin 14
+
 } // namespace Motate
 
 

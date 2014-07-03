@@ -236,7 +236,7 @@ ASFLAGS = $(DEVICE_ASFLAGS)
 # ---------------------------------------------------------------------------------------
 # Linker Flags
 
-LDFLAGS += $(LIBS) $(USER_LIBS) -Wl,--cref -Wl,--check-sections -Wl,--gc-sections -Wl,--entry=Reset_Handler -Wl,--unresolved-symbols=report-all -Wl,--warn-common -Wl,--warn-section-align -Wl,--warn-unresolved-symbols $(DEVICE_LDFLAGS)
+LDFLAGS += $(LIBS) $(USER_LIBS) -Wl,--cref -Wl,--check-sections -Wl,--gc-sections -Wl,--entry=Reset_Handler -Wl,--unresolved-symbols=report-all -Wl,--warn-common -Wl,--warn-section-align -Wl,--relax -Wl,--warn-unresolved-symbols $(DEVICE_LDFLAGS)
 
 #
 # End of setup tools
@@ -368,7 +368,7 @@ $(ALL_OTHER_ASM_OBJECTS): $(OUTDIR)/%.o: %.S
 	$(QUIET)$(CC) $(ASFLAGS) $(DEPFLAGS) -c -o $@ $<
 
 debug: $(1)
-	$(GDB) -x "$(MOTATE_PATH)/$(BOARD).gdb" -ex "reset" -readnow -se "$(OUTPUT_BIN)_$(1).elf"
+	$(GDB) -x "${BOARD_PATH}.gdb" -ex "monitor reset halt" -readnow -se "$(OUTPUT_BIN).elf"
 
 
 #-------------------------------------------------------------------------------

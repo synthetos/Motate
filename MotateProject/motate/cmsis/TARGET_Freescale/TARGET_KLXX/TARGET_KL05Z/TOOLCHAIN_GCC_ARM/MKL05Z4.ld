@@ -43,31 +43,52 @@ SECTIONS
     {
         __vector_table = .;
         KEEP(*(.vector_table))
+        KEEP(*(.vectors .vectors.*))
          . = ALIGN(4);
     } > VECTORS
 
     .text :
     {
-        *(.text*)
+        *(.text .text.* .gnu.linkonce.t.*)
+        *(.glue_7t) *(.glue_7)
+        *(.rodata* .gnu.linkonce.r.*)
 
+        . = ALIGN(4);
+        /* preinit data */
         KEEP(*(.init))
-        KEEP(*(.fini))
 
+         . = ALIGN(4);
+        PROVIDE_HIDDEN (__preinit_array_start = .);
+        KEEP(*(.preinit_array))
+        PROVIDE_HIDDEN (__preinit_array_end = .);
+
+        . = ALIGN(4);
+        /* init data */
+        PROVIDE_HIDDEN (__init_array_start = .);
+        KEEP(*(SORT(.init_array.*)))
+        KEEP(*(.init_array))
+        PROVIDE_HIDDEN (__init_array_end = .);
+
+        . = ALIGN(4);
         /* .ctors */
-        *crtbegin.o(.ctors)
-        *crtbegin?.o(.ctors)
-        *(EXCLUDE_FILE(*crtend?.o *crtend.o) .ctors)
-        *(SORT(.ctors.*))
-        *(.ctors)
+        KEEP (*crtbegin.o(.ctors))
+        KEEP (*(EXCLUDE_FILE (*crtend.o) .ctors))
+        KEEP (*(SORT(.ctors.*)))
+        KEEP (*crtend.o(.ctors))
+
+        . = ALIGN(4);
+        /* finit data */
+        KEEP(*(.fini))
+        PROVIDE_HIDDEN (__fini_array_start = .);
+        KEEP(*(SORT(.fini_array.*)))
+        KEEP(*(.fini_array))
+        PROVIDE_HIDDEN (__fini_array_end = .);
 
         /* .dtors */
-        *crtbegin.o(.dtors)
-        *crtbegin?.o(.dtors)
-        *(EXCLUDE_FILE(*crtend?.o *crtend.o) .dtors)
-        *(SORT(.dtors.*))
-        *(.dtors)
-
-        *(.rodata*)
+        KEEP (*crtbegin.o(.dtors))
+        KEEP (*(EXCLUDE_FILE (*crtend.o) .dtors))
+        KEEP (*(SORT(.dtors.*)))
+        KEEP (*crtend.o(.dtors))
 
         KEEP(*(.eh_frame*))
     } > FLASH
@@ -75,6 +96,7 @@ SECTIONS
     .ARM.extab :
     {
         *(.ARM.extab* .gnu.linkonce.armextab.*)
+        . = ALIGN(4);
     } > FLASH
 
     __exidx_start = .;
@@ -92,26 +114,7 @@ SECTIONS
         *(vtable)
         *(.data*)
 
-        . = ALIGN(4);
-        /* preinit data */
-        PROVIDE_HIDDEN (__preinit_array_start = .);
-        KEEP(*(.preinit_array))
-        PROVIDE_HIDDEN (__preinit_array_end = .);
-
-        . = ALIGN(4);
-        /* init data */
-        PROVIDE_HIDDEN (__init_array_start = .);
-        KEEP(*(SORT(.init_array.*)))
-        KEEP(*(.init_array))
-        PROVIDE_HIDDEN (__init_array_end = .);
-
-
-        . = ALIGN(4);
-        /* finit data */
-        PROVIDE_HIDDEN (__fini_array_start = .);
-        KEEP(*(SORT(.fini_array.*)))
-        KEEP(*(.fini_array))
-        PROVIDE_HIDDEN (__fini_array_end = .);
+		/* Place C++ constructors (etc) here to move them to RAM. */
 
         . = ALIGN(4);
         /* All data end */
@@ -119,7 +122,7 @@ SECTIONS
 
     } > RAM
 
-    .bss :
+    .bss  (NOLOAD) :
     {
         __bss_start__ = .;
         *(.bss*)
@@ -127,7 +130,7 @@ SECTIONS
         __bss_end__ = .;
     } > RAM
 
-    .heap :
+    .heap  (NOLOAD) :
     {
         __end__ = .;
         end = __end__;
@@ -138,7 +141,7 @@ SECTIONS
     /* .stack_dummy section doesn't contains any symbols. It is only
      * used for linker to calculate size of stack sections, and assign
      * values to stack symbols later */
-    .stack_dummy :
+    .stack_dummy (NOLOAD) :
     {
         *(.stack)
     } > RAM

@@ -1251,6 +1251,7 @@
 		D4C7A19C19630FA000A1BE28 /* stm32f0xx_hal_smartcard.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A631957C0AD00A1BE28 /* stm32f0xx_hal_smartcard.c */; };
 		D4C7A19D19630FA000A1BE28 /* startup_stm32l053xx.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C79BEE1957C0AD00A1BE28 /* startup_stm32l053xx.s */; };
 		D4C7A19E19630FA000A1BE28 /* stm32f30x_syscfg.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79AF11957C0AD00A1BE28 /* stm32f30x_syscfg.c */; };
+		D4C7A1AA19638D7500A1BE28 /* KL05ZUART.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C7A1A819638D7500A1BE28 /* KL05ZUART.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -4386,6 +4387,11 @@
 		D4C79F29196216A300A1BE28 /* Makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
 		D4C79F2E19630F7100A1BE28 /* index_sam */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = index_sam; sourceTree = BUILT_PRODUCTS_DIR; };
 		D4C7A1A419630FA000A1BE28 /* index_sam copy */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "index_sam copy"; sourceTree = BUILT_PRODUCTS_DIR; };
+		D4C7A1A819638D7500A1BE28 /* KL05ZUART.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = KL05ZUART.cpp; sourceTree = "<group>"; };
+		D4C7A1A919638D7500A1BE28 /* KL05ZUART.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KL05ZUART.h; sourceTree = "<group>"; };
+		D4C7A1AB1963B66D00A1BE28 /* MotateUART.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotateUART.h; sourceTree = "<group>"; };
+		D4C7A1AC19649C2200A1BE28 /* ArduinoDue.gdb */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ArduinoDue.gdb; sourceTree = "<group>"; };
+		D4C7A1AD19649C2900A1BE28 /* FRDM-KLxx.gdb */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = "FRDM-KLxx.gdb"; path = "motate/board/FRDM-KLxx.gdb"; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -4437,6 +4443,7 @@
 				D4C78F63195201A900A1BE28 /* MotatePins.h */,
 				D4C78F64195201A900A1BE28 /* MotateSPI.h */,
 				D4C78F65195201A900A1BE28 /* MotateTimers.h */,
+				D4C7A1AB1963B66D00A1BE28 /* MotateUART.h */,
 				D4C78F66195201A900A1BE28 /* MotateUSB.h */,
 				D4C78F67195201A900A1BE28 /* MotateUSBCDC.h */,
 				D4C78F68195201A900A1BE28 /* MotateUSBHelpers.h */,
@@ -4479,6 +4486,8 @@
 		D4C78F6E19538E6B00A1BE28 /* Freescale_klxx */ = {
 			isa = PBXGroup;
 			children = (
+				D4C7A1A819638D7500A1BE28 /* KL05ZUART.cpp */,
+				D4C7A1A919638D7500A1BE28 /* KL05ZUART.h */,
 				D4C78F6F19538E6B00A1BE28 /* KL05ZPins.cpp */,
 				D4C78F7019538E6B00A1BE28 /* KL05ZPins.h */,
 				D4C78F7F19553EF700A1BE28 /* KL05ZTimers.cpp */,
@@ -9779,8 +9788,10 @@
 		D4C79F001957C1E300A1BE28 /* board */ = {
 			isa = PBXGroup;
 			children = (
+				D4C7A1AC19649C2200A1BE28 /* ArduinoDue.gdb */,
 				D4C79F0D1957C2A100A1BE28 /* ArduinoDue.mk */,
 				D4C79F071957C24700A1BE28 /* ArduinoDue */,
+				D4C7A1AD19649C2900A1BE28 /* FRDM-KLxx.gdb */,
 				D4C79F0E1957C2A100A1BE28 /* FRDM-KLxx.mk */,
 				D4C79F0A1957C24700A1BE28 /* FRDM-KLxx */,
 			);
@@ -10952,6 +10963,7 @@
 				D4C7A0A319630FA000A1BE28 /* startup_LPC43xx.s in Sources */,
 				D4C7A0A419630FA000A1BE28 /* startup_stm32f0xx.s in Sources */,
 				D4C7A0A519630FA000A1BE28 /* startup_sam4n.c in Sources */,
+				D4C7A1AA19638D7500A1BE28 /* KL05ZUART.cpp in Sources */,
 				D4C7A0A619630FA000A1BE28 /* startup_stm32f10x_md_vl.s in Sources */,
 				D4C7A0A719630FA000A1BE28 /* cmsis_nvic.c in Sources */,
 				D4C7A0A819630FA000A1BE28 /* cmsis_nvic.c in Sources */,

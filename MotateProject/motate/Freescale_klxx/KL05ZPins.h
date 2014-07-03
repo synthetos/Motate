@@ -296,8 +296,9 @@ namespace Motate {
 				}\
 				if (kPinMuxSet & options)\
 				{\
+					uint8_t mux_val = (options & kPinMuxMask) >> kPinMuxOffset;\
 					(*PORT ## registerLetter).PCR[registerPin] = \
-						((*PORT ## registerLetter).PCR[registerPin] & ~PORT_PCR_MUX_MASK) | PORT_PCR_MUX((options & kPinMuxMask) >> kPinMuxOffset) ;\
+								((*PORT ## registerLetter).PCR[registerPin] & ~PORT_PCR_MUX_MASK) | PORT_PCR_MUX( mux_val ) ;\
 				}\
 			};\
 			uint32_t getOptions() {\
@@ -475,7 +476,6 @@ namespace Motate {
 			static const bool is_real = std::true_type::value;\
         };
 
-	
     
     template<int8_t pinNum>
 	struct SPISCKPin {
@@ -493,7 +493,41 @@ namespace Motate {
 			static const bool is_real = std::true_type::value;\
         };
 
+	
     
+    template<int8_t pinNum>
+	struct UARTTxPin {
+		static const bool is_real = std::false_type::value;
+	};
+
+	template <int8_t pinNum>
+	constexpr const bool IsUARTTxPin() { return UARTTxPin<pinNum>::is_real; };
+
+    #define _MAKE_MOTATE_UART_TX_PIN(registerChar, registerPin, pinmuxNum)\
+        template<>\
+        struct UARTTxPin< ReversePinLookup<registerChar, registerPin>::number > : ReversePinLookup<registerChar, registerPin> {\
+            UARTTxPin() : ReversePinLookup<registerChar, registerPin>(kPeripheralOutput, kPinMux ## pinmuxNum) {};\
+            static const uint8_t moduleId = 0; \
+			static const bool is_real = std::true_type::value;\
+        };
+	
+    
+    template<int8_t pinNum>
+	struct UARTRxPin {
+		static const bool is_real = std::false_type::value;
+	};
+
+	template <int8_t pinNum>
+	constexpr const bool IsUARTRxPin() { return UARTRxPin<pinNum>::is_real; };
+
+    #define _MAKE_MOTATE_UART_RX_PIN(registerChar, registerPin, pinmuxNum)\
+        template<>\
+        struct UARTRxPin< ReversePinLookup<registerChar, registerPin>::number > : ReversePinLookup<registerChar, registerPin> {\
+            UARTRxPin() : ReversePinLookup<registerChar, registerPin>(kPeripheralInput, kPinMux ## pinmuxNum) {};\
+            static const uint8_t moduleId = 0; \
+			static const bool is_real = std::true_type::value;\
+        };
+
 
 	#define _MAKE_MOTATE_PORT32(registerLetter, registerChar)\
 		template <>\

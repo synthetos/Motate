@@ -76,27 +76,31 @@ namespace Motate {
         kSPI16Bit              = SPI_CSR_BITS_16_BIT
 	};
 
-	enum class _SPI_HARDWARE_ENABLED { _SPI_HARDWARE_DUMMY };
-	constexpr auto _SPI_HARDWARE_DUMMY = _SPI_HARDWARE_ENABLED::_SPI_HARDWARE_DUMMY;
-
     // This is an internal representation of the peripheral.
     // This is *not* to be used externally.
 
-	template<uint8_t spiPeripheralNum, int8_t spiMISOPinNumber, int8_t spiMOSIPinNumber, int8_t spSCKSPinNumber, typename = void>
+	enum class _SPI_HARDWARE_ENABLED { _SPI_HARDWARE_DUMMY };
+	constexpr auto _SPI_HARDWARE_DUMMY = _SPI_HARDWARE_ENABLED::_SPI_HARDWARE_DUMMY;
+
+
+	template<uint8_t spiPeripheralNum, int8_t spiMISOPinNumber, int8_t spiMOSIPinNumber, int8_t spiSCKPinNumber, typename = void>
     struct _SPIHardware {
         // BITBANG HERE!
     };
+
+	template <int8_t spiMISOPinNumber, int8_t spiMOSIPinNumber, int8_t spiSCKPinNumber>
+	using IsValidSPIHardware = typename std::enable_if<IsSPIMISOPin<spiMISOPinNumber>() && IsSPIMOSIPin<spiMOSIPinNumber>() && IsSPISCKPin<spiSCKPinNumber>() >::type;
     
-    template<int8_t spiMISOPinNumber, int8_t spiMOSIPinNumber, int8_t spiSCKSPinNumber>
-    struct _SPIHardware<0u, spiMISOPinNumber, spiMOSIPinNumber, spiSCKSPinNumber, typename std::enable_if<IsSPIMISOPin<spiMISOPinNumber>() && IsSPIMOSIPin<spiMOSIPinNumber>() && IsSPISCKPin<spiSCKSPinNumber>() >::type>
-	: SamCommon< _SPIHardware<0u, spiMISOPinNumber, spiMOSIPinNumber, spiSCKSPinNumber> > {
+    template<int8_t spiMISOPinNumber, int8_t spiMOSIPinNumber, int8_t spiSCKPinNumber>
+    struct _SPIHardware<0u, spiMISOPinNumber, spiMOSIPinNumber, spiSCKPinNumber, IsValidSPIHardware<spiMISOPinNumber, spiMOSIPinNumber, spiSCKPinNumber>>
+	: SamCommon< _SPIHardware<0u, spiMISOPinNumber, spiMOSIPinNumber, spiSCKPinNumber> > {
 		static Spi * const spi() { return SPI0; };
         static const uint32_t peripheralId() { return ID_SPI0; }; // ID_SPI0 .. ID_SPI1
 		static const IRQn_Type spiIRQ() { return SPI0_IRQn; };
         
         static const uint8_t spiPeripheralNum=0;
         
-        typedef _SPIHardware<0u, spiMISOPinNumber, spiMOSIPinNumber, spiSCKSPinNumber> this_type_t;
+        typedef _SPIHardware<0u, spiMISOPinNumber, spiMOSIPinNumber, spiSCKPinNumber> this_type_t;
         typedef SamCommon< this_type_t > common;
 
         /* We have to play some tricks here, because templates and static members are tricky.
@@ -261,7 +265,7 @@ namespace Motate {
             // We derive the baud from the master clock with a divider.
             // We want the closest match *below* the value asked for. It's safer to bee too slow.
             
-            uint8_t divider = SystemCoreClock / baud;
+            uint16_t divider = SystemCoreClock / baud;
             if (divider > 255)
                 divider = 255;
             else if (divider < 1)

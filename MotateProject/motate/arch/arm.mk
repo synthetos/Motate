@@ -36,7 +36,7 @@
 # $(CPU_DEV)
 
 
-DEVICE_LIBS          = gcc c m
+DEVICE_LIBS          = gcc c
 
 ifeq ($(NEEDS_PRINTF_FLOAT),1)
 PRINTF_FLOAT_FLAGS = -u _printf_float
