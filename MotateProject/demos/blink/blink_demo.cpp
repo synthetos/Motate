@@ -44,18 +44,6 @@ OutputPin<kLED1_PinNumber> led1_pin;
 
 UART<kSerial0_RX, kSerial0_TX> serialPort {9600};
 
-const char test_str[] =
-	"word  1\n"
-	"word  2\n"
-	"word  3\n"
-	"word  4\n"
-	"word  5\n"
-	"word  6\n"
-	"word  7\n"
-	"word  8\n"
-	"word  9\n"
-;
-
 /****** Optional setup() function ******/
 
 void setup() {
@@ -94,5 +82,5 @@ void loop() {
 //	serialPort.write('t'); 	serialPort.flush();
 //	serialPort.write('\n'); 	serialPort.flush();
 //
-	serialPort.write((const uint8_t *)test_str, sizeof(test_str)-1);
+	serialPort.write((const uint8_t *)"Blah\n", 5);
 }

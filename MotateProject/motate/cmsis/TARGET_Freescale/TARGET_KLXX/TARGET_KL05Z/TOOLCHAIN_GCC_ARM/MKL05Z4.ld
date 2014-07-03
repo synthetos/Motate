@@ -49,9 +49,9 @@ SECTIONS
 
     .text :
     {
-        *(.text .text.* .gnu.linkonce.t.*)
-        *(.glue_7t) *(.glue_7)
-        *(.rodata* .gnu.linkonce.r.*)
+        *(.text*)
+        *(.rodata .rodata* .gnu.linkonce.r.*)
+        *(.ARM.extab* .gnu.linkonce.armextab.*)
 
         . = ALIGN(4);
         /* preinit data */
@@ -93,12 +93,6 @@ SECTIONS
         KEEP(*(.eh_frame*))
     } > FLASH
 
-    .ARM.extab :
-    {
-        *(.ARM.extab* .gnu.linkonce.armextab.*)
-        . = ALIGN(4);
-    } > FLASH
-
     __exidx_start = .;
     .ARM.exidx :
     {
@@ -122,11 +116,13 @@ SECTIONS
 
     } > RAM
 
-    .bss  (NOLOAD) :
+    .bss (NOLOAD) :
     {
+        . = ALIGN(4);
         __bss_start__ = .;
         *(.bss*)
         *(COMMON)
+        . = ALIGN(4);
         __bss_end__ = .;
     } > RAM
 
