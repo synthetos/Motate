@@ -27,60 +27,71 @@
  *  OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. *
  */
 
-#include "blink_demo.h"
-
 #include "MotatePins.h"
 #include "MotateTimers.h"
 #include "MotateUART.h"
+#include "MotateBuffer.h"
 
 // This makes the Motate:: prefix unnecessary.
 using namespace Motate;
 
+char write_buffer[8] = "static\n";
+
+//Buffer<8> write_buffer = { "static\n" };
+
+// Setup an led to blink and show that the board's working...
+OutputPin<kLED1_PinNumber> led1_pin;
+
 /****** Create file-global objects ******/
 
-OutputPin<kLED1_PinNumber> led1_pin;
-//OutputPin<kSerial0_TX> tx_pin;
-//InputPin<kSerial0_RX> rx_pin;
-
-UART<> serialPort {};
+UART<> serialPort {9600};
 
 /****** Optional setup() function ******/
 
 void setup() {
-	led1_pin = 1;
+//	serialPort.write("Startup...\n", 11);
 }
 
 /****** Main run loop() ******/
 
+std::size_t currentPos = 0;
+int16_t v;
+
 void loop() {
+	// Blink the led...
 
-	// Fastest version (hardware toggle of the pin):
-	led1_pin.toggle();
+	// Write a byte, then "flush()" to make sure it's completely sent.
+	/*
+	 serialPort.write('T'); 	serialPort.flush();
+	serialPort.write('e'); 	serialPort.flush();
+	serialPort.write('s'); 	serialPort.flush();
+	serialPort.write('t'); 	serialPort.flush();
+	serialPort.write('\n'); serialPort.flush();
 
-//	// Alternative version 1:
-//	if (led1_pin) {
-//		led1_pin = 0;
-//	} else {
-//		led1_pin = 1;
+	// Write a static string...
+	serialPort.write(write_buffer);
+
+//	for (char X: write_buffer) {
+//		if (!X)
+//			break;
+//		serialPort.write(X); 	serialPort.flush();
+//	}
+*/
+
+	v = serialPort.read();
+//	if (value > 0) {
+		led1_pin.toggle();
+
+		serialPort.write("--> "); serialPort.flush();
+		serialPort.write((uint8_t)v); serialPort.flush();
+		serialPort.write("\n");
+
+		delay(250);
+
+		//write_buffer[currentPos] = value;
+		if (++currentPos > 7)
+			currentPos = 0;
 //	}
 
-//	// Alternative version 2:
-//	if (led1_pin.getInputValue()) {
-//		led1_pin.clear();
-//	} else {
-//		led1_pin.set();
-//	}
-
-//	// Alternative version 3:
-//	led1_pin = !led1_pin;
-
-	delay(250);
-
-//	serialPort.write('T'); 	serialPort.flush();
-//	serialPort.write('e'); 	serialPort.flush();
-//	serialPort.write('s'); 	serialPort.flush();
-//	serialPort.write('t'); 	serialPort.flush();
-//	serialPort.write('\n'); 	serialPort.flush();
-
-	serialPort.write((const uint8_t *)"Blah\n", 5);
+	//delay(250);
 }

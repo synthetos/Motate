@@ -8,6 +8,10 @@
 
 /* Begin PBXBuildFile section */
 		D457117C17053EFA00EA19A8 /* Makefile in Sources */ = {isa = PBXBuildFile; fileRef = D457117B17053EFA00EA19A8 /* Makefile */; };
+		D48992C61965B460004F73A6 /* Makefile in Sources */ = {isa = PBXBuildFile; fileRef = D48992C41965B460004F73A6 /* Makefile */; };
+		D48992C71965B460004F73A6 /* Makefile in Sources */ = {isa = PBXBuildFile; fileRef = D48992C41965B460004F73A6 /* Makefile */; };
+		D48992C81965B460004F73A6 /* uart_demo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D48992C51965B460004F73A6 /* uart_demo.cpp */; };
+		D48992C91965B460004F73A6 /* uart_demo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D48992C51965B460004F73A6 /* uart_demo.cpp */; };
 		D4C78F69195201A900A1BE28 /* AvrUSB.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C78F56195201A900A1BE28 /* AvrUSB.cpp */; };
 		D4C78F6A195201A900A1BE28 /* SamPins.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C78F5B195201A900A1BE28 /* SamPins.cpp */; };
 		D4C78F6B195201A900A1BE28 /* SamSPI.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C78F5D195201A900A1BE28 /* SamSPI.cpp */; };
@@ -1277,6 +1281,9 @@
 
 /* Begin PBXFileReference section */
 		D457117B17053EFA00EA19A8 /* Makefile */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = Makefile; sourceTree = "<group>"; usesTabs = 1; xcLanguageSpecificationIdentifier = xcode.lang.sh; };
+		D48992C01965B118004F73A6 /* MotateBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MotateBuffer.h; path = motate/MotateBuffer.h; sourceTree = SOURCE_ROOT; };
+		D48992C41965B460004F73A6 /* Makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
+		D48992C51965B460004F73A6 /* uart_demo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = uart_demo.cpp; sourceTree = "<group>"; };
 		D4C77F6D1950912300A1BE28 /* Tools.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Tools.xcodeproj; path = ../Tools/Tools.xcodeproj; sourceTree = "<group>"; };
 		D4C78F54195201A900A1BE28 /* AvrPins.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AvrPins.h; sourceTree = "<group>"; };
 		D4C78F55195201A900A1BE28 /* AvrTimers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AvrTimers.h; sourceTree = "<group>"; };
@@ -4424,6 +4431,15 @@
 			);
 			sourceTree = "<group>";
 		};
+		D48992C21965B460004F73A6 /* uart */ = {
+			isa = PBXGroup;
+			children = (
+				D48992C41965B460004F73A6 /* Makefile */,
+				D48992C51965B460004F73A6 /* uart_demo.cpp */,
+			);
+			path = uart;
+			sourceTree = "<group>";
+		};
 		D4C77F6E1950912300A1BE28 /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -4440,6 +4456,7 @@
 				D4C78F53195201A900A1BE28 /* Atmel_avr */,
 				D4C78F59195201A900A1BE28 /* Atmel_sam3xa */,
 				D4C78F6E19538E6B00A1BE28 /* Freescale_klxx */,
+				D48992C01965B118004F73A6 /* MotateBuffer.h */,
 				D4C78F63195201A900A1BE28 /* MotatePins.h */,
 				D4C78F64195201A900A1BE28 /* MotateSPI.h */,
 				D4C78F65195201A900A1BE28 /* MotateTimers.h */,
@@ -9827,6 +9844,7 @@
 		D4C79F19195BC80800A1BE28 /* demos */ = {
 			isa = PBXGroup;
 			children = (
+				D48992C21965B460004F73A6 /* uart */,
 				D4C79F22196216A300A1BE28 /* blink */,
 				D4C79F26196216A300A1BE28 /* fade */,
 			);
@@ -9863,7 +9881,7 @@
 			buildPhases = (
 			);
 			buildToolPath = /usr/bin/make;
-			buildWorkingDirectory = ./demos/blink;
+			buildWorkingDirectory = ./demos/uart;
 			dependencies = (
 			);
 			name = "Motate Due";
@@ -9877,7 +9895,7 @@
 			buildPhases = (
 			);
 			buildToolPath = /usr/bin/make;
-			buildWorkingDirectory = ./demos/blink;
+			buildWorkingDirectory = ./demos/uart;
 			dependencies = (
 			);
 			name = "Motate FRDM-KL05Z";
@@ -9975,6 +9993,7 @@
 				D4C79D021957C0AE00A1BE28 /* vector_table.s in Sources */,
 				D4C79D251957C0AE00A1BE28 /* stm32f0xx_comp.c in Sources */,
 				D4C79CB41957C0AE00A1BE28 /* sys.cpp in Sources */,
+				D48992C81965B460004F73A6 /* uart_demo.cpp in Sources */,
 				D4C79ED21957C0AE00A1BE28 /* stm32f30x_usart.c in Sources */,
 				D4C79EB01957C0AE00A1BE28 /* stm32l1xx_rtc.c in Sources */,
 				D4C79EB31957C0AE00A1BE28 /* stm32l1xx_syscfg.c in Sources */,
@@ -10092,6 +10111,7 @@
 				D4C79EB51957C0AE00A1BE28 /* stm32l1xx_usart.c in Sources */,
 				D4C79C991957C0AE00A1BE28 /* system_sam4e.c in Sources */,
 				D4C79DD01957C0AE00A1BE28 /* stm32f0xx_hal_dac_ex.c in Sources */,
+				D48992C61965B460004F73A6 /* Makefile in Sources */,
 				D4C79C8F1957C0AE00A1BE28 /* system_sam4c.c in Sources */,
 				D4C79E9C1957C0AE00A1BE28 /* misc.c in Sources */,
 				D4C79CED1957C0AE00A1BE28 /* startup_LPC13xx.s in Sources */,
@@ -11150,6 +11170,7 @@
 				D4C7A15D19630FA000A1BE28 /* stm32f30x_comp.c in Sources */,
 				D4C7A15E19630FA000A1BE28 /* stm32l1xx_flash_ramfunc.c in Sources */,
 				D4C7A15F19630FA000A1BE28 /* stm32l0xx_hal_irda.c in Sources */,
+				D48992C91965B460004F73A6 /* uart_demo.cpp in Sources */,
 				D4C7A16019630FA000A1BE28 /* system_LPC407x_8x_177x_8x.c in Sources */,
 				D4C7A16119630FA000A1BE28 /* stm32f10x_can.c in Sources */,
 				D4C7A16219630FA000A1BE28 /* system_stm32l1xx.c in Sources */,
@@ -11172,6 +11193,7 @@
 				D4C7A17319630FA000A1BE28 /* stm32f30x_opamp.c in Sources */,
 				D4C7A17419630FA000A1BE28 /* stm32f4xx_hal_hcd.c in Sources */,
 				D4C7A17519630FA000A1BE28 /* hooks.c in Sources */,
+				D48992C71965B460004F73A6 /* Makefile in Sources */,
 				D4C7A17619630FA000A1BE28 /* stm32f4xx_hal_i2c_ex.c in Sources */,
 				D4C7A17719630FA000A1BE28 /* stm32f4xx_hal_sdram.c in Sources */,
 				D4C7A17819630FA000A1BE28 /* stm32f4xx_hal_rng.c in Sources */,

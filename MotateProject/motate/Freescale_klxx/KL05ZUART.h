@@ -32,6 +32,7 @@
 #define KL05ZUART_H_ONCE
 
 #include "MotatePins.h"
+#include "MotateBuffer.h"
 #include <type_traits>
 
 namespace Motate {
@@ -55,6 +56,20 @@ namespace Motate {
 		// TODO: Add polarity inversion and bit reversal options
 	};
 
+	enum class kUART : bool {
+		Flush = true,
+		DontFlush=false
+		};
+
+	// Convenience template classes for specialization:
+
+	template<typename T>
+	using IsUINT8Type = typename std::enable_if<1==1>::type;
+
+	template<pin_number rxPinNumber, pin_number txPinNumber>
+	using IsValidUART = typename std::enable_if<IsUARTRxPin<rxPinNumber>() && IsUARTTxPin<txPinNumber>() && rxPinNumber != txPinNumber && UARTTxPin<txPinNumber>::moduleId == UARTRxPin<rxPinNumber>::moduleId>::type;
+
+
 
     // This is an internal representation of the peripheral.
     // This is *not* to be used externally.
@@ -68,9 +83,6 @@ namespace Motate {
         // BITBANG HERE!
     };
 
-	template<pin_number rxPinNumber, pin_number txPinNumber>
-	using IsValidUART = typename std::enable_if<IsUARTRxPin<rxPinNumber>() && IsUARTTxPin<txPinNumber>() && rxPinNumber != txPinNumber && UARTTxPin<txPinNumber>::moduleId == UARTRxPin<rxPinNumber>::moduleId>::type;
-    
     template<pin_number rxPinNumber, pin_number txPinNumber>
     struct _UARTHardware<0u, rxPinNumber, txPinNumber, IsValidUART<rxPinNumber, txPinNumber>> {
 		static inline UART0_Type * const uart() { return UART0; };
@@ -168,24 +180,23 @@ namespace Motate {
         };
 
         int16_t read() {
-			if (uart()->S1 & UART0_S1_RDRF_MASK) {
-				return uart()->D;
+			while (!(uart()->S1 & UART0_S1_RDRF_MASK)) {
 			}
-			return -1;
+			return uart()->D;
+//			return -1;
         };
 
-        int16_t write(uint8_t value) __attribute__((noinline)) {
-            while (!(uart()->S1 & UART0_S1_TDRE_MASK)) {
-				;
+        int16_t write(uint8_t value) {
+            if (!(uart()->S1 & UART0_S1_TDRE_MASK)) {
+				return -1;
             }
 			uart()->D = value;
-
             return 1;
         };
 
 		void flush() {
 			// Wait for the buffer to be empty
-			while(!(uart()->S1 & UART0_S1_TDRE_MASK));
+			while(!(uart()->S1 & UART0_S1_TDRE_MASK)) {;}
 		}
     };
     
@@ -194,8 +205,8 @@ namespace Motate {
         UARTRxPin<rxPinNumber> rxPin;
         UARTTxPin<txPinNumber> txPin;
 
-        static _UARTHardware< 0u, rxPinNumber, txPinNumber > hardware;
-        static const uint8_t uartPeripheralNum() { return hardware.moduleId; };
+        _UARTHardware< 0u, rxPinNumber, txPinNumber > hardware;
+        const inline uint8_t uartPeripheralNum() { return hardware.moduleId; };
 
         UART(const uint32_t baud = 115200, const uint16_t options = kUART8N1) {
             hardware.init();
@@ -243,26 +254,62 @@ namespace Motate {
 			// Wait for the buffer to be empty...
 			hardware.flush();
 		};
-        
-        // WARNING: Currently only writes in bytes. For more-that-byte size data, we'll need another call.
-//		int16_t write(const char *data, const uint16_t length, bool autoFlush = false) {
-//			return write(data, length, autoFlush);
-//		};
-//
-		int16_t write(const uint8_t *data, const uint16_t length, bool autoFlush = false) __attribute__((noinline)) {
-            int16_t total_written = 0;
-			const uint8_t *out_buffer = data;
+
+		template<uint16_t buffer_size, typename T>
+		int16_t write(const Buffer<buffer_size, T>& data, const uint16_t length = 0, bool autoFlush = false) {
+			int16_t total_written = 0;
+			const T* out_buffer = data;
 			int16_t to_write = length;
+
+			if (length==0 && *out_buffer==0) {
+				return 0;
+			}
 
 			// BLOCKING!!
 			do {
-                /* int16_t ret = */hardware.write(*out_buffer);
-				
-//                if (ret > 0) {
+                int16_t ret = hardware.write((const char)*out_buffer);
+
+                if (ret > 0) {
                     out_buffer++;
                     total_written++;
                     to_write--;
-//                }
+
+					if (length==0 && *out_buffer==0) {
+						break;
+					}
+                }
+			} while (to_write);
+
+			if (autoFlush && total_written > 0)
+                flush();
+
+			return total_written;
+		}
+
+        // WARNING: Currently only writes in bytes. For more-that-byte size data, we'll need another call.
+		template<typename T>
+		int16_t write(const T* data, const uint16_t length = 0, bool autoFlush = false) {
+			int16_t total_written = 0;
+			const T* out_buffer = data;
+			int16_t to_write = length;
+
+			if (length==0 && *out_buffer==0) {
+				return 0;
+			}
+
+			// BLOCKING!!
+			do {
+                int16_t ret = hardware.write((const char)*out_buffer);
+				
+                if (ret > 0) {
+                    out_buffer++;
+                    total_written++;
+                    to_write--;
+
+					if (length==0 && *out_buffer==0) {
+						break;
+					}
+                }
 			} while (to_write);
             
 			if (autoFlush && total_written > 0)
