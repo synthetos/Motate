@@ -32,12 +32,16 @@
 #include "MotateUART.h"
 #include "MotateBuffer.h"
 
+#include <iterator>
+
 // This makes the Motate:: prefix unnecessary.
 using namespace Motate;
 
-char write_buffer[8] = "static\n";
+constexpr std::size_t write_buffer_size = 128;
 
-//Buffer<8> write_buffer = { "static\n" };
+//char write_buffer[write_buffer_size];
+
+Buffer<write_buffer_size> write_buffer;
 
 // Setup an led to blink and show that the board's working...
 OutputPin<kLED1_PinNumber> led1_pin;
@@ -49,49 +53,54 @@ UART<> serialPort {9600};
 /****** Optional setup() function ******/
 
 void setup() {
-//	serialPort.write("Startup...\n", 11);
+	serialPort.write("Startup...done.\n");
+	serialPort.write("Type 0 to turn the light off, and 1 to turn it on.\n");
+
+	serialPort.write("Type: ");
 }
 
 /****** Main run loop() ******/
 
 std::size_t currentPos = 0;
-int16_t v;
+char *write_pos = std::begin(write_buffer);
 
 void loop() {
-	// Blink the led...
 
-	// Write a byte, then "flush()" to make sure it's completely sent.
-	/*
-	 serialPort.write('T'); 	serialPort.flush();
-	serialPort.write('e'); 	serialPort.flush();
-	serialPort.write('s'); 	serialPort.flush();
-	serialPort.write('t'); 	serialPort.flush();
-	serialPort.write('\n'); serialPort.flush();
+	int16_t v = serialPort.getc();
 
-	// Write a static string...
-	serialPort.write(write_buffer);
+	if (v > 0) {
+		*write_pos++ = v;
 
-//	for (char X: write_buffer) {
-//		if (!X)
-//			break;
-//		serialPort.write(X); 	serialPort.flush();
-//	}
-*/
+		if (write_pos+1 == std::end(write_buffer))
+			*(write_pos-1) = '\n';
+			v = '\n';
 
-	v = serialPort.read();
-//	if (value > 0) {
-		led1_pin.toggle();
+		// Echo:
+		serialPort.putc(v);
 
-		serialPort.write("--> "); serialPort.flush();
-		serialPort.write((uint8_t)v); serialPort.flush();
-		serialPort.write("\n");
+		switch ((char)v) {
+			case '0':
+				led1_pin = 1;
+				break;
 
-		delay(250);
+			case '1':
+				led1_pin = 0;
+				break;
 
-		//write_buffer[currentPos] = value;
-		if (++currentPos > 7)
-			currentPos = 0;
-//	}
+//			default:
+		}
 
-	//delay(250);
+		switch ((char)v) {
+			case '\n':
+			case '\r':
+				*write_pos = 0;
+				// Write a static string...
+				serialPort.write(write_buffer);
+
+				serialPort.write("Type: ");
+				write_pos = std::begin(write_buffer);
+
+				break;
+		}
+	}
 }

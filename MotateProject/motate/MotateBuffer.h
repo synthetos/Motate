@@ -36,20 +36,19 @@
 
 namespace Motate {
 	// Implement a regular buffer, with a compile-time size
-	template <uint16_t size, typename base_type = uint8_t>
+	template <uint16_t _size, typename base_type = char>
 	struct Buffer {
 
 		// Internal properties!
-		base_type _data[size];
-//		base_type *_current = _data;
+		base_type _data[_size];
 
+		constexpr std::size_t size() { return _size; };
 
-		// Use the defualt constructors
-
+		// Default construcotrs will work fine.
 
 		// begin() and end()
 		base_type* begin() { return _data; };
-		base_type* end() { return _data+size; };
+		base_type* end() { return _data+_size; };
 
 
 		// Act like a pointer
@@ -58,9 +57,6 @@ namespace Motate {
 		operator base_type*() { return _data; };
 		operator const base_type*() const { return _data; };
 		base_type* operator*() { return _data; };
-
-		// Act like an array
-		base_type* operator[](const std::size_t offset) { return _data + offset; };
 	};
 } // namespace Motate
 

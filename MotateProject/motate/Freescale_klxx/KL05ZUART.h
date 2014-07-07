@@ -64,7 +64,7 @@ namespace Motate {
 	// Convenience template classes for specialization:
 
 	template<typename T>
-	using IsUINT8Type = typename std::enable_if<1==1>::type;
+		using IsUINT8PointerType = typename std::enable_if< std::is_same< char, char >::value >::type*;
 
 	template<pin_number rxPinNumber, pin_number txPinNumber>
 	using IsValidUART = typename std::enable_if<IsUARTRxPin<rxPinNumber>() && IsUARTTxPin<txPinNumber>() && rxPinNumber != txPinNumber && UARTTxPin<txPinNumber>::moduleId == UARTRxPin<rxPinNumber>::moduleId>::type;
@@ -85,17 +85,25 @@ namespace Motate {
 
     template<pin_number rxPinNumber, pin_number txPinNumber>
     struct _UARTHardware<0u, rxPinNumber, txPinNumber, IsValidUART<rxPinNumber, txPinNumber>> {
-		static inline UART0_Type * const uart() { return UART0; };
-		static const IRQn_Type spiIRQ() { return UART0_IRQn; };
+		constexpr volatile UART0_Type * const uart() { return UART0; };
+		constexpr volatile char &uart_s1() { return (char &)(UART0->S1); };
+		constexpr volatile char &uart_d() { return (char &)(UART0->D); };
+		constexpr const IRQn_Type spiIRQ() { return UART0_IRQn; };
         
-        static const uint8_t uartPeripheralNum=0;
+        static constexpr const uint8_t uartPeripheralNum=0;
         
 //        typedef _UARTHardware<0u, rxPinNumber, txPinNumber> this_type_t;
 
         void init() {
 			// Enable the UART0 Clock Gate
-			SIM->SOPT2 |= SIM_SOPT2_UART0SRC(1); // select the FLLFLLCLK as UART0 clock source
             SIM->SCGC4 |= SIM_SCGC4_UART0_MASK;
+
+            /* Select the clock source */
+			/* 0b01 = MCGFLLCLK
+			 * 0b10 = OSCERCLK
+			 * 0b11 = MCGIRCLK
+			 */
+			SIM->SOPT2 = (SIM->SOPT2 & ~SIM_SOPT2_UART0SRC_MASK) | SIM_SOPT2_UART0SRC(0b01);
 
             disable();
             
@@ -107,11 +115,11 @@ namespace Motate {
         };
 
         void enable() {
-			uart()->C2 |= (UART0_C2_TE_MASK | UART0_C2_RE_MASK);
+			uart()->C2 |= (uint8_t)(UART0_C2_TE_MASK | UART0_C2_RE_MASK);
         };
-        
+
         void disable () {
-			uart()->C2 &= ~(UART0_C2_TE_MASK | UART0_C2_RE_MASK);
+			uart()->C2 &= (uint8_t)~(UART0_C2_TE_MASK | UART0_C2_RE_MASK);
         };
 
         void setOptions(const uint32_t baud, const uint16_t options, const bool fromConstructor=false) {
@@ -146,57 +154,59 @@ namespace Motate {
 			// If the OSR is between 4x and 8x then both
 			// edge sampling MUST be turned on.
 			if (/*(oversample_rate > 3) && */(oversample_rate < 9))
-				uart()->C5|= UART0_C5_BOTHEDGE_MASK;
+				uart()->C5|= (uint8_t)UART0_C5_BOTHEDGE_MASK;
 
 			// Setup OSR value
-			uart()->C4 = ( uart()->C4 & ~UART0_C4_OSR_MASK ) | UART0_C4_OSR(oversample_rate-1);
+			uart()->C4 = ((uint8_t)uart()->C4 & ~UART0_C4_OSR_MASK ) | UART0_C4_OSR(oversample_rate-1);
 
 			/* Save off the current value of the uartx_BDH except for the SBR field */
-			uart()->BDH = ( uart()->BDH & ~(UART0_BDH_SBR_MASK | UART0_BDH_SBNS_MASK) )
+			uart()->BDH = ((uint8_t)uart()->BDH & ~(UART0_BDH_SBR_MASK | UART0_BDH_SBNS_MASK) )
 				| UART0_BDH_SBR( sbr_value >> 8 )
 				| (options & kUARTTwoStopBits ? UART0_BDH_SBNS_MASK : 0);
 			uart()->BDL = (uint8_t)(sbr_value & UART0_BDL_SBR_MASK);
 
 			if (options & kUART10Bit) {
-				uart()->C4 |= UART0_C4_M10_MASK;
+				uart()->C4 |= (uint8_t)UART0_C4_M10_MASK;
 			} else if (options & kUART9Bit) {
-				uart()->C1 |= UART0_C1_M_MASK;
-				uart()->C4 &= ~UART0_C4_M10_MASK;
+				uart()->C1 |= (uint8_t)UART0_C1_M_MASK;
+				uart()->C4 &= (uint8_t)~UART0_C4_M10_MASK;
 			} else {
-				uart()->C1 &= ~UART0_C1_M_MASK;
-				uart()->C4 &= ~UART0_C4_M10_MASK;
+				uart()->C1 &= (uint8_t)~UART0_C1_M_MASK;
+				uart()->C4 &= (uint8_t)~UART0_C4_M10_MASK;
 			}
 
 			if (options & (kUARTEvenParity|kUARTOddParity)) {
 				// Do we need to enforce 9-bit mode here? The manual is ambiguous...
-				uart()->C1 = (uart()->C1 & ~UART0_C1_PT_MASK) | UART0_C1_PE_MASK | (options & kUARTEvenParity ? 0 : UART0_C1_PT_MASK);
+				uart()->C1 = ((uint8_t)uart()->C1 & ~UART0_C1_PT_MASK) | UART0_C1_PE_MASK | (options & kUARTEvenParity ? 0 : UART0_C1_PT_MASK);
 			} else {
-				uart()->C1 &= ~UART0_C1_PE_MASK;
+				uart()->C1 &= (uint8_t)~UART0_C1_PE_MASK;
 			}
 
 			/* Enable receiver and transmitter */
             enable();
-			
+
         };
 
-        int16_t read() {
-			while (!(uart()->S1 & UART0_S1_RDRF_MASK)) {
+        int16_t getc() {
+//			uart_s1() |= (uint8_t)UART0_S1_OR_MASK;
+			if (uart_s1() & UART0_S1_RDRF_MASK) {
+				return uart_d();
 			}
-			return uart()->D;
-//			return -1;
+			return -1;
         };
 
-        int16_t write(uint8_t value) {
-            if (!(uart()->S1 & UART0_S1_TDRE_MASK)) {
-				return -1;
+        int16_t putc(uint8_t value) {
+//			uart_s1() |= (uint8_t)UART0_S1_OR_MASK;
+            if (uart_s1() & UART0_S1_TDRE_MASK) {
+				uart_d() = value;
+				return 1;
             }
-			uart()->D = value;
-            return 1;
+            return -1;
         };
 
 		void flush() {
 			// Wait for the buffer to be empty
-			while(!(uart()->S1 & UART0_S1_TDRE_MASK)) {;}
+			while(!(uart_s1() & UART0_S1_TDRE_MASK)) {;}
 		}
     };
     
@@ -221,8 +231,8 @@ namespace Motate {
             hardware.setOptions(baud, options, fromConstructor);
         };
 
-		int16_t read() {
-            return hardware.read();
+		int16_t getc() {
+            return hardware.getc();
 		};
         
         // WARNING: Currently only reads in bytes. For more-that-byte size data, we'll need another call.
@@ -233,8 +243,7 @@ namespace Motate {
 
 			// BLOCKING!!
 			while (to_read > 0) {
-                
-				int16_t ret = read();
+				int16_t ret = getc();
                 
                 if (ret >= 0) {
                     *read_ptr++ = ret;
@@ -246,8 +255,8 @@ namespace Motate {
 			return total_read;
 		};
         
-        int16_t write(uint16_t data) {
-            return hardware.write(data);
+        int16_t putc(uint8_t data) {
+            return hardware.putc(data);
 		};
 
         void flush() {
@@ -255,42 +264,10 @@ namespace Motate {
 			hardware.flush();
 		};
 
-		template<uint16_t buffer_size, typename T>
-		int16_t write(const Buffer<buffer_size, T>& data, const uint16_t length = 0, bool autoFlush = false) {
-			int16_t total_written = 0;
-			const T* out_buffer = data;
-			int16_t to_write = length;
-
-			if (length==0 && *out_buffer==0) {
-				return 0;
-			}
-
-			// BLOCKING!!
-			do {
-                int16_t ret = hardware.write((const char)*out_buffer);
-
-                if (ret > 0) {
-                    out_buffer++;
-                    total_written++;
-                    to_write--;
-
-					if (length==0 && *out_buffer==0) {
-						break;
-					}
-                }
-			} while (to_write);
-
-			if (autoFlush && total_written > 0)
-                flush();
-
-			return total_written;
-		}
-
         // WARNING: Currently only writes in bytes. For more-that-byte size data, we'll need another call.
-		template<typename T>
-		int16_t write(const T* data, const uint16_t length = 0, bool autoFlush = false) {
+		int16_t write(const char* data, const uint16_t length = 0, bool autoFlush = false) {
 			int16_t total_written = 0;
-			const T* out_buffer = data;
+			const char* out_buffer = data;
 			int16_t to_write = length;
 
 			if (length==0 && *out_buffer==0) {
@@ -299,7 +276,8 @@ namespace Motate {
 
 			// BLOCKING!!
 			do {
-                int16_t ret = hardware.write((const char)*out_buffer);
+				flush();
+                int16_t ret = putc(*out_buffer);
 				
                 if (ret > 0) {
                     out_buffer++;
