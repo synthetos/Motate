@@ -56,11 +56,6 @@ namespace Motate {
 		// TODO: Add polarity inversion and bit reversal options
 	};
 
-	enum class kUART : bool {
-		Flush = true,
-		DontFlush=false
-		};
-
 	// Convenience template classes for specialization:
 
 	template<typename T>
@@ -256,6 +251,7 @@ namespace Motate {
 		};
         
         int16_t putc(uint8_t data) {
+            hardware.flush();
             return hardware.putc(data);
 		};
 

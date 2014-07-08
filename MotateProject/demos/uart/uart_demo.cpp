@@ -1,5 +1,5 @@
 /*
- * blink_demo.cpp - Motate
+ * uart_demo.cpp - Motate
  * This file is part of the Motate project.
  *
  * Copyright (c) 2014 Robert Giseburt
@@ -39,9 +39,13 @@ using namespace Motate;
 
 constexpr std::size_t write_buffer_size = 128;
 
-//char write_buffer[write_buffer_size];
 
-Buffer<write_buffer_size> write_buffer;
+// Only one of these two lines should be uncommented:
+char write_buffer[write_buffer_size];
+//Buffer<write_buffer_size> write_buffer;
+
+// The above proves that write_buffer as a Buffer and as a raw char array will
+// generate the same file.
 
 // Setup an led to blink and show that the board's working...
 OutputPin<kLED1_PinNumber> led1_pin;
@@ -71,9 +75,10 @@ void loop() {
 	if (v > 0) {
 		*write_pos++ = v;
 
-		if (write_pos+1 == std::end(write_buffer))
+		if (write_pos+1 == std::end(write_buffer)) {
 			*(write_pos-1) = '\n';
 			v = '\n';
+		}
 
 		// Echo:
 		serialPort.putc(v);
