@@ -1,5 +1,5 @@
 /*
- * uart_demo.cpp - Motate
+ * buffered_uart_demo.cpp - Motate
  * This file is part of the Motate project.
  *
  * Copyright (c) 2014 Robert Giseburt
@@ -37,75 +37,54 @@
 // This makes the Motate:: prefix unnecessary.
 using namespace Motate;
 
-constexpr std::size_t write_buffer_size = 128;
-
-
-// Only one of these two lines should be uncommented:
-char write_buffer[write_buffer_size];
-//Buffer<write_buffer_size> write_buffer;
-
-// The above proves that write_buffer as a Buffer and as a raw char array will
-// generate the same file.
-
 // Setup an led to blink and show that the board's working...
 OutputPin<kLED1_PinNumber> led1_pin;
 
+// Create a buffer to hold the data to blast
+Motate::Buffer<1024> blast_buffer;
+
 /****** Create file-global objects ******/
 
-UART<> serialPort {9600};
+BufferedUART<kSerial_RX, kSerial_TX, 3, 2> serialPort {115200}; // 115200 is the default, as well.
+PinChangeHardwareProxy *Motate::GPIOIRQPin<2>::pinChangeProxy() {
+    return &(serialPort.hardware);
+}
+
+InputPin<2> ctsPin;
 
 /****** Optional setup() function ******/
 
 void setup() {
-	serialPort.write("Startup...done.\n");
-	serialPort.write("Type 0 to turn the light off, and 1 to turn it on.\n");
+    serialPort.write("Startup...done.\n");
+    serialPort.write("Type 0 to turn the light off, and 1 to turn it on.\n");
 
-	serialPort.write("Type: ");
+    serialPort.write("Type: ");
 }
 
 /****** Main run loop() ******/
 
-std::size_t currentPos = 0;
-char *write_pos = std::begin(write_buffer);
 
 void loop() {
 
-	int16_t v = serialPort.getc();
+    int16_t v = serialPort.getc();
 
-	if (v > 0) {
-		*write_pos++ = v;
+    if (v > 0) {
+	// Echo:
+	blast_buffer.write(v);
 
-		if (write_pos+1 == std::end(write_buffer)) {
-			*(write_pos-1) = '\n';
-			v = '\n';
-		}
+	switch ((char)v) {
+	    case '0':
+		led1_pin = 1;
+		break;
 
-		// Echo:
-		serialPort.putc(v);
+	    case '1':
+		led1_pin = 0;
+		break;
 
-		switch ((char)v) {
-			case '0':
-				led1_pin = 1;
-				break;
-
-			case '1':
-				led1_pin = 0;
-				break;
-
-//			default:
-		}
-
-		switch ((char)v) {
-			case '\n':
-			case '\r':
-				*write_pos = 0;
-				// Write a static string...
-				serialPort.write(write_buffer);
-
-				serialPort.write("Type: ");
-				write_pos = std::begin(write_buffer);
-
-				break;
-		}
+	    case '\n':
+	    case '\r':
+		serialPort.write(blast_buffer);
+		break;
 	}
+    }
 }
