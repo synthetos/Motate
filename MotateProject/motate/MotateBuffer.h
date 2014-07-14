@@ -39,10 +39,22 @@ namespace Motate {
     struct Buffer {
 	// Internal properties!
 	base_type _data[_size];
-	const base_type* _end_pos = _data+_size; // NOTE: _end_pos is one *past* the end of the buffer.
+	const base_type* const _end_pos = _data+_size; // NOTE: _end_pos is one *past* the end of the buffer.
 	volatile base_type* _read_pos = _data;
 	volatile base_type* _write_pos = _data;
 	volatile int16_t _available = _size;
+	volatile bool _write_locked = true;
+
+	struct _mutex {
+	    volatile bool &_mutex_lock;
+	    _mutex(volatile bool& _lockVar) : _mutex_lock {_lockVar} {
+		_mutex_lock = true;
+	    };
+
+	    ~_mutex() {
+		_mutex_lock = false;
+	    }
+	};
 
 	constexpr std::size_t size() { return _size; };
 
@@ -66,6 +78,7 @@ namespace Motate {
 
 	bool isEmpty() { return _available == _size; }
 	bool isFull() { return _available == 0; }
+	bool isLocked() { return _write_locked; }
 //	bool isEmpty() { return _read_pos == _write_pos; }
 //	bool isFull() { return nextReadPos() == _write_pos; }
 
@@ -86,7 +99,7 @@ namespace Motate {
 	};
 
 	int16_t read() {
-	    if (isEmpty())
+	    if (isEmpty() || isLocked())
 		return -1;
 
 	    int16_t ret = *_read_pos;
@@ -99,6 +112,8 @@ namespace Motate {
 	int16_t write(const base_type newValue) {
 	    if (isFull())
 		return -1;
+
+	    _mutex write_lock(_write_locked);
 
 	    // as quickly as possible we'll change the availability
 	    _available--;

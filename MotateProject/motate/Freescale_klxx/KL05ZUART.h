@@ -539,11 +539,15 @@ namespace Motate {
 			return;
 		    }
 		}
-		if (!txBuffer.isEmpty()) {
-		    parent::putc(txBuffer.read());
+		int16_t value = txBuffer.read();
+		if (value >= 0) {
+		    parent::putc(value);
 		}
 	    }
-	    if (txBuffer.isEmpty()) {
+	    if (txBuffer.isEmpty() || txBuffer.isLocked()) {
+		// This is tricky: If it's write locked, we have to bail, and SHUT OFF TxReady interrupts.
+		// On the ARM, it won't return to the main code as long as there's a pending interrupt,
+		// and the txReady interrupt will continue to fire, causing deadlock.
 		parent::setInterruptTxReady(false);
 	    }
 
