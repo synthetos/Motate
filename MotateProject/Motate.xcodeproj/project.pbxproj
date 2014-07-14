@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		D443391D196BB69B004A48F9 /* buffered_uart_demo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D443391B196BB69B004A48F9 /* buffered_uart_demo.cpp */; };
+		D443391E196BB69B004A48F9 /* buffered_uart_demo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D443391B196BB69B004A48F9 /* buffered_uart_demo.cpp */; };
+		D443391F196BB69B004A48F9 /* Makefile in Sources */ = {isa = PBXBuildFile; fileRef = D443391C196BB69B004A48F9 /* Makefile */; };
+		D4433920196BB69B004A48F9 /* Makefile in Sources */ = {isa = PBXBuildFile; fileRef = D443391C196BB69B004A48F9 /* Makefile */; };
 		D457117C17053EFA00EA19A8 /* Makefile in Sources */ = {isa = PBXBuildFile; fileRef = D457117B17053EFA00EA19A8 /* Makefile */; };
 		D48992C61965B460004F73A6 /* Makefile in Sources */ = {isa = PBXBuildFile; fileRef = D48992C41965B460004F73A6 /* Makefile */; };
 		D48992C71965B460004F73A6 /* Makefile in Sources */ = {isa = PBXBuildFile; fileRef = D48992C41965B460004F73A6 /* Makefile */; };
@@ -1280,6 +1284,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		D443391B196BB69B004A48F9 /* buffered_uart_demo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = buffered_uart_demo.cpp; sourceTree = "<group>"; };
+		D443391C196BB69B004A48F9 /* Makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
 		D457117B17053EFA00EA19A8 /* Makefile */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = Makefile; sourceTree = "<group>"; usesTabs = 1; xcLanguageSpecificationIdentifier = xcode.lang.sh; };
 		D48992C01965B118004F73A6 /* MotateBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MotateBuffer.h; path = motate/MotateBuffer.h; sourceTree = SOURCE_ROOT; };
 		D48992C41965B460004F73A6 /* Makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
@@ -4419,6 +4425,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		D4433919196BB69B004A48F9 /* buffered_uart */ = {
+			isa = PBXGroup;
+			children = (
+				D443391B196BB69B004A48F9 /* buffered_uart_demo.cpp */,
+				D443391C196BB69B004A48F9 /* Makefile */,
+			);
+			path = buffered_uart;
+			sourceTree = "<group>";
+		};
 		D45710B7170532AC00EA19A8 = {
 			isa = PBXGroup;
 			children = (
@@ -4434,8 +4449,8 @@
 		D48992C21965B460004F73A6 /* uart */ = {
 			isa = PBXGroup;
 			children = (
-				D48992C41965B460004F73A6 /* Makefile */,
 				D48992C51965B460004F73A6 /* uart_demo.cpp */,
+				D48992C41965B460004F73A6 /* Makefile */,
 			);
 			path = uart;
 			sourceTree = "<group>";
@@ -9844,6 +9859,7 @@
 		D4C79F19195BC80800A1BE28 /* demos */ = {
 			isa = PBXGroup;
 			children = (
+				D4433919196BB69B004A48F9 /* buffered_uart */,
 				D48992C21965B460004F73A6 /* uart */,
 				D4C79F22196216A300A1BE28 /* blink */,
 				D4C79F26196216A300A1BE28 /* fade */,
@@ -9888,17 +9904,31 @@
 			passBuildSettingsInEnvironment = 1;
 			productName = g3_due;
 		};
-		D4C78F731954DFAF00A1BE28 /* Motate FRDM-KL05Z */ = {
+		D4C4EF7E196DB49D00D1F791 /* Motate FRDM-KL05Z buffered_uart */ = {
 			isa = PBXLegacyTarget;
 			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 BOARD=FRDM-KL05Z";
-			buildConfigurationList = D4C78F741954DFAF00A1BE28 /* Build configuration list for PBXLegacyTarget "Motate FRDM-KL05Z" */;
+			buildConfigurationList = D4C4EF7F196DB49D00D1F791 /* Build configuration list for PBXLegacyTarget "Motate FRDM-KL05Z buffered_uart" */;
+			buildPhases = (
+			);
+			buildToolPath = /usr/bin/make;
+			buildWorkingDirectory = ./demos/buffered_uart;
+			dependencies = (
+			);
+			name = "Motate FRDM-KL05Z buffered_uart";
+			passBuildSettingsInEnvironment = 1;
+			productName = g3_due;
+		};
+		D4C78F731954DFAF00A1BE28 /* Motate FRDM-KL05Z uart */ = {
+			isa = PBXLegacyTarget;
+			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 BOARD=FRDM-KL05Z";
+			buildConfigurationList = D4C78F741954DFAF00A1BE28 /* Build configuration list for PBXLegacyTarget "Motate FRDM-KL05Z uart" */;
 			buildPhases = (
 			);
 			buildToolPath = /usr/bin/make;
 			buildWorkingDirectory = ./demos/uart;
 			dependencies = (
 			);
-			name = "Motate FRDM-KL05Z";
+			name = "Motate FRDM-KL05Z uart";
 			passBuildSettingsInEnvironment = 1;
 			productName = g3_due;
 		};
@@ -9967,7 +9997,8 @@
 			projectRoot = "";
 			targets = (
 				D45710C21705330C00EA19A8 /* Motate Due */,
-				D4C78F731954DFAF00A1BE28 /* Motate FRDM-KL05Z */,
+				D4C78F731954DFAF00A1BE28 /* Motate FRDM-KL05Z uart */,
+				D4C4EF7E196DB49D00D1F791 /* Motate FRDM-KL05Z buffered_uart */,
 				D457112317053BFB00EA19A8 /* index_sam */,
 				D4C79F2F19630FA000A1BE28 /* index_kl05z */,
 			);
@@ -10009,6 +10040,7 @@
 				D4C79CD11957C0AE00A1BE28 /* sys.cpp in Sources */,
 				D4C79D931957C0AE00A1BE28 /* stm32f4xx_hal_rcc_ex.c in Sources */,
 				D4C79D981957C0AE00A1BE28 /* stm32f4xx_hal_sd.c in Sources */,
+				D443391F196BB69B004A48F9 /* Makefile in Sources */,
 				D4C79EB81957C0AE00A1BE28 /* startup_stm32l1xx_hd.s in Sources */,
 				D4C79D741957C0AE00A1BE28 /* stm32f4xx_hal_cortex.c in Sources */,
 				D4C79CB31957C0AE00A1BE28 /* startup_MK64F12.s in Sources */,
@@ -10396,6 +10428,7 @@
 				D4C79D011957C0AE00A1BE28 /* vector_functions.s in Sources */,
 				D4C79D521957C0AE00A1BE28 /* stm32f10x_wwdg.c in Sources */,
 				D4C79D451957C0AE00A1BE28 /* stm32f10x_exti.c in Sources */,
+				D443391D196BB69B004A48F9 /* buffered_uart_demo.cpp in Sources */,
 				D4C79E611957C0AE00A1BE28 /* stm32f4xx_ll_fsmc.c in Sources */,
 				D4C79D4D1957C0AE00A1BE28 /* stm32f10x_rtc.c in Sources */,
 				D4C79DE81957C0AE00A1BE28 /* stm32f0xx_hal_tsc.c in Sources */,
@@ -10671,6 +10704,7 @@
 				D4C79F6B19630FA000A1BE28 /* system_MKL25Z4.c in Sources */,
 				D4C79F6C19630FA000A1BE28 /* stm32f4xx_hal_rcc.c in Sources */,
 				D4C79F6D19630FA000A1BE28 /* system_samd20.c in Sources */,
+				D443391E196BB69B004A48F9 /* buffered_uart_demo.cpp in Sources */,
 				D4C79F6E19630FA000A1BE28 /* sys.cpp in Sources */,
 				D4C79F6F19630FA000A1BE28 /* stm32f0xx_adc.c in Sources */,
 				D4C79F7019630FA000A1BE28 /* stm32f4xx_ll_sdmmc.c in Sources */,
@@ -11107,6 +11141,7 @@
 				D4C7A11E19630FA000A1BE28 /* vector_functions.s in Sources */,
 				D4C7A11F19630FA000A1BE28 /* stm32f4xx_hal_i2c.c in Sources */,
 				D4C7A12019630FA000A1BE28 /* stm32f0xx_hal_irda.c in Sources */,
+				D4433920196BB69B004A48F9 /* Makefile in Sources */,
 				D4C7A12119630FA000A1BE28 /* system_LPC11xx.c in Sources */,
 				D4C7A12219630FA000A1BE28 /* stm32f4xx_hal_smartcard.c in Sources */,
 				D4C7A12319630FA000A1BE28 /* sys.cpp in Sources */,
@@ -11344,6 +11379,22 @@
 			};
 			name = Release;
 		};
+		D4C4EF80196DB49D00D1F791 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "Motate FRDM-KL05Z copy";
+			};
+			name = Debug;
+		};
+		D4C4EF81196DB49D00D1F791 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "Motate FRDM-KL05Z copy";
+			};
+			name = Release;
+		};
 		D4C78F751954DFAF00A1BE28 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -11467,7 +11518,16 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		D4C78F741954DFAF00A1BE28 /* Build configuration list for PBXLegacyTarget "Motate FRDM-KL05Z" */ = {
+		D4C4EF7F196DB49D00D1F791 /* Build configuration list for PBXLegacyTarget "Motate FRDM-KL05Z buffered_uart" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D4C4EF80196DB49D00D1F791 /* Debug */,
+				D4C4EF81196DB49D00D1F791 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D4C78F741954DFAF00A1BE28 /* Build configuration list for PBXLegacyTarget "Motate FRDM-KL05Z uart" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				D4C78F751954DFAF00A1BE28 /* Debug */,

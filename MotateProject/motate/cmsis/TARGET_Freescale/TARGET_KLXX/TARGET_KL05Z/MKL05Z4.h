@@ -3607,7 +3607,6 @@ typedef struct {
  * @}
  */ /* end of group Backward_Compatibility_Symbols */
 
-
 #endif  /* #if !defined(MKL05Z4_H_) */
 
 /* MKL05Z4.h, eof. */

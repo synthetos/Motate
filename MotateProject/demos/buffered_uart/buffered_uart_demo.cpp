@@ -39,14 +39,20 @@ using namespace Motate;
 
 constexpr std::size_t write_buffer_size = 128;
 
+
+// Only one of these two lines should be uncommented:
 char write_buffer[write_buffer_size];
+//Buffer<write_buffer_size> write_buffer;
+
+// The above proves that write_buffer as a Buffer and as a raw char array will
+// generate the same file.
 
 // Setup an led to blink and show that the board's working...
 OutputPin<kLED1_PinNumber> led1_pin;
 
 /****** Create file-global objects ******/
 
-UART<> serialPort {115200}; // 115200 is the default, as well.
+UART<> serialPort {9600};
 
 /****** Optional setup() function ******/
 

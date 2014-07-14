@@ -285,7 +285,7 @@ REQUIRED_DIRS := $(BIN) $(OBJ) $(DEPDIR)
 MK_DIRS =   $(shell                              \
               for d in $(REQUIRED_DIRS);         \
               do                                 \
-				echo "Checking for $${d}"        \
+		echo "Checking for $${d}"        \
                 [[ -d $$d ]] || mkdir -p $$d;    \
               done)
 

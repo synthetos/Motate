@@ -35,16 +35,17 @@
 using namespace Motate;
 
 
-#if 0
+#if 1
 
 #define CheckAndCallInterruptForPortPin(portChar, portLetter, portPin) \
-if (ReversePinLookup<portChar, portPin>::interrupt != 0 && isr & 1 << portPin) {\
-    ReversePinLookup<portChar, portPin>::interrupt();\
+if (LookupGPIOIRQPin<portChar, portPin>::pinChangeProxy && (isr & (1 << portPin))) {\
+    LookupGPIOIRQPin<portChar, portPin>::pinChangeProxy()->pinChangeInterruptHandler();\
+    PORTA->ISFR |= (1 << portPin);\
 }
 
 
-extern "C" void PIOA_Handler(void) {
-    uint32_t isr = PIOA->PIO_ISR;
+extern "C" void PORTA_IRQHandler(void) {
+    uint32_t isr = PORTA->ISFR;
     
     CheckAndCallInterruptForPortPin('A', A,  0);
     CheckAndCallInterruptForPortPin('A', A,  1);
@@ -79,12 +80,12 @@ extern "C" void PIOA_Handler(void) {
     CheckAndCallInterruptForPortPin('A', A, 30);
     CheckAndCallInterruptForPortPin('A', A, 31);
 
-    NVIC_ClearPendingIRQ(PIOA_IRQn);
+    NVIC_ClearPendingIRQ(PORTA_IRQn);
 }
 
 
-extern "C" void PIOB_Handler(void) {
-    uint32_t isr = PIOB->PIO_ISR;
+extern "C" void PORTB_IRQHandler(void) {
+    uint32_t isr = PORTB->ISFR;
 
     CheckAndCallInterruptForPortPin('B', B,  0);
     CheckAndCallInterruptForPortPin('B', B,  1);
@@ -119,92 +120,9 @@ extern "C" void PIOB_Handler(void) {
     CheckAndCallInterruptForPortPin('B', B, 30);
     CheckAndCallInterruptForPortPin('B', B, 31);
 
-    NVIC_ClearPendingIRQ(PIOB_IRQn);
+    NVIC_ClearPendingIRQ(PORTB_IRQn);
 }
 
-#ifdef PIOC
-extern "C" void PIOC_Handler(void) {
-    uint32_t isr = PIOC->PIO_ISR;
-
-    CheckAndCallInterruptForPortPin('C', C,  0);
-    CheckAndCallInterruptForPortPin('C', C,  1);
-    CheckAndCallInterruptForPortPin('C', C,  2);
-    CheckAndCallInterruptForPortPin('C', C,  3);
-    CheckAndCallInterruptForPortPin('C', C,  4);
-    CheckAndCallInterruptForPortPin('C', C,  5);
-    CheckAndCallInterruptForPortPin('C', C,  6);
-    CheckAndCallInterruptForPortPin('C', C,  7);
-    CheckAndCallInterruptForPortPin('C', C,  8);
-    CheckAndCallInterruptForPortPin('C', C,  9);
-    CheckAndCallInterruptForPortPin('C', C, 10);
-    CheckAndCallInterruptForPortPin('C', C, 11);
-    CheckAndCallInterruptForPortPin('C', C, 12);
-    CheckAndCallInterruptForPortPin('C', C, 13);
-    CheckAndCallInterruptForPortPin('C', C, 14);
-    CheckAndCallInterruptForPortPin('C', C, 15);
-    CheckAndCallInterruptForPortPin('C', C, 16);
-    CheckAndCallInterruptForPortPin('C', C, 17);
-    CheckAndCallInterruptForPortPin('C', C, 18);
-    CheckAndCallInterruptForPortPin('C', C, 19);
-    CheckAndCallInterruptForPortPin('C', C, 20);
-    CheckAndCallInterruptForPortPin('C', C, 21);
-    CheckAndCallInterruptForPortPin('C', C, 22);
-    CheckAndCallInterruptForPortPin('C', C, 23);
-    CheckAndCallInterruptForPortPin('C', C, 24);
-    CheckAndCallInterruptForPortPin('C', C, 25);
-    CheckAndCallInterruptForPortPin('C', C, 26);
-    CheckAndCallInterruptForPortPin('C', C, 27);
-    CheckAndCallInterruptForPortPin('C', C, 28);
-    CheckAndCallInterruptForPortPin('C', C, 29);
-    CheckAndCallInterruptForPortPin('C', C, 30);
-    CheckAndCallInterruptForPortPin('C', C, 31);
-
-    NVIC_ClearPendingIRQ(PIOC_IRQn);
-}
-
-#endif // PORTC
-
-#ifdef PIOD
-extern "C" void PIOD_Handler(void) {
-    uint32_t isr = PIOD->PIO_ISR;
-
-    CheckAndCallInterruptForPortPin('D', D,  0);
-    CheckAndCallInterruptForPortPin('D', D,  1);
-    CheckAndCallInterruptForPortPin('D', D,  2);
-    CheckAndCallInterruptForPortPin('D', D,  3);
-    CheckAndCallInterruptForPortPin('D', D,  4);
-    CheckAndCallInterruptForPortPin('D', D,  5);
-    CheckAndCallInterruptForPortPin('D', D,  6);
-    CheckAndCallInterruptForPortPin('D', D,  7);
-    CheckAndCallInterruptForPortPin('D', D,  8);
-    CheckAndCallInterruptForPortPin('D', D,  9);
-    CheckAndCallInterruptForPortPin('D', D, 10);
-    CheckAndCallInterruptForPortPin('D', D, 11);
-    CheckAndCallInterruptForPortPin('D', D, 12);
-    CheckAndCallInterruptForPortPin('D', D, 13);
-    CheckAndCallInterruptForPortPin('D', D, 14);
-    CheckAndCallInterruptForPortPin('D', D, 15);
-    CheckAndCallInterruptForPortPin('D', D, 16);
-    CheckAndCallInterruptForPortPin('D', D, 17);
-    CheckAndCallInterruptForPortPin('D', D, 18);
-    CheckAndCallInterruptForPortPin('D', D, 19);
-    CheckAndCallInterruptForPortPin('D', D, 20);
-    CheckAndCallInterruptForPortPin('D', D, 21);
-    CheckAndCallInterruptForPortPin('D', D, 22);
-    CheckAndCallInterruptForPortPin('D', D, 23);
-    CheckAndCallInterruptForPortPin('D', D, 24);
-    CheckAndCallInterruptForPortPin('D', D, 25);
-    CheckAndCallInterruptForPortPin('D', D, 26);
-    CheckAndCallInterruptForPortPin('D', D, 27);
-    CheckAndCallInterruptForPortPin('D', D, 28);
-    CheckAndCallInterruptForPortPin('D', D, 29);
-    CheckAndCallInterruptForPortPin('D', D, 30);
-    CheckAndCallInterruptForPortPin('D', D, 31);
-
-    NVIC_ClearPendingIRQ(PIOD_IRQn);
-}
-
-#endif // PORTD
 
 #endif // 0
 

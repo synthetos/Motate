@@ -33,6 +33,16 @@
 #include "Freescale_klxx/KL05ZUART.h"
 
 namespace Motate {
+    _UARTHardwareProxy *uart0HardwareProxy = 0;
 }
+
+extern "C" void UART0_IRQHandler(void)  {
+    if (Motate::uart0HardwareProxy != 0) {
+	Motate::uart0HardwareProxy->uartInterruptHandler();
+	return;
+    }
+    while (1) ;
+}
+
 
 #endif

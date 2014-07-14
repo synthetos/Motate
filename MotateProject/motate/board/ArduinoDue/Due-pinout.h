@@ -70,7 +70,7 @@ namespace Motate {
     pin_number kLED2_PinNumber                  =  72;
     pin_number kLED3_PinNumber                  =  73;
 
-	pin_number kLED_USBRXPinNumber              =  72;
+    pin_number kLED_USBRXPinNumber              =  72;
     pin_number kLED_USBTXPinNumber              =  73;
 
 

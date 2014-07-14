@@ -37,156 +37,157 @@
 //#include "Freescale_klxx/KL05ZCommon.h"
 
 namespace Motate {
-	// Numbering is arbitrary:
-	enum PinMode {
-		kUnchanged      = 0,
-		kOutput         = 1,
-		kInput          = 2,
+    // Numbering is arbitrary:
+    enum PinMode {
+	kUnchanged      = 0,
+	kOutput         = 1,
+	kInput          = 2,
 
-		/* kPeripheral* is to prevent setting the mux to GPIO. */
-		/* This is for Motate internal-use only, and should never be in user-code. */
-		kPeripheralOutput = 3,
-		kPeripheralInput  = 4
-	};
+	/* kPeripheral* is to prevent setting the mux to GPIO. */
+	/* This is for Motate internal-use only, and should never be in user-code. */
+	kPeripheralOutput = 3,
+	kPeripheralInput  = 4
+    };
 
-	// Numbering is arbitrary, but bit unique for bitwise operations (unlike other architectures):
-	// Thses are NOT in order.
-	enum PinOptions {
-		kNormal         = 0,
-		kTotem          = 0, // alias
-		kPullUp         = 1<<1,
-		// KL05Z appears to not allow configuring pull direction, even though there's a register for it.
-		// They're all pull-up, except PTA0/SWD_CLK, which is pull-down.
+    // Numbering is arbitrary, but bit unique for bitwise operations (unlike other architectures):
+    // Thses are NOT in order.
+    enum PinOptions {
+	kNormal         = 0,
+	kTotem          = 0, // alias
+	kPullUp         = 1<<1,
+	// KL05Z appears to not allow configuring pull direction, even though there's a register for it.
+	// They're all pull-up, except PTA0/SWD_CLK, which is pull-down.
 #if !defined(MOTATE_AVR_COMPATIBILITY) && !defined(MOTATE_AVRX_COMPATIBILITY) && !defined(MOTATE_SAM_COMPATIBILITY)
-		// Drive strength control only works on:
-		//   PTA12, PTA13, PTB0, PTB1
-		kDriveStrengthLow  = 1<<2,
-		kDriveStrengthHigh = 1<<3,
+	// Drive strength control only works on:
+	//   PTA12, PTA13, PTB0, PTB1
+	kDriveStrengthLow  = 1<<2,
+	kDriveStrengthHigh = 1<<3,
 #endif // !MOTATE_AVR_COMPATIBILITY && !MOTATE_SAM_COMPATIBILITY
 
-		// The PinMux* modes are necessary for proper fuction of the library,
-		// but should NOT be used outside of Motate to maintain cross-platform support.
+	// The PinMux* modes are necessary for proper fuction of the library,
+	// but should NOT be used outside of Motate to maintain cross-platform support.
 
-		// Uses 4 bits
-		kPinMuxOffset      = 4,
-		kPinMuxOff         = (0b1000 | 0) << kPinMuxOffset,
-		kPinMux0           = (0b1000 | 0) << kPinMuxOffset, // alias
-		kPinMuxGPIO        = (0b1000 | 1) << kPinMuxOffset,
-		kPinMux1           = (0b1000 | 1) << kPinMuxOffset, // alias
-		kPinMux2           = (0b1000 | 2) << kPinMuxOffset,
-		kPinMux3           = (0b1000 | 3) << kPinMuxOffset,
-		kPinMux4           = (0b1000 | 4) << kPinMuxOffset,
-		kPinMux5           = (0b1000 | 5) << kPinMuxOffset,
-		kPinMux6           = (0b1000 | 6) << kPinMuxOffset,
-		kPinMux7           = (0b1000 | 7) << kPinMuxOffset,
-		kPinMuxSet         = 0b1000 << kPinMuxOffset,
-		kPinMuxMask        = 0b0111 << kPinMuxOffset,
+	// Uses 4 bits
+	kPinMuxOffset      = 4,
+	kPinMuxOff         = (0b1000 | 0) << kPinMuxOffset,
+	kPinMux0           = (0b1000 | 0) << kPinMuxOffset, // alias
+	kPinMuxGPIO        = (0b1000 | 1) << kPinMuxOffset,
+	kPinMux1           = (0b1000 | 1) << kPinMuxOffset, // alias
+	kPinMux2           = (0b1000 | 2) << kPinMuxOffset,
+	kPinMux3           = (0b1000 | 3) << kPinMuxOffset,
+	kPinMux4           = (0b1000 | 4) << kPinMuxOffset,
+	kPinMux5           = (0b1000 | 5) << kPinMuxOffset,
+	kPinMux6           = (0b1000 | 6) << kPinMuxOffset,
+	kPinMux7           = (0b1000 | 7) << kPinMuxOffset,
+	kPinMuxSet         = 0b1000 << kPinMuxOffset,
+	kPinMuxMask        = 0b0111 << kPinMuxOffset,
 
-		// For use on PWM pins only!
-		kPWMPinInverted    = 1<<8
-	};
-    
+	// For use on PWM pins only!
+	kPWMPinInverted    = 1<<8
+    };
+
     enum PinInterruptOptions {
         kPinInterruptsOff                = 0,
-        
+
         kPinInterruptOnChange            = 0b1011,
-        
+
         kPinInterruptOnRisingEdge        = 0b1001,
         kPinInterruptOnFallingEdge       = 0b1010,
-        
+
         kPinInterruptOnLowLevel          = 0b1000,
         kPinInterruptOnHighLevel         = 0b1100,
 
-		kPinInterruptTypeMask            = 0b1111,
+	kPinInterruptTypeMask            = 0b1111,
 
         /* This turns the IRQ on, but doesn't set the timer to ever trigger it. */
-		kPinInterruptOnSoftwareTrigger   = 1<<4,
+	kPinInterruptOnSoftwareTrigger   = 1<<4,
 
-		/* Set priority levels here as well: */
-		kPinInterruptPriorityHighest     = 1<<5,
-		kPinInterruptPriorityHigh        = 1<<6,
-		kPinInterruptPriorityMedium      = 1<<7,
-		kPinInterruptPriorityLow         = 1<<8,
-		kPinInterruptPriorityLowest      = 1<<9,
-        
+	/* Set priority levels here as well: */
+	kPinInterruptPriorityHighest     = 1<<5,
+	kPinInterruptPriorityHigh        = 1<<6,
+	kPinInterruptPriorityMedium      = 1<<7,
+	kPinInterruptPriorityLow         = 1<<8,
+	kPinInterruptPriorityLowest      = 1<<9,
+
         kPinInterruptPriorityMask        = ((1<<10) - (1<<5))
     };
-	
-	typedef uint32_t uintPort_t;
-    
-	typedef const int8_t pin_number;
 
-	template <unsigned char portLetter>
-	struct Port32 {
-		static const uint8_t letter = 0; // NULL stub!
+    typedef uint32_t uintPort_t;
 
-		static const uint32_t pmcId() {
+    typedef const int8_t pin_number;
+
+    template <unsigned char portLetter>
+    struct Port32 {
+	static const uint8_t letter = 0; // NULL stub!
+
+	static const uint32_t pmcId() {
             return 0;
         };
-		
-		void setModes(const uintPort_t value, const uintPort_t mask = 0xffffffff) {
-			// stub
-		};
-		void setOptions(const uint16_t options, const uintPort_t mask) {
-			// stub
-		};
-		void getModes() {
-			// stub
-		};
-		void getOptions() {
-			// stub
-		};
-		void set(const uintPort_t value) {
-			// stub
-		};
-		void clear(const uintPort_t value) {
-			// stub
-		};
-		void write(const uintPort_t value) {
-			// stub
-		};
-		void write(const uintPort_t value, const uintPort_t mask) {
-			// stub
-		};
-		uintPort_t getInputValues(const uintPort_t mask = 0xffffffff) {
-			// stub
-			return 0;
-		};
-		uintPort_t getOutputValues(const uintPort_t mask = 0xffffffff) {
-			// stub
-			return 0;
-		};
-	};
 
-	template<int8_t pinNum>
-	struct Pin {
-		static const int8_t number = -1;
-		static const uint8_t portLetter = 0;
-		static const uint32_t mask = 0;
-
-		Pin() {};
-		Pin(const PinMode type, const PinOptions options = kNormal) {};
-		void operator=(const bool value) {};
-		operator bool() { return 0; };
-		
-		void init(const PinMode type, const uint16_t options = kNormal, const bool fromConstructor=false) {};
-		void setMode(const PinMode type, const bool fromConstructor=false) {};
-		PinMode getMode() { return kUnchanged; };
-		void setOptions(const uint16_t options, const bool fromConstructor=false) {};
-		uint16_t getOptions() { return kNormal; };
-		void set() {};
-		void clear() {};
-		void write(const bool value) {};
-		void toggle() {};
-		uint8_t get() { return 0; };
-		uint8_t getInputValue() { return 0; };
-		uint8_t getOutputValue() { return 0; };
-		static uint32_t maskForPort(const uint8_t otherPortLetter) { return 0; };
-		bool isNull() { return true; };
-        
-        /* Placeholder for user code. */\
-        static void interrupt() __attribute__ ((weak));\
+	void setModes(const uintPort_t value, const uintPort_t mask = 0xffffffff) {
+	    // stub
 	};
+	void setOptions(const uint16_t options, const uintPort_t mask) {
+	    // stub
+	};
+	void getModes() {
+	    // stub
+	};
+	void getOptions() {
+	    // stub
+	};
+	void set(const uintPort_t value) {
+	    // stub
+	};
+	void clear(const uintPort_t value) {
+	    // stub
+	};
+	void write(const uintPort_t value) {
+	    // stub
+	};
+	void write(const uintPort_t value, const uintPort_t mask) {
+	    // stub
+	};
+	uintPort_t getInputValues(const uintPort_t mask = 0xffffffff) {
+	    // stub
+	    return 0;
+	};
+	uintPort_t getOutputValues(const uintPort_t mask = 0xffffffff) {
+	    // stub
+	    return 0;
+	};
+    };
+
+    template<int8_t pinNum>
+    struct Pin {
+	static const int8_t number = -1;
+	static const uint8_t portLetter = 0;
+	static const uint32_t mask = 0;
+
+	Pin() {};
+	Pin(const PinMode type, const PinOptions options = kNormal) {};
+	void operator=(const bool value) {};
+	operator bool() { return 0; };
+
+	void init(const PinMode type, const uint16_t options = kNormal, const bool fromConstructor=false) {};
+	void setMode(const PinMode type, const bool fromConstructor=false) {};
+	PinMode getMode() { return kUnchanged; };
+	void setOptions(const uint16_t options, const bool fromConstructor=false) {};
+	void setInterrupts(const uint32_t interrupts) {};
+	uint16_t getOptions() { return kNormal; };
+	void set() {};
+	void clear() {};
+	void write(const bool value) {};
+	void toggle() {};
+	uint8_t get() { return 0; };
+	uint8_t getInputValue() { return 0; };
+	uint8_t getOutputValue() { return 0; };
+	static uint32_t maskForPort(const uint8_t otherPortLetter) { return 0; };
+	bool isNull() { return true; };
+
+	/* Placeholder for user code. */
+	static void interrupt() __attribute__ ((weak));
+    };
 
     template<uint8_t portChar, uint8_t portPin>
 	struct ReversePinLookup : Pin<-1> {
@@ -194,241 +195,270 @@ namespace Motate {
 		ReversePinLookup(const PinMode type, const PinOptions options = kNormal) : Pin<-1>(type, options) {};
     };
     
-	template<int8_t pinNum>
-	struct InputPin : Pin<pinNum> {
-		InputPin() : Pin<pinNum>(kInput) {};
-		InputPin(const PinOptions options) : Pin<pinNum>(kInput, options) {};
-		void init(const PinOptions options = kNormal  ) {Pin<pinNum>::init(kInput, options);};
-		uint32_t get() {
-			return Pin<pinNum>::getInputValue();
-		};
-		/*Override these to pick up new methods */
-		operator bool() { return (get() != 0); };
-	private: /* Make these private to catch them early. These are intentionally not defined. */
-		void init(const PinMode type, const PinOptions options = kNormal);
-		void operator=(const bool value) { Pin<pinNum>::write(value); };
-		void write(const bool);
+    template<int8_t pinNum>
+    struct InputPin : Pin<pinNum> {
+	InputPin() : Pin<pinNum>(kInput) {};
+	InputPin(const PinOptions options) : Pin<pinNum>(kInput, options) {};
+	void init(const PinOptions options = kNormal  ) {Pin<pinNum>::init(kInput, options);};
+	uint32_t get() {
+	    return Pin<pinNum>::getInputValue();
 	};
+	/*Override these to pick up new methods */
+	operator bool() { return (get() != 0); };
+    private: /* Make these private to catch them early. These are intentionally not defined. */
+	void init(const PinMode type, const PinOptions options = kNormal);
+	void operator=(const bool value) { Pin<pinNum>::write(value); };
+	void write(const bool);
+    };
 
-	template<int8_t pinNum>
-	struct OutputPin : Pin<pinNum> {
-		OutputPin() : Pin<pinNum>(kOutput) {};
-		OutputPin(const PinOptions options) : Pin<pinNum>(kOutput, options) {};
-		void init(const PinOptions options = kNormal) {Pin<pinNum>::init(kOutput, options);};
-		uint32_t get() {
-			return Pin<pinNum>::getOutputValue();
-		};
-		void operator=(const bool value) { Pin<pinNum>::write(value); };
-		/*Override these to pick up new methods */
-		operator bool() { return (get() != 0); };
-	private: /* Make these private to catch them early. */
-		void init(const PinMode type, const PinOptions options = kNormal); /* Intentially not defined. */
-	};	
-	
+    template<int8_t pinNum>
+    struct OutputPin : Pin<pinNum> {
+	OutputPin() : Pin<pinNum>(kOutput) {};
+	OutputPin(const PinOptions options) : Pin<pinNum>(kOutput, options) {};
+	void init(const PinOptions options = kNormal) {Pin<pinNum>::init(kOutput, options);};
+	uint32_t get() {
+	    return Pin<pinNum>::getOutputValue();
+	};
+	void operator=(const bool value) { Pin<pinNum>::write(value); };
+	/*Override these to pick up new methods */
+	operator bool() { return (get() != 0); };
+    private: /* Make these private to catch them early. */
+	void init(const PinMode type, const PinOptions options = kNormal); /* Intentially not defined. */
+    };	
+
 	// TODO: Make the Pin<> use the appropriate Port<>, reducing duplication when there's no penalty
 	
     #define _MAKE_MOTATE_PIN(pinNum, registerLetter, registerChar, registerPin)\
-		template<>\
-		struct Pin<pinNum> {\
-		private: /* Lock the copy contructor.*/\
-			Pin(const Pin<pinNum>&){};\
-		public:\
-			static const int8_t number = pinNum;\
-			static const uint8_t portLetter = (uint8_t) registerChar;\
-			static const uint32_t mask = (1u << registerPin);\
-            \
-			Pin() {};\
-			Pin(const PinMode type, const PinOptions options = kNormal) {\
-				init(type, options, /*fromConstructor=*/true);\
-			};\
-			void operator=(const bool value) { write(value); };\
-			operator bool() { return (get() != 0); };\
-			\
-			void init(const PinMode type, const uint16_t options = kNormal | kDriveStrengthHigh, const bool fromConstructor=false) {\
-				/* Turn on the clock for this peripheral */\
-				/* ASSUMPTION: All ports are in SIM_SCGC5 on this processor */\
-				SIM->SCGC5 |= (SIM_SCGC5_PORT ## registerLetter ##_MASK);\
-				setMode(type, fromConstructor);\
-				setOptions(options, fromConstructor);\
-			};\
-			/* "Note: GPIO module is clocked by system clock." -- KL05 reference manual */\
-			void setMode(const PinMode type, const bool fromConstructor=false) {\
-				switch (type) {\
-					case kOutput:\
-						(*PORT ## registerLetter).PCR[registerPin] = \
-							((*PORT ## registerLetter).PCR[registerPin] & ~PORT_PCR_MUX_MASK) | PORT_PCR_MUX(kPinMuxGPIO >> kPinMuxOffset) ;\
-						/* NO break -- fall through: */\
-					case kPeripheralOutput:\
-						(*FPT ## registerLetter).PDDR |= mask ;\
-						break;\
-					\
-					case kInput:\
-						(*PORT ## registerLetter).PCR[registerPin] = \
-							((*PORT ## registerLetter).PCR[registerPin] & ~PORT_PCR_MUX_MASK) | PORT_PCR_MUX(kPinMuxGPIO >> kPinMuxOffset) ;\
-						/* NO break -- fall through: */\
-					case kPeripheralInput:\
-						(*FPT ## registerLetter).PDDR &= ~mask ;\
-						break;\
-					default:\
-						break;\
-				}\
-			};\
-			/* Note: getMode() does NOT check for peripheral modes. */\
-			PinMode getMode() {\
-				return ((*FPT ## registerLetter).PDOR & mask) ? kOutput : kInput;\
-			};\
-			void setOptions(const uint16_t options, const bool fromConstructor=false) {\
-				if (kPullUp & options)\
-				{\
-					(*PORT ## registerLetter).PCR[registerPin] |= PORT_PCR_PE_MASK ;\
-				}\
-				else\
-				{\
-					(*PORT ## registerLetter).PCR[registerPin] &= ~PORT_PCR_PE_MASK ;\
-				}\
-				if (kDriveStrengthHigh & options)\
-				{\
-					(*PORT ## registerLetter).PCR[registerPin] |= PORT_PCR_DSE_MASK ;\
-				}\
-				else\
-				{\
-					(*PORT ## registerLetter).PCR[registerPin] &= ~PORT_PCR_DSE_MASK ;\
-				}\
-				if (kPinMuxSet & options)\
-				{\
-					uint8_t mux_val = (options & kPinMuxMask) >> kPinMuxOffset;\
-					(*PORT ## registerLetter).PCR[registerPin] = \
-								((*PORT ## registerLetter).PCR[registerPin] & ~PORT_PCR_MUX_MASK) | PORT_PCR_MUX( mux_val ) ;\
-				}\
-			};\
-			uint32_t getOptions() {\
-				return (((*PORT ## registerLetter).PCR[registerPin] & PORT_PCR_PE_MASK) ? kPullUp : 0)\
-					| ( ( ((*PORT ## registerLetter).PCR[registerPin] & PORT_PCR_MUX_MASK) >> PORT_PCR_MUX_SHIFT ) << kPinMuxOffset );\
-			};\
-			void set() {\
-				(*FPT ## registerLetter).PSOR = mask ;\
-			};\
-			void clear() {\
-				(*FPT ## registerLetter).PCOR = mask ;\
-			};\
-			void write(const bool value) {\
-				if (!value)\
-					clear();\
-				else\
-					set();\
-			};\
-			void toggle()  {\
-				(*FPT ## registerLetter).PTOR = mask ;\
-			};\
-			uint32_t get() {\
-				return /*(*FPT ## registerLetter).PDDR & mask ?  */ \
-				/*	(*FPT ## registerLetter).PDOR & mask :*/ \
-					(*FPT ## registerLetter).PDIR & mask ; \
-			};\
-			uint32_t getInputValue() {\
-				return (*FPT ## registerLetter).PDIR & mask ; \
-			};\
-			uint32_t getOutputValue() {\
-				return (*FPT ## registerLetter).PDOR & mask ; \
-			};\
-            void setInterrupts(const uint32_t interrupts) {\
-                port ## registerLetter.setInterrupts(interrupts, mask);\
-            };\
-			bool isNull() { return false; };\
-			static uint32_t maskForPort(const uint8_t otherPortLetter) {\
-				return portLetter == otherPortLetter ? mask : 0x00u;\
-			};\
-            /* Placeholder for user code. */\
-            static void interrupt() __attribute__ ((weak));\
-			/* Motate internal use only: */\
-			bool getInterruptStatus() {\
-				return (*PORT ## registerLetter).PCR[registerPin] & PORT_PCR_ISF_MASK;\
-			};\
-			void clearInterruptStatus() {\
-				(*PORT ## registerLetter).PCR[registerPin] = PORT_PCR_ISF_MASK;\
-			};\
-		}; /* template<> struct Pin<pinNum> */\
-		typedef Pin<pinNum> Pin ## pinNum;\
-		static Pin ## pinNum pin ## pinNum;\
+	template<>\
+	struct Pin<pinNum> {\
+	private: /* Lock the copy contructor.*/\
+	    Pin(const Pin<pinNum>&){};\
+	public:\
+	    static const int8_t number = pinNum;\
+	    static const uint8_t portLetter = (uint8_t) registerChar;\
+	    static const uint32_t mask = (1u << registerPin);\
+	    \
+	    Pin() {};\
+	    Pin(const PinMode type, const PinOptions options = kNormal) {\
+		init(type, options, /*fromConstructor=*/true);\
+	    };\
+	    void operator=(const bool value) { write(value); };\
+	    operator bool() { return (get() != 0); };\
+	    \
+	    void init(const PinMode type, const uint16_t options = kNormal | kDriveStrengthHigh, const bool fromConstructor=false) {\
+		/* Turn on the clock for this peripheral */\
+		/* ASSUMPTION: All ports are in SIM_SCGC5 on this processor */\
+		SIM->SCGC5 |= (SIM_SCGC5_PORT ## registerLetter ##_MASK);\
+		setMode(type, fromConstructor);\
+		setOptions(options, fromConstructor);\
+	    };\
+	    /* "Note: GPIO module is clocked by system clock." -- KL05 reference manual */\
+	    void setMode(const PinMode type, const bool fromConstructor=false) {\
+		switch (type) {\
+		    case kOutput:\
+			(*PORT ## registerLetter).PCR[registerPin] = \
+			    ((*PORT ## registerLetter).PCR[registerPin] & ~PORT_PCR_MUX_MASK) | PORT_PCR_MUX(kPinMuxGPIO >> kPinMuxOffset) ;\
+			/* NO break -- fall through: */\
+		    case kPeripheralOutput:\
+			(*FPT ## registerLetter).PDDR |= mask ;\
+			break;\
+		    \
+		    case kInput:\
+			(*PORT ## registerLetter).PCR[registerPin] = \
+				((*PORT ## registerLetter).PCR[registerPin] & ~PORT_PCR_MUX_MASK) | PORT_PCR_MUX(kPinMuxGPIO >> kPinMuxOffset) ;\
+			/* NO break -- fall through: */\
+		    case kPeripheralInput:\
+			(*FPT ## registerLetter).PDDR &= ~mask ;\
+			break;\
+		    default:\
+			break;\
+		}\
+	    };\
+	    /* Note: getMode() does NOT check for peripheral modes. */\
+	    PinMode getMode() {\
+		    return ((*FPT ## registerLetter).PDOR & mask) ? kOutput : kInput;\
+	    };\
+	    void setOptions(const uint16_t options, const bool fromConstructor=false) {\
+		if (kPullUp & options)\
+		{\
+		    (*PORT ## registerLetter).PCR[registerPin] |= PORT_PCR_PE_MASK ;\
+		}\
+		else\
+		{\
+		    (*PORT ## registerLetter).PCR[registerPin] &= ~PORT_PCR_PE_MASK ;\
+		}\
+		if (kDriveStrengthHigh & options)\
+		{\
+		    (*PORT ## registerLetter).PCR[registerPin] |= PORT_PCR_DSE_MASK ;\
+		}\
+		else\
+		{\
+		    (*PORT ## registerLetter).PCR[registerPin] &= ~PORT_PCR_DSE_MASK ;\
+		}\
+		if (kPinMuxSet & options)\
+		{\
+		    uint8_t mux_val = (options & kPinMuxMask) >> kPinMuxOffset;\
+		    (*PORT ## registerLetter).PCR[registerPin] = \
+			((*PORT ## registerLetter).PCR[registerPin] & ~PORT_PCR_MUX_MASK) | PORT_PCR_MUX( mux_val ) ;\
+		}\
+	    };\
+	    uint32_t getOptions() {\
+		return (((*PORT ## registerLetter).PCR[registerPin] & PORT_PCR_PE_MASK) ? kPullUp : 0)\
+		    | ( ( ((*PORT ## registerLetter).PCR[registerPin] & PORT_PCR_MUX_MASK) >> PORT_PCR_MUX_SHIFT ) << kPinMuxOffset );\
+	    };\
+	    void set() {\
+		(*FPT ## registerLetter).PSOR = mask ;\
+	    };\
+	    void clear() {\
+		(*FPT ## registerLetter).PCOR = mask ;\
+	    };\
+	    void write(const bool value) {\
+		if (!value)\
+		    clear();\
+		else\
+		    set();\
+	    };\
+	    void toggle()  {\
+		(*FPT ## registerLetter).PTOR = mask ;\
+	    };\
+	    uint32_t get() {\
+		return /*(*FPT ## registerLetter).PDDR & mask ?  */ \
+		/*	(*FPT ## registerLetter).PDOR & mask :*/ \
+		    (*FPT ## registerLetter).PDIR & mask ; \
+	    };\
+	    uint32_t getInputValue() {\
+		return (*FPT ## registerLetter).PDIR & mask ; \
+	    };\
+	    uint32_t getOutputValue() {\
+		return (*FPT ## registerLetter).PDOR & mask ; \
+	    };\
+	    void setInterrupts(const uint32_t interrupts) {\
+		port ## registerLetter.setInterrupts(interrupts, mask);\
+	    };\
+	    bool isNull() { return false; };\
+	    static uint32_t maskForPort(const uint8_t otherPortLetter) {\
+		return portLetter == otherPortLetter ? mask : 0x00u;\
+	    };\
+	    /* Placeholder for user code. */\
+	    static void interrupt() __attribute__ ((weak));\
+	    /* Motate internal use only: */\
+	    bool getInterruptStatus() {\
+		return (*PORT ## registerLetter).PCR[registerPin] & PORT_PCR_ISF_MASK;\
+	    };\
+	    void clearInterruptStatus() {\
+		(*PORT ## registerLetter).PCR[registerPin] = PORT_PCR_ISF_MASK;\
+	    };\
+	}; /* template<> struct Pin<pinNum> */\
+	typedef Pin<pinNum> Pin ## pinNum;\
+	static Pin ## pinNum pin ## pinNum;\
         template<>\
         struct ReversePinLookup<registerChar, registerPin> : Pin<pinNum> {\
-			ReversePinLookup() {};\
-			ReversePinLookup(const PinMode type, const PinOptions options = kNormal) : Pin<pinNum>(type, options) {};\
+	    ReversePinLookup() {};\
+	    ReversePinLookup(const PinMode type, const PinOptions options = kNormal) : Pin<pinNum>(type, options) {};\
         };
 
 
-    
 
-	static const uint32_t kDefaultPWMFrequency = 1000;
-	template<int8_t pinNum>
+    static const uint32_t kDefaultPWMFrequency = 1000;
+    template<int8_t pinNum>
 	struct PWMOutputPin : Pin<pinNum> {
-		PWMOutputPin() : Pin<pinNum>(kOutput) {};
-		PWMOutputPin(const PinOptions options, const uint32_t freq = kDefaultPWMFrequency) : Pin<pinNum>(kOutput, options) {};
-		PWMOutputPin(const uint32_t freq) : Pin<pinNum>(kOutput, kNormal) {};
-		void setFrequency(const uint32_t freq) {};
-		void operator=(const float value) { write(value); };
-		void write(const float value) { Pin<pinNum>::write(value >= 0.5); };
-		void writeRaw(const uint16_t duty) { Pin<pinNum>::write(duty >= 50); };
-		uint16_t getTopValue() { return 100; };
-		bool canPWM() { return false; };
+	    PWMOutputPin() : Pin<pinNum>(kOutput) {};
+	    PWMOutputPin(const PinOptions options, const uint32_t freq = kDefaultPWMFrequency) : Pin<pinNum>(kOutput, options) {};
+	    PWMOutputPin(const uint32_t freq) : Pin<pinNum>(kOutput, kNormal) {};
+	    void setFrequency(const uint32_t freq) {};
+	    void operator=(const float value) { write(value); };
+	    void write(const float value) { Pin<pinNum>::write(value >= 0.5); };
+	    void writeRaw(const uint16_t duty) { Pin<pinNum>::write(duty >= 50); };
+	    uint16_t getTopValue() { return 100; };
+	    bool canPWM() { return false; };
 
-		/*Override these to pick up new methods */
+	    /*Override these to pick up new methods */
 
 	private: /* Make these private to catch them early. */
-		/* These are intentially not defined. */
-		void init(const PinMode type, const PinOptions options = kNormal);
+	    /* These are intentially not defined. */
+	    void init(const PinMode type, const PinOptions options = kNormal);
 
-		/* WARNING: Covariant return types! */
-		bool get();
-		operator bool();
+	    /* WARNING: Covariant return types! */
+	    bool get();
+	    operator bool();
 	};
 
-	#define _MAKE_MOTATE_PWM_PIN(registerChar, registerPin, timerOrPWM, channel, pinmuxNum, invertedByDefault)\
-		template<>\
-		struct PWMOutputPin< ReversePinLookup<registerChar, registerPin>::number > : Pin< ReversePinLookup<registerChar, registerPin>::number >, timerOrPWM {\
-			static const pin_number pinNum = ReversePinLookup<registerChar, registerPin>::number;\
-			PWMOutputPin() :\
-				Pin<pinNum>(kPeripheralOutput, kPinMux ## pinmuxNum), timerOrPWM(Motate::kTimerUpToMatch, kDefaultPWMFrequency)\
-				{pwmpin_init(kNormal);};\
-			\
-			PWMOutputPin(const PinOptions options, const uint32_t freq = kDefaultPWMFrequency) :\
-			Pin<pinNum>(kPeripheralOutput, kPinMux ## pinmuxNum), timerOrPWM(Motate::kTimerUpToMatch, kDefaultPWMFrequency)\
-			{pwmpin_init(options);};\
-			\
-			PWMOutputPin(const uint32_t freq) :\
-				Pin<pinNum>(kPeripheralOutput, kPinMux ## pinmuxNum), timerOrPWM(Motate::kTimerUpToMatch, freq)\
-				{pwmpin_init(kNormal);};\
-			\
-			void pwmpin_init(const PinOptions options) {\
-				timerOrPWM::setOutputOptions(channel, (invertedByDefault ^ ((options & kPWMPinInverted)?true:false)) ? kPWMOnInverted : kPWMOn);\
-				timerOrPWM::start();\
-			};\
-			\
-			void setFrequency(const uint32_t freq) {\
-				timerOrPWM::setModeAndFrequency(Motate::kTimerUpToMatch, freq);\
-				timerOrPWM::start();\
-			};\
-			void operator=(const float value) { write(value); };\
-			void write(const float value) {\
-				uint16_t duty = getTopValue() * value;\
-				timerOrPWM::setExactDutyCycle(channel, duty);\
-			};\
-			void writeRaw(const uint16_t duty) {\
-				timerOrPWM::setExactDutyCycle(channel, duty);\
-			};\
-			bool canPWM() { return true; };\
-			/*Override these to pick up new methods */\
-		private: /* Make these private to catch them early. */\
-			/* These are intentially not defined. */\
-			void init(const PinMode type, const PinOptions options = kNormal);\
-			/* WARNING: Covariant return types! */\
-			bool get();\
-			operator bool();\
-		};
+    #define _MAKE_MOTATE_PWM_PIN(registerChar, registerPin, timerOrPWM, channel, pinmuxNum, invertedByDefault)\
+	template<>\
+	struct PWMOutputPin< ReversePinLookup<registerChar, registerPin>::number > : Pin< ReversePinLookup<registerChar, registerPin>::number >, timerOrPWM {\
+	    static const pin_number pinNum = ReversePinLookup<registerChar, registerPin>::number;\
+	    PWMOutputPin() :\
+		Pin<pinNum>(kPeripheralOutput, kPinMux ## pinmuxNum), timerOrPWM(Motate::kTimerUpToMatch, kDefaultPWMFrequency)\
+		{pwmpin_init(kNormal);};\
+	    \
+	    PWMOutputPin(const PinOptions options, const uint32_t freq = kDefaultPWMFrequency) :\
+	    Pin<pinNum>(kPeripheralOutput, kPinMux ## pinmuxNum), timerOrPWM(Motate::kTimerUpToMatch, kDefaultPWMFrequency)\
+	    {pwmpin_init(options);};\
+	    \
+	    PWMOutputPin(const uint32_t freq) :\
+		Pin<pinNum>(kPeripheralOutput, kPinMux ## pinmuxNum), timerOrPWM(Motate::kTimerUpToMatch, freq)\
+		{pwmpin_init(kNormal);};\
+	    \
+	    void pwmpin_init(const PinOptions options) {\
+		timerOrPWM::setOutputOptions(channel, (invertedByDefault ^ ((options & kPWMPinInverted)?true:false)) ? kPWMOnInverted : kPWMOn);\
+		timerOrPWM::start();\
+	    };\
+	    \
+	    void setFrequency(const uint32_t freq) {\
+		timerOrPWM::setModeAndFrequency(Motate::kTimerUpToMatch, freq);\
+		timerOrPWM::start();\
+	    };\
+	    void operator=(const float value) { write(value); };\
+	    void write(const float value) {\
+		uint16_t duty = getTopValue() * value;\
+		timerOrPWM::setExactDutyCycle(channel, duty);\
+	    };\
+	    void writeRaw(const uint16_t duty) {\
+		timerOrPWM::setExactDutyCycle(channel, duty);\
+	    };\
+	    bool canPWM() { return true; };\
+	    /*Override these to pick up new methods */\
+	private: /* Make these private to catch them early. */\
+	    /* These are intentially not defined. */\
+	    void init(const PinMode type, const PinOptions options = kNormal);\
+	    /* WARNING: Covariant return types! */\
+	    bool get();\
+	    operator bool();\
+	};
+
+    struct PinChangeHardwareProxy {
+	virtual void pinChangeInterruptHandler() = 0;
+    };
+
+    template<int8_t pinNum>
+    struct GPIOIRQPin : Pin<-1> {
+	static const bool is_real = false;
+	static PinChangeHardwareProxy *pinChangeProxy() __attribute__ (( weak ));
+    };
+
+    template<int8_t pinNum>
+	constexpr const bool IsGPIOIRQPin() { return GPIOIRQPin<pinNum>::is_real; };
+
+    template<pin_number gpioPinNumber>
+	using IsGPIOIRQOrNull = typename std::enable_if<
+	    gpioPinNumber == -1 || IsGPIOIRQPin<gpioPinNumber>()
+	>::type;
+
+    template<uint8_t portChar, uint8_t portPin>
+    using LookupGPIOIRQPin = GPIOIRQPin< ReversePinLookup<portChar, portPin>::number >;
+
+    #define _MAKE_MOTATE_GPIO_IRQ_PIN(registerChar, registerPin)\
+        template<>\
+        struct GPIOIRQPin< ReversePinLookup<registerChar, registerPin>::number > : ReversePinLookup<registerChar, registerPin> {\
+	    GPIOIRQPin() : ReversePinLookup<registerChar, registerPin>(kInput) {};\
+	    GPIOIRQPin(const PinOptions options) : ReversePinLookup<registerChar, registerPin>(kInput, options) {};\
+	    static const bool is_real = true;\
+	    static PinChangeHardwareProxy *pinChangeProxy() __attribute__ (( weak ));\
+        };
 
     template<int8_t pinNum>
 	struct SPIChipSelectPin {
-		static const bool is_real = std::false_type::value;
+		static const bool is_real = false;
 	};
 
     template<int8_t pinNum>
@@ -439,13 +469,13 @@ namespace Motate {
         struct SPIChipSelectPin< ReversePinLookup<registerChar, registerPin>::number > : ReversePinLookup<registerChar, registerPin> {\
             SPIChipSelectPin() : ReversePinLookup<registerChar, registerPin>(kUnchanged, kPinMux ## pinmuxNum) {};\
             static const uint8_t moduleId = 0; \
-			static const bool is_real = std::true_type::value;\
+	    static const bool is_real = true;\
         };
 
     
     template<int8_t pinNum>
 	struct SPIMISOPin {
-		static const bool is_real = std::false_type::value;
+		static const bool is_real = false;
 	};
 
 	template <int8_t pinNum>
@@ -456,13 +486,13 @@ namespace Motate {
         struct SPIMISOPin< ReversePinLookup<registerChar, registerPin>::number > : ReversePinLookup<registerChar, registerPin> {\
             SPIMISOPin() : ReversePinLookup<registerChar, registerPin>(kInput, kPinMux ## pinmuxNum) {};\
             static const uint8_t moduleId = 0; \
-			static const bool is_real = std::true_type::value;\
+	    static const bool is_real = true;\
         };
 
     
     template<int8_t pinNum>
 	struct SPIMOSIPin {
-		static const bool is_real = std::false_type::value;
+		static const bool is_real = false;
 	};
 
 	template <int8_t pinNum>
@@ -473,13 +503,13 @@ namespace Motate {
         struct SPIMOSIPin< ReversePinLookup<registerChar, registerPin>::number > : ReversePinLookup<registerChar, registerPin> {\
             SPIMOSIPin() : ReversePinLookup<registerChar, registerPin>(kOutput, kPinMux ## pinmuxNum) {};\
             static const uint8_t moduleId = 0; \
-			static const bool is_real = std::true_type::value;\
+	    static const bool is_real = true;\
         };
 
     
     template<int8_t pinNum>
 	struct SPISCKPin {
-		static const bool is_real = std::false_type::value;
+		static const bool is_real = false;
 	};
 
 	template <int8_t pinNum>
@@ -490,14 +520,14 @@ namespace Motate {
         struct SPISCKPin< ReversePinLookup<registerChar, registerPin>::number > : ReversePinLookup<registerChar, registerPin> {\
             SPISCKPin() : ReversePinLookup<registerChar, registerPin>(kOutput, kPinMux ## pinmuxNum) {};\
             static const uint8_t moduleId = 0; \
-			static const bool is_real = std::true_type::value;\
+	    static const bool is_real = true;\
         };
 
 	
     
     template<int8_t pinNum>
 	struct UARTTxPin {
-		static const bool is_real = std::false_type::value;
+	    static const bool is_real = false;
 	};
 
 	template <int8_t pinNum>
@@ -508,13 +538,13 @@ namespace Motate {
         struct UARTTxPin< ReversePinLookup<registerChar, registerPin>::number > : ReversePinLookup<registerChar, registerPin> {\
             UARTTxPin() : ReversePinLookup<registerChar, registerPin>(kPeripheralOutput, kPinMux ## pinmuxNum) {};\
             static const uint8_t moduleId = 0; \
-			static const bool is_real = std::true_type::value;\
+	    static const bool is_real = true;\
         };
 	
     
     template<int8_t pinNum>
 	struct UARTRxPin {
-		static const bool is_real = std::false_type::value;
+		static const bool is_real = false;
 	};
 
 	template <int8_t pinNum>
@@ -525,100 +555,100 @@ namespace Motate {
         struct UARTRxPin< ReversePinLookup<registerChar, registerPin>::number > : ReversePinLookup<registerChar, registerPin> {\
             UARTRxPin() : ReversePinLookup<registerChar, registerPin>(kPeripheralInput, kPinMux ## pinmuxNum) {};\
             static const uint8_t moduleId = 0; \
-			static const bool is_real = std::true_type::value;\
+	    static const bool is_real = true;\
         };
 
 
-	#define _MAKE_MOTATE_PORT32(registerLetter, registerChar)\
-		template <>\
-		struct Port32<registerChar> {\
-			static const uint8_t letter = (uint8_t) registerChar;\
-			void setModes(const uintPort_t value, const uintPort_t mask) {\
-				(*FPT ## registerLetter).PDDR = ((*FPT ## registerLetter).PDDR & ~mask) | value ;\
-			};\
-			void setOptions(const uint16_t options, const uintPort_t mask) {\
-				uint16_t tempWriteValue = 0;\
-				if (kPullUp & options)\
-				{\
-					tempWriteValue |= PORT_PCR_PE_MASK ;\
-				}\
-				if (kDriveStrengthHigh & options)\
-				{\
-					tempWriteValue |= PORT_PCR_DSE_MASK ;\
-				}\
-				if (kPinMuxSet & options)\
-				{\
-					tempWriteValue |= PORT_PCR_MUX((options & kPinMuxMask) >> kPinMuxOffset) ;\
-				}\
-				if (mask & 0x0000ffff) {\
-					(*PORT ## registerLetter).GPCHR = PORT_GPCLR_GPWD(tempWriteValue) | PORT_GPCLR_GPWE(mask & 0x0000ffff);\
-				}\
-				if (mask & 0xffff0000) {\
-					(*PORT ## registerLetter).GPCHR = PORT_GPCHR_GPWD(tempWriteValue) | PORT_GPCHR_GPWE((mask >> 16) & 0x0000ffff);\
-				}\
-			};\
-			void set(const uintPort_t value) {\
-				(*FPT ## registerLetter).PSOR = value ;\
-			};\
-			void clear(const uintPort_t value) {\
-				(*FPT ## registerLetter).PCOR = value ;\
-			};\
-			void write(const uintPort_t value) {\
-				(*FPT ## registerLetter).PDOR = value ;\
-			};\
-			void write(const uintPort_t value, const uintPort_t mask) {\
-				(*FPT ## registerLetter).PDOR = ((*FPT ## registerLetter).PDOR & ~mask) | (value & ~mask) ;\
-			};\
-			uintPort_t getInputValues(const uintPort_t mask) {\
-				return (*FPT ## registerLetter).PDIR & mask ; \
-			};\
-			uintPort_t getOutputValues(const uintPort_t mask) {\
-				return (*FPT ## registerLetter).PDOR & mask ; \
-			};\
-            void setInterrupts(const uint32_t interrupts, const uintPort_t mask) {\
-                if (mask != 0) {\
-					/* We can't use the Global Port Control registers for interrupts */ \
-					/* WARNING: This uses a gcc extension! */ \
-					uintPort_t mask_temp = mask;\
-					do {\
-						uint32_t pinNum = __builtin_ctz(mask_temp);\
-						mask_temp ^= 1 << pinNum; \
-						(*PORT ## registerLetter).PCR[pinNum] = \
-							((*PORT ## registerLetter).PCR[pinNum] & ~PORT_PCR_IRQC_MASK) | PORT_PCR_IRQC(interrupts & kPinInterruptTypeMask) ;\
-					} while (mask_temp != 0); \
-				}\
-				if (interrupts != kPinInterruptsOff) {\
-                    /* Set interrupt priority */\
-                    if (interrupts & kPinInterruptPriorityMask) {\
-                        if (interrupts & kPinInterruptPriorityHighest) {\
-                            NVIC_SetPriority(PORT ## registerLetter ## _IRQn, 0);\
-                        }\
-                        else if (interrupts & kPinInterruptPriorityHigh) {\
-                            NVIC_SetPriority(PORT ## registerLetter ## _IRQn, 3);\
-                        }\
-                        else if (interrupts & kPinInterruptPriorityMedium) {\
-                            NVIC_SetPriority(PORT ## registerLetter ## _IRQn, 7);\
-                        }\
-                        else if (interrupts & kPinInterruptPriorityLow) {\
-                            NVIC_SetPriority(PORT ## registerLetter ## _IRQn, 11);\
-                        }\
-                        else if (interrupts & kPinInterruptPriorityLowest) {\
-                            NVIC_SetPriority(PORT ## registerLetter ## _IRQn, 15);\
-                        }\
-                    }\
-                    /* Enable the IRQ */\
-                    NVIC_EnableIRQ(PORT ## registerLetter ## _IRQn);\
-                } else {\
-					/* Ugly: We'd have to lop through all the pins of this port to make sure all interrupts are off. */\
-					/* NVIC_DisableIRQ(PORT ## registerLetter ## _IRQn); */\
-                }\
-            };\
-		};\
-		typedef Port32<registerChar> Port ## registerLetter;\
-		static Port ## registerLetter port ## registerLetter;
+    #define _MAKE_MOTATE_PORT32(registerLetter, registerChar)\
+	template <>\
+	struct Port32<registerChar> {\
+	    static const uint8_t letter = (uint8_t) registerChar;\
+	    void setModes(const uintPort_t value, const uintPort_t mask) {\
+		(*FPT ## registerLetter).PDDR = ((*FPT ## registerLetter).PDDR & ~mask) | value ;\
+	    };\
+	    void setOptions(const uint16_t options, const uintPort_t mask) {\
+		uint16_t tempWriteValue = 0;\
+		if (kPullUp & options)\
+		{\
+		    tempWriteValue |= PORT_PCR_PE_MASK ;\
+		}\
+		if (kDriveStrengthHigh & options)\
+		{\
+		    tempWriteValue |= PORT_PCR_DSE_MASK ;\
+		}\
+		if (kPinMuxSet & options)\
+		{\
+		    tempWriteValue |= PORT_PCR_MUX((options & kPinMuxMask) >> kPinMuxOffset) ;\
+		}\
+		if (mask & 0x0000ffff) {\
+		    (*PORT ## registerLetter).GPCHR = PORT_GPCLR_GPWD(tempWriteValue) | PORT_GPCLR_GPWE(mask & 0x0000ffff);\
+		}\
+		if (mask & 0xffff0000) {\
+		    (*PORT ## registerLetter).GPCHR = PORT_GPCHR_GPWD(tempWriteValue) | PORT_GPCHR_GPWE((mask >> 16) & 0x0000ffff);\
+		}\
+	    };\
+	    void set(const uintPort_t value) {\
+		(*FPT ## registerLetter).PSOR = value ;\
+	    };\
+	    void clear(const uintPort_t value) {\
+		(*FPT ## registerLetter).PCOR = value ;\
+	    };\
+	    void write(const uintPort_t value) {\
+		(*FPT ## registerLetter).PDOR = value ;\
+	    };\
+	    void write(const uintPort_t value, const uintPort_t mask) {\
+		(*FPT ## registerLetter).PDOR = ((*FPT ## registerLetter).PDOR & ~mask) | (value & ~mask) ;\
+	    };\
+	    uintPort_t getInputValues(const uintPort_t mask) {\
+		return (*FPT ## registerLetter).PDIR & mask ; \
+	    };\
+	    uintPort_t getOutputValues(const uintPort_t mask) {\
+		return (*FPT ## registerLetter).PDOR & mask ; \
+	    };\
+	    void setInterrupts(const uint32_t interrupts, const uintPort_t mask) {\
+		if (mask != 0) {\
+		    /* We can't use the Global Port Control registers for interrupts */ \
+		    /* WARNING: This uses a gcc extension! */ \
+		    uintPort_t mask_temp = mask;\
+		    do {\
+			uint32_t pinNum = __builtin_ctz(mask_temp);\
+			mask_temp ^= 1 << pinNum; \
+			(*PORT ## registerLetter).PCR[pinNum] = \
+				((*PORT ## registerLetter).PCR[pinNum] & ~PORT_PCR_IRQC_MASK) | PORT_PCR_IRQC(interrupts & kPinInterruptTypeMask) ;\
+		    } while (mask_temp != 0); \
+		}\
+		if (interrupts != kPinInterruptsOff) {\
+		    /* Set interrupt priority */\
+		    if (interrupts & kPinInterruptPriorityMask) {\
+			if (interrupts & kPinInterruptPriorityHighest) {\
+			    NVIC_SetPriority(PORT ## registerLetter ## _IRQn, 0);\
+			}\
+			else if (interrupts & kPinInterruptPriorityHigh) {\
+			    NVIC_SetPriority(PORT ## registerLetter ## _IRQn, 3);\
+			}\
+			else if (interrupts & kPinInterruptPriorityMedium) {\
+			    NVIC_SetPriority(PORT ## registerLetter ## _IRQn, 7);\
+			}\
+			else if (interrupts & kPinInterruptPriorityLow) {\
+			    NVIC_SetPriority(PORT ## registerLetter ## _IRQn, 11);\
+			}\
+			else if (interrupts & kPinInterruptPriorityLowest) {\
+			    NVIC_SetPriority(PORT ## registerLetter ## _IRQn, 15);\
+			}\
+		    }\
+		    /* Enable the IRQ */\
+		    NVIC_EnableIRQ(PORT ## registerLetter ## _IRQn);\
+		} else {\
+		    /* Ugly: We'd have to lop through all the pins of this port to make sure all interrupts are off. */\
+		    /* NVIC_DisableIRQ(PORT ## registerLetter ## _IRQn); */\
+		}\
+	    };\
+	};\
+	typedef Port32<registerChar> Port ## registerLetter;\
+	static Port ## registerLetter port ## registerLetter;
 
-	typedef Pin<-1> NullPin;
-	static NullPin nullPin;
+    typedef Pin<-1> NullPin;
+    static NullPin nullPin;
     
 } // end namespace Motate
 

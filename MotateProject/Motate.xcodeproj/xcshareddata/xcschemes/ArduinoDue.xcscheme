@@ -22,38 +22,10 @@
          </BuildActionEntry>
          <BuildActionEntry
             buildForTesting = "NO"
-            buildForRunning = "YES"
-            buildForProfiling = "NO"
-            buildForArchiving = "NO"
-            buildForAnalyzing = "YES">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "D4C78F731954DFAF00A1BE28"
-               BuildableName = "Motate FRDM-KL05Z uart"
-               BlueprintName = "Motate FRDM-KL05Z uart"
-               ReferencedContainer = "container:Motate.xcodeproj">
-            </BuildableReference>
-         </BuildActionEntry>
-         <BuildActionEntry
-            buildForTesting = "NO"
-            buildForRunning = "YES"
-            buildForProfiling = "NO"
-            buildForArchiving = "NO"
-            buildForAnalyzing = "YES">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "D4C4EF7E196DB49D00D1F791"
-               BuildableName = "Motate FRDM-KL05Z buffered_uart"
-               BlueprintName = "Motate FRDM-KL05Z buffered_uart"
-               ReferencedContainer = "container:Motate.xcodeproj">
-            </BuildableReference>
-         </BuildActionEntry>
-         <BuildActionEntry
-            buildForTesting = "NO"
             buildForRunning = "NO"
             buildForProfiling = "NO"
             buildForArchiving = "NO"
-            buildForAnalyzing = "NO">
+            buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "D4C77F651950912300A1BE28"
