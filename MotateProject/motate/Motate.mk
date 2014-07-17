@@ -194,7 +194,7 @@ endif
 #
 
 # Output file basename
-OUTPUT_BIN = $(BIN)/$(BOARD)
+OUTPUT_BIN = $(BIN)/$(PROJECT)
 
 # Compilation tools
 CC      = $(CROSS_COMPILE)-gcc
@@ -375,16 +375,16 @@ debug: $(OUTPUT_BIN).elf
 #		Default $(PROJECT).elf, and clean
 #-------------------------------------------------------------------------------
 
-$(BOARD).elf: $(OUTPUT_BIN).elf
+$(PROJECT).elf: $(OUTPUT_BIN).elf
 	$(CP) $< $@
 
-$(BOARD).map: $(OUTPUT_BIN).map
+$(PROJECT).map: $(OUTPUT_BIN).map
 	$(CP) $< $@
 
-$(BOARD).hex: $(OUTPUT_BIN).elf
+$(PROJECT).hex: $(OUTPUT_BIN).elf
 	$(QUIET)$(OBJCOPY) -O ihex $< $@
 
-$(BOARD).bin: $(OUTPUT_BIN).elf
+$(PROJECT).bin: $(OUTPUT_BIN).elf
 	$(QUIET)$(OBJCOPY) -O binary $< $@
 
 clean:

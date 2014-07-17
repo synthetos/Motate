@@ -91,6 +91,10 @@ SECTIONS
         KEEP (*crtend.o(.dtors))
 
         KEEP(*(.eh_frame*))
+
+        PROVIDE(motate_pin_change_interrupts_start = .);
+        KEEP( *(.motate.pin_change_interrupts));
+        PROVIDE(motate_pin_change_interrupts_end = .);
     } > FLASH
 
     __exidx_start = .;
@@ -108,7 +112,7 @@ SECTIONS
         *(vtable)
         *(.data*)
 
-		/* Place C++ constructors (etc) here to move them to RAM. */
+        /* Place C++ constructors (etc) here to move them to RAM. */
 
         . = ALIGN(4);
         /* All data end */

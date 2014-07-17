@@ -435,7 +435,7 @@ namespace Motate {
     extern _UARTHardwareProxy *uart0HardwareProxy;
 
     template<uint8_t uartPeripheralNumber, pin_number rtsPinNumber, pin_number ctsPinNumber, typename rxBufferClass, typename txBufferClass>
-    struct _BufferedUARTHardware : _UARTHardware<uartPeripheralNumber>, _UARTHardwareProxy, PinChangeHardwareProxy {
+    struct _BufferedUARTHardware : _UARTHardware<uartPeripheralNumber>, _UARTHardwareProxy {
 	rxBufferClass rxBuffer;
 	txBufferClass txBuffer;
 
@@ -445,10 +445,11 @@ namespace Motate {
 	uint32_t txDelayAfterResume = 3;
 	uint32_t txDelayUntilTime   = 0;
 
-	bool _rtsCtsFlowControl  = false;
-	bool _xonXoffFlowControl = false;
-	bool _xonXoffCanSend     = true;
-	char _xonXoffStartStop   = 0;
+	bool _rtsCtsFlowControl    = false;
+	bool _xonXoffFlowControl   = false;
+	volatile bool _xonXoffCanSend       = true;
+	volatile char _xonXoffStartStop     = kUARTXOn;
+	volatile bool _xonXoffStartStopSent = true;
 
 	typedef _UARTHardware<uartPeripheralNumber> parent;
 
@@ -468,18 +469,25 @@ namespace Motate {
 		_rtsCtsFlowControl = true;
 		parent::setInterruptTxReady(!canSend());
 		ctsPin.setInterrupts(kPinInterruptOnChange);
-	    }
+	    } else {
+                _rtsCtsFlowControl = false;
+            }
 	    if (options & UARTMode::XonXoffFlowControl) {
 		_xonXoffFlowControl = true;
-	    }
+	    } else {
+                _xonXoffFlowControl = false;
+                _xonXoffStartStopSent = true;
+            }
 	}
 
 	void stopRx() {
 	    if (_rtsCtsFlowControl) {
 		rtsPin = true;
 	    }
-	    if (_xonXoffFlowControl) {
+	    if (_xonXoffFlowControl && _xonXoffStartStop != kUARTXOff) {
 		_xonXoffStartStop = kUARTXOff;
+                _xonXoffStartStopSent = false;
+                parent::setInterruptTxReady(true);
 	    }
 	};
 
@@ -487,8 +495,10 @@ namespace Motate {
 	    if (_rtsCtsFlowControl) {
 		rtsPin = false;
 	    }
-	    if (_xonXoffFlowControl) {
+	    if (_xonXoffFlowControl && _xonXoffStartStop != kUARTXOn) {
 		_xonXoffStartStop = kUARTXOn;
+                _xonXoffStartStopSent = false;
+                parent::setInterruptTxReady(true);
 	    }
 	};
 
@@ -533,9 +543,9 @@ namespace Motate {
 		    return;
 		txDelayUntilTime = 0;
 		if (_xonXoffFlowControl) {
-		    if (_xonXoffStartStop) {
+		    if (_xonXoffStartStopSent == false) {
 			parent::putc(_xonXoffStartStop);
-			_xonXoffStartStop = 0;
+			_xonXoffStartStopSent = true;
 			return;
 		    }
 		}
@@ -570,7 +580,7 @@ namespace Motate {
 	    }
 	};
 
-	virtual void pinChangeInterruptHandler() final {
+	void pinChangeInterrupt() {
 	    txDelayUntilTime = SysTickTimer.getValue() + txDelayAfterResume;
 	    parent::setInterruptTxReady(canSend());
 	};
@@ -587,7 +597,11 @@ namespace Motate {
         UARTRxPin<rxPinNumber> rxPin;
         UARTTxPin<txPinNumber> txPin;
 
+//        typedef _BufferedUARTHardware< UARTGetPeripheralNum<rxPinNumber, txPinNumber>::uartPeripheralNum, rtsPinNumber, ctsPinNumber, rxBufferClass, txBufferClass > hardware_t;
+//        hardware_t hardware;
+
         _BufferedUARTHardware< UARTGetPeripheralNum<rxPinNumber, txPinNumber>::uartPeripheralNum, rtsPinNumber, ctsPinNumber, rxBufferClass, txBufferClass > hardware;
+
 	const uint8_t uartPeripheralNum() { return hardware.uartPeripheralNum; };
 
         BufferedUART(const uint32_t baud = 115200, const uint16_t options = UARTMode::As8N1) {
@@ -696,9 +710,16 @@ namespace Motate {
 	    return total_written;
 	};
 
-	// Placeholder for user code.
-	static void interrupt() __attribute__ ((weak));
+	void pinChangeInterrupt() {
+	    hardware.pinChangeInterrupt();
+	};
+
+//	// Placeholder for user code.
+//	static void interrupt() __attribute__ ((weak));
     };
+
+//    template<pin_number rxPinNumber, pin_number txPinNumber, pin_number rtsPinNumber, pin_number ctsPinNumber, typename rxBufferClass, typename txBufferClass>
+//        typename BufferedUART<rxPinNumber, txPinNumber, rtsPinNumber, ctsPinNumber, rxBufferClass, txBufferClass>::hardware_t BufferedUART<rxPinNumber, txPinNumber, rtsPinNumber, ctsPinNumber, rxBufferClass, txBufferClass>::hardware;
 
 }
 

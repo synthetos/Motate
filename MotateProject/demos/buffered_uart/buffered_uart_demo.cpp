@@ -39,18 +39,27 @@ using namespace Motate;
 
 // Setup an led to blink and show that the board's working...
 OutputPin<kLED1_PinNumber> led1_pin;
+OutputPin<kLED2_PinNumber> led2_pin;
+GPIOIRQPin<5> button { Motate::kPullUp };
 
 // Create a buffer to hold the data to blast
 Motate::Buffer<1024> blast_buffer;
 
 /****** Create file-global objects ******/
 
-BufferedUART<kSerial_RX, kSerial_TX, 3, 2> serialPort {115200}; // 115200 is the default, as well.
-PinChangeHardwareProxy *Motate::GPIOIRQPin<2>::pinChangeProxy() {
-    return &(serialPort.hardware);
+pin_number kRTSPinNumber = 3;
+pin_number kCTSPinNumber = 2;
+
+//BufferedUART<kSerial_RX, kSerial_TX, kRTSPinNumber, kCTSPinNumber> serialPort {115200, UARTMode::RTSCTSFlowControl}; // 115200 is the default, as well.
+BufferedUART<kSerial_RX, kSerial_TX, kRTSPinNumber, kCTSPinNumber> serialPort {115200, UARTMode::XonXoffFlowControl}; // 115200 is the default, as well.
+
+MOTATE_PIN_INTERRUPT(kCTSPinNumber) {
+    serialPort.pinChangeInterrupt();
 }
 
-InputPin<2> ctsPin;
+MOTATE_PIN_INTERRUPT(5) {
+    led2_pin = button;
+}
 
 /****** Optional setup() function ******/
 
@@ -59,6 +68,10 @@ void setup() {
     serialPort.write("Type 0 to turn the light off, and 1 to turn it on.\n");
 
     serialPort.write("Type: ");
+
+    led2_pin = 1;
+
+    button.setInterrupts(kPinInterruptOnChange | kInterruptPriorityLowest);
 }
 
 /****** Main run loop() ******/
@@ -86,5 +99,6 @@ void loop() {
 		serialPort.write(blast_buffer);
 		break;
 	}
+        delay(1);
     }
 }

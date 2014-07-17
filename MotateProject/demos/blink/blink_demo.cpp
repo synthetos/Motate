@@ -39,6 +39,7 @@ using namespace Motate;
 /****** Create file-global objects ******/
 
 OutputPin<kLED1_PinNumber> led1_pin;
+InputPin<kLED1_PinNumber> button {Motate::kPullup};
 //OutputPin<kSerial0_TX> tx_pin;
 //InputPin<kSerial0_RX> rx_pin;
 
