@@ -173,9 +173,6 @@ namespace Motate {
 	uint8_t getOutputValue() { return 0; };
 	static uint32_t maskForPort(const uint8_t otherPortLetter) { return 0; };
 	bool isNull() { return true; };
-
-	/* Placeholder for user code. */\
-	static void interrupt() __attribute__ ((weak));\
     };
 
     template<uint8_t portChar, uint8_t portPin>
@@ -344,8 +341,6 @@ namespace Motate {
 	    static uint32_t maskForPort(const uint8_t otherPortLetter) {\
 		return portLetter == otherPortLetter ? mask : 0x00u;\
 	    };\
-	    /* Placeholder for user code. */\
-	    static void interrupt() __attribute__ ((weak));\
 	};\
 	typedef Pin<pinNum> Pin ## pinNum;\
 	static Pin ## pinNum pin ## pinNum;\
@@ -426,6 +421,39 @@ namespace Motate {
 	    bool get();\
 	    operator bool();\
 	};
+
+
+    // All of the pins on the SAM can be an interrupt pin
+    // but we create these objects to share the interface with other architectures.
+    template<int8_t pinNum>
+    struct GPIOIRQPin : Pin<pinNum> {
+        static const bool is_real = true;
+        static void interrupt() __attribute__ (( weak ));
+    };
+
+    template<int8_t pinNum>
+    constexpr const bool IsGPIOIRQPin() { return GPIOIRQPin<pinNum>::is_real; };
+
+    template<pin_number gpioPinNumber>
+    using IsGPIOIRQOrNull = typename std::enable_if<true>::type;
+
+    template<uint8_t portChar, uint8_t portPin>
+    using LookupGPIOIRQPin = GPIOIRQPin< ReversePinLookup<portChar, portPin>::number >;
+
+
+    struct _pinChangeInterrupt {
+        const uint8_t portLetter;
+        const uint32_t mask;
+        void (&interrupt)();
+    };
+
+    #define MOTATE_PIN_INTERRUPT(number) \
+        Motate::_pinChangeInterrupt _Motate_Pin ## number ## Change_interrupt_Trampoline  __attribute__(( section(".motate.pin_change_interrupts") )) {\
+            Motate::GPIOIRQPin<number>::portLetter,\
+            Motate::GPIOIRQPin<number>::mask,\
+            Motate::GPIOIRQPin<number>::interrupt\
+        };\
+        void Motate::GPIOIRQPin<number>::interrupt()
 
 
     template<int8_t pinNum>
@@ -646,11 +674,6 @@ namespace Motate {
     static NullPin nullPin;
     
 } // end namespace Motate
-
-
-#define MOTATE_PIN_INTERRUPT(number) \
-    Pin<number>::interrupt_defined = true;\
-    template<> void Pin<number>::interrupt()
 
 
 // Note: We end the namespace before including in case the included file need to include

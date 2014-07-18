@@ -48,7 +48,7 @@ extern "C" void PORTA_IRQHandler(void) {
     while (current != &motate_pin_change_interrupts_end) {
         if (current->portLetter == 'A' && isr & current->mask) {
             current->interrupt();
-            PORTA->ISFR |= current->mask;\
+            PORTA->ISFR |= current->mask;
         }
         current++;
     }
@@ -64,7 +64,7 @@ extern "C" void PORTB_IRQHandler(void) {
     while (current != &motate_pin_change_interrupts_end) {
         if (current->portLetter == 'B' && isr & current->mask) {
             current->interrupt();
-            PORTA->ISFR |= current->mask;\
+            PORTA->ISFR |= current->mask;
         }
         current++;
     }

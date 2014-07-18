@@ -454,7 +454,7 @@ namespace Motate {
     };
 
     #define MOTATE_PIN_INTERRUPT(number) \
-        _pinChangeInterrupt _Motate_Pin ## number ## Change_interrupt_Trampoline  __attribute__(( section(".motate.pin_change_interrupts") )) {\
+        Motate::_pinChangeInterrupt _Motate_Pin ## number ## Change_interrupt_Trampoline  __attribute__(( section(".motate.pin_change_interrupts") )) {\
             Motate::GPIOIRQPin<number>::portLetter,\
             Motate::GPIOIRQPin<number>::mask,\
             Motate::GPIOIRQPin<number>::interrupt\
