@@ -426,19 +426,19 @@ namespace Motate {
     // All of the pins on the SAM can be an interrupt pin
     // but we create these objects to share the interface with other architectures.
     template<int8_t pinNum>
-    struct GPIOIRQPin : Pin<pinNum> {
+    struct IRQPin : Pin<pinNum> {
         static const bool is_real = true;
         static void interrupt() __attribute__ (( weak ));
     };
 
     template<int8_t pinNum>
-    constexpr const bool IsGPIOIRQPin() { return GPIOIRQPin<pinNum>::is_real; };
+    constexpr const bool IsIRQPin() { return IRQPin<pinNum>::is_real; };
 
     template<pin_number gpioPinNumber>
     using IsGPIOIRQOrNull = typename std::enable_if<true>::type;
 
     template<uint8_t portChar, uint8_t portPin>
-    using LookupGPIOIRQPin = GPIOIRQPin< ReversePinLookup<portChar, portPin>::number >;
+    using LookupIRQPin = IRQPin< ReversePinLookup<portChar, portPin>::number >;
 
 
     struct _pinChangeInterrupt {
@@ -449,11 +449,11 @@ namespace Motate {
 
     #define MOTATE_PIN_INTERRUPT(number) \
         Motate::_pinChangeInterrupt _Motate_Pin ## number ## Change_interrupt_Trampoline  __attribute__(( section(".motate.pin_change_interrupts") )) {\
-            Motate::GPIOIRQPin<number>::portLetter,\
-            Motate::GPIOIRQPin<number>::mask,\
-            Motate::GPIOIRQPin<number>::interrupt\
+            Motate::IRQPin<number>::portLetter,\
+            Motate::IRQPin<number>::mask,\
+            Motate::IRQPin<number>::interrupt\
         };\
-        void Motate::GPIOIRQPin<number>::interrupt()
+        void Motate::IRQPin<number>::interrupt()
 
 
     template<int8_t pinNum>

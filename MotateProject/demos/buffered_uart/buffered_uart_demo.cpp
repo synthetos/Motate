@@ -40,7 +40,7 @@ using namespace Motate;
 // Setup an led to blink and show that the board's working...
 OutputPin<kLED1_PinNumber> led1_pin;
 OutputPin<kLED2_PinNumber> led2_pin;
-GPIOIRQPin<5> button { Motate::kPullUp };
+IRQPin<5> button { Motate::kPullUp };
 
 // Create a buffer to hold the data to blast
 Motate::Buffer<1024> blast_buffer;

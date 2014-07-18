@@ -440,7 +440,7 @@ namespace Motate {
 	txBufferClass txBuffer;
 
 	OutputPin<rtsPinNumber> rtsPin;
-        GPIOIRQPin<ctsPinNumber> ctsPin;
+        IRQPin<ctsPinNumber> ctsPin;
 
 	uint32_t txDelayAfterResume = 3;
 	uint32_t txDelayUntilTime   = 0;
@@ -465,7 +465,7 @@ namespace Motate {
 	void setOptions(const uint32_t baud, const uint16_t options, const bool fromConstructor=false) {
 	    parent::setOptions(baud, options, fromConstructor);
 
-	    if (options & UARTMode::RTSCTSFlowControl && IsGPIOIRQPin<ctsPinNumber>() && !rtsPin.isNull()) {
+	    if (options & UARTMode::RTSCTSFlowControl && IsIRQPin<ctsPinNumber>() && !rtsPin.isNull()) {
 		_rtsCtsFlowControl = true;
 		parent::setInterruptTxReady(!canSend());
 		ctsPin.setInterrupts(kPinInterruptOnChange);
@@ -514,7 +514,7 @@ namespace Motate {
 
 	void setTxDelayAfterResume(uint32_t newDelay) { txDelayAfterResume = newDelay; };
 	bool isConnected() {
-	    if (!IsGPIOIRQPin<ctsPinNumber>())
+	    if (!IsIRQPin<ctsPinNumber>())
 		return true; // There's no way to tell!
 
 	    // If we have a cts pin, then will will use it to know if we're allowed to send,

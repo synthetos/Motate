@@ -422,27 +422,27 @@ namespace Motate {
         };
 
     template<int8_t pinNum>
-    struct GPIOIRQPin : Pin<-1> {
+    struct IRQPin : Pin<-1> {
         static const bool is_real = false;
         static void interrupt() __attribute__ (( weak ));
     };
 
     template<int8_t pinNum>
-        constexpr const bool IsGPIOIRQPin() { return GPIOIRQPin<pinNum>::is_real; };
+        constexpr const bool IsIRQPin() { return IRQPin<pinNum>::is_real; };
 
     template<pin_number gpioPinNumber>
         using IsGPIOIRQOrNull = typename std::enable_if<
-            gpioPinNumber == -1 || IsGPIOIRQPin<gpioPinNumber>()
+            gpioPinNumber == -1 || IsIRQPin<gpioPinNumber>()
         >::type;
 
     template<uint8_t portChar, uint8_t portPin>
-    using LookupGPIOIRQPin = GPIOIRQPin< ReversePinLookup<portChar, portPin>::number >;
+    using LookupIRQPin = IRQPin< ReversePinLookup<portChar, portPin>::number >;
 
     #define _MAKE_MOTATE_GPIO_IRQ_PIN(registerChar, registerPin)\
         template<>\
-        struct GPIOIRQPin< ReversePinLookup<registerChar, registerPin>::number > : ReversePinLookup<registerChar, registerPin> {\
-            GPIOIRQPin() : ReversePinLookup<registerChar, registerPin>(kInput) {};\
-            GPIOIRQPin(const PinOptions options) : ReversePinLookup<registerChar, registerPin>(kInput, options) {};\
+        struct IRQPin< ReversePinLookup<registerChar, registerPin>::number > : ReversePinLookup<registerChar, registerPin> {\
+            IRQPin() : ReversePinLookup<registerChar, registerPin>(kInput) {};\
+            IRQPin(const PinOptions options) : ReversePinLookup<registerChar, registerPin>(kInput, options) {};\
             static const bool is_real = true;\
             static void interrupt() __attribute__ (( weak ));\
         };
@@ -455,11 +455,11 @@ namespace Motate {
 
     #define MOTATE_PIN_INTERRUPT(number) \
         Motate::_pinChangeInterrupt _Motate_Pin ## number ## Change_interrupt_Trampoline  __attribute__(( section(".motate.pin_change_interrupts") )) {\
-            Motate::GPIOIRQPin<number>::portLetter,\
-            Motate::GPIOIRQPin<number>::mask,\
-            Motate::GPIOIRQPin<number>::interrupt\
+            Motate::IRQPin<number>::portLetter,\
+            Motate::IRQPin<number>::mask,\
+            Motate::IRQPin<number>::interrupt\
         };\
-        void Motate::GPIOIRQPin<number>::interrupt()
+        void Motate::IRQPin<number>::interrupt()
 
 
     template<int8_t pinNum>
