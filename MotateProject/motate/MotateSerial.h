@@ -1,5 +1,5 @@
 /*
-  KL05ZTimers.cpp - Library for the Arduino-compatible Motate system
+  MotateSerial.h - Serial (UART or USB) library for the Motate system
   http://tinkerin.gs/
 
   Copyright (c) 2013 Robert Giseburt
@@ -27,45 +27,58 @@
 	OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+#ifndef MOTATESERIAL_H_ONCE
+#define MOTATESERIAL_H_ONCE
 
-#if defined(__KL05Z__)
+#include <inttypes.h>
 
-#include "Freescale_klxx/KL05ZTimers.h"
-//#include "Reset.h"
+#if defined(__SAM3X8E__) || defined(__SAM3X8C__)
+#include "MotateUSB.h"
+#include "MotateUSBCDC.h"
+
+#ifndef FIRMWARE_VERSION
+#define FIRMWARE_VERSION 8
+#endif
+
+const Motate::USBSettings_t Motate::USBSettings = {
+    /*gVendorID         = */ 0x1d50,
+    /*gProductID        = */ 0x606d,
+    /*gProductVersion   = */ FIRMWARE_VERSION,
+    /*gAttributes       = */ kUSBConfigAttributeSelfPowered,
+    /*gPowerConsumption = */ 500
+};
+
+Motate::USBDevice< Motate::USBCDC > usb;
+//Motate::USBDevice< Motate::USBCDC, Motate::USBCDC > usb;
 
 namespace Motate {
-	/* System-wide tick counter */
-	/*  Inspired by code from Atmel and Arduino.
-	 *  Some of which is:   Copyright (c) 2012 Arduino. All right reserved.
-	 *  Some of which is:   Copyright (c) 2011-2012, Atmel Corporation. All rights reserved.
-	 */
 
-	Timer<SysTickTimerNum> SysTickTimer;
-	Timer<WatchDogTimerNum> WatchDogTimer;
-
-	volatile uint32_t Timer<SysTickTimerNum>::_motateTickCount = 0;
+auto &Serial = usb._mixin_0_type::Serial;
+//typeof usb._mixin_1_type::Serial &SerialUSB1 = usb._mixin_1_type::Serial;
 
 } // namespace Motate
 
-extern "C" void SysTick_Handler(void)
-{
-//	if (sysTickHook)
-//		sysTickHook();
+MOTATE_SET_USB_VENDOR_STRING( {'S' ,'y', 'n', 't', 'h', 'e', 't', 'o', 's'} )
+MOTATE_SET_USB_PRODUCT_STRING( {'M', 'o', 't', 'a', 't', 'e', ' ', 'D' , 'e', 'm', 'o'} )
+MOTATE_SET_USB_SERIAL_NUMBER_STRING( {'0','0','7'} )
 
-//	tickReset();
+#else
 
-	Motate::SysTickTimer._increment();
+#include "MotateUART.h"
 
-	if (Motate::SysTickTimer.interrupt) {
-		Motate::SysTickTimer.interrupt();
-	}
+namespace Motate {
+
+    pin_number kRTSPinNumber = 3;
+    pin_number kCTSPinNumber = 2;
+
+    BufferedUART<kSerial_RX, kSerial_TX, kRTSPinNumber, kCTSPinNumber> Serial {115200, UARTMode::XonXoffFlowControl}; // 115200 is the default, as well.
+} // namespace Motate
+
+MOTATE_PIN_INTERRUPT(2) {
+    Motate::Serial.pinChangeInterrupt();
 }
 
-extern "C" {
 
-    void TPM0_IRQHandler(void) { Motate::Timer<0>::interrupt(); }
-    void TPM1_IRQHandler(void) { Motate::Timer<1>::interrupt(); }
+#endif //defined(__SAM3X8E__) || defined(__SAM3X8C__)
 
-}
-
-#endif // __KL05Z__
+#endif /* end of include guard: MOTATESERIAL_H_ONCE */

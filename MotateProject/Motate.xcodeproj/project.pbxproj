@@ -1286,6 +1286,7 @@
 /* Begin PBXFileReference section */
 		D443391B196BB69B004A48F9 /* buffered_uart_demo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = buffered_uart_demo.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		D443391C196BB69B004A48F9 /* Makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
+		D449BC59197AC3E3000C0C3C /* MotateSerial.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotateSerial.h; sourceTree = "<group>"; };
 		D457117B17053EFA00EA19A8 /* Makefile */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = Makefile; sourceTree = "<group>"; usesTabs = 1; xcLanguageSpecificationIdentifier = xcode.lang.sh; };
 		D48992C01965B118004F73A6 /* MotateBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MotateBuffer.h; path = motate/MotateBuffer.h; sourceTree = SOURCE_ROOT; };
 		D48992C41965B460004F73A6 /* Makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
@@ -4473,6 +4474,7 @@
 				D4C78F6E19538E6B00A1BE28 /* Freescale_klxx */,
 				D48992C01965B118004F73A6 /* MotateBuffer.h */,
 				D4C78F63195201A900A1BE28 /* MotatePins.h */,
+				D449BC59197AC3E3000C0C3C /* MotateSerial.h */,
 				D4C78F64195201A900A1BE28 /* MotateSPI.h */,
 				D4C78F65195201A900A1BE28 /* MotateTimers.h */,
 				D4C7A1AB1963B66D00A1BE28 /* MotateUART.h */,
@@ -9890,17 +9892,17 @@
 /* End PBXGroup section */
 
 /* Begin PBXLegacyTarget section */
-		D45710C21705330C00EA19A8 /* Motate Due */ = {
+		D45710C21705330C00EA19A8 /* Motate Due uart */ = {
 			isa = PBXLegacyTarget;
 			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 BOARD=Due";
-			buildConfigurationList = D45710C31705330D00EA19A8 /* Build configuration list for PBXLegacyTarget "Motate Due" */;
+			buildConfigurationList = D45710C31705330D00EA19A8 /* Build configuration list for PBXLegacyTarget "Motate Due uart" */;
 			buildPhases = (
 			);
 			buildToolPath = /usr/bin/make;
 			buildWorkingDirectory = ./demos/uart;
 			dependencies = (
 			);
-			name = "Motate Due";
+			name = "Motate Due uart";
 			passBuildSettingsInEnvironment = 1;
 			productName = g3_due;
 		};
@@ -9929,6 +9931,20 @@
 			dependencies = (
 			);
 			name = "Motate FRDM-KL05Z uart";
+			passBuildSettingsInEnvironment = 1;
+			productName = g3_due;
+		};
+		D4D4A02F197CD7B400618EF3 /* Motate Due buffered_uart */ = {
+			isa = PBXLegacyTarget;
+			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 BOARD=Due";
+			buildConfigurationList = D4D4A030197CD7B400618EF3 /* Build configuration list for PBXLegacyTarget "Motate Due buffered_uart" */;
+			buildPhases = (
+			);
+			buildToolPath = /usr/bin/make;
+			buildWorkingDirectory = ./demos/buffered_uart;
+			dependencies = (
+			);
+			name = "Motate Due buffered_uart";
 			passBuildSettingsInEnvironment = 1;
 			productName = g3_due;
 		};
@@ -9996,7 +10012,8 @@
 			);
 			projectRoot = "";
 			targets = (
-				D45710C21705330C00EA19A8 /* Motate Due */,
+				D45710C21705330C00EA19A8 /* Motate Due uart */,
+				D4D4A02F197CD7B400618EF3 /* Motate Due buffered_uart */,
 				D4C78F731954DFAF00A1BE28 /* Motate FRDM-KL05Z uart */,
 				D4C4EF7E196DB49D00D1F791 /* Motate FRDM-KL05Z buffered_uart */,
 				D457112317053BFB00EA19A8 /* index_sam */,
@@ -11488,6 +11505,22 @@
 			};
 			name = Release;
 		};
+		D4D4A031197CD7B400618EF3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "Motate Due uart copy";
+			};
+			name = Debug;
+		};
+		D4D4A032197CD7B400618EF3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "Motate Due uart copy";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -11500,7 +11533,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		D45710C31705330D00EA19A8 /* Build configuration list for PBXLegacyTarget "Motate Due" */ = {
+		D45710C31705330D00EA19A8 /* Build configuration list for PBXLegacyTarget "Motate Due uart" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				D45710C41705330D00EA19A8 /* Debug */,
@@ -11541,6 +11574,15 @@
 			buildConfigurations = (
 				D4C7A1A219630FA000A1BE28 /* Debug */,
 				D4C7A1A319630FA000A1BE28 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D4D4A030197CD7B400618EF3 /* Build configuration list for PBXLegacyTarget "Motate Due buffered_uart" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D4D4A031197CD7B400618EF3 /* Debug */,
+				D4D4A032197CD7B400618EF3 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

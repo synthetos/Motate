@@ -93,7 +93,7 @@ SECTIONS
         KEEP(*(.eh_frame*))
 
         PROVIDE(motate_pin_change_interrupts_start = .);
-        *(.motate.pin_change_interrupts);
+        KEEP (*(.motate.pin_change_interrupts))
         PROVIDE(motate_pin_change_interrupts_end = .);
     } > FLASH
 

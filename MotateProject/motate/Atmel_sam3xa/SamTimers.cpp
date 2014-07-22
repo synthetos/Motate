@@ -63,15 +63,37 @@ extern "C" void SysTick_Handler(void)
 
 extern "C" {
 
-    void TC0_Handler(void) { Motate::Timer<0>::interrupt(); }
-    void TC1_Handler(void) { Motate::Timer<1>::interrupt(); }
-    void TC2_Handler(void) { Motate::Timer<2>::interrupt(); }
-    void TC3_Handler(void) { Motate::Timer<3>::interrupt(); }
-    void TC4_Handler(void) { Motate::Timer<4>::interrupt(); }
-    void TC5_Handler(void) { Motate::Timer<5>::interrupt(); }
-    void TC6_Handler(void) { Motate::Timer<6>::interrupt(); }
-    void TC7_Handler(void) { Motate::Timer<7>::interrupt(); }
-    void TC8_Handler(void) { Motate::Timer<8>::interrupt(); }
+#define _MAKE_TCx_Handler_DISABLED(x) \
+    void TC##x##_Handler(void) { /* delegate to the TimerChannels */\
+        Motate::TimerChannelInterruptOptions tcio = Motate::Timer<x>::getInterruptCause();\
+        if (  Motate::TimerChannel<x, 0>::interrupt || \
+              tcio == Motate::kInterruptOnMatchA || \
+              tcio == Motate::kInterruptOnOverflow) {\
+            Motate::TimerChannel<x, 0>::interrupt();\
+        }\
+        if (  Motate::TimerChannel<x, 1>::interrupt || \
+              tcio == Motate::kInterruptOnMatchB || \
+              tcio == Motate::kInterruptOnOverflow) {\
+            Motate::TimerChannel<x, 1>::interrupt();\
+        }\
+    }
+
+    #define _MAKE_TCx_Handler(x) \
+    void TC##x##_Handler(void) { \
+        Motate::Timer<x>::interrupt(); \
+    }
+
+    _MAKE_TCx_Handler(0)
+    _MAKE_TCx_Handler(1)
+    _MAKE_TCx_Handler(2)
+    _MAKE_TCx_Handler(3)
+    _MAKE_TCx_Handler(4)
+    _MAKE_TCx_Handler(5)
+    _MAKE_TCx_Handler(6)
+    _MAKE_TCx_Handler(7)
+    _MAKE_TCx_Handler(8)
+
+#undef _MAKE_TCx_Handler
 
 }
 

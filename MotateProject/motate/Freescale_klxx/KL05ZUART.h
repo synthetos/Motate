@@ -302,16 +302,16 @@ namespace Motate {
 	    return status;
 	}
 
-        int16_t getc() {
-	    //			uart_proxy.S1 |= (uint8_t)UART0_S1_OR_MASK;
+        int16_t readByte() {
+	    // uart_proxy.S1 |= (uint8_t)UART0_S1_OR_MASK;
 	    if (uart_proxy.S1() & (uint8_t)UART0_S1_RDRF_MASK) {
 		return uart_proxy.D();
 	    }
 	    return -1;
         };
 
-        int16_t putc(const uint8_t value) {
-	    //			uart_proxy.S1 |= (uint8_t)UART0_S1_OR_MASK;
+        int16_t writeByte(const char value) {
+	    // uart_proxy.S1 |= (uint8_t)UART0_S1_OR_MASK;
             if (uart_proxy.S1() & (uint8_t)UART0_S1_TDRE_MASK) {
 		uart_proxy.D() = value;
 		return 1;
@@ -361,8 +361,8 @@ namespace Motate {
             hardware.setOptions(baud, options, fromConstructor);
         };
 
-	int16_t getc() {
-            return hardware.getc();
+	int16_t readByte() {
+            return hardware.readByte();
 	};
 
         // WARNING: Currently only reads in bytes. For more-that-byte size data, we'll need another call.
@@ -373,7 +373,7 @@ namespace Motate {
 
 	    // BLOCKING!!
 	    while (to_read > 0) {
-		int16_t ret = getc();
+		int16_t ret = readByte();
 
                 if (ret >= 0) {
                     *read_ptr++ = ret;
@@ -385,9 +385,9 @@ namespace Motate {
 	    return total_read;
 	};
 
-        int16_t putc(uint8_t data) {
+        int16_t writeByte(uint8_t data) {
             hardware.flush();
-            return hardware.putc(data);
+            return hardware.writeByte(data);
 	};
 
         void flush() {
@@ -398,34 +398,63 @@ namespace Motate {
         // WARNING: Currently only writes in bytes. For more-that-byte size data, we'll need another call.
 	int16_t write(const char* data, const uint16_t length = 0, bool autoFlush = false) {
 	    int16_t total_written = 0;
-	    const char* out_buffer = data;
+	    const char* out_ptr = data;
 	    int16_t to_write = length;
 
-	    if (length==0 && *out_buffer==0) {
+	    if (length==0 && *out_ptr==0) {
 		return 0;
 	    }
 
-	    // BLOCKING!!
 	    do {
-		flush();
-                int16_t ret = putc(*out_buffer);
+                int16_t ret = hardware.writeByte(*out_ptr);
 
                 if (ret > 0) {
-                    out_buffer++;
+                    out_ptr++;
                     total_written++;
                     to_write--;
 
-		    if (length==0 && *out_buffer==0) {
+		    if (length==0 && *out_ptr==0) {
 			break;
 		    }
-                }
+                } else if (autoFlush) {
+		    flush();
+		} else {
+		    break;
+		}
 	    } while (to_write);
-            
+
 	    if (autoFlush && total_written > 0)
                 flush();
-	    
+            
 	    return total_written;
-	}
+	};
+
+    	template<uint16_t _size>
+	int16_t write(Motate::Buffer<_size> &data, const uint16_t length = 0, bool autoFlush = false) {
+	    int16_t total_written = 0;
+	    int16_t to_write = length;
+
+	    do {
+		int16_t value = data.peek();
+		if (value < 0) // no more data
+		    break;
+
+		int16_t ret = hardware.writeByte(value);
+                if (ret > 0) {
+		    data.pop();
+                    to_write--;
+                } else if (autoFlush) {
+		    flush();
+		} else {
+		    break;
+		}
+	    } while (to_write != 0);
+
+	    if (autoFlush && total_written > 0)
+                flush();
+            
+	    return total_written;
+	};
     };
 
     struct _UARTHardwareProxy {
@@ -522,14 +551,14 @@ namespace Motate {
 	    return !ctsPin;
 	};
 
-	int16_t getc() {
+	int16_t readByte() {
 	    if (rxBuffer.available() > (rxBuffer.size() - 4)) {
 		startRx();
 	    }
 	    return rxBuffer.read();
 	};
 
-	int16_t putc(const uint8_t data) {
+	int16_t writeByte(const uint8_t data) {
             int16_t ret = txBuffer.write(data);
 	    parent::setInterruptTxReady(canSend());
 	    return ret;
@@ -544,14 +573,14 @@ namespace Motate {
 		txDelayUntilTime = 0;
 		if (_xonXoffFlowControl) {
 		    if (_xonXoffStartStopSent == false) {
-			parent::putc(_xonXoffStartStop);
+			parent::writeByte(_xonXoffStartStop);
 			_xonXoffStartStopSent = true;
 			return;
 		    }
 		}
 		int16_t value = txBuffer.read();
 		if (value >= 0) {
-		    parent::putc(value);
+		    parent::writeByte(value);
 		}
 	    }
 	    if (txBuffer.isEmpty() || txBuffer.isLocked()) {
@@ -562,7 +591,7 @@ namespace Motate {
 	    }
 
 	    if ((interruptCause & UARTInterrupt::OnRxReady) && !rxBuffer.isFull()) {
-		int16_t value = parent::getc();
+		int16_t value = parent::readByte();
 		if (_xonXoffFlowControl) {
 		    if (value == kUARTXOn) {
 			_xonXoffCanSend = true;
@@ -617,8 +646,8 @@ namespace Motate {
             hardware.setOptions(baud, options, fromConstructor);
         };
 
-	int16_t getc() {
-	    return hardware.getc();
+	int16_t readByte() {
+	    return hardware.readByte();
 	};
 
         // WARNING: Currently only reads in bytes. For more-that-byte size data, we'll need another call.
@@ -629,7 +658,7 @@ namespace Motate {
 
 	    // BLOCKING!!
 	    while (to_read > 0) {
-		int16_t ret = hardware.getc();
+		int16_t ret = hardware.readByte();
 
                 if (ret >= 0) {
                     *read_ptr++ = ret;
@@ -641,8 +670,8 @@ namespace Motate {
 	    return total_read;
 	};
 
-        int16_t putc(uint8_t data) {
-            return hardware.putc(data);
+        int16_t writeByte(uint8_t data) {
+            return hardware.writeByte(data);
 	};
 
         void flush() {
@@ -660,7 +689,7 @@ namespace Motate {
 	    }
 
 	    do {
-                int16_t ret = hardware.putc(*out_ptr);
+                int16_t ret = hardware.writeByte(*out_ptr);
 
                 if (ret > 0) {
                     out_ptr++;
@@ -693,7 +722,7 @@ namespace Motate {
 		if (value < 0) // no more data
 		    break;
 
-		int16_t ret = hardware.putc(value);
+		int16_t ret = hardware.writeByte(value);
                 if (ret > 0) {
 		    data.pop();
                     to_write--;

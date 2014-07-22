@@ -34,34 +34,6 @@ using Motate::delay;
 
 /******************** External interface setup ************************/
 
-#ifdef MOTATE_CONFIG_HAS_USBSERIAL
-#include "MotateUSB.h"
-#include "MotateUSBCDC.h"
-
-#ifndef FIRMWARE_VERSION
-#define FIRMWARE_VERSION 8
-#endif
-
-const Motate::USBSettings_t Motate::USBSettings = {
-	/*gVendorID         = */ 0x1d50,
-	/*gProductID        = */ 0x606d,
-	/*gProductVersion   = */ FIRMWARE_VERSION,
-	/*gAttributes       = */ kUSBConfigAttributeSelfPowered,
-	/*gPowerConsumption = */ 500
-};
-	/*gProductVersion   = */ //0.1,
-
-Motate::USBDevice< Motate::USBCDC > usb;
-//Motate::USBDevice< Motate::USBCDC, Motate::USBCDC > usb;
-
-typeof usb._mixin_0_type::Serial &SerialUSB = usb._mixin_0_type::Serial;
-//typeof usb._mixin_1_type::Serial &SerialUSB1 = usb._mixin_1_type::Serial;
-
-MOTATE_SET_USB_VENDOR_STRING( {'S' ,'y', 'n', 't', 'h', 'e', 't', 'o', 's'} )
-MOTATE_SET_USB_PRODUCT_STRING( {'M', 'o', 't', 'a', 't', 'e', ' ', 'D' , 'e', 'm', 'o'} )
-MOTATE_SET_USB_SERIAL_NUMBER_STRING( {'0','0','7'} )
-#endif //MOTATE_CONFIG_HAS_USBSERIAL
-
 
 #ifdef MOTATE_CONFIG_HAS_SPI
 #include "MotateSPI.h"
@@ -80,21 +52,21 @@ int main(void);
 extern "C"{
 #endif // __cplusplus
 
-	// These two routines are defined with C linkage:
+    // These two routines are defined with C linkage:
 
-	void _init() __attribute__ ((weak));
-	void _init() {
-		SystemInit();
-	}
+    void _init() __attribute__ ((weak));
+    void _init() {
+        SystemInit();
+    }
 
-	void __libc_init_array(void);
+    void __libc_init_array(void);
 
-	void _start() __attribute__ ((weak));
-	void _start() {
-		SystemInit();
-		__libc_init_array();
-		main();
-	}
+    void _start() __attribute__ ((weak));
+    void _start() {
+        SystemInit();
+        __libc_init_array();
+        main();
+    }
 
 #ifdef __cplusplus
 }
@@ -107,12 +79,7 @@ extern "C"{
 
 void _system_init(void)
 {
-	Motate::WatchDogTimer.disable();
-
-	// Initialize C library
-#ifdef MOTATE_CONFIG_HAS_USBSERIAL
-	usb.attach();					// USB setup
-#endif
+    Motate::WatchDogTimer.disable();
 }
 
 
@@ -121,15 +88,14 @@ void _system_init(void)
  */
 
 int main(void) {
+    _system_init();
 
-	_system_init();
+    if (setup)
+        setup();
 
-	if (setup)
-		setup();
-
-	// main loop
-	for (;;) {
-		loop();
-	}
-	return 0;
+    // main loop
+    for (;;) {
+        loop();
+    }
+    return 0;
 }

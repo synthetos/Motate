@@ -212,6 +212,55 @@ namespace Motate {
 	void init(const PinMode type, const PinOptions options = kNormal); /* Intentially not defined. */
     };
 
+    
+
+    // All of the pins on the SAM can be an interrupt pin
+    // but we create these objects to share the interface with other architectures.
+    template<int8_t pinNum>
+    struct IRQPin : Pin<pinNum> {
+	IRQPin() : Pin<pinNum>(kInput) {};
+	IRQPin(const PinOptions options) : Pin<pinNum>(kInput, options) {};
+	void init(const PinOptions options = kNormal  ) {Pin<pinNum>::init(kInput, options);};
+
+        static const bool is_real = true;
+        static void interrupt() __attribute__ (( weak ));
+    };
+
+    template<int8_t pinNum>
+    constexpr const bool IsIRQPin() { return IRQPin<pinNum>::is_real; };
+
+    template<pin_number gpioPinNumber>
+    using IsGPIOIRQOrNull = typename std::enable_if<true>::type;
+
+    template<uint8_t portChar, uint8_t portPin>
+    using LookupIRQPin = IRQPin< ReversePinLookup<portChar, portPin>::number >;
+
+
+    struct _pinChangeInterrupt {
+        const uint8_t portLetter;
+        const uint32_t mask;
+        void (&interrupt)();
+    };
+
+    // YAY! We get to have fun with macro concatenation!
+    // See: https://gcc.gnu.org/onlinedocs/cpp/Stringification.html#Stringification
+    // Short form: We need to take two passes to get the concatenation to work
+    #define MOTATE_PIN_INTERRUPT_NAME_( x, y ) x##y
+    #define MOTATE_PIN_INTERRUPT_NAME( x, y )\
+        MOTATE_PIN_INTERRUPT_NAME_( x, y )
+
+    // Also we use the GCC-specific __COUNTER__
+    // See https://gcc.gnu.org/onlinedocs/cpp/Common-Predefined-Macros.html
+    #define MOTATE_PIN_INTERRUPT(number) \
+        Motate::_pinChangeInterrupt MOTATE_PIN_INTERRUPT_NAME( _Motate_PinChange_Interrupt_Trampoline, __COUNTER__ )\
+                __attribute__(( section(".motate.pin_change_interrupts") )) {\
+            Motate::IRQPin<number>::portLetter,\
+            Motate::IRQPin<number>::mask,\
+            Motate::IRQPin<number>::interrupt\
+        };\
+        template<> void Motate::IRQPin<number>::interrupt()
+
+
     // TODO: Make the Pin<> use the appropriate Port<>, reducing duplication when there's no penalty
 
     #define _MAKE_MOTATE_PIN(pinNum, registerLetter, registerChar, registerPin)\
@@ -348,7 +397,8 @@ namespace Motate {
 	struct ReversePinLookup<registerChar, registerPin> : Pin<pinNum> {\
 	    ReversePinLookup() {};\
 	    ReversePinLookup(const PinMode type, const PinOptions options = kNormal) : Pin<pinNum>(type, options) {};\
-	};
+	};\
+        template<> void Motate::IRQPin<pinNum>::interrupt();
 
 
 
@@ -421,40 +471,6 @@ namespace Motate {
 	    bool get();\
 	    operator bool();\
 	};
-
-
-    // All of the pins on the SAM can be an interrupt pin
-    // but we create these objects to share the interface with other architectures.
-    template<int8_t pinNum>
-    struct IRQPin : Pin<pinNum> {
-        static const bool is_real = true;
-        static void interrupt() __attribute__ (( weak ));
-    };
-
-    template<int8_t pinNum>
-    constexpr const bool IsIRQPin() { return IRQPin<pinNum>::is_real; };
-
-    template<pin_number gpioPinNumber>
-    using IsGPIOIRQOrNull = typename std::enable_if<true>::type;
-
-    template<uint8_t portChar, uint8_t portPin>
-    using LookupIRQPin = IRQPin< ReversePinLookup<portChar, portPin>::number >;
-
-
-    struct _pinChangeInterrupt {
-        const uint8_t portLetter;
-        const uint32_t mask;
-        void (&interrupt)();
-    };
-
-    #define MOTATE_PIN_INTERRUPT(number) \
-        Motate::_pinChangeInterrupt _Motate_Pin ## number ## Change_interrupt_Trampoline  __attribute__(( section(".motate.pin_change_interrupts") )) {\
-            Motate::IRQPin<number>::portLetter,\
-            Motate::IRQPin<number>::mask,\
-            Motate::IRQPin<number>::interrupt\
-        };\
-        void Motate::IRQPin<number>::interrupt()
-
 
     template<int8_t pinNum>
     struct SPIChipSelectPin {

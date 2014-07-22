@@ -29,7 +29,7 @@
 
 #include "MotatePins.h"
 #include "MotateTimers.h"
-#include "MotateUART.h"
+#include "MotateSerial.h"
 #include "MotateBuffer.h"
 
 #include <iterator>
@@ -47,16 +47,6 @@ Motate::Buffer<1024> blast_buffer;
 
 /****** Create file-global objects ******/
 
-pin_number kRTSPinNumber = 3;
-pin_number kCTSPinNumber = 2;
-
-//BufferedUART<kSerial_RX, kSerial_TX, kRTSPinNumber, kCTSPinNumber> serialPort {115200, UARTMode::RTSCTSFlowControl}; // 115200 is the default, as well.
-BufferedUART<kSerial_RX, kSerial_TX, kRTSPinNumber, kCTSPinNumber> serialPort {115200, UARTMode::XonXoffFlowControl}; // 115200 is the default, as well.
-
-MOTATE_PIN_INTERRUPT(kCTSPinNumber) {
-    serialPort.pinChangeInterrupt();
-}
-
 MOTATE_PIN_INTERRUPT(5) {
     led2_pin = button;
 }
@@ -64,10 +54,10 @@ MOTATE_PIN_INTERRUPT(5) {
 /****** Optional setup() function ******/
 
 void setup() {
-    serialPort.write("Startup...done.\n");
-    serialPort.write("Type 0 to turn the light off, and 1 to turn it on.\n");
+    Serial.write("Startup...done.\n");
+    Serial.write("Type 0 to turn the light off, and 1 to turn it on.\n");
 
-    serialPort.write("Type: ");
+    Serial.write("Type: ");
 
     led2_pin = 1;
 
@@ -79,7 +69,7 @@ void setup() {
 
 void loop() {
 
-    int16_t v = serialPort.getc();
+    int16_t v = Serial.readByte();
 
     if (v > 0) {
 	// Echo:
@@ -96,7 +86,7 @@ void loop() {
 
 	    case '\n':
 	    case '\r':
-		serialPort.write(blast_buffer);
+		Serial.write(blast_buffer);
 		break;
 	}
         delay(1);

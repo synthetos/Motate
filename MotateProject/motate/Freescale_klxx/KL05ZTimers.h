@@ -188,28 +188,28 @@ namespace Motate {
 
 	// Set the TOP value for modes that use it.
 	// WARNING: No sanity checking is done to verify that you are, indeed, in a mode that uses it.
-	constexpr void setTop(const uint32_t topValue) const {
+	void setTop(const uint32_t topValue) const {
 	    tc()->MOD = topValue & 0xFFFF;
 	};
 
-	constexpr uint32_t getTopValue() const {
+	uint32_t getTopValue() const {
 	    return tc()->MOD;
 	};
 
 	// Return the current value of the counter. This is a fleeting thing...
-	constexpr uint32_t getValue() const {
+	uint32_t getValue() const {
 	    return tc()->CNT;
 	}
 
-	constexpr void start() const {
+	void start() const {
 	    tc()->SC = (tc()->SC & ~TPM_SC_CMOD_MASK) | TPM_SC_CMOD(0b01 /* LPTPM counter increments on every LPTPM counter clock */);
 	};
 
-	constexpr void stop() const {
+	void stop() const {
 	    tc()->SC = (tc()->SC & ~TPM_SC_CMOD_MASK) | TPM_SC_CMOD(0b00 /* LPTPM counter is disabled */);
 	};
 
-	constexpr void stopOnMatch() const {
+	void stopOnMatch() const {
 	    tc()->CONF |= TPM_CONF_CSOO_MASK;
 	};
 
@@ -224,7 +224,7 @@ namespace Motate {
 
 	// Specify channel duty cycle as a integer value from 0 .. TOP (a.k.a MOD).
 	// WARNING: There are no checks on the bounds of channel!
-	constexpr void setExactDutyCycle(const uint8_t channel, const uint32_t absolute) {
+	void setExactDutyCycle(const uint8_t channel, const uint32_t absolute) {
 	    tc()->CONTROLS[channel].CnV = absolute;
 	};
 
@@ -261,7 +261,7 @@ namespace Motate {
 	// These two start the waveform. We try to be as fast as we can.
 	// ASSUMPTION: We stopped it with the corresponding function.
 	// ASSUMPTION: The pin is not and was not in Toggle mode.
-	constexpr void startPWMOutput(const uint8_t channel) {
+	void startPWMOutput(const uint8_t channel) {
 	    tc()->CONTROLS[channel].CnSC = (tc()->CONTROLS[channel].CnSC & ~(
 									     TPM_CnSC_ELSA_MASK |
 									     TPM_CnSC_ELSB_MASK
@@ -271,11 +271,12 @@ namespace Motate {
 	// These are special function for stopping output waveforms.
 	// This disables the channel.
 	// ASSUMPTION: The pin is not in Toggle mode.
-	constexpr void stopPWMOutput(const uint8_t channel) {
-	    tc()->CONTROLS[channel].CnSC = (tc()->CONTROLS[channel].CnSC & ~(
-									     TPM_CnSC_ELSA_MASK |
-									     TPM_CnSC_ELSB_MASK
-									     ));
+	void stopPWMOutput(const uint8_t channel) {
+	    tc()->CONTROLS[channel].CnSC =
+                (tc()->CONTROLS[channel].CnSC & ~(
+                                                  TPM_CnSC_ELSA_MASK |
+                                                  TPM_CnSC_ELSB_MASK
+                                                  ));
 	};
 
 	void setInterrupts(const uint32_t interrupts, const int16_t channel = -1) {
@@ -316,7 +317,7 @@ namespace Motate {
 	    }
 	}
 
-	constexpr void setInterruptPending() {
+	void setInterruptPending() {
 	    NVIC_SetPendingIRQ(tcIRQ());
 	}
 
@@ -334,9 +335,11 @@ namespace Motate {
 	 TC_SR_MTIOB   (TC_SR) TIOB Mirror
 	 */
 
-	TimerChannelInterruptOptions getInterruptCause(int16_t& channel = -1) {
+	static TimerChannelInterruptOptions getInterruptCause(int16_t &channel) {
 	    uint32_t status = tc()->STATUS;
 	    if (status & TPM_STATUS_TOF_MASK) {
+                channel = -1;
+
 		// Writing to this register clears the bits you set.
 		tc()->STATUS = TPM_STATUS_TOF_MASK;
 		return kInterruptOnOverflow;
@@ -344,6 +347,9 @@ namespace Motate {
 	    else if (status != 0) {
 		channel = __builtin_ctz(status);
 		status = 1 << channel;
+
+                // Writing to this register clears the bits you set.
+                tc()->STATUS = status;
 		return kInterruptOnMatch;
 	    }
 	    return kInterruptUnknown;
@@ -356,15 +362,18 @@ namespace Motate {
     template<> inline TPM_Type * const  Timer<0>::tc()           { return TPM0; };
     template<> inline const IRQn_Type   Timer<0>::tcIRQ()        { return TPM0_IRQn; };
     template<> inline void Timer<0>::_enablePeripheralClock()    { SIM->SCGC6 |= SIM_SCGC6_TPM0_MASK; };
+    template<> void Timer<0>::interrupt();
 
     template<> inline TPM_Type * const  Timer<1>::tc()           { return TPM1; };
     template<> inline const IRQn_Type   Timer<1>::tcIRQ()        { return TPM1_IRQn; };
     template<> inline void Timer<1>::_enablePeripheralClock()    { SIM->SCGC6 |= SIM_SCGC6_TPM1_MASK; };
+    template<> void Timer<1>::interrupt();
 
 
     template<uint8_t timerNum, uint8_t channelNum>
     struct TimerChannel : Timer<timerNum> {
-	TimerChannel() : Timer<timerNum>() {};
+	TimerChannel() : Timer<timerNum>{} {};
+	TimerChannel(const TimerMode mode, const uint32_t freq) : Timer<timerNum>{mode, freq} {};
 
 	void setDutyCycle(const float ratio) {
 	    Timer<timerNum>::setDutyCycleForChannel(channelNum, ratio);
@@ -385,6 +394,9 @@ namespace Motate {
 	void stopPWMOutput() {
 	    Timer<timerNum>::stopPWMOutput(channelNum);
 	}
+
+	// Placeholder for user code.
+	static void interrupt() __attribute__ ((weak));
     };
 
 
@@ -462,9 +474,12 @@ namespace Motate {
 	    __NOP();
 	} while ( SysTickTimer.getValue() < doneTime );
     }
-    
+
+#define MOTATE_TIMER_INTERRUPT(number) template<> void Motate::Timer<number>::interrupt()
+#define MOTATE_TIMER_CHANNEL_INTERRUPT(t_number, c_number) namespace Motate { template<> void TimerChannel<t_number, c_number>::interrupt(); }; \
+    template<> void Motate::TimerChannel<t_number, c_number>::interrupt()
+
 } // namespace Motate
 
-#define MOTATE_TIMER_INTERRUPT(number) template<> void Timer<number>::interrupt()
 
 #endif /* end of include guard: KL05ZTIMERS_H_ONCE */

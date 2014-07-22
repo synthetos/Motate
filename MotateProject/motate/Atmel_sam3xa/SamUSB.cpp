@@ -252,7 +252,7 @@ namespace Motate {
 
 	
 	//  Set the address
-	inline void _setUSBAddress(uint8_t address) {
+	void _setUSBAddress(uint8_t address) {
 		UOTGHS->UOTGHS_DEVCTRL = (UOTGHS->UOTGHS_DEVCTRL & ~UOTGHS_DEVCTRL_UADD_Msk) | UOTGHS_DEVCTRL_UADD(address);
 		UOTGHS->UOTGHS_DEVCTRL |= UOTGHS_DEVCTRL_ADDEN;
 	}
@@ -299,7 +299,7 @@ namespace Motate {
 		return (UOTGHS->UOTGHS_DEVEPTISR[endpoint] & UOTGHS_DEVEPTISR_RWALL) != 0;
 	}
 
-	inline void _waitForTransmitINAvailable(const uint8_t endpoint, bool reset_needed = false) {
+	void _waitForTransmitINAvailable(const uint8_t endpoint, bool reset_needed = false) {
 		while (!(UOTGHS->UOTGHS_DEVEPTISR[endpoint] & UOTGHS_DEVEPTISR_TXINI))
 			reset_needed = true;
 

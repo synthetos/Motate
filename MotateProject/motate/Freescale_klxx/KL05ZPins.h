@@ -453,8 +453,17 @@ namespace Motate {
         void (&interrupt)();
     };
 
+    // YAY! We get to have fun with macro concatenation!
+    // See: https://gcc.gnu.org/onlinedocs/cpp/Stringification.html#Stringification
+    // Short form: We need to take two passes to get the concatenation to work
+    #define MOTATE_PIN_INTERRUPT_NAME_( x, y ) x##y
+    #define MOTATE_PIN_INTERRUPT_NAME( x, y ) MOTATE_PIN_INTERRUPT_NAME_( x, y )
+
+    // Also we use the GCC-specific __COUNTER__
+    // See https://gcc.gnu.org/onlinedocs/cpp/Common-Predefined-Macros.html
     #define MOTATE_PIN_INTERRUPT(number) \
-        Motate::_pinChangeInterrupt _Motate_Pin ## number ## Change_interrupt_Trampoline  __attribute__(( section(".motate.pin_change_interrupts") )) {\
+        Motate::_pinChangeInterrupt MOTATE_PIN_INTERRUPT_NAME( _Motate_PinChange_Interrupt_Trampoline, __COUNTER__ )\
+                __attribute__(( section(".motate.pin_change_interrupts") )) {\
             Motate::IRQPin<number>::portLetter,\
             Motate::IRQPin<number>::mask,\
             Motate::IRQPin<number>::interrupt\

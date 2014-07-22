@@ -15,8 +15,22 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "D45710C21705330C00EA19A8"
-               BuildableName = "Motate Due"
-               BlueprintName = "Motate Due"
+               BuildableName = "Motate Due uart"
+               BlueprintName = "Motate Due uart"
+               ReferencedContainer = "container:Motate.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "NO"
+            buildForRunning = "YES"
+            buildForProfiling = "NO"
+            buildForArchiving = "NO"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "D4D4A02F197CD7B400618EF3"
+               BuildableName = "Motate Due buffered_uart"
+               BlueprintName = "Motate Due buffered_uart"
                ReferencedContainer = "container:Motate.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
