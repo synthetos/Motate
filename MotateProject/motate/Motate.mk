@@ -1,9 +1,9 @@
-# 
+#
 # Makefile
-# 
+#
 # Copyright (c) 2012 - 2014 Robert Giseburt
 # Copyright (c) 2013 - 2014 Alden S. Hart Jr.
-# 
+#
 #	This file is part of the Motate Library.
 #
 #	This file ("the software") is free software: you can redistribute it and/or modify
@@ -38,6 +38,8 @@ $(error BOARD not defined - please provide a project name)
 endif
 
 MOTATE_PATH ?= $(dir $(CURDIR)/$(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST)))
+
+TOOLS_PATH ?= ${MOTATE_PATH}/../../Tools
 
 SOURCE_DIRS = . ${MOTATE_PATH}
 
@@ -83,7 +85,7 @@ CFLAGS += -Wsign-compare -Waggregate-return
 CFLAGS += -Wformat -Wmissing-format-attribute -Wno-deprecated-declarations
 CFLAGS += -Wredundant-decls -Wnested-externs -Winline -Wlong-long
 CFLAGS += -Wunreachable-code
-#CFLAGS += -Wcast-align -Wpacked 
+#CFLAGS += -Wcast-align -Wpacked
 #CFLAGS += -Wmissing-noreturn
 #CFLAGS += -Wconversion
 
@@ -102,7 +104,7 @@ CPPFLAGS += -Wshadow -Wpointer-arith -Wwrite-strings
 #CPPFLAGS += -Wsign-compare -Waggregate-return -Wmissing-declarations
 CPPFLAGS += -Wformat -Wmissing-format-attribute -Wno-deprecated-declarations
 CPPFLAGS += -Wredundant-decls -Winline -Wlong-long
-#CPPFLAGS += -Wmissing-noreturn -Wpacked 
+#CPPFLAGS += -Wmissing-noreturn -Wpacked
 #CPPFLAGS += -Wconversion
 
 # Turn off printf() format strings. We use late bound FLASH and RAM format strings and this causes warnings
@@ -144,7 +146,7 @@ define NEWLINE_ONLY
 endef
 define NEWLINE_TAB
 
-	
+
 endef
 endif
 
@@ -278,22 +280,26 @@ $(info $(NEWLINE_ONLY)CXX_SOURCES: $(patsubst %,$(NEWLINE_TAB)%,$(CXX_SOURCES)))
 $(info $(NEWLINE_ONLY)FIRST_LINK_SOURCES: $(patsubst %,$(NEWLINE_TAB)%,$(FIRST_LINK_SOURCES)))
 endif
 
-all: TOOLS $(OUTPUT_BIN).elf
+all: $(OUTPUT_BIN).elf
 
 REQUIRED_DIRS := $(BIN) $(OBJ) $(DEPDIR)
 
 MK_DIRS =   $(shell                              \
               for d in $(REQUIRED_DIRS);         \
               do                                 \
-		echo "Checking for $${d}"        \
+              echo "Checking for $${d}"        \
                 [[ -d $$d ]] || mkdir -p $$d;    \
               done)
 
 $(eval $(DEVICE_RULES))
 
-TOOLS:
-if test \! `command -v ${CC}`; then cd ../Tools && make "ARCH=${CROSS_COMPILE}"; fi
+.PHONY : MKTOOLS
 
+MKTOOLS :
+	@echo Looking for tools...
+	cd ${TOOLS_PATH} && make "ARCH=gcc-${CROSS_COMPILE}"
+
+PATH:=${PATH}:${TOOLS_PATH}/gcc-${CROSS_COMPILE}/bin
 
 OUTDIR = $(OBJ)
 REQUIRED_DIRS += $(OUTDIR)
@@ -324,10 +330,10 @@ ABS_LINKER_SCRIPT = $(abspath $(LINKER_SCRIPT))
 # Generate dependency information
 DEPFLAGS = -MMD -MF $(OBJ)/dep/$(@F).d -MT $(subst $(OUTDIR),$(OBJ),$@)
 
-$(OUTPUT_BIN).elf: $(ALL_C_OBJECTS) $(ALL_CXX_OBJECTS) $(ALL_ASM_OBJECTS) $(ABS_LINKER_SCRIPT)
+$(OUTPUT_BIN).elf: MKTOOLS $(ALL_C_OBJECTS) $(ALL_CXX_OBJECTS) $(ALL_ASM_OBJECTS) $(ABS_LINKER_SCRIPT)
 	@echo $(START_BOLD)"Linking $(OUTPUT_BIN).elf" $(END_BOLD)
 	@echo $(START_BOLD)"Using linker script: $(ABS_LINKER_SCRIPT)" $(END_BOLD)
-	$(QUIET)$(CXX) $(LIB_PATH) -T"$(ABS_LINKER_SCRIPT)" -Wl,-Map,"$(OUTPUT_BIN).map" -o $@ $(LDFLAGS) $(LD_OPTIONAL) $(LIBS) -Wl,--start-group $(FIRST_LINK_OBJECTS_PATHS) $(filter-out $(FIRST_LINK_OBJECTS_PATHS) $(ABS_LINKER_SCRIPT),$+) -Wl,--end-group
+	$(QUIET)$(CXX) $(LIB_PATH) -T"$(ABS_LINKER_SCRIPT)" -Wl,-Map,"$(OUTPUT_BIN).map" -o ${filter-out MKTOOLS,$@} $(LDFLAGS) $(LD_OPTIONAL) $(LIBS) -Wl,--start-group $(FIRST_LINK_OBJECTS_PATHS) $(filter-out $(FIRST_LINK_OBJECTS_PATHS) $(ABS_LINKER_SCRIPT) MKTOOLS,$+) -Wl,--end-group
 	@echo $(START_BOLD)"Exporting symbols $(OUTPUT_BIN).elf.txt" $(END_BOLD)
 	$(QUIET)$(NM) "$(OUTPUT_BIN).elf" >"$(OUTPUT_BIN).elf.txt"
 	@echo $(START_BOLD)"Making binary $(OUTPUT_BIN).bin" $(END_BOLD)
@@ -391,7 +397,7 @@ clean:
 	-$(RM) -fR $(OBJ) $(BIN) $(BOARD).elf $(BOARD).map $(BOARD).hex $(BOARD).bin
 
 
-# 
+#
 # Include the dependency files, should be the last of the makefile
 #
 -include $(shell mkdir $(OBJ)/dep 2>/dev/null) $(wildcard $(OBJ)/dep/*.d)

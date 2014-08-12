@@ -34,7 +34,7 @@ UNAME := $(shell uname -s)
 		ifeq (Darwin,${UNAME})
 
 OS = OSX
-DOWNLOAD_TOOL = curl -O
+DOWNLOAD_TOOL = curl -OL
 
 		else
 			ifeq (Linux,${UNAME})
