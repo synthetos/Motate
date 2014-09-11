@@ -30,6 +30,7 @@
 #include "MotatePins.h"
 #include "MotateTimers.h"
 #include "MotateSerial.h"
+#include "MotateSPI.h"
 #include "MotateBuffer.h"
 
 #include <iterator>

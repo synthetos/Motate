@@ -55,57 +55,60 @@ float blue_pwm_d  = 0.0;
 /****** Optional setup() function ******/
 
 void setup() {
-	led1_pin = blue_pwm;
-	led2_pin = green_pwm;
-	led3_pin = red_pwm;
+
+    led1_pin.setFrequency(1000);
+
+    led1_pin = blue_pwm;
+    led2_pin = green_pwm;
+    led3_pin = red_pwm;
 }
 
 /****** Main run loop() ******/
 
 void loop() {
-	led3_pin = red_pwm;
-	led2_pin = green_pwm;
-	led1_pin = blue_pwm;
+    led3_pin = red_pwm;
+    led2_pin = green_pwm;
+    led1_pin = blue_pwm;
 
-	red_pwm += red_pwm_d;
-	green_pwm += green_pwm_d;
-	blue_pwm += blue_pwm_d;
+    red_pwm += red_pwm_d;
+    green_pwm += green_pwm_d;
+    blue_pwm += blue_pwm_d;
 
-	// This is the dnace for color cycles through all hues.
-	// see http://en.wikipedia.org/wiki/HSV_color_space#mediaviewer/File:HSV-RGB-comparison.svg
-	// via http://en.wikipedia.org/wiki/HSV_color_space#Converting_to_RGB
-	if (red_pwm > 1.0) {
-		red_pwm = 1.0;
-		red_pwm_d = 0.0;
-		green_pwm_d = -change_per_cycle;
-	}
-	else if (red_pwm < 0.0) {
-		red_pwm = 0.0;
-		red_pwm_d = 0.0;
-		green_pwm_d = change_per_cycle;
-	}
-	else if (blue_pwm > 1.0) {
-		blue_pwm = 1.0;
-		blue_pwm_d = 0.0;
-		red_pwm_d = -change_per_cycle;
-	}
-	else if (blue_pwm < 0.0) {
-		blue_pwm = 0.0;
-		blue_pwm_d = 0.0;
-		red_pwm_d = change_per_cycle;
-	}
-	else if (green_pwm > 1.0) {
-		green_pwm = 1.0;
-		green_pwm_d = 0.0;
-		blue_pwm_d = -change_per_cycle;
-	}
-	else if (green_pwm < 0.0) {
-		green_pwm = 0.0;
-		green_pwm_d = 0.0;
-		blue_pwm_d = change_per_cycle;
-	}
-
-	delay(100);
-
-//	led1_pin.toggle();
+    // This is the dnace for color cycles through all hues.
+    // see http://en.wikipedia.org/wiki/HSV_color_space#mediaviewer/File:HSV-RGB-comparison.svg
+    // via http://en.wikipedia.org/wiki/HSV_color_space#Converting_to_RGB
+    if (red_pwm > 1.0) {
+        red_pwm = 1.0;
+        red_pwm_d = 0.0;
+        green_pwm_d = -change_per_cycle;
+    }
+    else if (red_pwm < 0.0) {
+        red_pwm = 0.0;
+        red_pwm_d = 0.0;
+        green_pwm_d = change_per_cycle;
+    }
+    else if (blue_pwm > 1.0) {
+        blue_pwm = 1.0;
+        blue_pwm_d = 0.0;
+        red_pwm_d = -change_per_cycle;
+    }
+    else if (blue_pwm < 0.0) {
+        blue_pwm = 0.0;
+        blue_pwm_d = 0.0;
+        red_pwm_d = change_per_cycle;
+    }
+    else if (green_pwm > 1.0) {
+        green_pwm = 1.0;
+        green_pwm_d = 0.0;
+        blue_pwm_d = -change_per_cycle;
+    }
+    else if (green_pwm < 0.0) {
+        green_pwm = 0.0;
+        green_pwm_d = 0.0;
+        blue_pwm_d = change_per_cycle;
+    }
+    
+    delay(100);
+    
+    //	led1_pin.toggle();
 }

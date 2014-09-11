@@ -1,6 +1,6 @@
 /*
  KL05ZPinss.cpp - Library for the Arduino-compatible Motate system
- http://tinkerin.gs/
+ http://github.com/synthetos/motate/
  
  Copyright (c) 2014 Robert Giseburt
  

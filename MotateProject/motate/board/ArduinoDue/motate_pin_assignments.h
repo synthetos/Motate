@@ -1,5 +1,5 @@
 /*
- * http://tinkerin.gs/
+ * http://github.com/synthetos/motate/
  *
  * Copyright (c) 2013 Robert Giseburt
  * Copyright (c) 2013 Alden S. Hart Jr.

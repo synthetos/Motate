@@ -1260,6 +1260,13 @@
 		D4C7A19D19630FA000A1BE28 /* startup_stm32l053xx.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C79BEE1957C0AD00A1BE28 /* startup_stm32l053xx.s */; };
 		D4C7A19E19630FA000A1BE28 /* stm32f30x_syscfg.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79AF11957C0AD00A1BE28 /* stm32f30x_syscfg.c */; };
 		D4C7A1AA19638D7500A1BE28 /* KL05ZUART.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C7A1A819638D7500A1BE28 /* KL05ZUART.cpp */; };
+		D4D6453419BA0D4F0053705B /* KL05ZSPI.h in Sources */ = {isa = PBXBuildFile; fileRef = D409A5C919B97241009137D7 /* KL05ZSPI.h */; };
+		D4D6453619BA0D530053705B /* MotateSPI.h in Sources */ = {isa = PBXBuildFile; fileRef = D4C78F64195201A900A1BE28 /* MotateSPI.h */; };
+		D4D6453719BA0E520053705B /* MKL05Z4.h in Sources */ = {isa = PBXBuildFile; fileRef = D4C797851957C0AC00A1BE28 /* MKL05Z4.h */; };
+		D4DD3EA919BFE1AE0081E1BB /* Makefile in Sources */ = {isa = PBXBuildFile; fileRef = D4DD3E8319BFE1AE0081E1BB /* Makefile */; };
+		D4DD3EAA19BFE1AE0081E1BB /* Makefile in Sources */ = {isa = PBXBuildFile; fileRef = D4DD3E8319BFE1AE0081E1BB /* Makefile */; };
+		D4DD3EAB19BFE1AE0081E1BB /* soft_pwm_demo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4DD3E8419BFE1AE0081E1BB /* soft_pwm_demo.cpp */; };
+		D4DD3EAC19BFE1AE0081E1BB /* soft_pwm_demo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4DD3E8419BFE1AE0081E1BB /* soft_pwm_demo.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -1284,6 +1291,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		D409A5C919B97241009137D7 /* KL05ZSPI.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = KL05ZSPI.h; path = motate/Freescale_klxx/KL05ZSPI.h; sourceTree = SOURCE_ROOT; };
 		D443391B196BB69B004A48F9 /* buffered_uart_demo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = buffered_uart_demo.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		D443391C196BB69B004A48F9 /* Makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
 		D449BC59197AC3E3000C0C3C /* MotateSerial.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotateSerial.h; sourceTree = "<group>"; };
@@ -1291,6 +1299,7 @@
 		D48992C01965B118004F73A6 /* MotateBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MotateBuffer.h; path = motate/MotateBuffer.h; sourceTree = SOURCE_ROOT; };
 		D48992C41965B460004F73A6 /* Makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
 		D48992C51965B460004F73A6 /* uart_demo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = uart_demo.cpp; sourceTree = "<group>"; };
+		D4A74B2119C15DB00019633A /* frdm-kl05z.cfg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "frdm-kl05z.cfg"; sourceTree = "<group>"; };
 		D4C77F6D1950912300A1BE28 /* Tools.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Tools.xcodeproj; path = ../Tools/Tools.xcodeproj; sourceTree = "<group>"; };
 		D4C78F54195201A900A1BE28 /* AvrPins.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AvrPins.h; sourceTree = "<group>"; };
 		D4C78F55195201A900A1BE28 /* AvrTimers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AvrTimers.h; sourceTree = "<group>"; };
@@ -4394,10 +4403,8 @@
 		D4C79F1219588A8600A1BE28 /* arm.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = arm.mk; sourceTree = "<group>"; };
 		D4C79F20195BCC9A00A1BE28 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		D4C79F23196216A300A1BE28 /* blink_demo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = blink_demo.cpp; sourceTree = "<group>"; };
-		D4C79F24196216A300A1BE28 /* blink_demo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = blink_demo.h; sourceTree = "<group>"; };
 		D4C79F25196216A300A1BE28 /* Makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
 		D4C79F27196216A300A1BE28 /* fade_demo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = fade_demo.cpp; sourceTree = "<group>"; };
-		D4C79F28196216A300A1BE28 /* fade_demo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fade_demo.h; sourceTree = "<group>"; };
 		D4C79F29196216A300A1BE28 /* Makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
 		D4C79F2E19630F7100A1BE28 /* index_sam */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = index_sam; sourceTree = BUILT_PRODUCTS_DIR; };
 		D4C7A1A419630FA000A1BE28 /* index_sam copy */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "index_sam copy"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -4406,6 +4413,8 @@
 		D4C7A1AB1963B66D00A1BE28 /* MotateUART.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotateUART.h; sourceTree = "<group>"; };
 		D4C7A1AC19649C2200A1BE28 /* ArduinoDue.gdb */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ArduinoDue.gdb; sourceTree = "<group>"; };
 		D4C7A1AD19649C2900A1BE28 /* FRDM-KLxx.gdb */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = "FRDM-KLxx.gdb"; path = "motate/board/FRDM-KLxx.gdb"; sourceTree = SOURCE_ROOT; };
+		D4DD3E8319BFE1AE0081E1BB /* Makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
+		D4DD3E8419BFE1AE0081E1BB /* soft_pwm_demo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = soft_pwm_demo.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -4520,12 +4529,13 @@
 		D4C78F6E19538E6B00A1BE28 /* Freescale_klxx */ = {
 			isa = PBXGroup;
 			children = (
-				D4C7A1A819638D7500A1BE28 /* KL05ZUART.cpp */,
-				D4C7A1A919638D7500A1BE28 /* KL05ZUART.h */,
 				D4C78F6F19538E6B00A1BE28 /* KL05ZPins.cpp */,
 				D4C78F7019538E6B00A1BE28 /* KL05ZPins.h */,
+				D409A5C919B97241009137D7 /* KL05ZSPI.h */,
 				D4C78F7F19553EF700A1BE28 /* KL05ZTimers.cpp */,
 				D4C78F8019553EF700A1BE28 /* KL05ZTimers.h */,
+				D4C7A1A819638D7500A1BE28 /* KL05ZUART.cpp */,
+				D4C7A1A919638D7500A1BE28 /* KL05ZUART.h */,
 			);
 			path = Freescale_klxx;
 			sourceTree = "<group>";
@@ -9827,6 +9837,7 @@
 				D4C79F071957C24700A1BE28 /* ArduinoDue */,
 				D4C7A1AD19649C2900A1BE28 /* FRDM-KLxx.gdb */,
 				D4C79F0E1957C2A100A1BE28 /* FRDM-KLxx.mk */,
+				D4A74B2119C15DB00019633A /* frdm-kl05z.cfg */,
 				D4C79F0A1957C24700A1BE28 /* FRDM-KLxx */,
 			);
 			path = board;
@@ -9865,6 +9876,7 @@
 				D48992C21965B460004F73A6 /* uart */,
 				D4C79F22196216A300A1BE28 /* blink */,
 				D4C79F26196216A300A1BE28 /* fade */,
+				D4DD3E5D19BFE1AE0081E1BB /* soft_pwm */,
 			);
 			path = demos;
 			sourceTree = "<group>";
@@ -9873,7 +9885,6 @@
 			isa = PBXGroup;
 			children = (
 				D4C79F23196216A300A1BE28 /* blink_demo.cpp */,
-				D4C79F24196216A300A1BE28 /* blink_demo.h */,
 				D4C79F25196216A300A1BE28 /* Makefile */,
 			);
 			path = blink;
@@ -9883,10 +9894,18 @@
 			isa = PBXGroup;
 			children = (
 				D4C79F27196216A300A1BE28 /* fade_demo.cpp */,
-				D4C79F28196216A300A1BE28 /* fade_demo.h */,
 				D4C79F29196216A300A1BE28 /* Makefile */,
 			);
 			path = fade;
+			sourceTree = "<group>";
+		};
+		D4DD3E5D19BFE1AE0081E1BB /* soft_pwm */ = {
+			isa = PBXGroup;
+			children = (
+				D4DD3E8419BFE1AE0081E1BB /* soft_pwm_demo.cpp */,
+				D4DD3E8319BFE1AE0081E1BB /* Makefile */,
+			);
+			path = soft_pwm;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -9945,6 +9964,20 @@
 			dependencies = (
 			);
 			name = "Motate Due buffered_uart";
+			passBuildSettingsInEnvironment = 1;
+			productName = g3_due;
+		};
+		D4DD3EAD19BFE35F0081E1BB /* Motate FRDM-KL05Z soft_pwm */ = {
+			isa = PBXLegacyTarget;
+			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 BOARD=FRDM-KL05Z";
+			buildConfigurationList = D4DD3EAE19BFE35F0081E1BB /* Build configuration list for PBXLegacyTarget "Motate FRDM-KL05Z soft_pwm" */;
+			buildPhases = (
+			);
+			buildToolPath = /usr/bin/make;
+			buildWorkingDirectory = ./demos/soft_pwm;
+			dependencies = (
+			);
+			name = "Motate FRDM-KL05Z soft_pwm";
 			passBuildSettingsInEnvironment = 1;
 			productName = g3_due;
 		};
@@ -10014,6 +10047,7 @@
 			targets = (
 				D45710C21705330C00EA19A8 /* Motate Due uart */,
 				D4D4A02F197CD7B400618EF3 /* Motate Due buffered_uart */,
+				D4DD3EAD19BFE35F0081E1BB /* Motate FRDM-KL05Z soft_pwm */,
 				D4C78F731954DFAF00A1BE28 /* Motate FRDM-KL05Z uart */,
 				D4C4EF7E196DB49D00D1F791 /* Motate FRDM-KL05Z buffered_uart */,
 				D457112317053BFB00EA19A8 /* index_sam */,
@@ -10427,6 +10461,7 @@
 				D4C79DD71957C0AE00A1BE28 /* stm32f0xx_hal_i2s.c in Sources */,
 				D4C79CB51957C0AE00A1BE28 /* cmsis_nvic.c in Sources */,
 				D4C79E861957C0AE00A1BE28 /* stm32l0xx_hal_rcc.c in Sources */,
+				D4DD3EAB19BFE1AE0081E1BB /* soft_pwm_demo.cpp in Sources */,
 				D4C79C871957C0AD00A1BE28 /* system_sam3s.c in Sources */,
 				D4C79D4C1957C0AE00A1BE28 /* stm32f10x_rcc.c in Sources */,
 				D4C79EAE1957C0AE00A1BE28 /* stm32l1xx_pwr.c in Sources */,
@@ -10460,6 +10495,7 @@
 				D4C79D1C1957C0AE00A1BE28 /* system_LPC8xx.c in Sources */,
 				D4C79D891957C0AE00A1BE28 /* stm32f4xx_hal_irda.c in Sources */,
 				D4C79CF01957C0AE00A1BE28 /* startup_LPC15xx.s in Sources */,
+				D4DD3EA919BFE1AE0081E1BB /* Makefile in Sources */,
 				D4C79DA11957C0AE00A1BE28 /* stm32f4xx_hal_wwdg.c in Sources */,
 				D4C79D2C1957C0AE00A1BE28 /* stm32f0xx_flash.c in Sources */,
 				D4C79D411957C0AE00A1BE28 /* stm32f10x_crc.c in Sources */,
@@ -10664,15 +10700,18 @@
 				D4C79F3219630FA000A1BE28 /* stm32f30x_tim.c in Sources */,
 				D4C79F3319630FA000A1BE28 /* stm32l0xx_hal_smartcard_ex.c in Sources */,
 				D4C79F3419630FA000A1BE28 /* stm32f4xx_hal_tim.c in Sources */,
+				D4D6453719BA0E520053705B /* MKL05Z4.h in Sources */,
 				D4C79F3519630FA000A1BE28 /* stm32f4xx_hal_dac.c in Sources */,
 				D4C79F3619630FA000A1BE28 /* startup_sam4l.c in Sources */,
 				D4C79F3719630FA000A1BE28 /* startup_sam3n.c in Sources */,
 				D4C79F3819630FA000A1BE28 /* sys.cpp in Sources */,
+				D4D6453419BA0D4F0053705B /* KL05ZSPI.h in Sources */,
 				D4C79F3919630FA000A1BE28 /* stm32f4xx_hal_usart.c in Sources */,
 				D4C79F3A19630FA000A1BE28 /* startup_MKL25Z4.s in Sources */,
 				D4C79F3B19630FA000A1BE28 /* stm32f4xx_hal_crc.c in Sources */,
 				D4C79F3C19630FA000A1BE28 /* vector_table.s in Sources */,
 				D4C79F3D19630FA000A1BE28 /* stm32f0xx_comp.c in Sources */,
+				D4D6453619BA0D530053705B /* MotateSPI.h in Sources */,
 				D4C79F3E19630FA000A1BE28 /* sys.cpp in Sources */,
 				D4C79F3F19630FA000A1BE28 /* stm32f30x_usart.c in Sources */,
 				D4C79F4019630FA000A1BE28 /* stm32l1xx_rtc.c in Sources */,
@@ -11060,6 +11099,7 @@
 				D4C7A0BC19630FA000A1BE28 /* cmsis_nvic.c in Sources */,
 				D4C7A0BD19630FA000A1BE28 /* stm32l0xx_hal_rcc.c in Sources */,
 				D4C7A0BE19630FA000A1BE28 /* system_sam3s.c in Sources */,
+				D4DD3EAC19BFE1AE0081E1BB /* soft_pwm_demo.cpp in Sources */,
 				D4C7A0BF19630FA000A1BE28 /* stm32f10x_rcc.c in Sources */,
 				D4C7A0C019630FA000A1BE28 /* stm32l1xx_pwr.c in Sources */,
 				D4C7A0C119630FA000A1BE28 /* stm32f4xx_hal_nor.c in Sources */,
@@ -11198,6 +11238,7 @@
 				D4C7A14519630FA000A1BE28 /* stm32f0xx_gpio.c in Sources */,
 				D4C7A14619630FA000A1BE28 /* stm32l1xx_lcd.c in Sources */,
 				D4C7A14719630FA000A1BE28 /* startup_STM32F40x.s in Sources */,
+				D4DD3EAA19BFE1AE0081E1BB /* Makefile in Sources */,
 				D4C7A14819630FA000A1BE28 /* stm32f10x_tim.c in Sources */,
 				D4C7A14919630FA000A1BE28 /* startup_stm32f401xe.s in Sources */,
 				D4C7A14A19630FA000A1BE28 /* sys.cpp in Sources */,
@@ -11400,7 +11441,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
-				PRODUCT_NAME = "Motate FRDM-KL05Z copy";
+				PRODUCT_NAME = "Motate FRDM-KL05Z bufffered_uart";
 			};
 			name = Debug;
 		};
@@ -11408,7 +11449,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
-				PRODUCT_NAME = "Motate FRDM-KL05Z copy";
+				PRODUCT_NAME = "Motate FRDM-KL05Z bufffered_uart";
 			};
 			name = Release;
 		};
@@ -11416,7 +11457,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
-				PRODUCT_NAME = "Motate FRDM-KL05Z";
+				PRODUCT_NAME = "Motate FRDM-KL05Z uart";
 			};
 			name = Debug;
 		};
@@ -11424,7 +11465,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
-				PRODUCT_NAME = "Motate FRDM-KL05Z";
+				PRODUCT_NAME = "Motate FRDM-KL05Z uart";
 			};
 			name = Release;
 		};
@@ -11521,6 +11562,22 @@
 			};
 			name = Release;
 		};
+		D4DD3EAF19BFE35F0081E1BB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "Motate FRDM-KL05Z soft_pwm";
+			};
+			name = Debug;
+		};
+		D4DD3EB019BFE35F0081E1BB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "Motate FRDM-KL05Z soft_pwm";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -11583,6 +11640,15 @@
 			buildConfigurations = (
 				D4D4A031197CD7B400618EF3 /* Debug */,
 				D4D4A032197CD7B400618EF3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D4DD3EAE19BFE35F0081E1BB /* Build configuration list for PBXLegacyTarget "Motate FRDM-KL05Z soft_pwm" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D4DD3EAF19BFE35F0081E1BB /* Debug */,
+				D4DD3EB019BFE35F0081E1BB /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

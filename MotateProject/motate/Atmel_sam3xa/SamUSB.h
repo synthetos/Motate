@@ -1,6 +1,6 @@
 /*
  utility/SamUSB.h - Library for the Motate system
- http://tinkerin.gs/
+ http://github.com/synthetos/motate/
 
  Copyright (c) 2013 Robert Giseburt
 

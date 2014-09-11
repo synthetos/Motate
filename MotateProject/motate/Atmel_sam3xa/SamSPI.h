@@ -1,8 +1,8 @@
 /*
  utility/SamSPI.h - Library for the Motate system
- http://tinkerin.gs/
+ http://github.com/synthetos/motate/
 
- Copyright (c) 2013 Robert Giseburt
+ Copyright (c) 2013,2014 Robert Giseburt
 
  This file is part of the Motate Library.
 

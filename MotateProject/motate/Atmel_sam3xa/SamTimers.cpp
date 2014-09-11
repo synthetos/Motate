@@ -1,6 +1,6 @@
 /*
   SamTimers.cpp - Library for the Arduino-compatible Motate system
-  http://tinkerin.gs/
+  http://github.com/synthetos/motate/
 
   Copyright (c) 2013 Robert Giseburt
 
@@ -78,7 +78,7 @@ extern "C" {
         }\
     }
 
-    #define _MAKE_TCx_Handler(x) \
+#define _MAKE_TCx_Handler(x) \
     void TC##x##_Handler(void) { \
         Motate::Timer<x>::interrupt(); \
     }

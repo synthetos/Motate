@@ -32,8 +32,6 @@
 #include "MotateSerial.h"
 #include "MotateBuffer.h"
 
-#include <iterator>
-
 // This makes the Motate:: prefix unnecessary.
 using namespace Motate;
 
@@ -51,6 +49,8 @@ MOTATE_PIN_INTERRUPT(5) {
     led2_pin = button;
 }
 
+
+
 /****** Optional setup() function ******/
 
 void setup() {
@@ -58,6 +58,7 @@ void setup() {
     Serial.write("Type 0 to turn the light off, and 1 to turn it on.\n");
 
     Serial.write("Type: ");
+
 
     led2_pin = 1;
 
