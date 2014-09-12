@@ -48,6 +48,20 @@
                ReferencedContainer = "container:../Tools/Tools.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "D4A74B2319C167020019633A"
+               BuildableName = "Motate Due soft_pwm"
+               BlueprintName = "Motate Due soft_pwm"
+               ReferencedContainer = "container:Motate.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
       </BuildActionEntries>
    </BuildAction>
    <TestAction

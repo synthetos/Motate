@@ -75,12 +75,16 @@ namespace Motate {
         /* Waveform select, Up to 0xFFFFFFFF */
         kTimerUp            = TC_CMR_WAVE | TC_CMR_WAVSEL_UP,
         /* Waveform select, Up to TOP (RC) */
+        kTimerUpToTop       = TC_CMR_WAVE | TC_CMR_WAVSEL_UP_RC,
+        /* Keep the "ToMatch" naming for compatibility */
         kTimerUpToMatch     = TC_CMR_WAVE | TC_CMR_WAVSEL_UP_RC,
         /* For PWM, we'll alias kTimerUpToMatch as: */
         kPWMLeftAligned     = TC_CMR_WAVE | TC_CMR_WAVSEL_UP_RC,
         /* Waveform select, Up to 0xFFFFFFFF, then Down */
         kTimerUpDown        = TC_CMR_WAVE | TC_CMR_WAVSEL_UPDOWN,
         /* Waveform select, Up to TOP (RC), then Down */
+        kTimerUpDownToTop   = TC_CMR_WAVE | TC_CMR_WAVSEL_UPDOWN_RC,
+        /* Keep the "ToMatch" naming for compatibility */
         kTimerUpDownToMatch = TC_CMR_WAVE | TC_CMR_WAVSEL_UPDOWN_RC,
         /* For PWM, we'll alias kTimerUpDownToMatch as: */
         kPWMCenterAligned     = kTimerUpDownToMatch,

@@ -41,6 +41,7 @@ namespace Motate {
         /* Waveform select, Up to MAX */
         kTimerUp            = 1,
         /* Waveform select, Up to TOP */
+        kTimerUpToTop     = 2,
         kTimerUpToMatch     = 2,
         /* For PWM, we'll alias kTimerUpToMatch as: */
         kPWMLeftAligned     = kTimerUpToMatch,
@@ -48,6 +49,7 @@ namespace Motate {
         /* Waveform select, Up to 0xFFFFFFFF, then Down */
         kTimerUpDown        = 3,
         /* Waveform select, Up to TOP, then Down */
+        kTimerUpDownToTop = 4,
         kTimerUpDownToMatch = 4,
 
         /* For PWM, we'll alias kTimerUpDownToMatch as: */

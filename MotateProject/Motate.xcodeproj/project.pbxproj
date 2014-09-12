@@ -9925,6 +9925,20 @@
 			passBuildSettingsInEnvironment = 1;
 			productName = g3_due;
 		};
+		D4A74B2319C167020019633A /* Motate Due soft_pwm */ = {
+			isa = PBXLegacyTarget;
+			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 BOARD=Due";
+			buildConfigurationList = D4A74B2419C167020019633A /* Build configuration list for PBXLegacyTarget "Motate Due soft_pwm" */;
+			buildPhases = (
+			);
+			buildToolPath = /usr/bin/make;
+			buildWorkingDirectory = ./demos/soft_pwm;
+			dependencies = (
+			);
+			name = "Motate Due soft_pwm";
+			passBuildSettingsInEnvironment = 1;
+			productName = g3_due;
+		};
 		D4C4EF7E196DB49D00D1F791 /* Motate FRDM-KL05Z buffered_uart */ = {
 			isa = PBXLegacyTarget;
 			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 BOARD=FRDM-KL05Z";
@@ -10047,6 +10061,7 @@
 			targets = (
 				D45710C21705330C00EA19A8 /* Motate Due uart */,
 				D4D4A02F197CD7B400618EF3 /* Motate Due buffered_uart */,
+				D4A74B2319C167020019633A /* Motate Due soft_pwm */,
 				D4DD3EAD19BFE35F0081E1BB /* Motate FRDM-KL05Z soft_pwm */,
 				D4C78F731954DFAF00A1BE28 /* Motate FRDM-KL05Z uart */,
 				D4C4EF7E196DB49D00D1F791 /* Motate FRDM-KL05Z buffered_uart */,
@@ -11437,6 +11452,22 @@
 			};
 			name = Release;
 		};
+		D4A74B2519C167020019633A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "Motate Due uart copy";
+			};
+			name = Debug;
+		};
+		D4A74B2619C167020019633A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "Motate Due uart copy";
+			};
+			name = Release;
+		};
 		D4C4EF80196DB49D00D1F791 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -11604,6 +11635,15 @@
 			buildConfigurations = (
 				D457112B17053BFB00EA19A8 /* Debug */,
 				D457112C17053BFB00EA19A8 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D4A74B2419C167020019633A /* Build configuration list for PBXLegacyTarget "Motate Due soft_pwm" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D4A74B2519C167020019633A /* Debug */,
+				D4A74B2619C167020019633A /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

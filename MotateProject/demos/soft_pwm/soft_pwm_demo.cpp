@@ -9,7 +9,8 @@ OutputPin<kLED1_PinNumber> led1_pin;
 
 timer_number kBlinkTimerNumber = 0;
 timer_number kBlinkTimerChNumber = 0;
-TimerChannel<kBlinkTimerNumber, kBlinkTimerChNumber> blinkTimer(kTimerUpToMatch, /*Hz: */ 10000);
+TimerChannel<kBlinkTimerNumber, kBlinkTimerChNumber>
+                blinkTimer(kTimerUpToTop, /*Hz: */ 10000);
 
 float duty_cycle = 0.0;
 
@@ -41,7 +42,6 @@ MOTATE_TIMER_INTERRUPT(kBlinkTimerNumber) {
     int16_t interrupted_channel;
     TimerChannelInterruptOptions interrupt_cause = getInterruptCause(interrupted_channel);
     if (interrupt_cause == kInterruptOnMatch) {
-//        if (interrupted_channel != kBlinkTimerChNumber) return;
         led1_pin = 1;
     } else if (interrupt_cause == kInterruptOnOverflow) {
         led1_pin = 0;
