@@ -10,9 +10,9 @@ OutputPin<kLED1_PinNumber> led1_pin;
 timer_number kBlinkTimerNumber = 0;
 timer_number kBlinkTimerChNumber = 0;
 TimerChannel<kBlinkTimerNumber, kBlinkTimerChNumber>
-                blinkTimer(kTimerUpToTop, /*Hz: */ 10000);
+                blinkTimer(kTimerUpToMatch, /*Hz: */ 1000);
 
-float duty_cycle = 0.0;
+float duty_cycle = 0.01;
 
 /****** Optional setup() function ******/
 
@@ -27,9 +27,9 @@ void setup() {
 /****** Main run loop() ******/
 
 void loop() {
-    duty_cycle += 0.01;
+    duty_cycle += 0.03;
     if (duty_cycle > 1.0)
-        duty_cycle = 0.0;
+        duty_cycle = 0.01;
 
     blinkTimer.setDutyCycle(duty_cycle);
 

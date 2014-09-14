@@ -374,29 +374,29 @@ namespace Motate {
     template<> inline const IRQn_Type   Timer<1>::tcIRQ()        { return TPM1_IRQn; };
     template<> inline void Timer<1>::_enablePeripheralClock()    { SIM->SCGC6 |= SIM_SCGC6_TPM1_MASK; };
     template<> void Timer<1>::interrupt();
-    
-    
+
+
     template<uint8_t timerNum, uint8_t channelNum>
     struct TimerChannel : Timer<timerNum> {
         TimerChannel() : Timer<timerNum>{} {};
         TimerChannel(const TimerMode mode, const uint32_t freq) : Timer<timerNum>{mode, freq} {};
-        
+
         void setDutyCycle(const float ratio) {
             Timer<timerNum>::setDutyCycleForChannel(channelNum, ratio);
         };
-        
+
         void setExactDutyCycle(const uint32_t absolute) {
             Timer<timerNum>::setExactDutyCycle(channelNum, absolute);
         };
-        
+
         void setOutputOptions(const uint32_t options) {
             Timer<timerNum>::setOutputOptions(channelNum, options);
         };
-        
+
         void startPWMOutput() {
             Timer<timerNum>::startPWMOutput(channelNum);
         };
-        
+
         void stopPWMOutput() {
             Timer<timerNum>::stopPWMOutput(channelNum);
         }
@@ -423,24 +423,24 @@ namespace Motate {
         // Placeholder for user code.
         static void interrupt() __attribute__ ((weak));
     };
-    
-    
-    
+
+
+
     typedef const uint8_t timer_number;
-    
+
     static const timer_number SysTickTimerNum = 0xFF;
     template <>
     struct Timer<SysTickTimerNum> {
         static volatile uint32_t _motateTickCount;
-        
+
         Timer() { init(); };
         Timer(const TimerMode mode, const uint32_t freq) {
             init();
         };
-        
+
         void init() {
             _motateTickCount = 0;
-            
+
             // Set Systick to 1ms interval, common to all SAM3 variants
             if (SysTick_Config(SystemCoreClock / 1000))
             {
@@ -448,60 +448,60 @@ namespace Motate {
                 while (true);
             }
         };
-        
+
         // Return the current value of the counter. This is a fleeting thing...
         uint32_t getValue() {
             return _motateTickCount;
         };
-        
+
         void _increment() {
             _motateTickCount++;
         };
-        
+
         // Placeholder for user code.
         static void interrupt() __attribute__ ((weak));
     };
     extern Timer<SysTickTimerNum> SysTickTimer;
-    
-    
+
+
     static const timer_number WatchDogTimerNum = 0xFE;
     template <>
     struct Timer<WatchDogTimerNum> {
-        
+
         Timer() { init(); };
         Timer(const TimerMode mode, const uint32_t freq) {
             init();
             //			setModeAndFrequency(mode, freq);
         };
-        
+
         void init() {
         };
-        
+
         void disable() {
             SIM->COPC = SIM_COPC_COPT(0);
         };
-        
+
         void checkIn() {
         };
-        
+
         // Placeholder for user code.
         static void interrupt() __attribute__ ((weak));
     };
     extern Timer<WatchDogTimerNum> WatchDogTimer;
-    
+
     // Provide a Arduino-compatible blocking-delay function
     inline void delay( uint32_t microseconds )
     {
         uint32_t doneTime = SysTickTimer.getValue() + microseconds;
-        
+
         do
         {
             __NOP();
         } while ( SysTickTimer.getValue() < doneTime );
     }
-    
+
 #define MOTATE_TIMER_INTERRUPT(number) template<> void Motate::Timer<number>::interrupt()
-    
+
 } // namespace Motate
 
 

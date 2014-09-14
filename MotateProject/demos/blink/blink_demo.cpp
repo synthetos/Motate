@@ -1,6 +1,5 @@
 #include "MotatePins.h"
 #include "MotateTimers.h"
-#include "MotateUART.h"
 
 // This makes the Motate:: prefix unnecessary.
 using namespace Motate;
