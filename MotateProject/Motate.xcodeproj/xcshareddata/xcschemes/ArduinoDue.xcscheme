@@ -81,6 +81,15 @@
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
       allowLocationSimulation = "YES">
+      <MacroExpansion>
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "D45710C21705330C00EA19A8"
+            BuildableName = "Motate Due uart"
+            BlueprintName = "Motate Due uart"
+            ReferencedContainer = "container:Motate.xcodeproj">
+         </BuildableReference>
+      </MacroExpansion>
       <AdditionalOptions>
       </AdditionalOptions>
    </LaunchAction>

@@ -168,10 +168,10 @@ namespace Motate {
         void clear() {};
         void write(const bool value) {};
         void toggle() {};
-        uint8_t get() { return 0; };
-        uint8_t getInputValue() { return 0; };
-        uint8_t getOutputValue() { return 0; };
-        static uint32_t maskForPort(const uint8_t otherPortLetter) { return 0; };
+        uintPort_t get() { return 0; };
+        uintPort_t getInputValue() { return 0; };
+        uintPort_t getOutputValue() { return 0; };
+        static uintPort_t maskForPort(const uint8_t otherPortLetter) { return 0; };
         bool isNull() { return true; };
     };
 
@@ -387,7 +387,7 @@ namespace Motate {
             port ## registerLetter.setInterrupts(interrupts, mask);\
         };\
         bool isNull() { return false; };\
-            static uint32_t maskForPort(const uint8_t otherPortLetter) {\
+        static uint32_t maskForPort(const uint8_t otherPortLetter) {\
             return portLetter == otherPortLetter ? mask : 0x00u;\
         };\
     };\

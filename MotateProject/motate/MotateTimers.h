@@ -63,7 +63,7 @@ namespace Motate {
 
 #ifdef __AVR_XMEGA__
 
-#include <Atmel_avr/AvrXTimers.h>
+#include <Atmel_XMega/XMegaTimers.h>
 
 #else
 

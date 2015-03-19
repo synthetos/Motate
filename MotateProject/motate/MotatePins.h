@@ -45,7 +45,7 @@ namespace Motate {
 
 #ifdef __AVR_XMEGA__
 
-#include <Atmel_avr/AvrXPins.h>
+#include <Atmel_XMega/XMegaPins.h>
 
 #else
 

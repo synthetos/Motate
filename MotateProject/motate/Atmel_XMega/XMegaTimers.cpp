@@ -1,5 +1,5 @@
 /*
-  MotateUART.h - UART Library for the Motate system
+  KL05ZTimers.cpp - Library for the Arduino-compatible Motate system
   http://github.com/synthetos/motate/
 
   Copyright (c) 2013 Robert Giseburt
@@ -27,32 +27,45 @@
 	OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef MOTATEUART_H_ONCE
-#define MOTATEUART_H_ONCE
-
-#include <inttypes.h>
-
-namespace Motate {	
-} // namespace Motate
-
-#ifdef __AVR_XMEGA__
-
-#include <Atmel_XMega/XMegaUART.h>
-
-#else
-
-#ifdef __AVR__
-#include <Atmel_avr/AvrUART.h>
-#endif
-
-#endif
-
-#if defined(__SAM3X8E__) || defined(__SAM3X8C__)
-#include <Atmel_sam3xa/SamUART.h>
-#endif
 
 #if defined(__KL05Z__)
-#include <Freescale_klxx/KL05ZUART.h>
-#endif
 
-#endif /* end of include guard: MOTATEUART_H_ONCE */
+#include "Freescale_klxx/KL05ZTimers.h"
+//#include "Reset.h"
+
+namespace Motate {
+	/* System-wide tick counter */
+	/*  Inspired by code from Atmel and Arduino.
+	 *  Some of which is:   Copyright (c) 2012 Arduino. All right reserved.
+	 *  Some of which is:   Copyright (c) 2011-2012, Atmel Corporation. All rights reserved.
+	 */
+
+	Timer<SysTickTimerNum> SysTickTimer;
+	Timer<WatchDogTimerNum> WatchDogTimer;
+
+	volatile uint32_t Timer<SysTickTimerNum>::_motateTickCount = 0;
+
+} // namespace Motate
+
+extern "C" void SysTick_Handler(void)
+{
+//	if (sysTickHook)
+//		sysTickHook();
+
+//	tickReset();
+
+	Motate::SysTickTimer._increment();
+
+	if (Motate::SysTickTimer.interrupt) {
+		Motate::SysTickTimer.interrupt();
+	}
+}
+
+extern "C" {
+
+    void TPM0_IRQHandler(void) { Motate::Timer<0>::interrupt(); }
+    void TPM1_IRQHandler(void) { Motate::Timer<1>::interrupt(); }
+
+}
+
+#endif // __KL05Z__
