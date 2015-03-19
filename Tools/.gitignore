@@ -1,2 +1,5 @@
-gcc-arm-none-eabi-*
 .DS_Store
+gcc-arm-none-eabi
+gcc-arm-none-eabi-*
+avr-gcc
+avr-toolchain-*
