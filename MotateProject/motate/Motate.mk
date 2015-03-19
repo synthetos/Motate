@@ -341,7 +341,7 @@ $(OUTPUT_BIN).elf: MKTOOLS $(ALL_C_OBJECTS) $(ALL_CXX_OBJECTS) $(ALL_ASM_OBJECTS
 	@echo "--- SIZE INFO ---"
 	$(QUIET)$(SIZE) "$(OUTPUT_BIN).elf"
 
-## Note: The motate paths are seperated doe to MOTATE_PATH having multple ../ in it.
+## Note: The motate paths are seperated do to MOTATE_PATH having multple ../ in it.
 
 $(MOTATE_CXX_OBJECTS): $(OUTDIR)/motate/%.o: $(MOTATE_PATH)/%.cpp
 	$(QUIET)$(MKDIR) -p "$(@D)" "$(DEPDIR)" "$(BIN)"
