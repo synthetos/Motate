@@ -196,13 +196,13 @@ namespace Motate {
             return -1;
         }
 
-        static int16_t write(uint8_t value, const bool lastXfer = false) {
+        static int16_t write(const uint8_t value, const bool lastXfer = false) {
             int16_t throw_away;
             // Let's see what the optimizer does with this...
             return write(value, throw_away, lastXfer);
         };
 
-        static int16_t write(uint8_t value, int16_t &readValue, const bool lastXfer = false) {
+        static int16_t write(const uint8_t value, int16_t &readValue, const bool lastXfer = false) {
             if (spi_proxy.S() & SPI_S_SPRF_MASK) {
                 readValue = spi_proxy.D();
             } else {
@@ -252,12 +252,6 @@ namespace Motate {
         SPI(const uint32_t baud = 4000000, const uint16_t options = kSPI8Bit | kSPIMode0) {
             hardware.init();
             init(baud, options, /*fromConstructor =*/ true);
-
-            /* TEMP HACK !! */
-            //            csPin.setMode(kPeripheralA);
-            //            misoPin.setMode(kPeripheralA);
-            //            mosiPin.setMode(kPeripheralA);
-            //            sckPin.setMode(kPeripheralA);
         };
 
         void init(const uint32_t baud, const uint16_t options, const bool fromConstructor=false) {
@@ -265,7 +259,8 @@ namespace Motate {
         };
 
         bool setChannel() {
-            return hardware.setChannel(spiChannelNumber());
+//            return hardware.setChannel(spiChannelNumber());
+            return true;
         };
 
 //        uint16_t getOptions() {
@@ -315,17 +310,17 @@ namespace Motate {
         };
 
         void flush() {
-            hardware.disable();
-            hardware.enable();
+//            hardware.disable();
+//            hardware.enable();
         };
 
         // WARNING: Currently only writes in bytes. For more-that-byte size data, we'll need another call.
-        int16_t write(const uint8_t *data, const uint16_t length, bool autoFlush = true) {
+        int16_t write(const char *data, const uint16_t length = 0, bool autoFlush = true) {
             if (!setChannel())
                 return -1;
 
             int16_t total_written = 0;
-            const uint8_t *out_buffer = data;
+            const char *out_buffer = data;
             int16_t to_write = length;
 
             bool lastXfer = false;
@@ -335,12 +330,15 @@ namespace Motate {
                 if (autoFlush && to_write == 1)
                     lastXfer = true;
                 
-                int16_t ret = write(*out_buffer, lastXfer);
+                int16_t ret = writeByte(*out_buffer, lastXfer);
                 
                 if (ret > 0) {
                     out_buffer++;
                     total_written++;
                     to_write--;
+                    if (length==0 && *out_buffer==0) {
+                        break;
+                    }
                 }
             } while (to_write);
             

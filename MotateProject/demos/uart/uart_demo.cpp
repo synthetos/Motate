@@ -51,6 +51,8 @@ Motate::OutputPin<Motate::kLED2_PinNumber> led2_pin;
 
 //Motate::UART<> Serial {115200}; // 115200 is the default, as well.
 
+//Motate::SPI<10> SPI;
+
 
 timer_number kThingTimerNumber = 1;
 
@@ -119,7 +121,8 @@ void loop() {
                 *write_pos = 0;
                 // Write a static string...
                 Serial.write(write_buffer);
-                
+//                SPI.write(write_buffer);
+
                 Serial.write("Type: ");
                 write_pos = std::begin(write_buffer);
                 
