@@ -28,9 +28,11 @@
 */
 
 
-#if defined(__KL05Z__)
+#if defined(__AVR_XMEGA__)
 
-#include "Freescale_klxx/KL05ZTimers.h"
+#include "Atmel_XMega/XMegaTimers.h"
+#include <avr/io.h>
+#include <avr/interrupt.h>
 //#include "Reset.h"
 
 namespace Motate {
@@ -47,25 +49,35 @@ namespace Motate {
 
 } // namespace Motate
 
-extern "C" void SysTick_Handler(void)
+//extern "C" void SysTick_Handler(void)
+//{
+////	if (sysTickHook)
+////		sysTickHook();
+//
+////	tickReset();
+//
+//	Motate::SysTickTimer._increment();
+//
+//	if (Motate::SysTickTimer.interrupt) {
+//		Motate::SysTickTimer.interrupt();
+//	}
+//}
+
+
+ISR(RTC_COMP_vect)
 {
-//	if (sysTickHook)
-//		sysTickHook();
+    Motate::SysTickTimer._increment();
 
-//	tickReset();
-
-	Motate::SysTickTimer._increment();
-
-	if (Motate::SysTickTimer.interrupt) {
-		Motate::SysTickTimer.interrupt();
-	}
+    if (Motate::SysTickTimer.interrupt) {
+        Motate::SysTickTimer.interrupt();
+    }
 }
 
-extern "C" {
+//extern "C" {
+//
+//    void TPM0_IRQHandler(void) { Motate::Timer<0>::interrupt(); }
+//    void TPM1_IRQHandler(void) { Motate::Timer<1>::interrupt(); }
+//
+//}
 
-    void TPM0_IRQHandler(void) { Motate::Timer<0>::interrupt(); }
-    void TPM1_IRQHandler(void) { Motate::Timer<1>::interrupt(); }
-
-}
-
-#endif // __KL05Z__
+#endif // __AVR_XMEGA__

@@ -45,8 +45,8 @@ endif #eq ($(ARCH), 'gcc-arm-none-eabi')
 
 
 
-ifeq ($(ARCH), avr-gcc)
-TOOLS_SUBPATH = avr-gcc
+ifeq ($(ARCH), gcc-avr)
+TOOLS_SUBPATH = gcc-avr
 
 TOOLS_VERSION = 3.4.5
 TOOLS_EXPANDED_DIRNAME = avr-toolchain-${TOOLS_VERSION}

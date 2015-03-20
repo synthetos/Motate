@@ -34,17 +34,19 @@ ifeq ("$(BOARD)","TinyGv8")
     BASE_BOARD = xmega
     DEVICE_DEFINES += MOTATE_BOARD="TinyGv8"
     DEVICE_DEFINES += MOTATE_CONFIG_HAS_USBSERIAL=0
+    DEVICE_DEFINES += F_CPU=32000000UL
+    DEVICE_DEFINES += __CLOCK_EXTERNAL_16MHZ=1
 endif
 
 ifeq ("$(BASE_BOARD)","xmega")
     _BOARD_FOUND = 1
 
-    FIRST_LINK_SOURCES += $(wildcard ${MOTATE_PATH}/Atmel_avr/*.cpp)
+    FIRST_LINK_SOURCES += $(wildcard ${MOTATE_PATH}/Atmel_XMega/*.cpp)
 
-    CHIP = SAM3X8E
-    CHIP_LOWERCASE = sam3x8e
+    CHIP = atxmega192a3
+    CHIP_LOWERCASE = atxmega192a3
 
-    BOARD_PATH = ${MOTATE_PATH}/board/XMega
+    BOARD_PATH = ${MOTATE_PATH}/board/TinyGv8
     DEVICE_INCLUDE_DIRS += $(BOARD_PATH)
 
     PLATFORM_BASE = ${MOTATE_PATH}/platform/atmel_xmega

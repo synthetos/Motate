@@ -238,7 +238,7 @@ ASFLAGS = $(DEVICE_ASFLAGS)
 # ---------------------------------------------------------------------------------------
 # Linker Flags
 
-LDFLAGS += $(LIBS) $(USER_LIBS) -Wl,--cref -Wl,--check-sections -Wl,--gc-sections -Wl,--entry=Reset_Handler -Wl,--unresolved-symbols=report-all -Wl,--warn-common -Wl,--warn-section-align -Wl,--relax -Wl,--warn-unresolved-symbols $(DEVICE_LDFLAGS)
+LDFLAGS += $(LIBS) $(USER_LIBS) -Wl,--cref -Wl,--check-sections -Wl,--gc-sections -Wl,--unresolved-symbols=report-all -Wl,--warn-common -Wl,--warn-section-align -Wl,--relax -Wl,--warn-unresolved-symbols $(DEVICE_LDFLAGS)
 
 #
 # End of setup tools
@@ -280,7 +280,11 @@ $(info $(NEWLINE_ONLY)CXX_SOURCES: $(patsubst %,$(NEWLINE_TAB)%,$(CXX_SOURCES)))
 $(info $(NEWLINE_ONLY)FIRST_LINK_SOURCES: $(patsubst %,$(NEWLINE_TAB)%,$(FIRST_LINK_SOURCES)))
 endif
 
-all: $(OUTPUT_BIN).elf
+ifneq ("$(DEVICE_NEEDS_HEX)","")
+NEEDS_HEX = $(OUTPUT_BIN).hex
+endif
+
+all: $(OUTPUT_BIN).elf $(NEEDS_HEX)
 
 REQUIRED_DIRS := $(BIN) $(OBJ) $(DEPDIR)
 
@@ -324,22 +328,36 @@ CFLAGS   += -g3 -O$(OPTIMIZATION) $(INCLUDES) $(patsubst %,-D%,$(DEVICE_DEFINES)
 CPPFLAGS += -g3 -O$(OPTIMIZATION) $(INCLUDES) $(patsubst %,-D%,$(DEVICE_DEFINES) $(USER_DEFINES))
 ASFLAGS  += -g3 -O$(OPTIMIZATION) $(INCLUDES) -D__ASSEMBLY__ $(patsubst %,-D%,$(DEVICE_DEFINES) $(USER_DEFINES))
 
+ifneq ("$(DEVICE_LINKER_SCRIPT)", "")
 LINKER_SCRIPT := $(DEVICE_LINKER_SCRIPT)
 ABS_LINKER_SCRIPT = $(abspath $(LINKER_SCRIPT))
+ABS_LINKER_SCRIPT_TEXT = $(abspath $(LINKER_SCRIPT))
+LINKER_SCRIPT_OPTION = -T"$(LINKER_SCRIPT)"
+
+else
+
+ABS_LINKER_SCRIPT =
+ABS_LINKER_SCRIPT_TEXT = "[built in]"
+LINKER_SCRIPT_OPTION =
+
+endif
 
 # Generate dependency information
 DEPFLAGS = -MMD -MF $(OBJ)/dep/$(@F).d -MT $(subst $(OUTDIR),$(OBJ),$@)
 
 $(OUTPUT_BIN).elf: MKTOOLS $(ALL_C_OBJECTS) $(ALL_CXX_OBJECTS) $(ALL_ASM_OBJECTS) $(ABS_LINKER_SCRIPT)
 	@echo $(START_BOLD)"Linking $(OUTPUT_BIN).elf" $(END_BOLD)
-	@echo $(START_BOLD)"Using linker script: $(ABS_LINKER_SCRIPT)" $(END_BOLD)
-	$(QUIET)$(CXX) $(LIB_PATH) -T"$(ABS_LINKER_SCRIPT)" -Wl,-Map,"$(OUTPUT_BIN).map" -o ${filter-out MKTOOLS,$@} $(LDFLAGS) $(LD_OPTIONAL) $(LIBS) -Wl,--start-group $(FIRST_LINK_OBJECTS_PATHS) $(filter-out $(FIRST_LINK_OBJECTS_PATHS) $(ABS_LINKER_SCRIPT) MKTOOLS,$+) -Wl,--end-group
+	@echo $(START_BOLD)"Using linker script: $(ABS_LINKER_SCRIPT_TEXT)" $(END_BOLD)
+	$(QUIET)$(CXX) $(LIB_PATH) $(LINKER_SCRIPT_OPTION) -Wl,-Map,"$(OUTPUT_BIN).map" -o ${filter-out MKTOOLS,$@} $(LDFLAGS) $(LD_OPTIONAL) $(LIBS) -Wl,--start-group $(FIRST_LINK_OBJECTS_PATHS) $(filter-out $(FIRST_LINK_OBJECTS_PATHS) $(ABS_LINKER_SCRIPT) MKTOOLS,$+) -Wl,--end-group
 	@echo $(START_BOLD)"Exporting symbols $(OUTPUT_BIN).elf.txt" $(END_BOLD)
 	$(QUIET)$(NM) "$(OUTPUT_BIN).elf" >"$(OUTPUT_BIN).elf.txt"
 	@echo $(START_BOLD)"Making binary $(OUTPUT_BIN).bin" $(END_BOLD)
 	$(QUIET)$(OBJCOPY) -O binary "$(OUTPUT_BIN).elf" "$(OUTPUT_BIN).bin"
 	@echo "--- SIZE INFO ---"
 	$(QUIET)$(SIZE) "$(OUTPUT_BIN).elf"
+
+$(OUTPUT_BIN).hex: $(OUTPUT_BIN).elf
+	$(QUIET)$(OBJCOPY) -O ihex $(DEVICE_HEX_FLAGS) $< $@
 
 ## Note: The motate paths are seperated do to MOTATE_PATH having multple ../ in it.
 
@@ -388,7 +406,7 @@ $(PROJECT).map: $(OUTPUT_BIN).map
 	$(CP) $< $@
 
 $(PROJECT).hex: $(OUTPUT_BIN).elf
-	$(QUIET)$(OBJCOPY) -O ihex $< $@
+	$(QUIET)$(OBJCOPY) -O ihex $(DEVICE_HEX_FLAGS) $< $@
 
 $(PROJECT).bin: $(OUTPUT_BIN).elf
 	$(QUIET)$(OBJCOPY) -O binary $< $@

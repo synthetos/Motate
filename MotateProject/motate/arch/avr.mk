@@ -1,8 +1,8 @@
 #
 # Makefile
 # 
-# Copyright (c) 2012 - 2014 Robert Giseburt
-# Copyright (c) 2013 - 2014 Alden S. Hart Jr.
+# Copyright (c) 2012 - 2015 Robert Giseburt
+# Copyright (c) 2013 - 2016 Alden S. Hart Jr.
 # 
 #	This file is part of the Motate Library.
 #
@@ -36,37 +36,48 @@
 # $(CPU_DEV)
 
 
-DEVICE_LIBS          = gcc c
+DEVICE_LIBS          = gcc c m
 
 ifeq ($(NEEDS_PRINTF_FLOAT),1)
-PRINTF_FLOAT_FLAGS = -u _printf_float
+#PRINTF_FLOAT_FLAGS = -u _printf_float
 endif
 
 ifeq ($(NEEDS_SCANF_FLOAT),1)
-PRINTF_FLOAT_FLAGS = -u _scanf_float
+#PRINTF_FLOAT_FLAGS = -u _scanf_float
 endif
 
 
 # ---------------------------------------------------------------------------------------
 # C Flags (NOT CPP flags)
 
-DEVICE_CFLAGS := -D__$(CHIP)__ -D__$(CHIP_SERIES)__ -mcpu=$(CPU_DEV) -mthumb -ffunction-sections -fdata-sections -std=gnu99
+DEVICE_CFLAGS := -D__$(CHIP)__ -D__$(CHIP_SERIES)__ -mmcu=$(CPU_DEV) -ffunction-sections -fdata-sections -std=gnu99
 
 #--param max-inline-insns-single=500 -mlong-calls
 
 # ---------------------------------------------------------------------------------------
 # CPP Flags
 
-DEVICE_CPPFLAGS := -D__$(CHIP)__ -D__$(CHIP_SERIES)__ -mcpu=$(CPU_DEV) -mthumb -ffunction-sections -fdata-sections -std=gnu++11 -fno-rtti -fno-exceptions
+DEVICE_CPPFLAGS := -D__$(CHIP)__ -D__$(CHIP_SERIES)__ -mmcu=$(CPU_DEV) -ffunction-sections -fdata-sections -std=gnu++11 -fno-rtti -fno-exceptions
 # --param max-inline-insns-single=500 -mlong-calls
 
 # ---------------------------------------------------------------------------------------
 # Assembly Flags
 
-DEVICE_ASFLAGS  := -D__$(CHIP)__ -D__$(CHIP_SERIES)__ -mcpu=$(CPU_DEV) -mthumb
+DEVICE_ASFLAGS  := -D__$(CHIP)__ -D__$(CHIP_SERIES)__ -mmcu=$(CPU_DEV)
 
 # ---------------------------------------------------------------------------------------
 # Linker Flags
 
-DEVICE_LDFLAGS :=  -Wl,--entry=Reset_Handler -nostartfiles -mcpu=$(CPU_DEV) --specs=nano.specs ${PRINTF_FLOAT_FLAGS} -mthumb -L$(DEVICE_LINKER_SCRIPT_PATH)
+DEVICE_LDFLAGS := -mmcu=$(CPU_DEV) ${PRINTF_FLOAT_FLAGS}
 
+
+# ---------------------------------------------------------------------------------------
+# objcopy hex Flags
+
+DEVICE_NEEDS_HEX=1
+
+#DEVICE_HEX_FLAGS = -R .eeprom -R .fuse -R .lock -R .signature
+
+#HEX_EEPROM_FLAGS = -j .eeprom
+#HEX_EEPROM_FLAGS += --set-section-flags=.eeprom="alloc,load"
+#HEX_EEPROM_FLAGS += --change-section-lma .eeprom=0 --no-change-warnings

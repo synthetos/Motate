@@ -33,7 +33,31 @@
 #include <avr/io.h>
 #include <util/atomic.h>
 
+#include "xmega.h"
+
 namespace Motate {
+
+    // **************************
+    // Briefly: avr-gcc doesn't include the stl, at all.
+    // And, we only need enable_if, so here it is, yanked
+    // graciously from type_traits of gcc 4.8.3:
+
+    namespace std {
+        //#include <type_traits>
+        template<bool, typename _Tp = void>
+        struct enable_if
+        { };
+
+        // Partial specialization for true.
+        template<typename _Tp>
+        struct enable_if<true, _Tp>
+        { typedef _Tp type; };
+    } // end motate::std
+
+
+    // **************************
+    // Resume actual Motate code:
+
 	enum PinMode {
 		kUnchanged         = 0,
 		kOutput            = 1,
@@ -322,7 +346,7 @@ namespace Motate {
     typedef Pin<pinNum> Pin ## pinNum;\
     static Pin<pinNum> pin ## pinNum(kOutput);\
     typedef InputPin<pinNum> InputPin ## pinNum;\
-    typedef OutputPin<pinNum> OutputPin ## pinNum;
+    typedef OutputPin<pinNum> OutputPin ## pinNum;\
     template<>\
     struct ReversePinLookup<registerChar, registerPin> : Pin<pinNum> {\
         ReversePinLookup() {};\
@@ -346,18 +370,15 @@ namespace Motate {
 			/*case kTotem:*/\
 				(PORT ## registerLetter).PIN0CTRL = PORT_OPC_TOTEM_gc;\
 				break;\
-#ifdef MOTATE_AVR_COMPATIBILITY
 			case kBusKeeper:\
 				(PORT ## registerLetter).PIN0CTRL = PORT_OPC_BUSKEEPER_gc;\
 				break;\
 			case kPullDown:\
 				(PORT ## registerLetter).PIN0CTRL = PORT_OPC_PULLDOWN_gc;\
 				break;\
-#endif // MOTATE_AVR_COMPATIBILITY
 			case kPullUp:\
 				(PORT ## registerLetter).PIN0CTRL = PORT_OPC_PULLUP_gc;\
 				break;\
-#ifdef MOTATE_AVR_COMPATIBILITY
 			case kWiredOr:\
 				(PORT ## registerLetter).PIN0CTRL = PORT_OPC_WIREDOR_gc;\
 				break;\
@@ -370,7 +391,6 @@ namespace Motate {
 			case kWiredAndPull:\
 				(PORT ## registerLetter).PIN0CTRL = PORT_OPC_WIREDANDPULL_gc;\
 				break;\
-#endif // MOTATE_AVR_COMPATIBILITY
 			default:\
 				break;\
 		}\

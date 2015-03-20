@@ -48,6 +48,8 @@ extern void loop();
 
 int main(void);
 
+#ifdef __ARM__
+
 #ifdef __cplusplus
 extern "C"{
 #endif // __cplusplus
@@ -72,6 +74,7 @@ extern "C"{
 }
 #endif // __cplusplus
 
+#endif // __ARM__
 
 /*
  * _system_init()
@@ -79,6 +82,10 @@ extern "C"{
 
 void _system_init(void)
 {
+#ifdef __AVR__
+    SystemInit();
+#endif // __AVR__
+
     Motate::WatchDogTimer.disable();
 }
 

@@ -14,9 +14,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "D4E90E211ABB39D20042A16C"
-               BuildableName = "Motate XMega blink"
-               BlueprintName = "Motate XMega blink"
+               BlueprintIdentifier = "D4E910B71ABBB2370042A16C"
+               BuildableName = "index_kl05z copy"
+               BlueprintName = "index_xmega"
                ReferencedContainer = "container:Motate.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -32,9 +32,9 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "D4E90E211ABB39D20042A16C"
-            BuildableName = "Motate XMega blink"
-            BlueprintName = "Motate XMega blink"
+            BlueprintIdentifier = "D4E910B71ABBB2370042A16C"
+            BuildableName = "index_kl05z copy"
+            BlueprintName = "index_xmega"
             ReferencedContainer = "container:Motate.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -48,15 +48,16 @@
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
       allowLocationSimulation = "YES">
-      <MacroExpansion>
+      <BuildableProductRunnable
+         runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "D4E90E211ABB39D20042A16C"
-            BuildableName = "Motate XMega blink"
-            BlueprintName = "Motate XMega blink"
+            BlueprintIdentifier = "D4E910B71ABBB2370042A16C"
+            BuildableName = "index_kl05z copy"
+            BlueprintName = "index_xmega"
             ReferencedContainer = "container:Motate.xcodeproj">
          </BuildableReference>
-      </MacroExpansion>
+      </BuildableProductRunnable>
       <AdditionalOptions>
       </AdditionalOptions>
    </LaunchAction>
@@ -66,15 +67,16 @@
       useCustomWorkingDirectory = "NO"
       buildConfiguration = "Release"
       debugDocumentVersioning = "YES">
-      <MacroExpansion>
+      <BuildableProductRunnable
+         runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "D4E90E211ABB39D20042A16C"
-            BuildableName = "Motate XMega blink"
-            BlueprintName = "Motate XMega blink"
+            BlueprintIdentifier = "D4E910B71ABBB2370042A16C"
+            BuildableName = "index_kl05z copy"
+            BlueprintName = "index_xmega"
             ReferencedContainer = "container:Motate.xcodeproj">
          </BuildableReference>
-      </MacroExpansion>
+      </BuildableProductRunnable>
    </ProfileAction>
    <AnalyzeAction
       buildConfiguration = "Debug">

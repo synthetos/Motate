@@ -30,7 +30,10 @@
 #ifndef XMEGATIMERS_H_ONCE
 #define XMEGATIMERS_H_ONCE
 
+#include "xmega.h"
+
 namespace Motate {
+#if 0 // FIX ME
     enum TimerMode {
         /* InputCapture mode (WAVE = 0) */
         kTimerInputCapture         = 0,
@@ -961,34 +964,59 @@ namespace Motate {
          */
     };
 
+#endif // FIXME
+    /// THEN REMOVE THIS:
+    typedef const uint8_t timer_number;
+
+    template <uint8_t timerNum>
+    struct Timer {
+    };
+    // END REMOVE
+
+
     static const timer_number SysTickTimerNum = 0xFF;
     template <>
     struct Timer<SysTickTimerNum> {
         static volatile uint32_t _motateTickCount;
 
-        Timer() { init(); };
-        Timer(const TimerMode mode, const uint32_t freq) {
-            init();
-        };
+        Timer() { /*init();*/ };
+//        Timer(const TimerMode mode, const uint32_t freq) {
+//            init();
+//        };
+
+
+        /*
+         * Code originally from rtc.c of the TinyG project:
+         * rtc_init() - initialize and start the clock
+         *
+         * This routine follows the code in app note AVR1314.
+         */
 
         void init() {
             _motateTickCount = 0;
 
-            // Set Systick to 1ms interval, common to all SAM3 variants
-            if (SysTick_Config(SystemCoreClock / 1000))
-            {
-                // Capture error
-                while (true);
-            }
+            OSC.CTRL |= OSC_RC32KEN_bm;							// Turn on internal 32kHz.
+            do {} while ((OSC.STATUS & OSC_RC32KRDY_bm) == 0);	// Wait for 32kHz oscillator to stabilize.
+            do {} while (RTC.STATUS & RTC_SYNCBUSY_bm);			// Wait until RTC is not busy
+
+            CLK.RTCCTRL = CLK_RTCSRC_RCOSC_gc | CLK_RTCEN_bm;	// Set internal 32kHz osc as RTC clock source
+            do {} while (RTC.STATUS & RTC_SYNCBUSY_bm);			// Wait until RTC is not busy
+
+            // the following must be in this order or it doesn;t work
+            RTC.PER = 0xfffe;	// set overflow period to maximum -- we'll use the count + out own overflow counter
+            RTC.CNT = 0;
+            RTC.COMP = 0xfffe;
+            RTC.CTRL = RTC_PRESCALER_DIV1_gc;					// no prescale (1x)
+            RTC.INTCTRL = RTC_COMPINTLVL_LO_gc;                 // interrupt on compare
         };
 
         // Return the current value of the counter. This is a fleeting thing...
         uint32_t getValue() {
-            return _motateTickCount;
+            return _motateTickCount + RTC.CNT;
         };
 
-        void _increment() {
-            _motateTickCount++;
+        void _increment() { // called on overflow, every 0xffff ms
+            _motateTickCount += 0xffff;
         };
 
         // Placeholder for user code.
@@ -1001,16 +1029,17 @@ namespace Motate {
     struct Timer<WatchDogTimerNum> {
 
         Timer() { init(); };
-        Timer(const TimerMode mode, const uint32_t freq) {
-            init();
-            //			setModeAndFrequency(mode, freq);
-        };
+//        Timer(const TimerMode mode, const uint32_t freq) {
+//            init();
+//            //			setModeAndFrequency(mode, freq);
+//        };
 
         void init() {
         };
 
         void disable() {
-            WDT->WDT_MR = WDT_MR_WDDIS;
+        // FIXME
+//            WDT->WDT_MR = WDT_MR_WDDIS;
         };
 
         void checkIn() {
@@ -1029,7 +1058,8 @@ namespace Motate {
 
         do
         {
-            __NOP();
+            // Huh! No __NOP() macro. Oh well...
+            __asm__ __volatile__ ("nop");
         } while ( SysTickTimer.getValue() < doneTime );
     }
 

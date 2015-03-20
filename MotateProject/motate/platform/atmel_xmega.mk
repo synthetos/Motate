@@ -27,46 +27,32 @@
 #	OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 
-
-#######
-#
-# These values must be defined before including this file:
-# $(CHIP)
-# $(CHIP_SERIES)
-# $(CPU_DEV)
-
-
-DEVICE_LIBS          = gcc c
-
-ifeq ($(NEEDS_PRINTF_FLOAT),1)
-PRINTF_FLOAT_FLAGS = -u _printf_float
-endif
-
-ifeq ($(NEEDS_SCANF_FLOAT),1)
-PRINTF_FLOAT_FLAGS = -u _scanf_float
+ifeq ('$(CHIP)','')
+$(error CHIP not defined)
 endif
 
 
-# ---------------------------------------------------------------------------------------
-# C Flags (NOT CPP flags)
+CHIP_SERIES=XMEGA
 
-DEVICE_CFLAGS := -D__$(CHIP)__ -D__$(CHIP_SERIES)__ -mcpu=$(CPU_DEV) -mthumb -ffunction-sections -fdata-sections -std=gnu99
+# Toolchain prefix when cross-compiling
+CROSS_COMPILE = avr
 
-#--param max-inline-insns-single=500 -mlong-calls
+DEVICE_PATH = $(MOTATE_PATH)/platform/atmel_xmega
 
-# ---------------------------------------------------------------------------------------
-# CPP Flags
+XMEGA_SOURCE_DIRS += $(MOTATE_PATH)/Atmel_XMega
+XMEGA_SOURCE_DIRS += $(DEVICE_PATH)
+FIRST_LINK_SOURCES += $(MOTATE_PATH)/platform/atmel_xmega/syscalls.c
+FIRST_LINK_SOURCES += $(MOTATE_PATH)/platform/atmel_xmega/xmega.c
 
-DEVICE_CPPFLAGS := -D__$(CHIP)__ -D__$(CHIP_SERIES)__ -mcpu=$(CPU_DEV) -mthumb -ffunction-sections -fdata-sections -std=gnu++11 -fno-rtti -fno-exceptions
-# --param max-inline-insns-single=500 -mlong-calls
+DEVICE_RULES = $(call CREATE_DEVICE_LIBRARY,XMEGA,device_xmega)
 
-# ---------------------------------------------------------------------------------------
-# Assembly Flags
+# Flags
+DEVICE_INCLUDE_DIRS += $(DEVICE_PATH)
+DEVICE_INCLUDE_DIRS += $(MOTATE_PATH)/Atmel_XMega
 
-DEVICE_ASFLAGS  := -D__$(CHIP)__ -D__$(CHIP_SERIES)__ -mcpu=$(CPU_DEV) -mthumb
 
-# ---------------------------------------------------------------------------------------
-# Linker Flags
+DEVICE_LINKER_SCRIPT =
 
-DEVICE_LDFLAGS :=  -Wl,--entry=Reset_Handler -nostartfiles -mcpu=$(CPU_DEV) --specs=nano.specs ${PRINTF_FLOAT_FLAGS} -mthumb -L$(DEVICE_LINKER_SCRIPT_PATH)
+CPU_DEV = $(CHIP)
 
+include $(MOTATE_PATH)/arch/avr.mk

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "0510"
+   LastUpgradeVersion = "0620"
    version = "1.3">
    <BuildAction
       parallelizeBuildables = "YES"
@@ -14,10 +14,10 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "D457112317053BFB00EA19A8"
-               BuildableName = "index"
-               BlueprintName = "index"
-               ReferencedContainer = "container:TinyG2.xcodeproj">
+               BlueprintIdentifier = "D4C79F2F19630FA000A1BE28"
+               BuildableName = "index_kl05z"
+               BlueprintName = "index_kl05z"
+               ReferencedContainer = "container:Motate.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -32,10 +32,10 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "D457112317053BFB00EA19A8"
-            BuildableName = "index"
-            BlueprintName = "index"
-            ReferencedContainer = "container:TinyG2.xcodeproj">
+            BlueprintIdentifier = "D4C79F2F19630FA000A1BE28"
+            BuildableName = "index_kl05z"
+            BlueprintName = "index_kl05z"
+            ReferencedContainer = "container:Motate.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
    </TestAction>
@@ -48,13 +48,14 @@
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
       allowLocationSimulation = "YES">
-      <BuildableProductRunnable>
+      <BuildableProductRunnable
+         runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "D457112317053BFB00EA19A8"
-            BuildableName = "index"
-            BlueprintName = "index"
-            ReferencedContainer = "container:TinyG2.xcodeproj">
+            BlueprintIdentifier = "D4C79F2F19630FA000A1BE28"
+            BuildableName = "index_kl05z"
+            BlueprintName = "index_kl05z"
+            ReferencedContainer = "container:Motate.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
       <AdditionalOptions>
@@ -66,13 +67,14 @@
       useCustomWorkingDirectory = "NO"
       buildConfiguration = "Release"
       debugDocumentVersioning = "YES">
-      <BuildableProductRunnable>
+      <BuildableProductRunnable
+         runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "D457112317053BFB00EA19A8"
-            BuildableName = "index"
-            BlueprintName = "index"
-            ReferencedContainer = "container:TinyG2.xcodeproj">
+            BlueprintIdentifier = "D4C79F2F19630FA000A1BE28"
+            BuildableName = "index_kl05z"
+            BlueprintName = "index_kl05z"
+            ReferencedContainer = "container:Motate.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

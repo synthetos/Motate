@@ -3,3 +3,4 @@ gcc-arm-none-eabi
 gcc-arm-none-eabi-*
 avr-gcc
 avr-toolchain-*
+gcc-avr

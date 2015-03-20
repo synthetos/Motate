@@ -1267,6 +1267,38 @@
 		D4DD3EAA19BFE1AE0081E1BB /* Makefile in Sources */ = {isa = PBXBuildFile; fileRef = D4DD3E8319BFE1AE0081E1BB /* Makefile */; };
 		D4DD3EAB19BFE1AE0081E1BB /* soft_pwm_demo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4DD3E8419BFE1AE0081E1BB /* soft_pwm_demo.cpp */; };
 		D4DD3EAC19BFE1AE0081E1BB /* soft_pwm_demo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4DD3E8419BFE1AE0081E1BB /* soft_pwm_demo.cpp */; };
+		D4E913371ABC5D1D0042A16C /* Makefile in Sources */ = {isa = PBXBuildFile; fileRef = D457117B17053EFA00EA19A8 /* Makefile */; };
+		D4E913381ABC5D1D0042A16C /* buffered_uart_demo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D443391B196BB69B004A48F9 /* buffered_uart_demo.cpp */; };
+		D4E913391ABC5D1D0042A16C /* uart_demo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D48992C51965B460004F73A6 /* uart_demo.cpp */; };
+		D4E9133A1ABC5D1D0042A16C /* blink_demo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C79F23196216A300A1BE28 /* blink_demo.cpp */; };
+		D4E9133B1ABC5D1D0042A16C /* fade_demo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C79F27196216A300A1BE28 /* fade_demo.cpp */; };
+		D4E9133C1ABC5D1D0042A16C /* soft_pwm_demo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4DD3E8419BFE1AE0081E1BB /* soft_pwm_demo.cpp */; };
+		D4E9133D1ABC5D1D0042A16C /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C79F20195BCC9A00A1BE28 /* main.cpp */; };
+		D4E9133E1ABC5D1D0042A16C /* Motate.mk in Sources */ = {isa = PBXBuildFile; fileRef = D4C78F821957BF8400A1BE28 /* Motate.mk */; };
+		D4E9133F1ABC5D1D0042A16C /* MotateUtilities.mk in Sources */ = {isa = PBXBuildFile; fileRef = D4C79F0F1957C9E700A1BE28 /* MotateUtilities.mk */; };
+		D4E913401ABC5D1D0042A16C /* XMegaPins.h in Sources */ = {isa = PBXBuildFile; fileRef = D4E90E281ABB54D40042A16C /* XMegaPins.h */; };
+		D4E913411ABC5D1D0042A16C /* XMegaTimers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4E90E291ABB54D40042A16C /* XMegaTimers.cpp */; };
+		D4E913421ABC5D1D0042A16C /* XMegaTimers.h in Sources */ = {isa = PBXBuildFile; fileRef = D4E90E2A1ABB54D40042A16C /* XMegaTimers.h */; };
+		D4E913431ABC5D1D0042A16C /* XMegaUART.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4E90E2B1ABB54D40042A16C /* XMegaUART.cpp */; };
+		D4E913441ABC5D1D0042A16C /* XMegaUART.h in Sources */ = {isa = PBXBuildFile; fileRef = D4E90E2C1ABB54D40042A16C /* XMegaUART.h */; };
+		D4E913451ABC5D1D0042A16C /* MotateBuffer.h in Sources */ = {isa = PBXBuildFile; fileRef = D48992C01965B118004F73A6 /* MotateBuffer.h */; };
+		D4E913461ABC5D1D0042A16C /* MotatePins.h in Sources */ = {isa = PBXBuildFile; fileRef = D4C78F63195201A900A1BE28 /* MotatePins.h */; };
+		D4E913471ABC5D1D0042A16C /* MotateSerial.h in Sources */ = {isa = PBXBuildFile; fileRef = D449BC59197AC3E3000C0C3C /* MotateSerial.h */; };
+		D4E913481ABC5D1D0042A16C /* MotateSPI.h in Sources */ = {isa = PBXBuildFile; fileRef = D4C78F64195201A900A1BE28 /* MotateSPI.h */; };
+		D4E913491ABC5D1D0042A16C /* MotateTimers.h in Sources */ = {isa = PBXBuildFile; fileRef = D4C78F65195201A900A1BE28 /* MotateTimers.h */; };
+		D4E9134A1ABC5D1D0042A16C /* MotateUART.h in Sources */ = {isa = PBXBuildFile; fileRef = D4C7A1AB1963B66D00A1BE28 /* MotateUART.h */; };
+		D4E9134B1ABC5D1D0042A16C /* MotateUSB.h in Sources */ = {isa = PBXBuildFile; fileRef = D4C78F66195201A900A1BE28 /* MotateUSB.h */; };
+		D4E9134C1ABC5D1D0042A16C /* MotateUSBCDC.h in Sources */ = {isa = PBXBuildFile; fileRef = D4C78F67195201A900A1BE28 /* MotateUSBCDC.h */; };
+		D4E9134D1ABC5D1D0042A16C /* MotateUSBHelpers.h in Sources */ = {isa = PBXBuildFile; fileRef = D4C78F68195201A900A1BE28 /* MotateUSBHelpers.h */; };
+		D4E9134E1ABC5D1D0042A16C /* TinyGv8.mk in Sources */ = {isa = PBXBuildFile; fileRef = D4E90E261ABB3A670042A16C /* TinyGv8.mk */; };
+		D4E9134F1ABC5D1D0042A16C /* motate_pin_assignments.h in Sources */ = {isa = PBXBuildFile; fileRef = D4E90E2E1ABB5C3B0042A16C /* motate_pin_assignments.h */; };
+		D4E913501ABC5D1D0042A16C /* TinyGv8-pinout.h in Sources */ = {isa = PBXBuildFile; fileRef = D4E90E2F1ABB5C3B0042A16C /* TinyGv8-pinout.h */; };
+		D4E913511ABC5D1D0042A16C /* avr.mk in Sources */ = {isa = PBXBuildFile; fileRef = D4E910B41ABB615D0042A16C /* avr.mk */; };
+		D4E913521ABC5D1D0042A16C /* syscalls.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4E910B11ABB60550042A16C /* syscalls.cpp */; };
+		D4E913531ABC5D1D0042A16C /* syscalls.h in Sources */ = {isa = PBXBuildFile; fileRef = D4E910B21ABB60550042A16C /* syscalls.h */; };
+		D4E913541ABC5D1D0042A16C /* xmega.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4E910B51ABBAD140042A16C /* xmega.cpp */; };
+		D4E913551ABC5D1D0042A16C /* xmega.h in Sources */ = {isa = PBXBuildFile; fileRef = D4E910B61ABBAD140042A16C /* xmega.h */; };
+		D4E913581ABCB58F0042A16C /* xmega_interrupts.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4E913561ABCB58F0042A16C /* xmega_interrupts.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -1280,6 +1312,15 @@
 			runOnlyForDeploymentPostprocessing = 1;
 		};
 		D4C7A1A019630FA000A1BE28 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+		D4E913321ABBB2370042A16C /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = /usr/share/man/man1/;
@@ -1324,7 +1365,7 @@
 		D4C78F7019538E6B00A1BE28 /* KL05ZPins.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = KL05ZPins.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		D4C78F7F19553EF700A1BE28 /* KL05ZTimers.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = KL05ZTimers.cpp; sourceTree = "<group>"; };
 		D4C78F8019553EF700A1BE28 /* KL05ZTimers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KL05ZTimers.h; sourceTree = "<group>"; };
-		D4C78F821957BF8400A1BE28 /* Motate.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Motate.mk; sourceTree = "<group>"; };
+		D4C78F821957BF8400A1BE28 /* Motate.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Motate.mk; sourceTree = "<group>"; usesTabs = 1; };
 		D4C78F851957C0AA00A1BE28 /* core_cm0.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = core_cm0.h; sourceTree = "<group>"; };
 		D4C78F861957C0AA00A1BE28 /* core_cm0plus.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = core_cm0plus.h; sourceTree = "<group>"; };
 		D4C78F871957C0AA00A1BE28 /* core_cm3.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = core_cm3.h; sourceTree = "<group>"; };
@@ -4420,6 +4461,17 @@
 		D4E90E2A1ABB54D40042A16C /* XMegaTimers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XMegaTimers.h; sourceTree = "<group>"; };
 		D4E90E2B1ABB54D40042A16C /* XMegaUART.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = XMegaUART.cpp; sourceTree = "<group>"; };
 		D4E90E2C1ABB54D40042A16C /* XMegaUART.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XMegaUART.h; sourceTree = "<group>"; };
+		D4E90E2E1ABB5C3B0042A16C /* motate_pin_assignments.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = motate_pin_assignments.h; sourceTree = "<group>"; };
+		D4E90E2F1ABB5C3B0042A16C /* TinyGv8-pinout.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "TinyGv8-pinout.h"; sourceTree = "<group>"; };
+		D4E910B11ABB60550042A16C /* syscalls.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = syscalls.cpp; sourceTree = "<group>"; };
+		D4E910B21ABB60550042A16C /* syscalls.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = syscalls.h; sourceTree = "<group>"; };
+		D4E910B31ABB60550042A16C /* atmel_xmega.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = atmel_xmega.mk; sourceTree = "<group>"; };
+		D4E910B41ABB615D0042A16C /* avr.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = avr.mk; sourceTree = "<group>"; };
+		D4E910B51ABBAD140042A16C /* xmega.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = xmega.cpp; sourceTree = "<group>"; };
+		D4E910B61ABBAD140042A16C /* xmega.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = xmega.h; sourceTree = "<group>"; };
+		D4E913361ABBB2370042A16C /* index_xmega */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = index_xmega; sourceTree = BUILT_PRODUCTS_DIR; };
+		D4E913561ABCB58F0042A16C /* xmega_interrupts.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = xmega_interrupts.cpp; sourceTree = "<group>"; };
+		D4E913571ABCB58F0042A16C /* xmega_interrupts.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = xmega_interrupts.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -4431,6 +4483,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		D4C7A19F19630FA000A1BE28 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D4E913311ABBB2370042A16C /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -4458,6 +4517,7 @@
 				D4C77F6D1950912300A1BE28 /* Tools.xcodeproj */,
 				D4C79F2E19630F7100A1BE28 /* index_sam */,
 				D4C7A1A419630FA000A1BE28 /* index_kl05z */,
+				D4E913361ABBB2370042A16C /* index_xmega */,
 			);
 			sourceTree = "<group>";
 		};
@@ -9802,6 +9862,8 @@
 			children = (
 				D4C79EE01957C0B700A1BE28 /* atmel_sam */,
 				D4C79EF11957C0B700A1BE28 /* atmel_sam.mk */,
+				D4E910B01ABB60550042A16C /* atmel_xmega */,
+				D4E910B31ABB60550042A16C /* atmel_xmega.mk */,
 				D4C79EF21957C0B700A1BE28 /* freescale_klxx */,
 				D4C79EF91957C0B700A1BE28 /* freescale_klxx.mk */,
 			);
@@ -9845,6 +9907,7 @@
 				D4A74B2119C15DB00019633A /* frdm-kl05z.cfg */,
 				D4C79F0A1957C24700A1BE28 /* FRDM-KLxx */,
 				D4E90E261ABB3A670042A16C /* TinyGv8.mk */,
+				D4E90E2D1ABB5C3B0042A16C /* TinyGv8 */,
 			);
 			path = board;
 			sourceTree = "<group>";
@@ -9871,6 +9934,7 @@
 			isa = PBXGroup;
 			children = (
 				D4C79F1219588A8600A1BE28 /* arm.mk */,
+				D4E910B41ABB615D0042A16C /* avr.mk */,
 			);
 			path = arch;
 			sourceTree = "<group>";
@@ -9924,6 +9988,28 @@
 				D4E90E2C1ABB54D40042A16C /* XMegaUART.h */,
 			);
 			path = Atmel_XMega;
+			sourceTree = "<group>";
+		};
+		D4E90E2D1ABB5C3B0042A16C /* TinyGv8 */ = {
+			isa = PBXGroup;
+			children = (
+				D4E90E2E1ABB5C3B0042A16C /* motate_pin_assignments.h */,
+				D4E90E2F1ABB5C3B0042A16C /* TinyGv8-pinout.h */,
+			);
+			path = TinyGv8;
+			sourceTree = "<group>";
+		};
+		D4E910B01ABB60550042A16C /* atmel_xmega */ = {
+			isa = PBXGroup;
+			children = (
+				D4E910B11ABB60550042A16C /* syscalls.cpp */,
+				D4E910B21ABB60550042A16C /* syscalls.h */,
+				D4E910B51ABBAD140042A16C /* xmega.cpp */,
+				D4E910B61ABBAD140042A16C /* xmega.h */,
+				D4E913561ABCB58F0042A16C /* xmega_interrupts.cpp */,
+				D4E913571ABCB58F0042A16C /* xmega_interrupts.h */,
+			);
+			path = atmel_xmega;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -10064,13 +10150,30 @@
 			productReference = D4C7A1A419630FA000A1BE28 /* index_kl05z */;
 			productType = "com.apple.product-type.tool";
 		};
+		D4E910B71ABBB2370042A16C /* index_xmega */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D4E913331ABBB2370042A16C /* Build configuration list for PBXNativeTarget "index_xmega" */;
+			buildPhases = (
+				D4E910B81ABBB2370042A16C /* Sources */,
+				D4E913311ABBB2370042A16C /* Frameworks */,
+				D4E913321ABBB2370042A16C /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = index_xmega;
+			productName = index;
+			productReference = D4E913361ABBB2370042A16C /* index_xmega */;
+			productType = "com.apple.product-type.tool";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
 		D45710B8170532AC00EA19A8 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0510;
+				LastUpgradeCheck = 0620;
 				ORGANIZATIONNAME = "Rob Giseburt";
 			};
 			buildConfigurationList = D45710BB170532AC00EA19A8 /* Build configuration list for PBXProject "Motate" */;
@@ -10100,6 +10203,7 @@
 				D4E90E211ABB39D20042A16C /* Motate XMega blink */,
 				D457112317053BFB00EA19A8 /* index_sam */,
 				D4C79F2F19630FA000A1BE28 /* index_kl05z */,
+				D4E910B71ABBB2370042A16C /* index_xmega */,
 			);
 		};
 /* End PBXProject section */
@@ -11379,12 +11483,52 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		D4E910B81ABBB2370042A16C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D4E913371ABC5D1D0042A16C /* Makefile in Sources */,
+				D4E913381ABC5D1D0042A16C /* buffered_uart_demo.cpp in Sources */,
+				D4E913391ABC5D1D0042A16C /* uart_demo.cpp in Sources */,
+				D4E9133A1ABC5D1D0042A16C /* blink_demo.cpp in Sources */,
+				D4E9133B1ABC5D1D0042A16C /* fade_demo.cpp in Sources */,
+				D4E9133C1ABC5D1D0042A16C /* soft_pwm_demo.cpp in Sources */,
+				D4E9133D1ABC5D1D0042A16C /* main.cpp in Sources */,
+				D4E9133E1ABC5D1D0042A16C /* Motate.mk in Sources */,
+				D4E9133F1ABC5D1D0042A16C /* MotateUtilities.mk in Sources */,
+				D4E913401ABC5D1D0042A16C /* XMegaPins.h in Sources */,
+				D4E913411ABC5D1D0042A16C /* XMegaTimers.cpp in Sources */,
+				D4E913421ABC5D1D0042A16C /* XMegaTimers.h in Sources */,
+				D4E913431ABC5D1D0042A16C /* XMegaUART.cpp in Sources */,
+				D4E913441ABC5D1D0042A16C /* XMegaUART.h in Sources */,
+				D4E913451ABC5D1D0042A16C /* MotateBuffer.h in Sources */,
+				D4E913461ABC5D1D0042A16C /* MotatePins.h in Sources */,
+				D4E913471ABC5D1D0042A16C /* MotateSerial.h in Sources */,
+				D4E913481ABC5D1D0042A16C /* MotateSPI.h in Sources */,
+				D4E913491ABC5D1D0042A16C /* MotateTimers.h in Sources */,
+				D4E9134A1ABC5D1D0042A16C /* MotateUART.h in Sources */,
+				D4E913581ABCB58F0042A16C /* xmega_interrupts.cpp in Sources */,
+				D4E9134B1ABC5D1D0042A16C /* MotateUSB.h in Sources */,
+				D4E9134C1ABC5D1D0042A16C /* MotateUSBCDC.h in Sources */,
+				D4E9134D1ABC5D1D0042A16C /* MotateUSBHelpers.h in Sources */,
+				D4E9134E1ABC5D1D0042A16C /* TinyGv8.mk in Sources */,
+				D4E9134F1ABC5D1D0042A16C /* motate_pin_assignments.h in Sources */,
+				D4E913501ABC5D1D0042A16C /* TinyGv8-pinout.h in Sources */,
+				D4E913511ABC5D1D0042A16C /* avr.mk in Sources */,
+				D4E913521ABC5D1D0042A16C /* syscalls.cpp in Sources */,
+				D4E913531ABC5D1D0042A16C /* syscalls.h in Sources */,
+				D4E913541ABC5D1D0042A16C /* xmega.cpp in Sources */,
+				D4E913551ABC5D1D0042A16C /* xmega.h in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
 		D45710BD170532AC00EA19A8 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ONLY_ACTIVE_ARCH = YES;
 			};
 			name = Debug;
 		};
@@ -11433,6 +11577,11 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/motate\"",
+					"$(SRCROOT)/motate/Atmel_sam3xa\" \"$(SRCROOT)/motate/cmsis/TARGET_Atmel\" \"$(SRCROOT)/motate/cmsis/TARGET_Atmel/sam3xa\" \"$(SRCROOT)/motate/platform/ateml_sam\"",
+				);
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/motate\"",
@@ -11469,6 +11618,11 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/motate\"",
+					"$(SRCROOT)/motate/Atmel_sam3xa\" \"$(SRCROOT)/motate/cmsis/TARGET_Atmel\" \"$(SRCROOT)/motate/cmsis/TARGET_Atmel/sam3xa\" \"$(SRCROOT)/motate/platform/ateml_sam\"",
+				);
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/motate\"",
@@ -11558,6 +11712,11 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/motate\"",
+					"$(SRCROOT)/motate/Freescale_klxx\" \"$(SRCROOT)/motate/cmsis/TARGET_Freescale/TARGET_KLXX/TARGET_KL05Z\" \"$(SRCROOT)/motate/platform/freescale_klxx\"",
+				);
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/motate\"",
@@ -11594,6 +11753,11 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/motate\"",
+					"$(SRCROOT)/motate/Freescale_klxx\" \"$(SRCROOT)/motate/cmsis/TARGET_Freescale/TARGET_KLXX/TARGET_KL05Z\" \"$(SRCROOT)/motate/platform/freescale_klxx\"",
+				);
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/motate\"",
@@ -11655,6 +11819,123 @@
 			buildSettings = {
 				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
 				PRODUCT_NAME = "Motate XMega blink";
+			};
+			name = Release;
+		};
+		D4E913341ABBB2370042A16C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/motate\"",
+					"\"$(SRCROOT)/motate/Atmel_XMega\"",
+					"\"$(SRCROOT)/motate/platform/atmel_xmega\"",
+					"\"$(SRCROOT)/../Tools/gcc-avr/include\"",
+					"\"$(SRCROOT)/../Tools/gcc-avr/avr/include\"",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/motate\"",
+					"\"$(SRCROOT)/motate/Atmel_XMega\"",
+					"\"$(SRCROOT)/motate/platform/atmel_xmega\"",
+					"\"$(SRCROOT)/../Tools/gcc-avr/include\"",
+					"\"$(SRCROOT)/../Tools/gcc-avr/avr/include\"",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				ONLY_ACTIVE_ARCH = YES;
+				OTHER_CFLAGS = (
+					"-DAVR",
+					"-D__AVR=1",
+					"-D__AVR_XMEGA__=1",
+					"-D__AVR_ATxmega192A3__=1",
+					"-D__AVR_ATxmega192A3__=1",
+					"-D__AVR_DEVICE_NAME__=atxmega192a3",
+					"-D__AVR_ARCH__=106",
+					"-D__WITH_AVRLIBC__=1",
+					"-Imotate",
+					"-D__CLOCK_EXTERNAL_16MHZ",
+					"-DF_CPU=32000000UL",
+					"-DXCODE_INDEX",
+				);
+				PRODUCT_NAME = index_xmega;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		D4E913351ABBB2370042A16C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/motate\"",
+					"\"$(SRCROOT)/motate/Atmel_XMega\"",
+					"\"$(SRCROOT)/motate/platform/atmel_xmega\"",
+					"\"$(SRCROOT)/../Tools/gcc-avr/include\"",
+					"\"$(SRCROOT)/../Tools/gcc-avr/avr/include\"",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/motate\"",
+					"\"$(SRCROOT)/motate/Atmel_XMega\"",
+					"\"$(SRCROOT)/motate/platform/atmel_xmega\"",
+					"\"$(SRCROOT)/../Tools/gcc-avr/include\"",
+					"\"$(SRCROOT)/../Tools/gcc-avr/avr/include\"",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				OTHER_CFLAGS = (
+					"-DAVR",
+					"-D__AVR=1",
+					"-D__AVR_XMEGA__=1",
+					"-D__AVR_ATxmega192A3__=1",
+					"-D__AVR_ATxmega192A3__=1",
+					"-D__AVR_DEVICE_NAME__=atxmega192a3",
+					"-D__AVR_ARCH__=106",
+					"-D__WITH_AVRLIBC__=1",
+					"-Imotate",
+					"-D__CLOCK_EXTERNAL_16MHZ",
+					"-DF_CPU=32000000UL",
+					"-DXCODE_INDEX",
+				);
+				PRODUCT_NAME = index_xmega;
+				SDKROOT = macosx;
 			};
 			name = Release;
 		};
@@ -11747,6 +12028,15 @@
 			buildConfigurations = (
 				D4E90E231ABB39D20042A16C /* Debug */,
 				D4E90E241ABB39D20042A16C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D4E913331ABBB2370042A16C /* Build configuration list for PBXNativeTarget "index_xmega" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D4E913341ABBB2370042A16C /* Debug */,
+				D4E913351ABBB2370042A16C /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
