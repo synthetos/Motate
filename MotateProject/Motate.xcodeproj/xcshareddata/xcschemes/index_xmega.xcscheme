@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "D4E910B71ABBB2370042A16C"
-               BuildableName = "index_kl05z copy"
+               BuildableName = "index_xmega"
                BlueprintName = "index_xmega"
                ReferencedContainer = "container:Motate.xcodeproj">
             </BuildableReference>
@@ -33,7 +33,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "D4E910B71ABBB2370042A16C"
-            BuildableName = "index_kl05z copy"
+            BuildableName = "index_xmega"
             BlueprintName = "index_xmega"
             ReferencedContainer = "container:Motate.xcodeproj">
          </BuildableReference>
@@ -53,7 +53,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "D4E910B71ABBB2370042A16C"
-            BuildableName = "index_kl05z copy"
+            BuildableName = "index_xmega"
             BlueprintName = "index_xmega"
             ReferencedContainer = "container:Motate.xcodeproj">
          </BuildableReference>
@@ -72,7 +72,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "D4E910B71ABBB2370042A16C"
-            BuildableName = "index_kl05z copy"
+            BuildableName = "index_xmega"
             BlueprintName = "index_xmega"
             ReferencedContainer = "container:Motate.xcodeproj">
          </BuildableReference>
