@@ -55,4 +55,8 @@ DEVICE_LINKER_SCRIPT =
 
 CPU_DEV = $(CHIP)
 
+FLASH_REQUIRES = $(OUTPUT_BIN).hex
+AVRDUDE_PORT ?= /dev/tty.usbserial-*
+DEVICE_FLASH_CMD = avrdude -C $(TOOLS_PATH)/gcc-avr/etc/avrdude.conf -D  -p x192a3 -c avr109 -b 115200 -P $(AVRDUDE_PORT) -U flash:w:$(OUTPUT_BIN).hex
+
 include $(MOTATE_PATH)/arch/avr.mk

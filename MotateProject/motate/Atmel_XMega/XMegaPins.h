@@ -70,23 +70,23 @@ namespace Motate {
 		kNormal            = 0,
 		kTotem             = 0, // alias
 		kPullUp            = 3,
-// Mask off functionality that the SAM and AVR don't have
-#if !defined(MOTATE_AVR_COMPATIBILITY) && !defined(MOTATE_SAM_COMPATIBILITY)
-		kBusKeeper         = 1,
+
+        kBusKeeper         = 1,
 		kPullDown          = 2,
 		kWiredOr           = 4,
 		kDriveHighOnly     = 4, // alias
 		kWiredOrPull       = 6,
 		kDriveHighPullDown = 6, // alias
-#endif // !MOTATE_AVR_COMPATIBILITY && !MOTATE_SAM_COMPATIBILITY
-// Mask off functionality that the AVR doesn't have
-// NOTE: The SAM does, but it uses a different mechanism to control it
-#if !defined(MOTATE_AVR_COMPATIBILITY)
-		kWiredAnd          = 5,
+
+        kWiredAnd          = 5,
 		kDriveLowOnly      = 5, // alias
 		kWiredAndPull      = 7,
 		kDriveLowPullUp    = 7, // alias
-#endif // !MOTATE_AVR_COMPATIBILITY
+
+        kIOInverted        = 1<<4,
+
+        // For use on PWM pins only!
+        kPWMPinInverted    = 1<<4
 	};
 
     typedef uint32_t uintPort_t;
@@ -100,7 +100,7 @@ namespace Motate {
 		void setModes(const uintPort_t value, const uintPort_t mask = 0xff) {
 			// stub
 		};
-		void setOptions(const PinOptions options, const uintPort_t mask) {
+		void setOptions(const uint8_t options, const uintPort_t mask) {
 			// stub
 		};
 		void getModes() {
@@ -138,14 +138,14 @@ namespace Motate {
         static const uint32_t mask = 0;
 
         Pin() {};
-        Pin(const PinMode type, const PinOptions options = kNormal) {};
+        Pin(const PinMode type, const uint8_t options = kNormal) {};
         void operator=(const bool value) {};
         operator bool() { return 0; };
 
         void init(const PinMode type, const uint16_t options = kNormal, const bool fromConstructor=false) {};
         void setMode(const PinMode type, const bool fromConstructor=false) {};
         PinMode getMode() { return kUnchanged; };
-        void setOptions(const uint16_t options, const bool fromConstructor=false) {};
+        void setOptions(const uint8_t options, const bool fromConstructor=false) {};
         uint16_t getOptions() { return kNormal; };
         void set() {};
         void clear() {};
@@ -161,21 +161,21 @@ namespace Motate {
     template<uint8_t portChar, uint8_t portPin>
     struct ReversePinLookup : Pin<-1> {
         ReversePinLookup() {};
-        ReversePinLookup(const PinMode type, const PinOptions options = kNormal) : Pin<-1>(type, options) {};
+        ReversePinLookup(const PinMode type, const uint8_t options = kNormal) : Pin<-1>(type, options) {};
     };
 
     template<int8_t pinNum>
     struct InputPin : Pin<pinNum> {
         InputPin() : Pin<pinNum>(kInput) {};
-        InputPin(const PinOptions options) : Pin<pinNum>(kInput, options) {};
-        void init(const PinOptions options = kNormal  ) {Pin<pinNum>::init(kInput, options);};
+        InputPin(const uint8_t options) : Pin<pinNum>(kInput, options) {};
+        void init(const uint8_t options = kNormal  ) {Pin<pinNum>::init(kInput, options);};
         uint32_t get() {
             return Pin<pinNum>::getInputValue();
         };
         /*Override these to pick up new methods */
         operator bool() { return (get() != 0); };
     private: /* Make these private to catch them early. These are intentionally not defined. */
-        void init(const PinMode type, const PinOptions options = kNormal);
+        void init(const PinMode type, const uint8_t options = kNormal);
         void operator=(const bool value) { Pin<pinNum>::write(value); };
         void write(const bool);
     };
@@ -183,8 +183,8 @@ namespace Motate {
     template<int8_t pinNum>
     struct OutputPin : Pin<pinNum> {
         OutputPin() : Pin<pinNum>(kOutput) {};
-        OutputPin(const PinOptions options) : Pin<pinNum>(kOutput, options) {};
-        void init(const PinOptions options = kNormal) {Pin<pinNum>::init(kOutput, options);};
+        OutputPin(const uint8_t options) : Pin<pinNum>(kOutput, options) {};
+        void init(const uint8_t options = kNormal) {Pin<pinNum>::init(kOutput, options);};
         uint32_t get() {
             return Pin<pinNum>::getOutputValue();
         };
@@ -192,7 +192,7 @@ namespace Motate {
         /*Override these to pick up new methods */
         operator bool() { return (get() != 0); };
     private: /* Make these private to catch them early. */
-        void init(const PinMode type, const PinOptions options = kNormal); /* Intentially not defined. */
+        void init(const PinMode type, const uint8_t options = kNormal); /* Intentially not defined. */
     };
 
 
@@ -202,8 +202,8 @@ namespace Motate {
     template<int8_t pinNum>
     struct IRQPin : Pin<pinNum> {
         IRQPin() : Pin<pinNum>(kInput) {};
-        IRQPin(const PinOptions options) : Pin<pinNum>(kInput, options) {};
-        void init(const PinOptions options = kNormal  ) {Pin<pinNum>::init(kInput, options);};
+        IRQPin(const uint8_t options) : Pin<pinNum>(kInput, options) {};
+        void init(const uint8_t options = kNormal  ) {Pin<pinNum>::init(kInput, options);};
 
         static const bool is_real = true;
         static void interrupt() __attribute__ (( weak ));
@@ -255,13 +255,13 @@ namespace Motate {
         static const uint8_t mask = (1 << registerPin);\
             \
         Pin(){};\
-        Pin(const PinMode type, const PinOptions options = kNormal) {\
+        Pin(const PinMode type, const uint8_t options = kNormal) {\
             init(type, options);\
         };\
         void operator=(const bool value) { write(value); };\
         operator bool() { return (get() != 0); };\
-    \
-        void init(const PinMode type, const PinOptions options = kNormal) {\
+        \
+        void init(const PinMode type, const uint8_t options = kNormal) {\
             setMode(type);\
             setOptions(options);\
         };\
@@ -280,8 +280,11 @@ namespace Motate {
         PinMode getMode() {\
             return ((PORT ## registerLetter).DIR |= mask) ? kOutput : kInput;\
         };\
-        void setOptions(const PinOptions options) {\
-            switch (options) {\
+        void setOptions(const uint8_t options) {\
+            if (options & kIOInverted) {\
+                (PORT ## registerLetter).PIN ## registerPin ## CTRL = PORT_INVEN_bm;\
+            }\
+            switch (options & ~kIOInverted) {\
                 case kNormal:\
                 /*case kTotem:*/\
                     (PORT ## registerLetter).PIN ## registerPin ## CTRL = PORT_OPC_TOTEM_gc;\
@@ -311,8 +314,8 @@ namespace Motate {
                     break;\
             }\
         };\
-        PinOptions getOptions() {\
-            return static_cast<PinOptions>((PORT ## registerLetter).PIN ## registerPin ## CTRL);\
+        uint8_t getOptions() {\
+            return (PORT ## registerLetter).PIN ## registerPin ## CTRL;\
         };\
         void set() {\
             (PORT ## registerLetter).OUTSET = mask;\
@@ -344,7 +347,6 @@ namespace Motate {
         };\
     };\
     typedef Pin<pinNum> Pin ## pinNum;\
-    static Pin<pinNum> pin ## pinNum(kOutput);\
     typedef InputPin<pinNum> InputPin ## pinNum;\
     typedef OutputPin<pinNum> OutputPin ## pinNum;\
     template<>\
@@ -362,7 +364,7 @@ namespace Motate {
 		}\
 		(PORT ## registerLetter).DIR = port_value | value;\
 	};\
-	template <> inline void Port8<registerChar>::setOptions(const PinOptions options, const uintPort_t mask) {\
+	template <> inline void Port8<registerChar>::setOptions(const uint8_t options, const uintPort_t mask) {\
 		PORTCFG.MPCMASK = mask; /*Write the configuration to all the masked pins at once.*/\
 		/* MPCMASK is automatically cleared after any PINnCTRL write completes.*/\
 		switch (options) {\
@@ -419,6 +421,74 @@ namespace Motate {
 	}\
 	typedef Port8<registerChar> Port ## registerLetter;\
 	static Port ## registerLetter port ## registerLetter;
+
+    static const uint32_t kDefaultPWMFrequency = 1000;
+    template<int8_t pinNum>
+        struct PWMOutputPin : Pin<pinNum> {
+            PWMOutputPin() : Pin<pinNum>(kOutput) {};
+            PWMOutputPin(const PinOptions options, const uint32_t freq = kDefaultPWMFrequency) : Pin<pinNum>(kOutput, options) {};
+            PWMOutputPin(const uint32_t freq) : Pin<pinNum>(kOutput, kNormal) {};
+            void setFrequency(const uint32_t freq) {};
+            void operator=(const float value) { write(value); };
+            void write(const float value) { Pin<pinNum>::write(value >= 0.5); };
+            void writeRaw(const uint16_t duty) { Pin<pinNum>::write(duty >= 50); };
+            uint16_t getTopValue() { return 100; };
+            bool canPWM() { return false; };
+
+            /*Override these to pick up new methods */
+
+        private: /* Make these private to catch them early. */
+            /* These are intentially not defined. */
+            void init(const PinMode type, const PinOptions options = kNormal);
+
+            /* WARNING: Covariant return types! */
+            bool get();
+            operator bool();
+        };
+
+#define _MAKE_MOTATE_PWM_PIN(registerChar, registerPin, timerOrPWM, channel, invertedByDefault)\
+    template<>\
+    struct PWMOutputPin< ReversePinLookup<registerChar, registerPin>::number > : Pin< ReversePinLookup<registerChar, registerPin>::number >, timerOrPWM {\
+        static const pin_number pinNum = ReversePinLookup<registerChar, registerPin>::number;\
+        PWMOutputPin() :\
+            Pin<pinNum>(kOutput), timerOrPWM(Motate::kTimerUpToMatch, kDefaultPWMFrequency)\
+            {pwmpin_init(kNormal);};\
+        \
+        PWMOutputPin(const PinOptions options, const uint32_t freq = kDefaultPWMFrequency) :\
+            Pin<pinNum>(kOutput), timerOrPWM(Motate::kTimerUpToMatch, kDefaultPWMFrequency)\
+            {pwmpin_init(options);};\
+        \
+        PWMOutputPin(const uint32_t freq) :\
+            Pin<pinNum>(kOutput), timerOrPWM(Motate::kTimerUpToMatch, freq)\
+            {pwmpin_init(kNormal);};\
+        \
+        void pwmpin_init(const PinOptions options) {\
+            timerOrPWM::startPWMOutput(channel);\
+            timerOrPWM::start();\
+        };\
+        \
+        void setFrequency(const uint32_t freq) {\
+            timerOrPWM::setModeAndFrequency(Motate::kTimerUpToMatch, freq);\
+            timerOrPWM::start();\
+        };\
+        void operator=(const float value) { write(value); };\
+        void write(const float value) {\
+            uint16_t duty = getTopValue() * value;\
+            timerOrPWM::setExactDutyCycleForChannel(channel, duty);\
+        };\
+        void writeRaw(const uint16_t duty) {\
+            timerOrPWM::setExactDutyCycleForChannel(channel, duty);\
+        };\
+        bool canPWM() { return true; };\
+        /*Override these to pick up new methods */\
+    private: /* Make these private to catch them early. */\
+        /* These are intentially not defined. */\
+        void init(const PinMode type, const PinOptions options = kNormal);\
+        /* WARNING: Covariant return types! */\
+        bool get();\
+        operator bool();\
+    };
+
 
 	typedef Pin<-1> NullPin;
 	static NullPin nullPin;

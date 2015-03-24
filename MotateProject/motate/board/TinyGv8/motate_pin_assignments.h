@@ -43,8 +43,58 @@ namespace Motate {
     _MAKE_MOTATE_PORT8(E, 'E');
     _MAKE_MOTATE_PORT8(F, 'F');
 
-    
-    _MAKE_MOTATE_PIN( 117, A, 'A', 5);	// COOLANT_LED
+
+    _MAKE_MOTATE_PIN( 110, C, 'C', 0);	// PWM_0
+    _MAKE_MOTATE_PIN( 111, C, 'C', 1);	// PWM_1
+    _MAKE_MOTATE_PIN( 112, C, 'C', 2);	// PWM_2
+    _MAKE_MOTATE_PIN( 113, C, 'C', 3);	// PWM_3
+    _MAKE_MOTATE_PIN( 114, C, 'C', 4);	// PWM_4
+    _MAKE_MOTATE_PIN( 115, C, 'C', 5);	// PWM_5
+    _MAKE_MOTATE_PIN( 116, D, 'D', 0);	// PWM_6
+    _MAKE_MOTATE_PIN( 117, D, 'D', 1);	// PWM_7
+    _MAKE_MOTATE_PIN( 118, D, 'D', 2);	// PWM_8
+    _MAKE_MOTATE_PIN( 119, D, 'D', 3);	// PWM_9
+    _MAKE_MOTATE_PIN( 120, D, 'D', 4);	// PWM_10
+    _MAKE_MOTATE_PIN( 121, D, 'D', 5);	// PWM_11
+    _MAKE_MOTATE_PIN( 122, E, 'E', 0);	// PWM_12
+    _MAKE_MOTATE_PIN( 123, E, 'E', 1);	// PWM_13
+    _MAKE_MOTATE_PIN( 124, E, 'E', 2);	// PWM_14
+    _MAKE_MOTATE_PIN( 125, E, 'E', 3);	// PWM_15
+    _MAKE_MOTATE_PIN( 126, E, 'E', 4);	// PWM_16
+    _MAKE_MOTATE_PIN( 127, E, 'E', 5);	// PWM_17
+    _MAKE_MOTATE_PIN( 128, F, 'F', 0);	// PWM_18
+    _MAKE_MOTATE_PIN( 129, F, 'F', 1);	// PWM_19
+    _MAKE_MOTATE_PIN( 130, F, 'F', 2);	// PWM_20
+    _MAKE_MOTATE_PIN( 131, F, 'F', 3);	// PWM_21
+
+
+    _MAKE_MOTATE_PIN( 150, A, 'A', 5);	// COOLANT_LED
+
+    _MAKE_MOTATE_PWM_PIN( 'C',  0, Timer<0>, /*Channel:*/ 0, /*Inverted:*/ false);
+    _MAKE_MOTATE_PWM_PIN( 'C',  1, Timer<0>, /*Channel:*/ 1, /*Inverted:*/ false);
+    _MAKE_MOTATE_PWM_PIN( 'C',  2, Timer<0>, /*Channel:*/ 2, /*Inverted:*/ false);
+    _MAKE_MOTATE_PWM_PIN( 'C',  3, Timer<0>, /*Channel:*/ 3, /*Inverted:*/ false);
+    _MAKE_MOTATE_PWM_PIN( 'C',  4, Timer<1>, /*Channel:*/ 0, /*Inverted:*/ false);
+    _MAKE_MOTATE_PWM_PIN( 'C',  5, Timer<1>, /*Channel:*/ 1, /*Inverted:*/ false);
+
+    _MAKE_MOTATE_PWM_PIN( 'D',  0, Timer<2>, /*Channel:*/ 0, /*Inverted:*/ false);
+    _MAKE_MOTATE_PWM_PIN( 'D',  1, Timer<2>, /*Channel:*/ 1, /*Inverted:*/ false);
+    _MAKE_MOTATE_PWM_PIN( 'D',  2, Timer<2>, /*Channel:*/ 2, /*Inverted:*/ false);
+    _MAKE_MOTATE_PWM_PIN( 'D',  3, Timer<2>, /*Channel:*/ 3, /*Inverted:*/ false);
+    _MAKE_MOTATE_PWM_PIN( 'D',  4, Timer<3>, /*Channel:*/ 0, /*Inverted:*/ false);
+    _MAKE_MOTATE_PWM_PIN( 'D',  5, Timer<3>, /*Channel:*/ 1, /*Inverted:*/ false);
+
+    _MAKE_MOTATE_PWM_PIN( 'E',  0, Timer<4>, /*Channel:*/ 0, /*Inverted:*/ false);
+    _MAKE_MOTATE_PWM_PIN( 'E',  1, Timer<4>, /*Channel:*/ 1, /*Inverted:*/ false);
+    _MAKE_MOTATE_PWM_PIN( 'E',  2, Timer<4>, /*Channel:*/ 2, /*Inverted:*/ false);
+    _MAKE_MOTATE_PWM_PIN( 'E',  3, Timer<4>, /*Channel:*/ 3, /*Inverted:*/ false);
+    _MAKE_MOTATE_PWM_PIN( 'E',  4, Timer<5>, /*Channel:*/ 0, /*Inverted:*/ false);
+    _MAKE_MOTATE_PWM_PIN( 'E',  5, Timer<5>, /*Channel:*/ 1, /*Inverted:*/ false);
+
+    _MAKE_MOTATE_PWM_PIN( 'F',  0, Timer<6>, /*Channel:*/ 0, /*Inverted:*/ false);
+    _MAKE_MOTATE_PWM_PIN( 'F',  1, Timer<6>, /*Channel:*/ 1, /*Inverted:*/ false);
+    _MAKE_MOTATE_PWM_PIN( 'F',  2, Timer<6>, /*Channel:*/ 2, /*Inverted:*/ false);
+    _MAKE_MOTATE_PWM_PIN( 'F',  3, Timer<6>, /*Channel:*/ 3, /*Inverted:*/ false);
 
 } // namespace Motate
 
@@ -52,7 +102,7 @@ namespace Motate {
 // We're putting this in to make the autocomplete work for XCode,
 // since it doesn't understand the special syntax coming up.
 #ifdef XCODE_INDEX
-#include <Due-pinout.h>
+#include <TinyGv8-pinout.h>
 #endif
 
 #ifdef MOTATE_BOARD

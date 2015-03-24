@@ -394,6 +394,8 @@ $(ALL_OTHER_ASM_OBJECTS): $(OUTDIR)/%.o: %.S
 debug: $(OUTPUT_BIN).elf
 	$(GDB) -x "${BOARD_PATH}.gdb" -ex "monitor reset halt" -readnow -se "$(OUTPUT_BIN).elf"
 
+flash: $(FLASH_REQUIRES)
+	$(DEVICE_FLASH_CMD)
 
 #-------------------------------------------------------------------------------
 #		Default $(PROJECT).elf, and clean

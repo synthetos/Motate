@@ -36,7 +36,45 @@
 //#include "Reset.h"
 
 namespace Motate {
-	/* System-wide tick counter */
+
+    template<>
+    void Motate::Timer<0>::interrupt()  __attribute__ ((weak));
+
+    template<>
+    void Motate::TimerChannel<0, 0>::interrupt()  __attribute__ ((weak));
+
+    template<>
+    void Motate::TimerChannel<0, 1>::interrupt()  __attribute__ ((weak));
+
+    template<>
+    void Motate::TimerChannel<0, 2>::interrupt()  __attribute__ ((weak));
+
+    template<>
+    void Motate::TimerChannel<0, 3>::interrupt()  __attribute__ ((weak));
+
+
+    template<>
+    void Motate::Timer<1>::interrupt()  __attribute__ ((weak));
+
+    template<>
+    void Motate::TimerChannel<1, 0>::interrupt()  __attribute__ ((weak));
+
+    template<>
+    void Motate::TimerChannel<1, 1>::interrupt()  __attribute__ ((weak));
+
+
+
+    template<>
+    TimerChannelInterruptOptions Timer<0>::_interruptCause = kInterruptUnknown;
+    template<>
+    int8_t                       Timer<0>::_interruptCauseChannel = 0;
+
+    template<>
+    TimerChannelInterruptOptions Timer<1>::_interruptCause = kInterruptUnknown;
+    template<>
+    int8_t                       Timer<1>::_interruptCauseChannel = 0;
+
+    /* System-wide tick counter */
 	/*  Inspired by code from Atmel and Arduino.
 	 *  Some of which is:   Copyright (c) 2012 Arduino. All right reserved.
 	 *  Some of which is:   Copyright (c) 2011-2012, Atmel Corporation. All rights reserved.
@@ -49,22 +87,93 @@ namespace Motate {
 
 } // namespace Motate
 
-//extern "C" void SysTick_Handler(void)
-//{
-////	if (sysTickHook)
-////		sysTickHook();
-//
-////	tickReset();
-//
-//	Motate::SysTickTimer._increment();
-//
-//	if (Motate::SysTickTimer.interrupt) {
-//		Motate::SysTickTimer.interrupt();
-//	}
-//}
 
 
+// TC0 OVerFlow Interrupt
+ISR(TCC0_OVF_vect) {
+    if (Motate::Timer<0>::interrupt) {
+        Motate::Timer<0>::_setInterruptCause(Motate::kInterruptOnOverflow, -1);
+        Motate::Timer<0>::interrupt();
+    }
+}
+
+// TC0 CC A Interrupt
+ISR(TCC0_CCA_vect) {
+    if (!Motate::TimerChannel<0, 0>::interrupt) {
+        Motate::Timer<0>::_setInterruptCause(Motate::kInterruptOnMatch, 0);
+        Motate::Timer<0>::interrupt();
+    } else {
+        Motate::TimerChannel<0, 0>::interrupt();
+    }
+}
+
+// TC0 CC B Interrupt
+ISR(TCC0_CCB_vect) {
+    if (!Motate::TimerChannel<0, 1>::interrupt) {
+        Motate::Timer<0>::_setInterruptCause(Motate::kInterruptOnMatch, 1);
+        Motate::Timer<0>::interrupt();
+    } else {
+        Motate::TimerChannel<0, 1>::interrupt();
+    }
+}
+// TC0 CC C Interrupt
+ISR(TCC0_CCC_vect) {
+    if (!Motate::TimerChannel<0, 2>::interrupt) {
+        Motate::Timer<0>::_setInterruptCause(Motate::kInterruptOnMatch, 2);
+        Motate::Timer<0>::interrupt();
+    } else {
+        Motate::TimerChannel<0, 2>::interrupt();
+    }
+}
+// TC0 CC D Interrupt
+ISR(TCC0_CCD_vect) {
+    if (!Motate::TimerChannel<0, 3>::interrupt) {
+        Motate::Timer<0>::_setInterruptCause(Motate::kInterruptOnMatch, 3);
+        Motate::Timer<0>::interrupt();
+    } else {
+        Motate::TimerChannel<0, 3>::interrupt();
+    }
+}
+
+
+// TC1 OVerFlow Interrupt
+ISR(TCC1_OVF_vect) {
+    if (Motate::Timer<1>::interrupt) {
+        Motate::Timer<1>::_setInterruptCause(Motate::kInterruptOnOverflow, -1);
+        Motate::Timer<1>::interrupt();
+    }
+}
+
+// TC1 CC A Interrupt
+ISR(TCC1_CCA_vect) {
+    if (!Motate::TimerChannel<1, 0>::interrupt) {
+        Motate::Timer<1>::_setInterruptCause(Motate::kInterruptOnMatch, 0);
+        Motate::Timer<1>::interrupt();
+    } else {
+        Motate::TimerChannel<1, 0>::interrupt();
+    }
+}
+// TC1 CC B Interrupt
+ISR(TCC1_CCB_vect) {
+    if (!Motate::TimerChannel<1, 1>::interrupt) {
+        Motate::Timer<1>::_setInterruptCause(Motate::kInterruptOnMatch, 1);
+        Motate::Timer<1>::interrupt();
+    } else {
+        Motate::TimerChannel<1, 1>::interrupt();
+    }
+}
+
+
+// RTC COMPare Interrupt
 ISR(RTC_COMP_vect)
+{
+//    if (Motate::SysTickTimer.interrupt) {
+//        Motate::SysTickTimer.interrupt();
+//    }
+}
+
+// RTC OVerFlow Interrupt
+ISR(RTC_OVF_vect)
 {
     Motate::SysTickTimer._increment();
 

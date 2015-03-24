@@ -46,7 +46,6 @@ void SystemInit(void) {
     cli();
 
     xmega_init_clocks();
-    Motate::SysTickTimer.init();
 
     // now bring up the interrupts and get started
     PMIC_SetVectorLocationToApplication();// as opposed to boot ROM

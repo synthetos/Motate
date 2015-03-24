@@ -66,7 +66,32 @@ namespace Motate {
 //    pin_number kSPI0_CS2PinNumber               =  52;
 //    pin_number kSPI0_CS3PinNumber               =  78;
 
-    pin_number kLED1_PinNumber                  =  117;
+
+    pin_number kPWM0_PinNumber                  =  110;
+    pin_number kPWM1_PinNumber                  =  111;
+    pin_number kPWM2_PinNumber                  =  112;
+    pin_number kPWM3_PinNumber                  =  113;
+    pin_number kPWM4_PinNumber                  =  114;
+    pin_number kPWM5_PinNumber                  =  115;
+    pin_number kPWM6_PinNumber                  =  116;
+    pin_number kPWM7_PinNumber                  =  117;
+    pin_number kPWM8_PinNumber                  =  118;
+    pin_number kPWM9_PinNumber                  =  119;
+    pin_number kPWM10_PinNumber                 =  120;
+    pin_number kPWM11_PinNumber                 =  121;
+    pin_number kPWM12_PinNumber                 =  122;
+    pin_number kPWM13_PinNumber                 =  123;
+    pin_number kPWM14_PinNumber                 =  124;
+    pin_number kPWM15_PinNumber                 =  125;
+    pin_number kPWM16_PinNumber                 =  126;
+    pin_number kPWM17_PinNumber                 =  127;
+    pin_number kPWM18_PinNumber                 =  128;
+    pin_number kPWM19_PinNumber                 =  129;
+    pin_number kPWM20_PinNumber                 =  130;
+    pin_number kPWM21_PinNumber                 =  131;
+
+
+    pin_number kLED1_PinNumber                  =  150;
     pin_number kLED2_PinNumber                  =  -1;
     pin_number kLED3_PinNumber                  =  -1;
 
