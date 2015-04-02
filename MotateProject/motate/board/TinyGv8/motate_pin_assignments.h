@@ -35,15 +35,6 @@
 
 namespace Motate {
 
-    // DUE
-    _MAKE_MOTATE_PORT8(A, 'A');
-    _MAKE_MOTATE_PORT8(B, 'B');
-    _MAKE_MOTATE_PORT8(C, 'C');
-    _MAKE_MOTATE_PORT8(D, 'D');
-    _MAKE_MOTATE_PORT8(E, 'E');
-    _MAKE_MOTATE_PORT8(F, 'F');
-
-
     _MAKE_MOTATE_PIN( 110, C, 'C', 0);	// PWM_0
     _MAKE_MOTATE_PIN( 111, C, 'C', 1);	// PWM_1
     _MAKE_MOTATE_PIN( 112, C, 'C', 2);	// PWM_2

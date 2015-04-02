@@ -104,42 +104,73 @@ namespace Motate {
 
 	template <unsigned char portLetter>
 	struct Port8 {
-        static const uint8_t letter = 0; // NULL stub!
+        static const uint8_t letter = portLetter; // NULL stub!
+        static const PORT_t& port_proxy;
 
-		void setModes(const uintPort_t value, const uintPort_t mask = 0xff) {
-			// stub
-		};
-		void setOptions(const uint8_t options, const uintPort_t mask) {
-			// stub
-		};
-		void getModes() {
-			// stub
-		};
-		void getOptions() {
-			// stub
-		};
-		void set(const uintPort_t value) {
-			// stub
-		};
-		void clear(const uintPort_t value) {
-			// stub
-		};
-		void write(const uintPort_t value) {
-			// stub
-		};
-		void write(const uintPort_t value, const uintPort_t mask) {
-			// stub
-		};
-		uintPort_t getInputValues(const uintPort_t mask = 0xff) {
-			// stub
-			return 0;
-		};
-		uintPort_t getOutputValues(const uintPort_t mask = 0xff) {
-			// stub
-			return 0;
-		};
+        void setModes(const uintPort_t value, const uintPort_t mask) {
+            uint8_t port_value = 0;
+            if (mask != 0xff) {
+                port_value = (port_proxy).DIR & mask;
+            }
+            (port_proxy).DIR = port_value | value;
+        };
+        void setOptions(const uint8_t options, const uintPort_t mask) {
+            PORTCFG.MPCMASK = mask; /*Write the configuration to all the masked pins at once.*/
+            /* MPCMASK is automatically cleared after any PINnCTRL write completes.*/
+            switch (options) {
+                case kNormal:
+                    /*case kTotem:*/
+                    (port_proxy).PIN0CTRL = PORT_OPC_TOTEM_gc;
+                    break;
+                case kBusKeeper:
+                    (port_proxy).PIN0CTRL = PORT_OPC_BUSKEEPER_gc;
+                    break;
+                case kPullDown:
+                    (port_proxy).PIN0CTRL = PORT_OPC_PULLDOWN_gc;
+                    break;
+                case kPullUp:
+                    (port_proxy).PIN0CTRL = PORT_OPC_PULLUP_gc;
+                    break;
+                case kWiredOr:
+                    (port_proxy).PIN0CTRL = PORT_OPC_WIREDOR_gc;
+                    break;
+                case kWiredAnd:
+                    (port_proxy).PIN0CTRL = PORT_OPC_WIREDAND_gc;
+                    break;
+                case kWiredOrPull:
+                    (port_proxy).PIN0CTRL = PORT_OPC_WIREDORPULL_gc;
+                    break;
+                case kWiredAndPull:
+                    (port_proxy).PIN0CTRL = PORT_OPC_WIREDANDPULL_gc;
+                    break;
+                default:
+                    break;
+            }
+        };
+        void set(const uintPort_t value) {
+            (port_proxy).OUTSET = value;
+        };
+        void clear(const uintPort_t value) {
+            (port_proxy).OUTCLR = value;
+        };
+        void write(const uintPort_t value) {
+            (port_proxy).OUT = value;
+        };
+        void write(const uintPort_t value, const uintPort_t mask) {
+            uintPort_t port_value = 0;
+            if (mask != 0xff) {
+                port_value = (port_proxy).OUT & mask;
+            }
+            (port_proxy).OUT = port_value | value;
+        };
+        uintPort_t getInputValues(const uintPort_t mask) {
+            return (port_proxy).IN & (mask);
+        }
+        uintPort_t getOutputValues(const uintPort_t mask) {
+            return (port_proxy).OUT & (mask);
+        }
 	};
-	
+
     template<pin_number pinNum>
     struct Pin {
         static const uint8_t number = -1;
@@ -382,72 +413,6 @@ namespace Motate {
     };\
 
 
-	#define _MAKE_MOTATE_PORT8(registerLetter, registerChar)\
-	template <> inline void Port8<registerChar>::setModes(const uintPort_t value, const uintPort_t mask) {\
-		uint8_t port_value = 0;\
-		if (mask != 0xff) {\
-			port_value = (PORT ## registerLetter).DIR & mask;\
-		}\
-		(PORT ## registerLetter).DIR = port_value | value;\
-	};\
-	template <> inline void Port8<registerChar>::setOptions(const uint8_t options, const uintPort_t mask) {\
-		PORTCFG.MPCMASK = mask; /*Write the configuration to all the masked pins at once.*/\
-		/* MPCMASK is automatically cleared after any PINnCTRL write completes.*/\
-		switch (options) {\
-			case kNormal:\
-			/*case kTotem:*/\
-				(PORT ## registerLetter).PIN0CTRL = PORT_OPC_TOTEM_gc;\
-				break;\
-			case kBusKeeper:\
-				(PORT ## registerLetter).PIN0CTRL = PORT_OPC_BUSKEEPER_gc;\
-				break;\
-			case kPullDown:\
-				(PORT ## registerLetter).PIN0CTRL = PORT_OPC_PULLDOWN_gc;\
-				break;\
-			case kPullUp:\
-				(PORT ## registerLetter).PIN0CTRL = PORT_OPC_PULLUP_gc;\
-				break;\
-			case kWiredOr:\
-				(PORT ## registerLetter).PIN0CTRL = PORT_OPC_WIREDOR_gc;\
-				break;\
-			case kWiredAnd:\
-				(PORT ## registerLetter).PIN0CTRL = PORT_OPC_WIREDAND_gc;\
-				break;\
-			case kWiredOrPull:\
-				(PORT ## registerLetter).PIN0CTRL = PORT_OPC_WIREDORPULL_gc;\
-				break;\
-			case kWiredAndPull:\
-				(PORT ## registerLetter).PIN0CTRL = PORT_OPC_WIREDANDPULL_gc;\
-				break;\
-			default:\
-				break;\
-		}\
-	};\
-	template <> inline void Port8<registerChar>::set(const uintPort_t value) {\
-		(PORT ## registerLetter).OUTSET = value;\
-	};\
-	template <> inline void Port8<registerChar>::clear(const uintPort_t value) {\
-		(PORT ## registerLetter).OUTCLR = value;\
-	};\
-	template <> inline void Port8<registerChar>::write(const uintPort_t value) {\
-		(PORT ## registerLetter).OUT = value;\
-	};\
-	template <> inline void Port8<registerChar>::write(const uintPort_t value, const uintPort_t mask) {\
-		uintPort_t port_value = 0;\
-		if (mask != 0xff) {\
-			port_value = (PORT ## registerLetter).OUT & mask;\
-		}\
-		(PORT ## registerLetter).OUT = port_value | value;\
-	};\
-	template <> inline uintPort_t Port8<registerChar>::getInputValues(const uintPort_t mask) {\
-		return (PORT ## registerLetter).IN & (mask);\
-	}\
-	template <> inline uintPort_t Port8<registerChar>::getOutputValues(const uintPort_t mask) {\
-		return (PORT ## registerLetter).OUT & (mask);\
-	}\
-	typedef Port8<registerChar> Port ## registerLetter;\
-	static Port ## registerLetter port ## registerLetter;
-
     static const uint32_t kDefaultPWMFrequency = 1000;
     template<int8_t pinNum>
         struct PWMOutputPin : Pin<pinNum> {
@@ -527,6 +492,8 @@ namespace Motate {
 //   Motate::Motate::* definitions and weird compiler errors.
 #include "motate_pin_assignments.h"
 
+#if 0 // PinHolder is currently unused and unmaintained
+// If anyone wishes to use it, then ping us on GitHub with an issue.
 namespace Motate {
 
 	// PinHolder - virtual ports
@@ -616,4 +583,7 @@ namespace Motate {
 		
 	};
 } // namespace Motate
+#endif // pinholder disabled
+
+
 #endif /* end of include guard: XMEGAPINS_H_ONCE */

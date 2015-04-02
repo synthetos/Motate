@@ -42,6 +42,7 @@ extern "C" void _null_pin_interrupt() {};
 #if 1
 
 #define _MAKE_MOTATE_PIN_INTERRUPTS(portLtr, portChr) \
+template<> const PORT_t& Port8<portChr>::port_proxy = PORT##portLtr; \
 namespace Motate { \
     template<> void _IRQPin<portChr,0>::interrupt() __attribute__ ((weak, alias("_null_pin_interrupt"))); \
     template<> void _IRQPin<portChr,1>::interrupt() __attribute__ ((weak, alias("_null_pin_interrupt"))); \
@@ -83,6 +84,7 @@ ISR(PORT##portLtr##_INT0_vect) { \
 #else
 
 #define _MAKE_MOTATE_PIN_INTERRUPTS(portLtr, portChr) \
+template<> const PORT_t& Port8<portChr>::port_proxy = PORT##portLtr; \
 namespace Motate { \
     template<> void _IRQPin<portChr,0>::interrupt() __attribute__ ((weak)); \
     template<> void _IRQPin<portChr,0>::interrupt() {}; \
