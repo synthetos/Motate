@@ -61,18 +61,16 @@ namespace Motate {
     _MAKE_MOTATE_PIN( 124, E, 'E', 2);	// PWM_14
     _MAKE_MOTATE_PIN( 125, E, 'E', 3);	// PWM_15
     _MAKE_MOTATE_PIN( 126, E, 'E', 4);	// PWM_16
-    _MAKE_MOTATE_PIN( 127, E, 'E', 5);	// PWM_17
+    _MAKE_MOTATE_PIN( 127, E, 'E', 5);	// PWM_17 + COOLANT_LED
     _MAKE_MOTATE_PIN( 128, F, 'F', 0);	// PWM_18
     _MAKE_MOTATE_PIN( 129, F, 'F', 1);	// PWM_19
     _MAKE_MOTATE_PIN( 130, F, 'F', 2);	// PWM_20
     _MAKE_MOTATE_PIN( 131, F, 'F', 3);	// PWM_21
 
 
-    _MAKE_MOTATE_PIN( 150, A, 'A', 5);	// COOLANT_LED
+    _MAKE_MOTATE_PIN( 150, A, 'A', 5);	// SPINDLE_LED
 
     _MAKE_MOTATE_PIN( 151, A, 'A', 6);	// X_MIN
-
-    _MAKE_MOTATE_PIN( 152, A, 'A', 7);	// TESTING_REMOVE_ME
 
     _MAKE_MOTATE_PWM_PIN( 'C',  0, Timer<0>, /*Channel:*/ 0, /*Inverted:*/ false);
     _MAKE_MOTATE_PWM_PIN( 'C',  1, Timer<0>, /*Channel:*/ 1, /*Inverted:*/ false);
