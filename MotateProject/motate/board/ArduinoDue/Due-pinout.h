@@ -66,7 +66,7 @@ namespace Motate {
     pin_number kSPI0_CS2PinNumber               =  52;
     pin_number kSPI0_CS3PinNumber               =  78;
 
-pin_number kLED1_PinNumber                  =  13;
+    pin_number kLED1_PinNumber                  =  13;
     pin_number kLED2_PinNumber                  =  72;
     pin_number kLED3_PinNumber                  =  73;
 

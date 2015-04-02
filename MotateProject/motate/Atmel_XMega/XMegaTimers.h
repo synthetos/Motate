@@ -529,7 +529,7 @@ namespace Motate {
         }
 
         // Placeholder for user code.
-        static void interrupt() __attribute__ (( weak ));
+        static void interrupt();
     }; // Timer
 
 
@@ -604,7 +604,7 @@ namespace Motate {
             RTC.CNT = 0;
             RTC.COMP = 0xfffe;
             RTC.CTRL = RTC_PRESCALER_DIV1_gc;					// no prescale (1x)
-            RTC.INTCTRL = RTC_COMPINTLVL_LO_gc;                 // interrupt on compare
+            RTC.INTCTRL = RTC_OVFINTLVL_MED_gc;                 // interrupt on compare
         };
 
         // Return the current value of the counter. This is a fleeting thing...
@@ -660,9 +660,9 @@ namespace Motate {
         } while ( SysTickTimer.getValue() < doneTime );
     }
 
-    #define MOTATE_TIMER_INTERRUPT(number) template<> void Motate::Timer<number>::interrupt()
-    #define MOTATE_TIMER_CHANNEL_INTERRUPT(t, ch) template<> void Motate::TimerChannel<t, ch>::interrupt()
-
 } // namespace Motate
+
+#define MOTATE_TIMER_INTERRUPT(number) template<> void Motate::Timer<number>::interrupt()
+#define MOTATE_TIMER_CHANNEL_INTERRUPT(t, ch) template<> void Motate::TimerChannel<t, ch>::interrupt()
 
 #endif /* end of include guard: XMEGATIMERS_H_ONCE */

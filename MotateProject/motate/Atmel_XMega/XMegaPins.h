@@ -34,26 +34,9 @@
 #include <util/atomic.h>
 
 #include "xmega.h"
+#include "xmega_stdcpp_stubs.h"
 
 namespace Motate {
-
-    // **************************
-    // Briefly: avr-gcc doesn't include the stl, at all.
-    // And, we only need enable_if, so here it is, yanked
-    // graciously from type_traits of gcc 4.8.3:
-
-    namespace std {
-        //#include <type_traits>
-        template<bool, typename _Tp = void>
-        struct enable_if
-        { };
-
-        // Partial specialization for true.
-        template<typename _Tp>
-        struct enable_if<true, _Tp>
-        { typedef _Tp type; };
-    } // end motate::std
-
 
     // **************************
     // Resume actual Motate code:
@@ -89,9 +72,35 @@ namespace Motate {
         kPWMPinInverted    = 1<<4
 	};
 
-    typedef uint32_t uintPort_t;
+    enum PinInterruptOptions {
+        kPinInterruptsOff                = 0,
 
-    typedef const int8_t pin_number;
+        kPinInterruptOnChange            = PORT_ISC_BOTHEDGES_gc,
+
+        kPinInterruptOnRisingEdge        = PORT_ISC_RISING_gc,
+        kPinInterruptOnFallingEdge       = PORT_ISC_FALLING_gc,
+
+        kPinInterruptOnLowLevel          = PORT_ISC_LEVEL_gc,
+        /*kPinInterruptOnHighLevel         = UNSUPPOTED,*/
+
+        kPinInterruptTypeMask            = PORT_ISC_gm,
+
+        /* This turns the IRQ on, but doesn't set the timer to ever trigger it. */
+        /*kPinInterruptOnSoftwareTrigger   = 1<<4,*/
+
+        /* Set priority levels here as well: */
+        kPinInterruptPriorityHighest     = 1<<5,
+        kPinInterruptPriorityHigh        = 1<<5, // same as highest
+        kPinInterruptPriorityMedium      = 1<<6,
+        kPinInterruptPriorityLow         = 1<<7, // same as lowest
+        kPinInterruptPriorityLowest      = 1<<7,
+
+        kPinInterruptPriorityMask        = ((1<<8) - (1<<5))
+    };
+
+    typedef uint8_t uintPort_t;
+
+    typedef const uint8_t pin_number;
 
 	template <unsigned char portLetter>
 	struct Port8 {
@@ -131,10 +140,11 @@ namespace Motate {
 		};
 	};
 	
-    template<int8_t pinNum>
+    template<pin_number pinNum>
     struct Pin {
-        static const int8_t number = -1;
+        static const uint8_t number = -1;
         static const uint8_t portLetter = 0;
+        static const uint8_t portPin = 0;
         static const uint32_t mask = 0;
 
         Pin() {};
@@ -164,7 +174,7 @@ namespace Motate {
         ReversePinLookup(const PinMode type, const uint8_t options = kNormal) : Pin<-1>(type, options) {};
     };
 
-    template<int8_t pinNum>
+    template<pin_number pinNum>
     struct InputPin : Pin<pinNum> {
         InputPin() : Pin<pinNum>(kInput) {};
         InputPin(const uint8_t options) : Pin<pinNum>(kInput, options) {};
@@ -180,7 +190,7 @@ namespace Motate {
         void write(const bool);
     };
 
-    template<int8_t pinNum>
+    template<pin_number pinNum>
     struct OutputPin : Pin<pinNum> {
         OutputPin() : Pin<pinNum>(kOutput) {};
         OutputPin(const uint8_t options) : Pin<pinNum>(kOutput, options) {};
@@ -195,21 +205,23 @@ namespace Motate {
         void init(const PinMode type, const uint8_t options = kNormal); /* Intentially not defined. */
     };
 
+    template<uint8_t portChar, uint8_t portPin>
+    struct _IRQPin {
+        static void interrupt();
+    };
 
-
-    // All of the pins on the SAM can be an interrupt pin
+    // All of the pins on the XMega can be an interrupt pins
     // but we create these objects to share the interface with other architectures.
-    template<int8_t pinNum>
-    struct IRQPin : Pin<pinNum> {
+    template<pin_number pinNum>
+    struct IRQPin : Pin<pinNum>, _IRQPin<Pin<pinNum>::portLetter, Pin<pinNum>::portPin> {
         IRQPin() : Pin<pinNum>(kInput) {};
         IRQPin(const uint8_t options) : Pin<pinNum>(kInput, options) {};
         void init(const uint8_t options = kNormal  ) {Pin<pinNum>::init(kInput, options);};
 
         static const bool is_real = true;
-        static void interrupt() __attribute__ (( weak ));
     };
 
-    template<int8_t pinNum>
+    template<pin_number pinNum>
     constexpr const bool IsIRQPin() { return IRQPin<pinNum>::is_real; };
 
     template<pin_number gpioPinNumber>
@@ -219,29 +231,42 @@ namespace Motate {
     using LookupIRQPin = IRQPin< ReversePinLookup<portChar, portPin>::number >;
 
 
-    struct _pinChangeInterrupt {
-        const uint8_t portLetter;
-        const uint32_t mask;
-        void (&interrupt)();
+#define MOTATE_PIN_INTERRUPT(number) \
+    template<> void Motate::_IRQPin<Pin<number>::portLetter, Pin<number>::portPin>::interrupt()
+
+    template<pin_number pinNum>
+    struct UARTTxPin {
+        static const bool is_real = false;
     };
 
-    // YAY! We get to have fun with macro concatenation!
-    // See: https://gcc.gnu.org/onlinedocs/cpp/Stringification.html#Stringification
-    // Short form: We need to take two passes to get the concatenation to work
-    #define MOTATE_PIN_INTERRUPT_NAME_( x, y ) x##y
-    #define MOTATE_PIN_INTERRUPT_NAME( x, y )\
-        MOTATE_PIN_INTERRUPT_NAME_( x, y )
+    template <pin_number pinNum>
+    constexpr const bool IsUARTTxPin() { return UARTTxPin<pinNum>::is_real; };
 
-    // Also we use the GCC-specific __COUNTER__
-    // See https://gcc.gnu.org/onlinedocs/cpp/Common-Predefined-Macros.html
-#define MOTATE_PIN_INTERRUPT(number) \
-    Motate::_pinChangeInterrupt MOTATE_PIN_INTERRUPT_NAME( _Motate_PinChange_Interrupt_Trampoline, __COUNTER__ )\
-            __attribute__(( section(".motate.pin_change_interrupts") )) {\
-        Motate::IRQPin<number>::portLetter,\
-        Motate::IRQPin<number>::mask,\
-        Motate::IRQPin<number>::interrupt\
-    };\
-    template<> void Motate::IRQPin<number>::interrupt()
+#define _MAKE_MOTATE_UART_TX_PIN(registerChar, registerPin)\
+    template<>\
+    struct UARTTxPin< ReversePinLookup<registerChar, registerPin>::number > : ReversePinLookup<registerChar, registerPin> {\
+        UARTTxPin() : ReversePinLookup<registerChar, registerPin>(kPeripheralOutput) {};\
+        static const uint8_t moduleId = 0; \
+        static const bool is_real = true;\
+    };
+        
+    
+    template<pin_number pinNum>
+    struct UARTRxPin {
+            static const bool is_real = false;
+    };
+
+    template <pin_number pinNum>
+    constexpr const bool IsUARTRxPin() { return UARTRxPin<pinNum>::is_real; };
+
+#define _MAKE_MOTATE_UART_RX_PIN(registerChar, registerPin)\
+    template<>\
+    struct UARTRxPin< ReversePinLookup<registerChar, registerPin>::number > : ReversePinLookup<registerChar, registerPin> {\
+        UARTRxPin() : ReversePinLookup<registerChar, registerPin>(kPeripheralInput) {};\
+        static const uint8_t moduleId = 0; \
+        static const bool is_real = true;\
+    };
+
 
 
 #define _MAKE_MOTATE_PIN(pinNum, registerLetter, registerChar, registerPin)\
@@ -250,8 +275,9 @@ namespace Motate {
     private: /* Lock the copy contructor.*/\
         Pin(const Pin<pinNum>&){};\
     public:\
-        static const int8_t number = pinNum;\
+        static const uint8_t number = pinNum;\
         static const uint8_t portLetter = (uint8_t) registerChar;\
+        static const uint8_t portPin = (uint8_t) registerPin;\
         static const uint8_t mask = (1 << registerPin);\
             \
         Pin(){};\

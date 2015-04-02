@@ -46,29 +46,28 @@ ifeq ($(NEEDS_SCANF_FLOAT),1)
 #PRINTF_FLOAT_FLAGS = -u _scanf_float
 endif
 
-
 # ---------------------------------------------------------------------------------------
 # C Flags (NOT CPP flags)
 
-DEVICE_CFLAGS := -D__$(CHIP)__ -D__$(CHIP_SERIES)__ -mmcu=$(CPU_DEV) -ffunction-sections -fdata-sections -std=gnu99
+DEVICE_CFLAGS := $(LTO) -D__$(CHIP)__ -D__$(CHIP_SERIES)__ -mmcu=$(CPU_DEV) -ffunction-sections -fdata-sections -std=gnu99 -mrelax
 
 #--param max-inline-insns-single=500 -mlong-calls
 
 # ---------------------------------------------------------------------------------------
 # CPP Flags
 
-DEVICE_CPPFLAGS := -D__$(CHIP)__ -D__$(CHIP_SERIES)__ -mmcu=$(CPU_DEV) -ffunction-sections -fdata-sections -std=gnu++11 -fno-rtti -fno-exceptions
+DEVICE_CPPFLAGS := $(LTO) -D__$(CHIP)__ -D__$(CHIP_SERIES)__ -mmcu=$(CPU_DEV) -ffunction-sections -fdata-sections -std=gnu++11 -fno-rtti -fno-exceptions -mrelax
 # --param max-inline-insns-single=500 -mlong-calls
 
 # ---------------------------------------------------------------------------------------
 # Assembly Flags
 
-DEVICE_ASFLAGS  := -D__$(CHIP)__ -D__$(CHIP_SERIES)__ -mmcu=$(CPU_DEV)
+DEVICE_ASFLAGS  := $(LTO) -D__$(CHIP)__ -D__$(CHIP_SERIES)__ -mmcu=$(CPU_DEV)
 
 # ---------------------------------------------------------------------------------------
 # Linker Flags
 
-DEVICE_LDFLAGS := -mmcu=$(CPU_DEV) ${PRINTF_FLOAT_FLAGS}
+DEVICE_LDFLAGS := $(LTO) -mmcu=$(CPU_DEV) ${PRINTF_FLOAT_FLAGS} -mrelax
 
 
 # ---------------------------------------------------------------------------------------

@@ -1,8 +1,9 @@
 /*
- KL05ZUART.h - Library for the Motate system
+ XMegaUART.h - Library for the Motate system
  http://github.com/synthetos/motate/
 
- Copyright (c) 2013 Robert Giseburt
+ Copyright (c) 2015 Robert Giseburt
+ Copyright (c) 2015 Alden S. Hart Jr.
 
  This file is part of the Motate Library.
 
@@ -28,13 +29,13 @@
 
  */
 
-#ifndef KL05ZUART_H_ONCE
-#define KL05ZUART_H_ONCE
+#ifndef XMEGAUART_H_ONCE
+#define XMEGAUART_H_ONCE
 
 #include "MotatePins.h"
 #include "MotateBuffer.h"
-#include <type_traits>
-#include <algorithm> // for std::max, etc.
+#include "stdlib.h"
+#include "xmega.h"
 
 namespace Motate {
 
@@ -49,7 +50,7 @@ namespace Motate {
 
         static constexpr uint16_t As8Bit             =      0; // Default
         static constexpr uint16_t As9Bit             = 1 << 3;
-        static constexpr uint16_t As10Bit            = 1 << 4;
+//        static constexpr uint16_t As10Bit            = 1 << 4;
 
         // Some careful hand math will show that 8N1 == 0
         static constexpr uint16_t As8N1              = As8Bit | NoParity | OneStopBit;
@@ -104,46 +105,25 @@ namespace Motate {
 
     template<uint8_t uartPeripheralNumber>
     struct _UARTHardware {
-        static const uint8_t uartPeripheralNum=0xFF;
-
-        // BITBANG HERE!
-    };
-
-    template<>
-    struct _UARTHardware<0u> {
-        // Template specialize this for KLxx with multiple UARTs
-        struct uart_proxy_t {
-            static constexpr volatile char &BDH() { return (char &)(UART0->BDH); };
-            static constexpr volatile char &BDL() { return (char &)(UART0->BDL); };
-
-            static constexpr volatile char &C1() { return (char &)(UART0->C1); };
-            static constexpr volatile char &C2() { return (char &)(UART0->C2); };
-            static constexpr volatile char &S1() { return (char &)(UART0->S1); };
-            static constexpr volatile char &S2() { return (char &)(UART0->S2); };
-            static constexpr volatile char &C3() { return (char &)(UART0->C3); };
-            static constexpr volatile char &D () { return (char &)(UART0->D);  };
-            static constexpr volatile char &C4() { return (char &)(UART0->C4); };
-            static constexpr volatile char &C5() { return (char &)(UART0->C5); };
-        };
-
-        static uart_proxy_t uart_proxy;
-
-        static constexpr const IRQn_Type uartIRQ() { return UART0_IRQn; };
-
-        static constexpr const uint8_t uartPeripheralNum=0;
-
-        //        typedef _UARTHardware<0u, rxPinNumber, txPinNumber> this_type_t;
+        static USART_t& uart_proxy;
 
         void init() {
-            // Enable the UART0 Clock Gate
-            SIM->SCGC4 |= SIM_SCGC4_UART0_MASK;
+//            dx->usart = (USART_t *)pgm_read_word(&cfgUsart[idx].usart);
+//            dx->port = (PORT_t *)pgm_read_word(&cfgUsart[idx].port);
+//            uint8_t baud = (uint8_t)pgm_read_byte(&cfgUsart[idx].baud);
+//            if (baud == XIO_BAUD_UNSPECIFIED) { baud = XIO_BAUD_DEFAULT; }
+//            xio_set_baud_usart(dx, baud);						// usart must be bound first
+//            dx->port->DIRCLR = (uint8_t)pgm_read_byte(&cfgUsart[idx].inbits);
+//            dx->port->DIRSET = (uint8_t)pgm_read_byte(&cfgUsart[idx].outbits);
+//            dx->port->OUTCLR = (uint8_t)pgm_read_byte(&cfgUsart[idx].outclr);
+//            dx->port->OUTSET = (uint8_t)pgm_read_byte(&cfgUsart[idx].outset);
+//            dx->usart->CTRLB = (USART_TXEN_bm | USART_RXEN_bm);	// enable tx and rx
+//            dx->usart->CTRLA = CTRLA_RXON_TXON;					// enable tx and rx IRQs
+//
+//            dx->port->USB_CTS_PINCTRL = PORT_OPC_TOTEM_gc | PORT_ISC_BOTHEDGES_gc;
+//            dx->port->INTCTRL = USB_CTS_INTLVL;		// see xio_usart.h for setting
+//            dx->port->USB_CTS_INTMSK = USB_CTS_bm;
 
-            /* Select the clock source */
-            /* 0b01 = MCGFLLCLK
-             * 0b10 = OSCERCLK
-             * 0b11 = MCGIRCLK
-             */
-            SIM->SOPT2 = (SIM->SOPT2 & ~SIM_SOPT2_UART0SRC_MASK) | SIM_SOPT2_UART0SRC(0b01);
 
             disable();
         };
@@ -154,71 +134,189 @@ namespace Motate {
         };
 
         void enable() {
-            uart_proxy.C2() |= (uint8_t)(UART0_C2_TE_MASK | UART0_C2_RE_MASK);
+            uart_proxy.CTRLB |= USART_RXEN_bm | USART_TXEN_bm;
         };
 
         void disable () {
-            uart_proxy.C2() &= (uint8_t)~(UART0_C2_TE_MASK | UART0_C2_RE_MASK);
+            uart_proxy.CTRLB &= ~(USART_RXEN_bm | USART_TXEN_bm);
         };
 
         void setOptions(const uint32_t baud, const uint16_t options, const bool fromConstructor=false) {
             disable();
 
-            // This all breaks down to the SBR ("Baud Rate Modulo Divisor" -- how does SBR stand for that?)
-            // formula, which sets the baud rate. One key component is the OSR ("Over Sampling Ratio"), which
-            // is a number between 3 and 31, where the actual rate of oversampling is OSR+1.
-            //
-            // Final formula:
-            //   baud = clock / ((OSR+1) × SBR).
-            // Higher OSR is better.
-            // Manual also says that for 4 <= OSR+1 <= 7, set sampling to "both edges."
+            // Using int16_t for most of these so as to avoid conversions.
+            // BSEL is valid from 0 to 4096
+            // BSCALE is valid from -7 to 7
+            // CLK2X is 0 or 1
+            int16_t bestBSEL = 0;
+            int16_t bestBSCALE = 0;
+            int16_t bestCLK2X = 0;
+            int16_t bestError = 1;
 
-            uint32_t best_baud_diff = 0xFFFFFF; // Start it high, we'll change in in a second...
-            uint32_t sbr_value = 0;
+            int32_t tmpBaud = 0;
+            int16_t tmpBSEL = 0;
+            int16_t tmpBSCALE = 7;
+            int16_t tmpCLK2X = 0;
+            int32_t tmpError = 0;
 
-            uint32_t oversample_rate = 4;
-            for (uint32_t test_oversample_rate = 4; test_oversample_rate <= 32; test_oversample_rate++) {
-                uint32_t temp_sbr_value = SystemCoreClock / (baud * test_oversample_rate);
-                uint32_t calculated_baud = SystemCoreClock / (temp_sbr_value * test_oversample_rate);
+            do {
+                do {
+                    if (tmpCLK2X == 0) {
+                        if (tmpBSCALE < 0) {
+                            tmpBSEL = (1 / (2 ^ tmpBSCALE)) * ((F_CPU / (16 * baud)) - 1);
+                        } else {
+                            tmpBSEL = ((F_CPU / ((2 ^ tmpBSCALE) * 16 * baud)) - 1);
+                        }
+                    } else /*if (tmpCLK2X == 1)*/ {
+                        if (tmpBSCALE < 0) {
+                            tmpBSEL = (1 / (2 ^ tmpBSCALE)) * ((F_CPU / (8 * baud)) - 1);
+                        } else {
+                            tmpBSEL = ((F_CPU / ((2 ^ tmpBSCALE) * 8 * baud)) - 1);
+                        }
+                    }
 
-                uint32_t baud_diff = calculated_baud > baud ? calculated_baud - baud : baud - calculated_baud;
+                    if (tmpCLK2X == 0) {
+                        if (tmpBSCALE < 0) {
+                            tmpBaud = (F_CPU / (16 * (((2 ^ tmpBSCALE) * tmpBSEL) + 1)));
+                        } else {
+                            tmpBaud = (F_CPU / ((2 ^ tmpBSCALE) * 16 * (tmpBSEL + 1)));
+                        }
+                    } else /*if (tmpCLK2X == 1)*/ {
+                        if (tmpBSCALE < 0) {
+                            tmpBaud = (F_CPU / (8 * (((2 ^ tmpBSCALE) * tmpBSEL) + 1)));
+                        } else {
+                            tmpBaud = (F_CPU / ((2 ^ tmpBSCALE) * 8 * (tmpBSEL + 1)));
+                        }
+                    }
 
-                if (baud_diff <= best_baud_diff) {
-                    best_baud_diff = baud_diff;
-                    oversample_rate = test_oversample_rate;
-                    sbr_value = temp_sbr_value;
-                }
-            }
+                    // We want 4 digits of precision, and we don't want to have to use float
+                    // (and potentially bloat the code if it's not used in the project proper)
+                    // so we'll bitshift by 10 bits to get a multiply of 1024.8
+                    tmpError = ((tmpBaud - baud)<<10)/(baud);
 
-            // If the OSR is between 4x and 8x then both
-            // edge sampling MUST be turned on.
-            if (/*(oversample_rate > 3) && */(oversample_rate < 9))
-                uart_proxy.C5() |= (uint8_t)UART0_C5_BOTHEDGE_MASK;
+                    if (abs(bestError)>abs(tmpError)) {
+                        bestBSEL = tmpBSEL;
+                        bestBSCALE = tmpBSCALE;
+                        bestCLK2X = tmpCLK2X;
+                        bestError = tmpError;
+                    }
 
-            // Setup OSR value
-            uart_proxy.C4() = ((uint8_t)uart_proxy.C4() & ~UART0_C4_OSR_MASK ) | UART0_C4_OSR(oversample_rate-1);
+                } while (tmpBSCALE > -8);
+            } while (tmpCLK2X < 2);
 
-            /* Save off the current value of the uartx_BDH except for the SBR field */
-            uart_proxy.BDH() = ((uint8_t)uart_proxy.BDH() & ~(UART0_BDH_SBR_MASK | UART0_BDH_SBNS_MASK) )
-            | UART0_BDH_SBR( sbr_value >> 8 )
-            | (options & UARTMode::TwoStopBits ? UART0_BDH_SBNS_MASK : 0);
-            uart_proxy.BDL() = (uint8_t)(sbr_value & UART0_BDL_SBR_MASK);
+            uart_proxy.BAUDCTRLA = (uint8_t)bestBSEL;
+            uart_proxy.BAUDCTRLB = (bestBSCALE << USART_BSCALE0_bp)|(bestBSEL >> 8);
 
-            if (options & UARTMode::As10Bit) {
-                uart_proxy.C4() |= (uint8_t)UART0_C4_M10_MASK;
+
+            /**********
+             * From the excel spreadsheet included with AVR1307:
+                bestBSEL = 0
+                bestBSCALE = 0
+                bestCLK2X = 0
+                bestError = 1
+                
+                tmpBaud = 0
+                tmpBSEL = 0
+                tmpBscale = 7
+                tmpCLK2X = 0
+                tmpError = 0
+                Do
+                    Do
+                        tmpBSEL = BSELCalc(CPUclk, tmpBscale, Baud, tmpCLK2X)
+                        If (IsError(tmpBSEL) = False) Then
+                            tmpBaud = BaudRateCalc(CPUclk, tmpBscale, tmpBSEL, tmpCLK2X)
+                            If (IsError(tmpBaud) = False) Then
+                                tmpError = Round(((tmpBaud - Baud) / Baud), 4)
+                            Else
+                                tmpError = CVErr(xlErrNA)
+                            End If
+                        Else
+                            tmpError = CVErr(xlErrNA)
+                        End If
+                        
+                        If (IsError(tmpError) = False) Then
+                            If (Abs(bestError) > Abs(tmpError)) Then
+                                bestBSEL = tmpBSEL
+                                bestBSCALE = tmpBscale
+                                bestCLK2X = tmpCLK2X
+                                bestError = tmpError
+                            End If
+                        End If
+                        tmpBscale = tmpBscale - 1
+                    Loop While (tmpBscale > -8)
+                    tmpBscale = 7
+                    tmpCLK2X = tmpCLK2X + 1
+                Loop While (tmpCLK2X < 2)
+             
+             ---
+             
+                Function BSELCalc(Fper, Bscale, FBaud, Clk2x)
+                    If (Clk2x = 0) Then
+                        If (Bscale < 0) Then
+                            bselval = (1 / (2 ^ Bscale)) * ((Fper / (16 * FBaud)) - 1)
+                        Else
+                            bselval = ((Fper / ((2 ^ Bscale) * 16 * FBaud)) - 1)
+                        End If
+                    ElseIf (Clk2x = 1) Then
+                        If (Bscale < 0) Then
+                            bselval = (1 / (2 ^ Bscale)) * ((Fper / (8 * FBaud)) - 1)
+                        Else
+                            bselval = ((Fper / ((2 ^ Bscale) * 8 * FBaud)) - 1)
+                        End If
+                    Else
+                        bselval = CVErr(xlErrNA)
+                    End If
+                    
+                    If (bselval >= 0) And (bselval <= 4095) Then
+                        BSELCalc = Round(bselval, 0)
+                    Else
+                        BSELCalc = CVErr(xlErrNA)
+                    End If
+                End Function
+
+             ---
+             
+                Function BaudRateCalc(Fper, Bscale, Bsel, Clk2x)
+                    If (Clk2x = 0) Then
+                        If (Bscale < 0) Then
+                            Baud = (Fper / (16 * (((2 ^ Bscale) * Bsel) + 1)))
+                        Else
+                            Baud = (Fper / ((2 ^ Bscale) * 16 * (Bsel + 1)))
+                        End If
+                    ElseIf (Clk2x = 1) Then
+                        If (Bscale < 0) Then
+                            Baud = (Fper / (8 * (((2 ^ Bscale) * Bsel) + 1)))
+                        Else
+                            Baud = (Fper / ((2 ^ Bscale) * 8 * (Bsel + 1)))
+                        End If
+                    Else
+                       Baud = CVErr(xlErrNA)
+                    End If
+                    BaudRateCalc = Baud
+                End Function
+
+             **********/
+
+            uint8_t tmpCTRLC = uart_proxy.CTRLC;
+
+            if (options & UARTMode::As8Bit) { // USART_CHSIZE_t
+                tmpCTRLC = (tmpCTRLC & (~USART_CHSIZE_gm)) | USART_CHSIZE_8BIT_gc;
             } else if (options & UARTMode::As9Bit) {
-                uart_proxy.C1() |= (uint8_t)UART0_C1_M_MASK;
-                uart_proxy.C4() &= (uint8_t)~UART0_C4_M10_MASK;
-            } else {
-                uart_proxy.C1() &= (uint8_t)~UART0_C1_M_MASK;
-                uart_proxy.C4() &= (uint8_t)~UART0_C4_M10_MASK;
+                tmpCTRLC = (tmpCTRLC & (~USART_CHSIZE_gm)) | USART_CHSIZE_9BIT_gc;
             }
 
-            if (options & (UARTMode::EvenParity|UARTMode::OddParity)) {
-                // Do we need to enforce 9-bit mode here? The manual is ambiguous...
-                uart_proxy.C1() = ((uint8_t)uart_proxy.C1() & ~UART0_C1_PT_MASK) | UART0_C1_PE_MASK | (options & UARTMode::EvenParity ? 0 : UART0_C1_PT_MASK);
+            if (options & (UARTMode::EvenParity|UARTMode::EvenParity)) { // USART_PMODE_t
+                tmpCTRLC = (tmpCTRLC & (USART_PMODE_gm)) | USART_PMODE_EVEN_gc;
+            } else if (options & (UARTMode::EvenParity|UARTMode::OddParity)) { // USART_PMODE_t
+                tmpCTRLC = (tmpCTRLC & (USART_PMODE_gm)) | USART_PMODE_ODD_gc;
             } else {
-                uart_proxy.C1() &= (uint8_t)~UART0_C1_PE_MASK;
+                tmpCTRLC = (tmpCTRLC & (USART_PMODE_gm)) | USART_PMODE_DISABLED_gc;
+            }
+
+            if (options & (UARTMode::EvenParity|UARTMode::TwoStopBits)) { // bool
+                tmpCTRLC |= USART_SBMODE_bm;
+            } else {
+                tmpCTRLC &= ~USART_SBMODE_bm;
             }
 
             /* Enable receiver and transmitter */
@@ -230,95 +328,76 @@ namespace Motate {
             if (interrupts != UARTInterrupt::Off) {
 
                 if (interrupts & (UARTInterrupt::OnRxDone | UARTInterrupt::OnTxDone | UARTInterrupt::OnTxReady | UARTInterrupt::OnIdle)) {
-                    uart_proxy.C2() &= ~(UART0_C2_RIE_MASK | UART0_C2_TCIE_MASK | UART0_C2_TIE_MASK | UART0_C2_ILIE_MASK);
+                    // TODO
                 }
 
                 if (interrupts & UARTInterrupt::OnRxDone) {
-                    uart_proxy.C2() |= UART0_C2_RIE_MASK;
+                    // TODO
                 }
                 if (interrupts & UARTInterrupt::OnTxDone) {
-                    uart_proxy.C2() |= UART0_C2_TCIE_MASK;
+                    // TODO
                 }
 
                 if (interrupts & UARTInterrupt::OnTxReady) {
-                    uart_proxy.C2() |= UART0_C2_TIE_MASK;
+                    // TODO
+
                 }
                 if (interrupts & UARTInterrupt::OnIdle) {
-                    uart_proxy.C2() |= UART0_C2_ILIE_MASK;
+                    // TODO
                 }
 
 
                 /* Set interrupt priority */
                 if (interrupts & UARTInterrupt::PriorityHighest) {
-                    NVIC_SetPriority(uartIRQ(), 0);
+                    // TODO
                 }
                 else if (interrupts & UARTInterrupt::PriorityHigh) {
-                    NVIC_SetPriority(uartIRQ(), 3);
+                    // TODO
                 }
                 else if (interrupts & UARTInterrupt::PriorityMedium) {
-                    NVIC_SetPriority(uartIRQ(), 7);
+                    // TODO
                 }
                 else if (interrupts & UARTInterrupt::PriorityLow) {
-                    NVIC_SetPriority(uartIRQ(), 11);
+                    // TODO
                 }
                 else if (interrupts & kInterruptPriorityLowest) {
-                    NVIC_SetPriority(uartIRQ(), 15);
+                    // TODO
                 }
 
-                NVIC_EnableIRQ(uartIRQ());
+                // TODO -- enable interrupts
             } else {
 
-                NVIC_DisableIRQ(uartIRQ());
+                // TODO -- disable all interrupts
             }
         };
 
         void setInterruptTxReady(bool value) {
             if (value) {
-                uart_proxy.C2() |= UART0_C2_TIE_MASK;
+                // TODO
             } else {
-                uart_proxy.C2() &= ~UART0_C2_TIE_MASK;
+                // TODO
             }
         };
 
 
         uint16_t getInterruptCause() __attribute__ (( noinline )) {
-            uint16_t status = UARTInterrupt::Unknown;
-            uint8_t s1 = uart_proxy.S1();
-            if (s1 & UART0_S1_TDRE_MASK) {
-                status |= UARTInterrupt::OnTxReady;
-            }
-            if (s1 & UART0_S1_TC_MASK) {
-                status |= UARTInterrupt::OnTxDone;
-            }
-            if (s1 & UART0_S1_RDRF_MASK) {
-                status |= UARTInterrupt::OnRxDone;
-            }
-            if (s1 & UART0_S1_IDLE_MASK) {
-                status |= UARTInterrupt::OnIdle;
-            }
-            return status;
+            // TODO
+            return 0;
         }
 
         int16_t readByte() {
-            // uart_proxy.S1 |= (uint8_t)UART0_S1_OR_MASK;
-            if (uart_proxy.S1() & (uint8_t)UART0_S1_RDRF_MASK) {
-                return uart_proxy.D();
-            }
+            // TODO
             return -1;
         };
 
         int16_t writeByte(const char value) {
-            // uart_proxy.S1 |= (uint8_t)UART0_S1_OR_MASK;
-            if (uart_proxy.S1() & (uint8_t)UART0_S1_TDRE_MASK) {
-                uart_proxy.D() = value;
-                return 1;
-            }
+            // TODO
             return -1;
         };
 
         void flush() {
             // Wait for the buffer to be empty
-            while(!(uart_proxy.S1() & (uint8_t)UART0_S1_TDRE_MASK)) {;}
+            // TODO
         };
     };
 
@@ -337,7 +416,7 @@ namespace Motate {
 
 
 
-    template<pin_number rxPinNumber = ReversePinLookup<'B',  2>::number, pin_number txPinNumber = ReversePinLookup<'B',  1>::number>
+    template<pin_number rxPinNumber, pin_number txPinNumber>
     struct UART {
         UARTRxPin<rxPinNumber> rxPin;
         UARTTxPin<txPinNumber> txPin;
@@ -453,6 +532,23 @@ namespace Motate {
             return total_written;
         };
     };
+
+    template<>
+    USART_t& _UARTHardware<0>::uart_proxy = USARTC0;
+    template<>
+    USART_t& _UARTHardware<1>::uart_proxy = USARTC1;
+    template<>
+    USART_t& _UARTHardware<2>::uart_proxy = USARTD0;
+    template<>
+    USART_t& _UARTHardware<3>::uart_proxy = USARTD1;
+    template<>
+    USART_t& _UARTHardware<4>::uart_proxy = USARTE0;
+    template<>
+    USART_t& _UARTHardware<5>::uart_proxy = USARTE1;
+    template<>
+    USART_t& _UARTHardware<6>::uart_proxy = USARTF0;
+    template<>
+    USART_t& _UARTHardware<7>::uart_proxy = USARTF1;
 
     struct _UARTHardwareProxy {
         virtual void uartInterruptHandler() = 0;
@@ -749,4 +845,4 @@ namespace Motate {
     
 }
 
-#endif /* end of include guard: KL05ZUART_H_ONCE */
+#endif /* end of include guard: XMEGAUART_H_ONCE */

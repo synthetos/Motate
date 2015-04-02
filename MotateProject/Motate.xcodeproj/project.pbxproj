@@ -12,6 +12,7 @@
 		D443391F196BB69B004A48F9 /* Makefile in Sources */ = {isa = PBXBuildFile; fileRef = D443391C196BB69B004A48F9 /* Makefile */; };
 		D4433920196BB69B004A48F9 /* Makefile in Sources */ = {isa = PBXBuildFile; fileRef = D443391C196BB69B004A48F9 /* Makefile */; };
 		D457117C17053EFA00EA19A8 /* Makefile in Sources */ = {isa = PBXBuildFile; fileRef = D457117B17053EFA00EA19A8 /* Makefile */; };
+		D47E9A951ACC532300476AF2 /* XMegaPins.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D47E9A941ACC532300476AF2 /* XMegaPins.cpp */; };
 		D48992C61965B460004F73A6 /* Makefile in Sources */ = {isa = PBXBuildFile; fileRef = D48992C41965B460004F73A6 /* Makefile */; };
 		D48992C71965B460004F73A6 /* Makefile in Sources */ = {isa = PBXBuildFile; fileRef = D48992C41965B460004F73A6 /* Makefile */; };
 		D48992C81965B460004F73A6 /* uart_demo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D48992C51965B460004F73A6 /* uart_demo.cpp */; };
@@ -1337,6 +1338,8 @@
 		D443391C196BB69B004A48F9 /* Makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
 		D449BC59197AC3E3000C0C3C /* MotateSerial.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotateSerial.h; sourceTree = "<group>"; };
 		D457117B17053EFA00EA19A8 /* Makefile */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = Makefile; sourceTree = "<group>"; usesTabs = 1; xcLanguageSpecificationIdentifier = xcode.lang.sh; };
+		D47E9A921ACB2CFE00476AF2 /* xmega_stdcpp_stubs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = xmega_stdcpp_stubs.h; sourceTree = "<group>"; };
+		D47E9A941ACC532300476AF2 /* XMegaPins.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = XMegaPins.cpp; sourceTree = "<group>"; };
 		D48992C01965B118004F73A6 /* MotateBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MotateBuffer.h; path = motate/MotateBuffer.h; sourceTree = SOURCE_ROOT; };
 		D48992C41965B460004F73A6 /* Makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
 		D48992C51965B460004F73A6 /* uart_demo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = uart_demo.cpp; sourceTree = "<group>"; };
@@ -9981,6 +9984,7 @@
 		D4E90E271ABB54D40042A16C /* Atmel_XMega */ = {
 			isa = PBXGroup;
 			children = (
+				D47E9A941ACC532300476AF2 /* XMegaPins.cpp */,
 				D4E90E281ABB54D40042A16C /* XMegaPins.h */,
 				D4E90E291ABB54D40042A16C /* XMegaTimers.cpp */,
 				D4E90E2A1ABB54D40042A16C /* XMegaTimers.h */,
@@ -10006,6 +10010,7 @@
 				D4E910B21ABB60550042A16C /* syscalls.h */,
 				D4E910B51ABBAD140042A16C /* xmega.cpp */,
 				D4E910B61ABBAD140042A16C /* xmega.h */,
+				D47E9A921ACB2CFE00476AF2 /* xmega_stdcpp_stubs.h */,
 				D4E913561ABCB58F0042A16C /* xmega_interrupts.cpp */,
 				D4E913571ABCB58F0042A16C /* xmega_interrupts.h */,
 			);
@@ -11503,6 +11508,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				D4E913371ABC5D1D0042A16C /* Makefile in Sources */,
+				D47E9A951ACC532300476AF2 /* XMegaPins.cpp in Sources */,
 				D4E913381ABC5D1D0042A16C /* buffered_uart_demo.cpp in Sources */,
 				D4E913391ABC5D1D0042A16C /* uart_demo.cpp in Sources */,
 				D4E9133A1ABC5D1D0042A16C /* blink_demo.cpp in Sources */,

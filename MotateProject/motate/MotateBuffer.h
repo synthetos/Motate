@@ -31,7 +31,7 @@
 #define MOTATEBUFFER_H_ONCE
 
 #include <inttypes.h>
-#include <utility> // for std::move
+//#include <utility> // for std::move
 
 namespace Motate {
     // Implement a simple circular buffer, with a compile-time size
@@ -56,7 +56,7 @@ namespace Motate {
 	    }
 	};
 
-	constexpr std::size_t size() { return _size; };
+	constexpr int16_t size() { return _size; };
 
 	// Default constructors will work fine.
 

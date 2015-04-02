@@ -219,26 +219,41 @@ export PATH := $(PATH):../Tools/gcc-$(CROSS_COMPILE)/bin
 
 
 # ---------------------------------------------------------------------------------------
+# LTO generic flags
+
+ifeq ($(USE_LTO),1)
+LTO = -flto -fuse-linker-plugin -fwhole-program
+else
+LTO =
+endif
+
+
+# ---------------------------------------------------------------------------------------
 # C Flags (NOT CPP flags)
 
 #CFLAGS +=  $(DEVICE_CFLAGS)
-CFLAGS +=  $(DEVICE_CFLAGS) -DBOARD=$(BOARD)
+CFLAGS +=  $(DEVICE_CFLAGS) -DBOARD=$(BOARD) $(LTO)
 
 # ---------------------------------------------------------------------------------------
 # CPP Flags
 
 #CPPFLAGS +=  $(DEVICE_CPPFLAGS)
-CPPFLAGS +=  $(DEVICE_CPPFLAGS) -DBOARD=$(BOARD)
+CPPFLAGS +=  $(DEVICE_CPPFLAGS) -DBOARD=$(BOARD)  $(LTO)
 
 # ---------------------------------------------------------------------------------------
 # ASM Flags
 
-ASFLAGS = $(DEVICE_ASFLAGS)
+ASFLAGS = $(DEVICE_ASFLAGS)  $(LTO)
 
 # ---------------------------------------------------------------------------------------
 # Linker Flags
 
-LDFLAGS += $(LIBS) $(USER_LIBS) -Wl,--cref -Wl,--check-sections -Wl,--gc-sections -Wl,--unresolved-symbols=report-all -Wl,--warn-common -Wl,--warn-section-align -Wl,--relax -Wl,--warn-unresolved-symbols $(DEVICE_LDFLAGS)
+
+LDFLAGS += $(LIBS) $(USER_LIBS) -g3 -O$(OPTIMIZATION) -Wl,--cref -Wl,--check-sections -Wl,--gc-sections -Wl,--unresolved-symbols=report-all -Wl,--warn-common -Wl,--warn-section-align $(DEVICE_LDFLAGS)  $(LTO)
+# To allow unresolved symbols, uncomment
+#LDFLAGS += -Wl,--warn-unresolved-symbols
+
+#LDFLAGS += -Wl,--relax
 
 #
 # End of setup tools

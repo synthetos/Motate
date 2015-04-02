@@ -35,44 +35,75 @@
 #include <avr/interrupt.h>
 //#include "Reset.h"
 
-namespace Motate {
+#if 0
+#define _MOTATE_PREDEFINE_TIMER0(tNum) \
+    extern "C" void _null_interrupt_##tNum() {}; \
+    extern "C" void _null_interrupt_##tNum##_0() {}; \
+    extern "C" void _null_interrupt_##tNum##_1() {}; \
+    extern "C" void _null_interrupt_##tNum##_2() {}; \
+    extern "C" void _null_interrupt_##tNum##_3() {}; \
+    namespace Motate { \
+    template<> \
+    TimerChannelInterruptOptions Motate::Timer<tNum>::_interruptCause = kInterruptUnknown; \
+    template<> int8_t            Motate::Timer<tNum>::_interruptCauseChannel = 0; \
+    template<> void Motate::Timer<tNum>::interrupt()  __attribute__ ((weak, alias("_null_interrupt_" #tNum))); \
+    template<> void Motate::TimerChannel<tNum, 0>::interrupt() __attribute__ ((weak, alias("_null_interrupt_" #tNum "_0"))); \
+    template<> void Motate::TimerChannel<tNum, 1>::interrupt() __attribute__ ((weak, alias("_null_interrupt_" #tNum "_1"))); \
+    template<> void Motate::TimerChannel<tNum, 2>::interrupt() __attribute__ ((weak, alias("_null_interrupt_" #tNum "_2"))); \
+    template<> void Motate::TimerChannel<tNum, 3>::interrupt() __attribute__ ((weak, alias("_null_interrupt_" #tNum "_3"))); \
+    }
 
-    template<>
-    void Motate::Timer<0>::interrupt()  __attribute__ ((weak));
+#define _MOTATE_PREDEFINE_TIMER1(tNum) \
+    extern "C" void _null_interrupt_##tNum() {}; \
+    extern "C" void _null_interrupt_##tNum##_0() {}; \
+    extern "C" void _null_interrupt_##tNum##_1() {}; \
+    namespace Motate { \
+    template<> \
+    TimerChannelInterruptOptions Motate::Timer<tNum>::_interruptCause = kInterruptUnknown; \
+    template<>  int8_t           Motate::Timer<tNum>::_interruptCauseChannel = 0; \
+    template<> void Motate::Timer<tNum>::interrupt() __attribute__ ((weak, alias("_null_interrupt_" #tNum))); \
+    template<> void Motate::TimerChannel<tNum, 0>::interrupt() __attribute__ ((weak, alias("_null_interrupt_" #tNum "_0"))); \
+    template<> void Motate::TimerChannel<tNum, 1>::interrupt() __attribute__ ((weak, alias("_null_interrupt_" #tNum "_1"))); \
+    }
 
-    template<>
-    void Motate::TimerChannel<0, 0>::interrupt()  __attribute__ ((weak));
+#else
 
-    template<>
-    void Motate::TimerChannel<0, 1>::interrupt()  __attribute__ ((weak));
+extern "C" void _null_interrupt() {};
 
-    template<>
-    void Motate::TimerChannel<0, 2>::interrupt()  __attribute__ ((weak));
+#define _MOTATE_PREDEFINE_TIMER0(tNum) \
+    namespace Motate { \
+    template<> \
+    TimerChannelInterruptOptions Motate::Timer<tNum>::_interruptCause = kInterruptUnknown; \
+    template<> int8_t            Motate::Timer<tNum>::_interruptCauseChannel = 0; \
+    template<> void Motate::Timer<tNum>::interrupt()  __attribute__ ((weak, alias("_null_interrupt"))); \
+    template<> void Motate::TimerChannel<tNum, 0>::interrupt() __attribute__ ((weak, alias("_null_interrupt"))); \
+    template<> void Motate::TimerChannel<tNum, 1>::interrupt() __attribute__ ((weak, alias("_null_interrupt"))); \
+    template<> void Motate::TimerChannel<tNum, 2>::interrupt() __attribute__ ((weak, alias("_null_interrupt"))); \
+    template<> void Motate::TimerChannel<tNum, 3>::interrupt() __attribute__ ((weak, alias("_null_interrupt"))); \
+    }
 
-    template<>
-    void Motate::TimerChannel<0, 3>::interrupt()  __attribute__ ((weak));
+#define _MOTATE_PREDEFINE_TIMER1(tNum) \
+    namespace Motate { \
+    template<> \
+    TimerChannelInterruptOptions Motate::Timer<tNum>::_interruptCause = kInterruptUnknown; \
+    template<>  int8_t           Motate::Timer<tNum>::_interruptCauseChannel = 0; \
+    template<> void Motate::Timer<tNum>::interrupt() __attribute__ ((weak, alias("_null_interrupt"))); \
+    template<> void Motate::TimerChannel<tNum, 0>::interrupt() __attribute__ ((weak, alias("_null_interrupt"))); \
+    template<> void Motate::TimerChannel<tNum, 1>::interrupt() __attribute__ ((weak, alias("_null_interrupt"))); \
+    }
+
+#endif
+
+    _MOTATE_PREDEFINE_TIMER0(0); // C 0
+    _MOTATE_PREDEFINE_TIMER1(1); // C 1
+    _MOTATE_PREDEFINE_TIMER0(2); // D 0
+    _MOTATE_PREDEFINE_TIMER1(3); // D 1
+    _MOTATE_PREDEFINE_TIMER0(4); // E 0
+    _MOTATE_PREDEFINE_TIMER1(5); // E 1
+    _MOTATE_PREDEFINE_TIMER0(6); // F 0
 
 
-    template<>
-    void Motate::Timer<1>::interrupt()  __attribute__ ((weak));
-
-    template<>
-    void Motate::TimerChannel<1, 0>::interrupt()  __attribute__ ((weak));
-
-    template<>
-    void Motate::TimerChannel<1, 1>::interrupt()  __attribute__ ((weak));
-
-
-
-    template<>
-    TimerChannelInterruptOptions Timer<0>::_interruptCause = kInterruptUnknown;
-    template<>
-    int8_t                       Timer<0>::_interruptCauseChannel = 0;
-
-    template<>
-    TimerChannelInterruptOptions Timer<1>::_interruptCause = kInterruptUnknown;
-    template<>
-    int8_t                       Timer<1>::_interruptCauseChannel = 0;
+namespace Motate { \
 
     /* System-wide tick counter */
 	/*  Inspired by code from Atmel and Arduino.
@@ -87,82 +118,86 @@ namespace Motate {
 
 } // namespace Motate
 
+#define _MOTATE_CREATE_ISRS0(tLetter, tNum) \
+    /* OVerFlow Interrupt */ \
+    ISR(TC ## tLetter ## 0_OVF_vect) { \
+        if (Motate::Timer<tNum>::interrupt) { \
+            Motate::Timer<tNum>::_setInterruptCause(Motate::kInterruptOnOverflow, -1); \
+            Motate::Timer<tNum>::interrupt(); \
+        } \
+    } \
+    /* CC A Interrupt */ \
+    ISR(TC ## tLetter ## 0_CCA_vect) { \
+        if (Motate::TimerChannel<tNum, 0>::interrupt) { \
+            Motate::TimerChannel<tNum, 0>::interrupt(); \
+        } else { \
+            Motate::Timer<tNum>::_setInterruptCause(Motate::kInterruptOnMatch, 0); \
+            Motate::Timer<tNum>::interrupt(); \
+        } \
+    } \
+    /* CC B Interrupt */ \
+    ISR(TC ## tLetter ## 0_CCB_vect) { \
+        if (Motate::TimerChannel<tNum, 1>::interrupt) { \
+            Motate::TimerChannel<tNum, 1>::interrupt(); \
+        } else { \
+            Motate::Timer<tNum>::_setInterruptCause(Motate::kInterruptOnMatch, 1); \
+            Motate::Timer<tNum>::interrupt(); \
+        } \
+    } \
+    /* CC C Interrupt */ \
+    ISR(TC ## tLetter ## 0_CCC_vect) { \
+        if (Motate::TimerChannel<tNum, 2>::interrupt) { \
+            Motate::TimerChannel<tNum, 2>::interrupt(); \
+        } else { \
+            Motate::Timer<tNum>::_setInterruptCause(Motate::kInterruptOnMatch, 2); \
+            Motate::Timer<tNum>::interrupt(); \
+        } \
+    } \
+    /* CC D Interrupt */ \
+    ISR(TC ## tLetter ## 0_CCD_vect) { \
+        if (Motate::TimerChannel<tNum, 3>::interrupt) { \
+            Motate::TimerChannel<tNum, 3>::interrupt(); \
+        } else { \
+            Motate::Timer<tNum>::_setInterruptCause(Motate::kInterruptOnMatch, 3); \
+            Motate::Timer<tNum>::interrupt(); \
+        } \
+    }
+
+#define _MOTATE_CREATE_ISRS1(tLetter, tNum) \
+    /* OVerFlow Interrupt */ \
+    ISR(TC ## tLetter ## 1_OVF_vect) { \
+        if (Motate::Timer<tNum>::interrupt) { \
+            Motate::Timer<tNum>::_setInterruptCause(Motate::kInterruptOnOverflow, -1); \
+            Motate::Timer<tNum>::interrupt(); \
+        } \
+    } \
+    /* CC A Interrupt */ \
+    ISR(TC ## tLetter ## 1_CCA_vect) { \
+        if (Motate::TimerChannel<tNum, 0>::interrupt) { \
+            Motate::TimerChannel<tNum, 0>::interrupt(); \
+        } else { \
+            Motate::Timer<tNum>::_setInterruptCause(Motate::kInterruptOnMatch, 0); \
+            Motate::Timer<tNum>::interrupt(); \
+        } \
+    } \
+    /* CC B Interrupt */ \
+    ISR(TC ## tLetter ## 1_CCB_vect) { \
+        if (Motate::TimerChannel<tNum, 1>::interrupt) { \
+            Motate::TimerChannel<tNum, 1>::interrupt(); \
+        } else { \
+            Motate::Timer<tNum>::_setInterruptCause(Motate::kInterruptOnMatch, 1); \
+            Motate::Timer<tNum>::interrupt(); \
+        } \
+    }
 
 
-// TC0 OVerFlow Interrupt
-ISR(TCC0_OVF_vect) {
-    if (Motate::Timer<0>::interrupt) {
-        Motate::Timer<0>::_setInterruptCause(Motate::kInterruptOnOverflow, -1);
-        Motate::Timer<0>::interrupt();
-    }
-}
-
-// TC0 CC A Interrupt
-ISR(TCC0_CCA_vect) {
-    if (!Motate::TimerChannel<0, 0>::interrupt) {
-        Motate::Timer<0>::_setInterruptCause(Motate::kInterruptOnMatch, 0);
-        Motate::Timer<0>::interrupt();
-    } else {
-        Motate::TimerChannel<0, 0>::interrupt();
-    }
-}
-
-// TC0 CC B Interrupt
-ISR(TCC0_CCB_vect) {
-    if (!Motate::TimerChannel<0, 1>::interrupt) {
-        Motate::Timer<0>::_setInterruptCause(Motate::kInterruptOnMatch, 1);
-        Motate::Timer<0>::interrupt();
-    } else {
-        Motate::TimerChannel<0, 1>::interrupt();
-    }
-}
-// TC0 CC C Interrupt
-ISR(TCC0_CCC_vect) {
-    if (!Motate::TimerChannel<0, 2>::interrupt) {
-        Motate::Timer<0>::_setInterruptCause(Motate::kInterruptOnMatch, 2);
-        Motate::Timer<0>::interrupt();
-    } else {
-        Motate::TimerChannel<0, 2>::interrupt();
-    }
-}
-// TC0 CC D Interrupt
-ISR(TCC0_CCD_vect) {
-    if (!Motate::TimerChannel<0, 3>::interrupt) {
-        Motate::Timer<0>::_setInterruptCause(Motate::kInterruptOnMatch, 3);
-        Motate::Timer<0>::interrupt();
-    } else {
-        Motate::TimerChannel<0, 3>::interrupt();
-    }
-}
-
-
-// TC1 OVerFlow Interrupt
-ISR(TCC1_OVF_vect) {
-    if (Motate::Timer<1>::interrupt) {
-        Motate::Timer<1>::_setInterruptCause(Motate::kInterruptOnOverflow, -1);
-        Motate::Timer<1>::interrupt();
-    }
-}
-
-// TC1 CC A Interrupt
-ISR(TCC1_CCA_vect) {
-    if (!Motate::TimerChannel<1, 0>::interrupt) {
-        Motate::Timer<1>::_setInterruptCause(Motate::kInterruptOnMatch, 0);
-        Motate::Timer<1>::interrupt();
-    } else {
-        Motate::TimerChannel<1, 0>::interrupt();
-    }
-}
-// TC1 CC B Interrupt
-ISR(TCC1_CCB_vect) {
-    if (!Motate::TimerChannel<1, 1>::interrupt) {
-        Motate::Timer<1>::_setInterruptCause(Motate::kInterruptOnMatch, 1);
-        Motate::Timer<1>::interrupt();
-    } else {
-        Motate::TimerChannel<1, 1>::interrupt();
-    }
-}
-
+_MOTATE_CREATE_ISRS0(C, 0)
+_MOTATE_CREATE_ISRS1(C, 1)
+_MOTATE_CREATE_ISRS0(D, 2)
+_MOTATE_CREATE_ISRS1(D, 3)
+_MOTATE_CREATE_ISRS0(E, 4)
+_MOTATE_CREATE_ISRS1(E, 5)
+_MOTATE_CREATE_ISRS0(F, 6)
 
 // RTC COMPare Interrupt
 ISR(RTC_COMP_vect)

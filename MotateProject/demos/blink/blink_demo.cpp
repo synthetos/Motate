@@ -7,6 +7,15 @@ using namespace Motate;
 /****** Create file-global objects ******/
 
 OutputPin<kLED1_PinNumber> led1_pin;
+OutputPin<kLED2_PinNumber> led2_pin;
+InputPin<kGPIO_XMin> input_pin;
+
+
+namespace Motate {
+MOTATE_PIN_INTERRUPT(kGPIO_XMin) {
+    led2_pin.toggle();
+}
+}
 
 /****** Optional setup() function ******/
 

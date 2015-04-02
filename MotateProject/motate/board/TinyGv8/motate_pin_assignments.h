@@ -70,6 +70,10 @@ namespace Motate {
 
     _MAKE_MOTATE_PIN( 150, A, 'A', 5);	// COOLANT_LED
 
+    _MAKE_MOTATE_PIN( 151, A, 'A', 6);	// X_MIN
+
+    _MAKE_MOTATE_PIN( 152, A, 'A', 7);	// TESTING_REMOVE_ME
+
     _MAKE_MOTATE_PWM_PIN( 'C',  0, Timer<0>, /*Channel:*/ 0, /*Inverted:*/ false);
     _MAKE_MOTATE_PWM_PIN( 'C',  1, Timer<0>, /*Channel:*/ 1, /*Inverted:*/ false);
     _MAKE_MOTATE_PWM_PIN( 'C',  2, Timer<0>, /*Channel:*/ 2, /*Inverted:*/ false);
