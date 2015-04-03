@@ -34,15 +34,43 @@
 
 using namespace Motate;
 
+// Here we define a MY_ISR, which is similar to the avrlibc ISR routine, except it does NOT
+// declare the function as 'signal', which will push/pop EVERY register for every ISR,
+// even if it does nothing.
+
+// Using MY_ISR means that a interrupt routine can be optimized down to just the ret
+// instruction, and takes very little space.
+
+// However, there's a cost: any function that is called from a MY_ISR function MUST be
+// declared with the 'sinal' attribute. You must also be careful not to do anything that
+// would require the use of registers in the MY_ISR directly. This is because, as an
+// interrupt, there will be some other context that is being interrupted and is expecting
+// the registers to not change. The push and pop of registers has to happen if they are
+// used.
+
+// Our intent here is to ONLY do comparisons that will compile out, and then call functions
+// that are declared as 'signals'. We're also assuming, in this case, that we will only call
+// one or two pin change interrupts per port, since there will be redundant register push/pop
+// and the higher pins will have to wait for the lower pins to finish.
+
+// Also note that on the XMega, the hardware doesn't record which pin triggered the interrupt,
+// so we have no choice but to call all of the pin change interrupts of a whole port. :-/
+
+#  define MY_ISR(vector, ...) \
+extern "C" void vector (void) __attribute__ ((used, externally_visible)) __VA_ARGS__; \
+void vector (void)
+
 
 #if 1
 
-extern "C" void _null_pin_interrupt() {};
-
-#if 1
+extern "C" {
+    void _null_pin_interrupt() __attribute__ ((naked));
+    void _null_pin_interrupt() {};
+}
 
 #define _MAKE_MOTATE_PIN_INTERRUPTS(portLtr, portChr) \
-template<> const PORT_t& Port8<portChr>::port_proxy = PORT##portLtr; \
+template<> PORT_t& Port8<portChr>::port_proxy = PORT##portLtr; \
+Port8<portChr> port##portLtr; \
 namespace Motate { \
     template<> void _IRQPin<portChr,0>::interrupt() __attribute__ ((weak, alias("_null_pin_interrupt"))); \
     template<> void _IRQPin<portChr,1>::interrupt() __attribute__ ((weak, alias("_null_pin_interrupt"))); \
@@ -54,91 +82,39 @@ namespace Motate { \
     template<> void _IRQPin<portChr,7>::interrupt() __attribute__ ((weak, alias("_null_pin_interrupt"))); \
 } \
 \
-ISR(PORT##portLtr##_INT0_vect) { \
-    if (LookupIRQPin<portChr,0>::number != -1 && _IRQPin<portChr,0>::interrupt) { \
+MY_ISR(PORT##portLtr##_INT0_vect) { \
+    if (LookupIRQPin<portChr,0>::number != -1 && _IRQPin<portChr,0>::interrupt != _null_pin_interrupt) { \
         _IRQPin<portChr,0>::interrupt(); \
     } \
-    if (LookupIRQPin<portChr,1>::number != -1 && _IRQPin<portChr,1>::interrupt) { \
+    if (LookupIRQPin<portChr,1>::number != -1 && _IRQPin<portChr,1>::interrupt != _null_pin_interrupt) { \
         _IRQPin<portChr,1>::interrupt(); \
     } \
-    if (LookupIRQPin<portChr,2>::number != -1 && _IRQPin<portChr,2>::interrupt) { \
+    if (LookupIRQPin<portChr,2>::number != -1 && _IRQPin<portChr,2>::interrupt != _null_pin_interrupt) { \
         _IRQPin<portChr,2>::interrupt(); \
     } \
-    if (LookupIRQPin<portChr,3>::number != -1 && _IRQPin<portChr,3>::interrupt) { \
+    if (LookupIRQPin<portChr,3>::number != -1 && _IRQPin<portChr,3>::interrupt != _null_pin_interrupt) { \
         _IRQPin<portChr,3>::interrupt(); \
     } \
-    if (LookupIRQPin<portChr,4>::number != -1 && _IRQPin<portChr,4>::interrupt) { \
+    if (LookupIRQPin<portChr,4>::number != -1 && _IRQPin<portChr,4>::interrupt != _null_pin_interrupt) { \
         _IRQPin<portChr,4>::interrupt(); \
     } \
-    if (LookupIRQPin<portChr,5>::number != -1 && _IRQPin<portChr,5>::interrupt) { \
+    if (LookupIRQPin<portChr,5>::number != -1 && _IRQPin<portChr,5>::interrupt != _null_pin_interrupt) { \
         _IRQPin<portChr,5>::interrupt(); \
     } \
-    if (LookupIRQPin<portChr,6>::number != -1 && _IRQPin<portChr,6>::interrupt) { \
+    if (LookupIRQPin<portChr,6>::number != -1 && _IRQPin<portChr,6>::interrupt != _null_pin_interrupt) { \
         _IRQPin<portChr,6>::interrupt(); \
     } \
-    if (LookupIRQPin<portChr,7>::number != -1 && _IRQPin<portChr,7>::interrupt) { \
+    if (LookupIRQPin<portChr,7>::number != -1 && _IRQPin<portChr,7>::interrupt != _null_pin_interrupt) { \
         _IRQPin<portChr,7>::interrupt(); \
     } \
 }
 
-#else
-
-#define _MAKE_MOTATE_PIN_INTERRUPTS(portLtr, portChr) \
-template<> const PORT_t& Port8<portChr>::port_proxy = PORT##portLtr; \
-namespace Motate { \
-    template<> void _IRQPin<portChr,0>::interrupt() __attribute__ ((weak)); \
-    template<> void _IRQPin<portChr,0>::interrupt() {}; \
-    template<> void _IRQPin<portChr,1>::interrupt() __attribute__ ((weak)); \
-    template<> void _IRQPin<portChr,1>::interrupt() {}; \
-    template<> void _IRQPin<portChr,2>::interrupt() __attribute__ ((weak)); \
-    template<> void _IRQPin<portChr,2>::interrupt() {}; \
-    template<> void _IRQPin<portChr,3>::interrupt() __attribute__ ((weak)); \
-    template<> void _IRQPin<portChr,3>::interrupt() {}; \
-    template<> void _IRQPin<portChr,4>::interrupt() __attribute__ ((weak)); \
-    template<> void _IRQPin<portChr,4>::interrupt() {}; \
-    template<> void _IRQPin<portChr,5>::interrupt() __attribute__ ((weak)); \
-    template<> void _IRQPin<portChr,5>::interrupt() {}; \
-    template<> void _IRQPin<portChr,6>::interrupt() __attribute__ ((weak)); \
-    template<> void _IRQPin<portChr,6>::interrupt() {}; \
-    template<> void _IRQPin<portChr,7>::interrupt() __attribute__ ((weak)); \
-    template<> void _IRQPin<portChr,7>::interrupt() {}; \
-} \
-\
-ISR(PORT##portLtr##_INT0_vect) { \
-    if (LookupIRQPin<portChr,0>::number != -1 && _IRQPin<portChr,0>::interrupt) { \
-        _IRQPin<portChr,0>::interrupt(); \
-    } \
-    if (LookupIRQPin<portChr,1>::number != -1 && _IRQPin<portChr,1>::interrupt) { \
-        _IRQPin<portChr,1>::interrupt(); \
-    } \
-    if (LookupIRQPin<portChr,2>::number != -1 && _IRQPin<portChr,2>::interrupt) { \
-        _IRQPin<portChr,2>::interrupt(); \
-    } \
-    if (LookupIRQPin<portChr,3>::number != -1 && _IRQPin<portChr,3>::interrupt) { \
-        _IRQPin<portChr,3>::interrupt(); \
-    } \
-    if (LookupIRQPin<portChr,4>::number != -1 && _IRQPin<portChr,4>::interrupt) { \
-        _IRQPin<portChr,4>::interrupt(); \
-    } \
-    if (LookupIRQPin<portChr,5>::number != -1 && _IRQPin<portChr,5>::interrupt) { \
-        _IRQPin<portChr,5>::interrupt(); \
-    } \
-    if (LookupIRQPin<portChr,6>::number != -1 && _IRQPin<portChr,6>::interrupt) { \
-        _IRQPin<portChr,6>::interrupt(); \
-    } \
-    if (LookupIRQPin<portChr,7>::number != -1 && _IRQPin<portChr,7>::interrupt) { \
-        _IRQPin<portChr,7>::interrupt(); \
-    } \
-}
-
-#endif
-
-_MAKE_MOTATE_PIN_INTERRUPTS(A, 'A')
-_MAKE_MOTATE_PIN_INTERRUPTS(B, 'B')
-_MAKE_MOTATE_PIN_INTERRUPTS(C, 'C')
-_MAKE_MOTATE_PIN_INTERRUPTS(D, 'D')
-_MAKE_MOTATE_PIN_INTERRUPTS(E, 'E')
-_MAKE_MOTATE_PIN_INTERRUPTS(F, 'F')
+_MAKE_MOTATE_PIN_INTERRUPTS(A, 'A') // PORTA_INT0_vect
+_MAKE_MOTATE_PIN_INTERRUPTS(B, 'B') // PORTB_INT0_vect
+_MAKE_MOTATE_PIN_INTERRUPTS(C, 'C') // PORTC_INT0_vect
+_MAKE_MOTATE_PIN_INTERRUPTS(D, 'D') // PORTD_INT0_vect
+_MAKE_MOTATE_PIN_INTERRUPTS(E, 'E') // PORTE_INT0_vect
+_MAKE_MOTATE_PIN_INTERRUPTS(F, 'F') // PORTF_INT0_vect
 
 #endif // 0
 

@@ -81,7 +81,7 @@ namespace Motate {
         kPinInterruptOnFallingEdge       = PORT_ISC_FALLING_gc,
 
         kPinInterruptOnLowLevel          = PORT_ISC_LEVEL_gc,
-        /*kPinInterruptOnHighLevel         = UNSUPPOTED,*/
+        /*kPinInterruptOnHighLevel         = UNSUPPORTED,*/
 
         kPinInterruptTypeMask            = PORT_ISC_gm,
 
@@ -105,7 +105,7 @@ namespace Motate {
 	template <unsigned char portLetter>
 	struct Port8 {
         static const uint8_t letter = portLetter; // NULL stub!
-        static const PORT_t& port_proxy;
+        static PORT_t& port_proxy;
 
         void setModes(const uintPort_t value, const uintPort_t mask) {
             uint8_t port_value = 0;
@@ -165,11 +165,46 @@ namespace Motate {
         };
         uintPort_t getInputValues(const uintPort_t mask) {
             return (port_proxy).IN & (mask);
-        }
+        };
         uintPort_t getOutputValues(const uintPort_t mask) {
             return (port_proxy).OUT & (mask);
-        }
+        };
+        void setInterrupts(const uint32_t interrupts, const uintPort_t mask) {
+            if (mask != 0) {
+                if ((interrupts & kPinInterruptTypeMask) == kPinInterruptsOff) {
+                    (port_proxy).INT0MASK |=  mask;
+                } else {
+                    (port_proxy).INT0MASK &= ~mask;
+                }
+            }
+
+            // We can change JUST the priority...
+            if ((interrupts & kPinInterruptPriorityMask) != kPinInterruptsOff) {
+                /* Set interrupt priority */
+                if (interrupts & kPinInterruptPriorityMask) {
+                    if (interrupts & kPinInterruptPriorityHigh) {
+                        (port_proxy).INTCTRL = ((port_proxy).INTCTRL & ~(PORT_INT0LVL_gm)) | PORT_INT0LVL_HI_gc;
+                    }
+                    else if (interrupts & kPinInterruptPriorityMedium) {
+                        (port_proxy).INTCTRL = ((port_proxy).INTCTRL & ~(PORT_INT0LVL_gm)) | PORT_INT0LVL_MED_gc;
+                    }
+                    else if (interrupts & kPinInterruptPriorityLow) {
+                        (port_proxy).INTCTRL = ((port_proxy).INTCTRL & ~(PORT_INT0LVL_gm)) | PORT_INT0LVL_LO_gc;
+                    }
+                }
+            } else {
+                // Possible optimization -- check if we're turning the last one off and shut off the priority.
+            }
+        };
 	};
+
+    extern Port8<'A'> portA;
+    extern Port8<'B'> portB;
+    extern Port8<'C'> portC;
+    extern Port8<'D'> portD;
+    extern Port8<'E'> portE;
+    extern Port8<'F'> portF;
+
 
     template<pin_number pinNum>
     struct Pin {
@@ -195,6 +230,8 @@ namespace Motate {
         uintPort_t get() { return 0; };
         uintPort_t getInputValue() { return 0; };
         uintPort_t getOutputValue() { return 0; };
+        void setInterrupts(const uint32_t interrupts) {};
+
         static uintPort_t maskForPort(const uint8_t otherPortLetter) { return 0; };
         bool isNull() { return true; };
     };
@@ -250,6 +287,7 @@ namespace Motate {
         void init(const uint8_t options = kNormal  ) {Pin<pinNum>::init(kInput, options);};
 
         static const bool is_real = true;
+        static const bool knows_which_pin = false;
     };
 
     template<pin_number pinNum>
@@ -263,6 +301,7 @@ namespace Motate {
 
 
 #define MOTATE_PIN_INTERRUPT(number) \
+    template<> void Motate::_IRQPin<Pin<number>::portLetter, Pin<number>::portPin>::interrupt() __attribute__((signal)); \
     template<> void Motate::_IRQPin<Pin<number>::portLetter, Pin<number>::portPin>::interrupt()
 
     template<pin_number pinNum>
@@ -397,6 +436,9 @@ namespace Motate {
         };\
         uint8_t getOutputValue() {\
             return ((PORT ## registerLetter).OUT & mask);\
+        };\
+        void setInterrupts(const uint32_t interrupts) {\
+            port ## registerLetter.setInterrupts(interrupts, mask);\
         };\
         bool isNull() { return false; };\
         static uint8_t maskForPort(const uint8_t otherPortLetter) {\
