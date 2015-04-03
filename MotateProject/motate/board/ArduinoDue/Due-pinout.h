@@ -73,6 +73,8 @@ namespace Motate {
     pin_number kLED_USBRXPinNumber              =  72;
     pin_number kLED_USBTXPinNumber              =  73;
 
+    pin_number kInput1_PinNumber                =  2;
+    pin_number kPWM11_PinNumber                 =  53;
 
     /** NOTE: When adding pin definitions here, they must be
      *        added to ALL board pin assignment files, even if

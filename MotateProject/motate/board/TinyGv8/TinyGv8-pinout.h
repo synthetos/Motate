@@ -92,6 +92,7 @@ namespace Motate {
 
 
     pin_number kGPIO_XMin                       =  151;
+    pin_number kInput1_PinNumber                =  151;
 
     pin_number kLED1_PinNumber                  =  150;
     pin_number kLED2_PinNumber                  =  127;

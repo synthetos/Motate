@@ -8,11 +8,11 @@ using namespace Motate;
 
 OutputPin<kLED1_PinNumber> led1_pin;
 OutputPin<kLED2_PinNumber> led2_pin;
-InputPin<kGPIO_XMin> input_pin(kPullUp);
+InputPin<kInput1_PinNumber> input_pin(kPullUp);
 
 
 namespace Motate {
-    MOTATE_PIN_INTERRUPT(kGPIO_XMin) {
+    MOTATE_PIN_INTERRUPT(kInput1_PinNumber) {
         led2_pin.toggle();
     }
 }
@@ -22,7 +22,7 @@ namespace Motate {
 void setup() {
     led1_pin = 1;
     led2_pin = 1;
-//    input_pin.setInterrupts();
+    input_pin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityLow);
 }
 
 /****** Main run loop() ******/
