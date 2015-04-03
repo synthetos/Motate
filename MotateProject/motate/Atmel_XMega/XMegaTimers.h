@@ -257,8 +257,6 @@ namespace Motate {
     template <uint8_t timerNum>
     struct Timer : _TC_Stub<timerNum> {
         uint8_t                             _storedClock;
-        static TimerChannelInterruptOptions _interruptCause;
-        static int8_t                       _interruptCauseChannel;
 
         Timer() { init(); };
         Timer(const TimerMode mode, const uint32_t freq) {
@@ -270,7 +268,6 @@ namespace Motate {
             /* Unlock this thing */
             unlock();
             _storedClock = 0;
-            _interruptCause = kInterruptUnknown;
             this->_stopAllInterrupts();
         }
 
@@ -518,14 +515,14 @@ namespace Motate {
             // Trigger a software interrupt
         }
 
-        static void _setInterruptCause(TimerChannelInterruptOptions c, int8_t ch) {
-            _interruptCause = c;
-            _interruptCauseChannel = ch;
-        }
 
+        static const bool has_channel_interrupts = true;
+
+        // These two are for compile-compatibility platforms where has_channel_interrupts == false:
+        static void _setInterruptCause(TimerChannelInterruptOptions c, int8_t ch) {
+        }
         static TimerChannelInterruptOptions getInterruptCause(int16_t &channel) {
-            channel = channel;
-            return _interruptCause;
+            return kInterruptUnknown;
         }
 
         // Placeholder for user code.
@@ -662,7 +659,11 @@ namespace Motate {
 
 } // namespace Motate
 
-#define MOTATE_TIMER_INTERRUPT(number) template<> void Motate::Timer<number>::interrupt()
-#define MOTATE_TIMER_CHANNEL_INTERRUPT(t, ch) template<> void Motate::TimerChannel<t, ch>::interrupt()
+#define MOTATE_TIMER_INTERRUPT(number) \
+    template<> void Motate::Timer<number>::interrupt() __attribute__((signal)); \
+    template<> void Motate::Timer<number>::interrupt()
+#define MOTATE_TIMER_CHANNEL_INTERRUPT(t, ch) \
+    template<> void Motate::TimerChannel<t, ch>::interrupt() __attribute__((signal)) ; \
+    template<> void Motate::TimerChannel<t, ch>::interrupt()
 
 #endif /* end of include guard: XMEGATIMERS_H_ONCE */
