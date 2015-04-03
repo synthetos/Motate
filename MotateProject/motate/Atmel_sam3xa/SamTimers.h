@@ -158,6 +158,8 @@ namespace Motate {
 
         typedef SamCommon< Timer<timerNum> > common;
 
+        static const bool has_channel_interrupts = false;
+
         /********************************************************************
          **                          WARNING                                **
          ** WARNING: Sam channels (tcChan) DO NOT map to Motate Channels!?! **

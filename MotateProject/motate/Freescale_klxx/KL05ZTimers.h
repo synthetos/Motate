@@ -109,11 +109,7 @@ namespace Motate {
         static void _disablePeripheralClock();
         static const IRQn_Type tcIRQ();
 
-        /********************************************************************
-         **                          WARNING                                **
-         ** WARNING: Sam channels (tcChan) DO NOT map to Motate Channels!?! **
-         **                          WARNING           (u been warned)      **
-         *********************************************************************/
+        static const bool has_channel_interrupts = false;
 
         Timer() { init(); };
         Timer(const TimerMode mode, const uint32_t freq) {

@@ -43,23 +43,24 @@ void loop() {
 /****** timer interrupt handler ******/
 
 namespace Motate {
-#if 1
+
     MOTATE_TIMER_INTERRUPT(kBlinkTimerNumber) {
-        int16_t interrupted_channel;
-        TimerChannelInterruptOptions interrupt_cause = getInterruptCause(interrupted_channel);
-        if (interrupt_cause == kInterruptOnMatch) {
+        if (Timer<kBlinkTimerNumber>::has_channel_interrupts) {
             led1_pin = 1;
-        } else if (interrupt_cause == kInterruptOnOverflow) {
-            led1_pin = 0;
+        } else {
+            int16_t interrupted_channel;
+            TimerChannelInterruptOptions interrupt_cause = getInterruptCause(interrupted_channel);
+            if (interrupt_cause == kInterruptOnMatch) {
+                led1_pin = 1;
+            } else if (interrupt_cause == kInterruptOnOverflow) {
+                led1_pin = 0;
+            }
         }
-    }
-#else
-    MOTATE_TIMER_INTERRUPT(kBlinkTimerNumber) {
-        led1_pin = 1;
     }
 
     MOTATE_TIMER_CHANNEL_INTERRUPT(kBlinkTimerNumber, kBlinkTimerChNumber) {
-        led1_pin = 0;
+        if (Timer<kBlinkTimerNumber>::has_channel_interrupts) {
+            led1_pin = 0;
+        }
     }
-#endif
 }
