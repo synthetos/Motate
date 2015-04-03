@@ -42,6 +42,7 @@ ifeq ("$(BASE_BOARD)","due")
     FIRST_LINK_SOURCES += $(wildcard ${MOTATE_PATH}/Atmel_sam3xa/*.cpp)
 
     CHIP = SAM3X8E
+    export CHIP
     CHIP_LOWERCASE = sam3x8e
 
     BOARD_PATH = ${MOTATE_PATH}/board/ArduinoDue

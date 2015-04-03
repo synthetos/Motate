@@ -1334,6 +1334,8 @@
 
 /* Begin PBXFileReference section */
 		D409A5C919B97241009137D7 /* KL05ZSPI.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = KL05ZSPI.h; path = motate/Freescale_klxx/KL05ZSPI.h; sourceTree = SOURCE_ROOT; };
+		D40A24031ACE2C5A00406A3A /* openocd.cfg */ = {isa = PBXFileReference; lastKnownFileType = text; name = openocd.cfg; path = motate/openocd.cfg; sourceTree = "<group>"; };
+		D40A24041ACE2CCC00406A3A /* atmel_sam.cfg */ = {isa = PBXFileReference; lastKnownFileType = text; path = atmel_sam.cfg; sourceTree = "<group>"; };
 		D443391B196BB69B004A48F9 /* buffered_uart_demo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = buffered_uart_demo.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		D443391C196BB69B004A48F9 /* Makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
 		D449BC59197AC3E3000C0C3C /* MotateSerial.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotateSerial.h; sourceTree = "<group>"; };
@@ -4515,6 +4517,7 @@
 			isa = PBXGroup;
 			children = (
 				D457117B17053EFA00EA19A8 /* Makefile */,
+				D40A24031ACE2C5A00406A3A /* openocd.cfg */,
 				D4C79F19195BC80800A1BE28 /* demos */,
 				D4C78F52195201A900A1BE28 /* motate */,
 				D4C77F6D1950912300A1BE28 /* Tools.xcodeproj */,
@@ -9877,6 +9880,7 @@
 			isa = PBXGroup;
 			children = (
 				D4C79EE21957C0B700A1BE28 /* atmel_sam_series.mk */,
+				D40A24041ACE2CCC00406A3A /* atmel_sam.cfg */,
 				D4C79EE81957C0B700A1BE28 /* cortex_handlers.c */,
 				D4C79EE91957C0B700A1BE28 /* gcc_flash.ld */,
 				D4C79EEA1957C0B700A1BE28 /* gcc_sram.ld */,

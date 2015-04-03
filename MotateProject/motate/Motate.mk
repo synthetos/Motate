@@ -38,6 +38,7 @@ $(error BOARD not defined - please provide a project name)
 endif
 
 MOTATE_PATH ?= $(dir $(CURDIR)/$(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST)))
+export MOTATE_PATH
 
 TOOLS_PATH ?= ${MOTATE_PATH}/../../Tools
 
@@ -250,7 +251,7 @@ ASFLAGS = $(DEVICE_ASFLAGS)  $(LTO)
 
 DEBUG_SYMBOLS = -g3
 
-LDFLAGS += $(LIBS) $(USER_LIBS) $(DEBUG_SYMBOLS) -O$(OPTIMIZATION) -Wl,--cref -Wl,--check-sections -Wl,--gc-sections -Wl,--unresolved-symbols=report-all -Wl,--warn-common -Wl,--warn-section-align $(DEVICE_LDFLAGS)  $(LTO)
+LDFLAGS += $(LIBS) $(USER_LIBS) $(DEBUG_SYMBOLS) -O$(OPTIMIZATION) -Wl,--cref -Wl,--check-sections -Wl,--gc-sections -ffunction-sections -Wl,--unresolved-symbols=report-all -Wl,--warn-common -Wl,--warn-section-align $(DEVICE_LDFLAGS)  $(LTO)
 # To allow unresolved symbols, uncomment
 #LDFLAGS += -Wl,--warn-unresolved-symbols
 
