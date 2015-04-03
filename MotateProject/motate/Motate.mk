@@ -222,7 +222,7 @@ export PATH := $(PATH):../Tools/gcc-$(CROSS_COMPILE)/bin
 # LTO generic flags
 
 ifeq ($(USE_LTO),1)
-LTO = -flto -fuse-linker-plugin -fwhole-program
+LTO = -flto
 else
 LTO =
 endif
@@ -248,8 +248,9 @@ ASFLAGS = $(DEVICE_ASFLAGS)  $(LTO)
 # ---------------------------------------------------------------------------------------
 # Linker Flags
 
+DEBUG_SYMBOLS = -g3
 
-LDFLAGS += $(LIBS) $(USER_LIBS) -g3 -O$(OPTIMIZATION) -Wl,--cref -Wl,--check-sections -Wl,--gc-sections -Wl,--unresolved-symbols=report-all -Wl,--warn-common -Wl,--warn-section-align $(DEVICE_LDFLAGS)  $(LTO)
+LDFLAGS += $(LIBS) $(USER_LIBS) $(DEBUG_SYMBOLS) -O$(OPTIMIZATION) -Wl,--cref -Wl,--check-sections -Wl,--gc-sections -Wl,--unresolved-symbols=report-all -Wl,--warn-common -Wl,--warn-section-align $(DEVICE_LDFLAGS)  $(LTO)
 # To allow unresolved symbols, uncomment
 #LDFLAGS += -Wl,--warn-unresolved-symbols
 
@@ -339,9 +340,9 @@ ALL_ASM_OBJECTS := $(MOTATE_ASM_OBJECTS) $(ALL_OTHER_ASM_OBJECTS)
 
 
 #
-CFLAGS   += -g3 -O$(OPTIMIZATION) $(INCLUDES) $(patsubst %,-D%,$(DEVICE_DEFINES) $(USER_DEFINES))
-CPPFLAGS += -g3 -O$(OPTIMIZATION) $(INCLUDES) $(patsubst %,-D%,$(DEVICE_DEFINES) $(USER_DEFINES))
-ASFLAGS  += -g3 -O$(OPTIMIZATION) $(INCLUDES) -D__ASSEMBLY__ $(patsubst %,-D%,$(DEVICE_DEFINES) $(USER_DEFINES))
+CFLAGS   += $(DEBUG_SYMBOLS) -O$(OPTIMIZATION) $(INCLUDES) $(patsubst %,-D%,$(DEVICE_DEFINES) $(USER_DEFINES))
+CPPFLAGS += $(DEBUG_SYMBOLS) -O$(OPTIMIZATION) $(INCLUDES) $(patsubst %,-D%,$(DEVICE_DEFINES) $(USER_DEFINES))
+ASFLAGS  += $(DEBUG_SYMBOLS) -O$(OPTIMIZATION) $(INCLUDES) -D__ASSEMBLY__ $(patsubst %,-D%,$(DEVICE_DEFINES) $(USER_DEFINES))
 
 ifneq ("$(DEVICE_LINKER_SCRIPT)", "")
 LINKER_SCRIPT := $(DEVICE_LINKER_SCRIPT)

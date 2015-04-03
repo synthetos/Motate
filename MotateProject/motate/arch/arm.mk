@@ -50,20 +50,20 @@ endif
 # ---------------------------------------------------------------------------------------
 # C Flags (NOT CPP flags)
 
-DEVICE_CFLAGS := -D__$(CHIP)__ -D__$(CHIP_SERIES)__ -mcpu=$(CPU_DEV) -mthumb -ffunction-sections -fdata-sections -std=gnu99
+DEVICE_CFLAGS := -D__$(CHIP)__ -D__$(CHIP_SERIES)__ -D__ARM__  -mcpu=$(CPU_DEV) -mthumb -ffunction-sections -fdata-sections -std=gnu99
 
 #--param max-inline-insns-single=500 -mlong-calls
 
 # ---------------------------------------------------------------------------------------
 # CPP Flags
 
-DEVICE_CPPFLAGS := -D__$(CHIP)__ -D__$(CHIP_SERIES)__ -mcpu=$(CPU_DEV) -mthumb -ffunction-sections -fdata-sections -std=gnu++11 -fno-rtti -fno-exceptions
+DEVICE_CPPFLAGS := -D__$(CHIP)__ -D__$(CHIP_SERIES)__ -D__ARM__ -mcpu=$(CPU_DEV) -mthumb -ffunction-sections -fdata-sections -std=gnu++11 -fno-rtti -fno-exceptions
 # --param max-inline-insns-single=500 -mlong-calls
 
 # ---------------------------------------------------------------------------------------
 # Assembly Flags
 
-DEVICE_ASFLAGS  := -D__$(CHIP)__ -D__$(CHIP_SERIES)__ -mcpu=$(CPU_DEV) -mthumb
+DEVICE_ASFLAGS  := -D__$(CHIP)__ -D__$(CHIP_SERIES)__ -D__ARM__ -mcpu=$(CPU_DEV) -mthumb
 
 # ---------------------------------------------------------------------------------------
 # Linker Flags
