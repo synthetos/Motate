@@ -38,11 +38,26 @@ namespace Motate {
     // NOT ALL OF THESE PINS ARE ON ALL PLATFORMS
     // Undefined pins will be equivalent to Motate::NullPin, and return 1 for Pin<>::isNull();
 
-    pin_number kSerial_RX                       =   0;
-    pin_number kSerial_TX                       =   1;
+    pin_number kSerial_RX                       =   ReversePinLookup<'C',  2>::number;
+    pin_number kSerial_TX                       =   ReversePinLookup<'C',  3>::number;
+    pin_number kSerial_CTS                      =   ReversePinLookup<'C',  1>::number;
+    pin_number kSerial_RTS                      =   ReversePinLookup<'C',  0>::number;
 
-    pin_number kSerial0_RX                      =   0;
-    pin_number kSerial0_TX                      =   1;
+
+    pin_number kSerial0_RX                      =   kSerial_RX;
+    pin_number kSerial0_TX                      =   kSerial_TX;
+    pin_number kSerial1_RX                      =   ReversePinLookup<'C',  6>::number;
+    pin_number kSerial1_TX                      =   ReversePinLookup<'C',  7>::number;
+    pin_number kSerial2_RX                      =   ReversePinLookup<'D',  2>::number;
+    pin_number kSerial2_TX                      =   ReversePinLookup<'D',  3>::number;
+    pin_number kSerial3_RX                      =   ReversePinLookup<'D',  6>::number;
+    pin_number kSerial3_TX                      =   ReversePinLookup<'D',  7>::number;
+    pin_number kSerial4_RX                      =   ReversePinLookup<'E',  2>::number;
+    pin_number kSerial4_TX                      =   ReversePinLookup<'E',  3>::number;
+    pin_number kSerial5_RX                      =   ReversePinLookup<'E',  6>::number;
+    pin_number kSerial5_TX                      =   ReversePinLookup<'E',  7>::number;
+    pin_number kSerial6_RX                      =   ReversePinLookup<'F',  2>::number;
+    pin_number kSerial6_TX                      =   ReversePinLookup<'F',  3>::number;
 
 //    pin_number kI2C_SDAPinNumber                =  20;
 //    pin_number kI2C_SCLPinNumber                =  21;

@@ -54,16 +54,14 @@ int main(void);
 extern "C"{
 #endif // __cplusplus
 
-    // These two routines are defined with C linkage:
+    // These routines are defined with C linkage:
 
-    void _init() __attribute__ ((weak));
     void _init() {
         SystemInit();
     }
 
     void __libc_init_array(void);
 
-    void _start() __attribute__ ((weak));
     void _start() {
         SystemInit();
         __libc_init_array();

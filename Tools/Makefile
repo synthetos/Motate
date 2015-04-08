@@ -48,16 +48,22 @@ endif #eq ($(ARCH), 'gcc-arm-none-eabi')
 ifeq ($(ARCH), gcc-avr)
 TOOLS_SUBPATH = gcc-avr
 
-TOOLS_VERSION = 3.4.5
-TOOLS_EXPANDED_DIRNAME = avr-toolchain-${TOOLS_VERSION}
+TOOLS_VERSION = 4.8.1-arduino3
+TOOLS_EXPANDED_DIRNAME = avr
 
-#http://arduino.cc/download.php?f=/avr-toolchain-linux32-3.4.5.zip
-TOOLS_URL_PREFIX = http://arduino.cc/download.php?f=/
-TOOLS_OSX_ARCHIVE_FILENAME = avr-toolchain-mac32-${TOOLS_VERSION}.zip
-TOOLS_LINUX_ARCHIVE_FILENAME = avr-toolchain-linux64-${TOOLS_VERSION}.zip
-TOOLS_WIN32_ARCHIVE_FILENAME = avr-toolchain-win32-${TOOLS_VERSION}-arduino1.zip
+#http://arduino.cc/download.php?f=/tools/avr-gcc-4.8.1-arduino3-i386-apple-darwin11.tar.bz2
+TOOLS_URL_PREFIX = http://arduino.cc/download.php?f=/tools/
 
-EXPAND_COMMAND = unzip -d ${TOOLS_EXPANDED_DIRNAME}
+TOOLS_OSX_ARCHIVE_FILENAME = avr-gcc-${TOOLS_VERSION}-i386-apple-darwin11.tar.bz2
+EXPAND_COMMAND_OSX = tar xzvf
+
+TOOLS_LINUX_ARCHIVE_FILENAME = avr-${TOOLS_VERSION}-x86_64-pc-linux-gnu.tar.bz2
+EXPAND_COMMAND_LINUX = tar xzvf
+
+TOOLS_WIN32_ARCHIVE_FILENAME = avr-${TOOLS_VERSION}-i686-mingw32.zip
+EXPAND_COMMAND_WIN32 = unzip -d ${TOOLS_EXPANDED_DIRNAME}
+
+EXPAND_COMMAND = ${EXPAND_COMMAND_${OS}}
 
 TEST_COMMAND=avr-gcc
 

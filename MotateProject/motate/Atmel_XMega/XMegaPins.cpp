@@ -69,9 +69,9 @@ extern "C" {
 }
 
 #define _MAKE_MOTATE_PIN_INTERRUPTS(portLtr, portChr) \
-template<> PORT_t& Port8<portChr>::port_proxy = PORT##portLtr; \
-Port8<portChr> port##portLtr; \
 namespace Motate { \
+    template<> PORT_t& Port8<portChr>::port_proxy = PORT##portLtr; \
+    Port8<portChr> port##portLtr; \
     template<> void _IRQPin<portChr,0>::interrupt() __attribute__ ((weak, alias("_null_pin_interrupt"))); \
     template<> void _IRQPin<portChr,1>::interrupt() __attribute__ ((weak, alias("_null_pin_interrupt"))); \
     template<> void _IRQPin<portChr,2>::interrupt() __attribute__ ((weak, alias("_null_pin_interrupt"))); \

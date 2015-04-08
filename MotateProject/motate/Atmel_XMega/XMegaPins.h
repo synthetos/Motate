@@ -301,8 +301,8 @@ namespace Motate {
 
 
 #define MOTATE_PIN_INTERRUPT(number) \
-    template<> void Motate::_IRQPin<Pin<number>::portLetter, Pin<number>::portPin>::interrupt() __attribute__((signal)); \
-    template<> void Motate::_IRQPin<Pin<number>::portLetter, Pin<number>::portPin>::interrupt()
+    template<> void Motate::_IRQPin<Motate::Pin<number>::portLetter, Motate::Pin<number>::portPin>::interrupt() __attribute__((signal)); \
+    template<> void Motate::_IRQPin<Motate::Pin<number>::portLetter, Motate::Pin<number>::portPin>::interrupt()
 
     template<pin_number pinNum>
     struct UARTTxPin {
@@ -312,11 +312,11 @@ namespace Motate {
     template <pin_number pinNum>
     constexpr const bool IsUARTTxPin() { return UARTTxPin<pinNum>::is_real; };
 
-#define _MAKE_MOTATE_UART_TX_PIN(registerChar, registerPin)\
+#define _MAKE_MOTATE_UART_TX_PIN(uartNum_, registerChar, registerPin)\
     template<>\
     struct UARTTxPin< ReversePinLookup<registerChar, registerPin>::number > : ReversePinLookup<registerChar, registerPin> {\
-        UARTTxPin() : ReversePinLookup<registerChar, registerPin>(kPeripheralOutput) {};\
-        static const uint8_t moduleId = 0; \
+        UARTTxPin() : ReversePinLookup<registerChar, registerPin>(kOutput) {};\
+        static const uint8_t uartNum = uartNum_; \
         static const bool is_real = true;\
     };
         
@@ -329,11 +329,11 @@ namespace Motate {
     template <pin_number pinNum>
     constexpr const bool IsUARTRxPin() { return UARTRxPin<pinNum>::is_real; };
 
-#define _MAKE_MOTATE_UART_RX_PIN(registerChar, registerPin)\
+#define _MAKE_MOTATE_UART_RX_PIN(uartNum_, registerChar, registerPin)\
     template<>\
     struct UARTRxPin< ReversePinLookup<registerChar, registerPin>::number > : ReversePinLookup<registerChar, registerPin> {\
-        UARTRxPin() : ReversePinLookup<registerChar, registerPin>(kPeripheralInput) {};\
-        static const uint8_t moduleId = 0; \
+        UARTRxPin() : ReversePinLookup<registerChar, registerPin>(kInput) {};\
+        static const uint8_t uartNum = uartNum_; \
         static const bool is_real = true;\
     };
 

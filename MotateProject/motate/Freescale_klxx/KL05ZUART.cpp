@@ -38,8 +38,8 @@ namespace Motate {
 
 extern "C" void UART0_IRQHandler(void)  {
     if (Motate::uart0HardwareProxy != 0) {
-	Motate::uart0HardwareProxy->uartInterruptHandler();
-	return;
+        Motate::uart0HardwareProxy->uartInterruptHandler(Motate::_UARTHardware<0u>::getInterruptCause());
+        return;
     }
     while (1) ;
 }

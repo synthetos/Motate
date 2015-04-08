@@ -4,3 +4,5 @@ gcc-arm-none-eabi-*
 avr-gcc
 avr-toolchain-*
 gcc-avr
+avr
+*.tar.bz2

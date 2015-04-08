@@ -10024,6 +10024,20 @@
 /* End PBXGroup section */
 
 /* Begin PBXLegacyTarget section */
+		D40A24051ACF384800406A3A /* Motate XMega buffered_uart */ = {
+			isa = PBXLegacyTarget;
+			buildArgumentsString = "$(ACTION) VERBOSE=1 USE_LTO=1 COLOR=0 BOARD=TinyGv8";
+			buildConfigurationList = D40A24061ACF384800406A3A /* Build configuration list for PBXLegacyTarget "Motate XMega buffered_uart" */;
+			buildPhases = (
+			);
+			buildToolPath = /usr/bin/make;
+			buildWorkingDirectory = ./demos/buffered_uart;
+			dependencies = (
+			);
+			name = "Motate XMega buffered_uart";
+			passBuildSettingsInEnvironment = 1;
+			productName = g3_due;
+		};
 		D45710C21705330C00EA19A8 /* Motate Due uart */ = {
 			isa = PBXLegacyTarget;
 			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 BOARD=Due";
@@ -10110,7 +10124,7 @@
 		};
 		D4E90E211ABB39D20042A16C /* Motate XMega blink */ = {
 			isa = PBXLegacyTarget;
-			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 BOARD=TinyGv8";
+			buildArgumentsString = "$(ACTION) VERBOSE=1 USE_LTO=1 COLOR=0 BOARD=TinyGv8";
 			buildConfigurationList = D4E90E221ABB39D20042A16C /* Build configuration list for PBXLegacyTarget "Motate XMega blink" */;
 			buildPhases = (
 			);
@@ -10124,7 +10138,7 @@
 		};
 		D4E913591AC0891B0042A16C /* Motate XMega soft_pwm */ = {
 			isa = PBXLegacyTarget;
-			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 BOARD=TinyGv8";
+			buildArgumentsString = "$(ACTION) VERBOSE=1 USE_LTO=1 COLOR=0 BOARD=TinyGv8";
 			buildConfigurationList = D4E9135A1AC0891B0042A16C /* Build configuration list for PBXLegacyTarget "Motate XMega soft_pwm" */;
 			buildPhases = (
 			);
@@ -10225,6 +10239,7 @@
 				D4C4EF7E196DB49D00D1F791 /* Motate FRDM-KL05Z buffered_uart */,
 				D4E90E211ABB39D20042A16C /* Motate XMega blink */,
 				D4E913591AC0891B0042A16C /* Motate XMega soft_pwm */,
+				D40A24051ACF384800406A3A /* Motate XMega buffered_uart */,
 				D457112317053BFB00EA19A8 /* index_sam */,
 				D4C79F2F19630FA000A1BE28 /* index_kl05z */,
 				D4E910B71ABBB2370042A16C /* index_xmega */,
@@ -11550,6 +11565,22 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
+		D40A24071ACF384800406A3A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "Motate XMega buffered_uart";
+			};
+			name = Debug;
+		};
+		D40A24081ACF384800406A3A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "Motate XMega buffered_uart";
+			};
+			name = Release;
+		};
 		D45710BD170532AC00EA19A8 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -11983,6 +12014,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		D40A24061ACF384800406A3A /* Build configuration list for PBXLegacyTarget "Motate XMega buffered_uart" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D40A24071ACF384800406A3A /* Debug */,
+				D40A24081ACF384800406A3A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		D45710BB170532AC00EA19A8 /* Build configuration list for PBXProject "Motate" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

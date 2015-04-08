@@ -29,19 +29,17 @@
 
 #include "MotatePins.h"
 #include "MotateTimers.h"
-#include "MotateSerial.h"
-#include "MotateSPI.h"
+#include "MotateUART.h"
+//#include "MotateSPI.h"
 #include "MotateBuffer.h"
 
-#include <iterator>
+//#include <iterator>
 
 // This makes the Motate:: prefix unnecessary.
 using Motate::timer_number;
-using Motate::Serial;
 
-constexpr std::size_t write_buffer_size = 128;
-
-char write_buffer[write_buffer_size];
+//constexpr int16_t write_buffer_size = 128;
+//char write_buffer[write_buffer_size];
 
 // Setup an led to blink and show that the board's working...
 Motate::OutputPin<Motate::kLED1_PinNumber> led1_pin;
@@ -49,57 +47,39 @@ Motate::OutputPin<Motate::kLED2_PinNumber> led2_pin;
 
 /****** Create file-global objects ******/
 
-//Motate::UART<> Serial {115200}; // 115200 is the default, as well.
+Motate::UART<Motate::kSerial_RX, Motate::kSerial_TX> Serial {115200}; // 115200 is the default, as well.
 
 //Motate::SPI<10> SPI;
-
-
-timer_number kThingTimerNumber = 1;
-
-Motate::TimerChannel<kThingTimerNumber, 0> thingTimer { Motate::kTimerUpToMatch, /*frequency: */12000 };
-
-MOTATE_TIMER_INTERRUPT(kThingTimerNumber) {
-    int16_t whichChannel = -1;
-    TimerChannelInterruptOptions interuptCause =
-        Motate::Timer<kThingTimerNumber>::getInterruptCause(whichChannel);
-
-
-    if (interuptCause == Motate::kInterruptOnOverflow) {
-        led2_pin = 0;
-    } else if (interuptCause == Motate::kInterruptOnMatch) {
-        led2_pin = 1;
-    }
-}
 
 /****** Optional setup() function ******/
 
 void setup() {
-    Serial.write("Startup...done.\n");
-    Serial.write("Type 0 to turn the light off, and 1 to turn it on.\n");
-
-    Serial.write("Type: ");
-
-    thingTimer.setDutyCycle(0.25);
-    thingTimer.start();
+//    Serial.setOptions(115200, Motate::UARTMode::As8N1);
+    Serial.write("Startup...done.\n", 0, /*autoFlush=*/true);
+//    Serial.write("Type 0 to turn the light off, and 1 to turn it on.\n");
+//
+//    Serial.write("Type: ");
+//
+    led2_pin = 1;
 }
 
 /****** Main run loop() ******/
 
-std::size_t currentPos = 0;
-char *write_pos = std::begin(write_buffer);
+int16_t currentPos = 0;
+//char *write_pos = std::begin(write_buffer);
 
 void loop() {
 
     int16_t v = Serial.readByte();
 
     if (v > 0) {
-        *write_pos++ = v;
-
-        if (write_pos+1 == std::end(write_buffer)) {
-            *(write_pos-1) = '\n';
-            v = '\n';
-        }
-
+//        *write_pos++ = v;
+//
+//        if (write_pos+1 == std::end(write_buffer)) {
+//            *(write_pos-1) = '\n';
+//            v = '\n';
+//        }
+//
         // Echo:
         Serial.writeByte(v);
 
@@ -114,19 +94,19 @@ void loop() {
 
                 //			default:
         }
-
-        switch ((char)v) {
-            case '\n':
-            case '\r':
-                *write_pos = 0;
-                // Write a static string...
-                Serial.write(write_buffer);
-//                SPI.write(write_buffer);
-
-                Serial.write("Type: ");
-                write_pos = std::begin(write_buffer);
-                
-                break;
-        }
+//
+//        switch ((char)v) {
+//            case '\n':
+//            case '\r':
+//                *write_pos = 0;
+//                // Write a static string...
+//                Serial.write(write_buffer);
+////                SPI.write(write_buffer);
+//
+//                Serial.write("Type: ");
+//                write_pos = std::begin(write_buffer);
+//                
+//                break;
+//        }
     }
 }

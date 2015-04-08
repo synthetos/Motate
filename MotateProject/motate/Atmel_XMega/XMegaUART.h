@@ -35,7 +35,10 @@
 #include "MotatePins.h"
 #include "MotateBuffer.h"
 #include "stdlib.h"
+#include "math.h"
 #include "xmega.h"
+
+//#pragma GCC optimize (0)
 
 namespace Motate {
 
@@ -62,29 +65,31 @@ namespace Motate {
     };
 
     struct UARTInterrupt {
-        static constexpr uint16_t Off              = 0;
+        static constexpr uint16_t Off               = 0;
         /* Alias for "off" to make more sense
          when returned from setInterruptPending(). */
         static constexpr uint16_t Unknown           = 0;
 
         static constexpr uint16_t OnTxReady         = 1<<1;
         static constexpr uint16_t OnTransmitReady   = 1<<1;
-        static constexpr uint16_t OnTxDone          = 1<<1;
-        static constexpr uint16_t OnTransmitDone    = 1<<1;
+        static constexpr uint16_t OnTxDone          = 1<<2;
+        static constexpr uint16_t OnTransmitDone    = 1<<2;
 
-        static constexpr uint16_t OnRxReady         = 1<<2;
-        static constexpr uint16_t OnReceiveReady    = 1<<2;
-        static constexpr uint16_t OnRxDone          = 1<<2;
-        static constexpr uint16_t OnReceiveDone     = 1<<2;
+        static constexpr uint16_t OnRxReady         = 1<<3;
+        static constexpr uint16_t OnReceiveReady    = 1<<3;
+        static constexpr uint16_t OnRxDone          = 1<<3;
+        static constexpr uint16_t OnReceiveDone     = 1<<3;
 
-        static constexpr uint16_t OnIdle            = 1<<3;
+        static constexpr uint16_t OnIdle            = 0; // Unsupported
 
         /* Set priority levels here as well: */
-        static constexpr uint16_t PriorityHighest   = 1<<5;
-        static constexpr uint16_t PriorityHigh      = 1<<6;
-        static constexpr uint16_t PriorityMedium    = 1<<7;
-        static constexpr uint16_t PriorityLow       = 1<<8;
-        static constexpr uint16_t PriorityLowest    = 1<<9;
+        static constexpr uint16_t PriorityHighest   = 1<<5; // Alias for PriorityHigh
+        static constexpr uint16_t PriorityHigh      = 1<<5;
+        static constexpr uint16_t PriorityMedium    = 1<<6;
+        static constexpr uint16_t PriorityLow       = 1<<7;
+        static constexpr uint16_t PriorityLowest    = 1<<7; // Alias for PriorityLow
+
+        static constexpr uint16_t PriorityMask    = ((1<<8) - (1<<5));
     };
 
     // Convenience template classes for specialization:
@@ -94,11 +99,16 @@ namespace Motate {
         IsUARTRxPin<rxPinNumber>() &&
         IsUARTTxPin<txPinNumber>() &&
         rxPinNumber != txPinNumber &&
-        UARTTxPin<txPinNumber>::moduleId == UARTRxPin<rxPinNumber>::moduleId
+        UARTTxPin<txPinNumber>::uartNum == UARTRxPin<rxPinNumber>::uartNum
 	>::type;
 
     static const char kUARTXOn  = 0x11;
     static const char kUARTXOff = 0x13;
+
+
+    struct _UARTHardwareProxy {
+        virtual void uartInterruptHandler(const uint16_t interruptCause) = 0;
+    };
 
     // This is an internal representation of the peripheral.
     // This is *not* to be used externally.
@@ -106,6 +116,11 @@ namespace Motate {
     template<uint8_t uartPeripheralNumber>
     struct _UARTHardware {
         static USART_t& uart_proxy;
+        static const uint8_t uartPeripheralNum = uartPeripheralNumber;
+
+        static uint16_t _txReadyPriority;
+
+        static _UARTHardwareProxy *proxy;
 
         void init() {
 //            dx->usart = (USART_t *)pgm_read_word(&cfgUsart[idx].usart);
@@ -141,7 +156,59 @@ namespace Motate {
             uart_proxy.CTRLB &= ~(USART_RXEN_bm | USART_TXEN_bm);
         };
 
-        void setOptions(const uint32_t baud, const uint16_t options, const bool fromConstructor=false) {
+#ifdef ALLOW_ODD_BAUDS
+        inline int32_t _calcBSEL(const int32_t baud, const int32_t tmpBSCALE, const int32_t tmpCLK2X)  {
+            return (int32_t)
+            ((tmpCLK2X == 0) ?
+            (
+             (tmpBSCALE < 0) ?
+             (
+              ((((float)F_CPU / (16.0 * (float)baud)) - 1.0)/pow(2.0,tmpBSCALE))
+              ) :
+             (
+              (((float)F_CPU / (pow(2.0,tmpBSCALE) * 16.0 * baud)) - 1.0)
+              )
+             ) :
+            (
+             (tmpBSCALE < 0) ?
+             (
+              ((((float)F_CPU / (8.0 * (float)baud)) - 1.0)/pow(2.0,tmpBSCALE))
+              ) :
+             (
+              (((float)F_CPU / (pow(2.0,tmpBSCALE) * 8.0 * baud)) - 1.0)
+              )
+             ) + 0.5);
+        };
+
+        inline int32_t _calcBaud(const int32_t tmpBSEL, const int32_t tmpBSCALE, const int32_t tmpCLK2X)  {
+            return (int32_t)
+            ((tmpCLK2X == 0) ?
+             (
+              (tmpBSCALE < 0) ?
+              (
+               ((float)F_CPU / (16.0 * ((pow(2.0,tmpBSCALE) * (float)tmpBSEL) + 1.0)))
+               ) :
+              (
+               ((float)F_CPU / (pow(2.0,tmpBSCALE) * 16.0 * ((float)tmpBSEL + 1.0)))
+               )
+              ) :
+             (
+              (tmpBSCALE < 0) ?
+              (
+               ((float)F_CPU / (8.0 * ((pow(2.0,tmpBSCALE) * (float)tmpBSEL) + 1.0)))
+               ) :
+              (
+               ((float)F_CPU / (pow(2.0,tmpBSCALE) * 8.0 * ((float)tmpBSEL + 1.0)))
+               )
+              ) + 0.5);
+        };
+
+        inline float _calcError(const int32_t baud, const int32_t tmpBaud)  {
+            return (float)(tmpBaud - baud)/((float)baud);
+        };
+#endif
+
+        void setOptions(const int32_t baud, const uint16_t options, const bool fromConstructor=false)  {
             disable();
 
             // Using int16_t for most of these so as to avoid conversions.
@@ -151,61 +218,111 @@ namespace Motate {
             int16_t bestBSEL = 0;
             int16_t bestBSCALE = 0;
             int16_t bestCLK2X = 0;
-            int16_t bestError = 1;
 
-            int32_t tmpBaud = 0;
-            int16_t tmpBSEL = 0;
-            int16_t tmpBSCALE = 7;
-            int16_t tmpCLK2X = 0;
-            int32_t tmpError = 0;
+            if (baud == 1200) {
+                bestBSEL   = 3331;
+                bestBSCALE = -1;
+                bestCLK2X  = 0;
+            }
+            else if (baud == 2400) {
+                bestBSEL   = 3329;
+                bestBSCALE = -2;
+                bestCLK2X  = 0;
+            }
+            else if (baud == 4800) {
+                bestBSEL   = 3325;
+                bestBSCALE = -3;
+                bestCLK2X  = 0;
+            }
+            else if (baud == 9600) {
+                bestBSEL   = 3317;
+                bestBSCALE = -4;
+                bestCLK2X  = 0;
+            }
+            else if (baud == 14400) {
+                bestBSEL   = 2206;
+                bestBSCALE = -4;
+                bestCLK2X  = 0;
+            }
+            else if (baud == 19200) {
+                bestBSEL   = 3301;
+                bestBSCALE = -5;
+                bestCLK2X  = 0;
+            }
+            else if (baud == 28800) {
+                bestBSEL   = 1095;
+                bestBSCALE = -4;
+                bestCLK2X  = 0;
+            }
+            else if (baud == 38400) {
+                bestBSEL   = 3269;
+                bestBSCALE = -6;
+                bestCLK2X  = 0;
+            }
+            else if (baud == 57600) {
+                bestBSEL   = 2158;
+                bestBSCALE = -6;
+                bestCLK2X  = 0;
+            }
+            else if (baud == 115200) {
+                bestBSEL   = 1047;
+                bestBSCALE = -6;
+                bestCLK2X  = 0;
+            }
+            else if (baud == 230400) {
+                bestBSEL   = 983;
+                bestBSCALE = -7;
+                bestCLK2X  = 0;
+            }
+#ifdef ALLOW_ODD_BAUDS
+            else {
+                int32_t tmpBaud = 0;
+                int16_t tmpBSEL = 0;
+                int16_t tmpBSCALE = 7;
+                int16_t tmpCLK2X = 0;
+                float tmpError = 0;
 
-            do {
+                float bestError = 100000;
+
                 do {
-                    if (tmpCLK2X == 0) {
-                        if (tmpBSCALE < 0) {
-                            tmpBSEL = (1 / (2 ^ tmpBSCALE)) * ((F_CPU / (16 * baud)) - 1);
-                        } else {
-                            tmpBSEL = ((F_CPU / ((2 ^ tmpBSCALE) * 16 * baud)) - 1);
-                        }
-                    } else /*if (tmpCLK2X == 1)*/ {
-                        if (tmpBSCALE < 0) {
-                            tmpBSEL = (1 / (2 ^ tmpBSCALE)) * ((F_CPU / (8 * baud)) - 1);
-                        } else {
-                            tmpBSEL = ((F_CPU / ((2 ^ tmpBSCALE) * 8 * baud)) - 1);
-                        }
-                    }
+                    do {
+                        tmpBSEL = _calcBSEL(baud, tmpBSCALE, tmpCLK2X);
 
-                    if (tmpCLK2X == 0) {
-                        if (tmpBSCALE < 0) {
-                            tmpBaud = (F_CPU / (16 * (((2 ^ tmpBSCALE) * tmpBSEL) + 1)));
-                        } else {
-                            tmpBaud = (F_CPU / ((2 ^ tmpBSCALE) * 16 * (tmpBSEL + 1)));
+                        if (tmpBSEL == -1) {
+                            tmpBSCALE--;
+                            continue;
                         }
-                    } else /*if (tmpCLK2X == 1)*/ {
-                        if (tmpBSCALE < 0) {
-                            tmpBaud = (F_CPU / (8 * (((2 ^ tmpBSCALE) * tmpBSEL) + 1)));
-                        } else {
-                            tmpBaud = (F_CPU / ((2 ^ tmpBSCALE) * 8 * (tmpBSEL + 1)));
+
+                        tmpBaud = _calcBaud(tmpBSEL, tmpBSCALE, tmpCLK2X);
+
+                        // We want 4 digits of precision, and we don't want to have to use float
+                        // (and potentially bloat the code if it's not used in the project proper)
+                        // so we'll bitshift by 10 bits to get a multiply of 1024.8
+                        tmpError = _calcError(baud, tmpBaud);
+
+                        if (fabs(bestError)>fabs(tmpError)) {
+                            bestBSEL = tmpBSEL;
+                            bestBSCALE = tmpBSCALE;
+                            bestCLK2X = tmpCLK2X;
+                            bestError = tmpError;
                         }
-                    }
+                        tmpBSCALE--;
+                    } while (tmpBSCALE > -8);
 
-                    // We want 4 digits of precision, and we don't want to have to use float
-                    // (and potentially bloat the code if it's not used in the project proper)
-                    // so we'll bitshift by 10 bits to get a multiply of 1024.8
-                    tmpError = ((tmpBaud - baud)<<10)/(baud);
-
-                    if (abs(bestError)>abs(tmpError)) {
-                        bestBSEL = tmpBSEL;
-                        bestBSCALE = tmpBSCALE;
-                        bestCLK2X = tmpCLK2X;
-                        bestError = tmpError;
-                    }
-
-                } while (tmpBSCALE > -8);
-            } while (tmpCLK2X < 2);
+                    tmpBSCALE=7;
+                    tmpCLK2X++;
+                } while (tmpCLK2X < 2);
+            }
+#endif
+            /*
+             bestBSEL   = 33;
+             bestBSCALE = -1;
+             bestCLK2X = 0;
+             */
 
             uart_proxy.BAUDCTRLA = (uint8_t)bestBSEL;
             uart_proxy.BAUDCTRLB = (bestBSCALE << USART_BSCALE0_bp)|(bestBSEL >> 8);
+            uart_proxy.CTRLB = (uart_proxy.CTRLB & ~USART_CLK2X_bm) | (bestCLK2X?USART_CLK2X_bm:0);
 
 
             /**********
@@ -299,18 +416,18 @@ namespace Motate {
 
             uint8_t tmpCTRLC = uart_proxy.CTRLC;
 
-            if (options & UARTMode::As8Bit) { // USART_CHSIZE_t
-                tmpCTRLC = (tmpCTRLC & (~USART_CHSIZE_gm)) | USART_CHSIZE_8BIT_gc;
-            } else if (options & UARTMode::As9Bit) {
-                tmpCTRLC = (tmpCTRLC & (~USART_CHSIZE_gm)) | USART_CHSIZE_9BIT_gc;
+            if (options & UARTMode::As9Bit) {
+                tmpCTRLC = (tmpCTRLC & ~(USART_CHSIZE_gm)) | USART_CHSIZE_9BIT_gc;
+            } else {
+                tmpCTRLC = (tmpCTRLC & ~(USART_CHSIZE_gm)) | USART_CHSIZE_8BIT_gc;
             }
 
             if (options & (UARTMode::EvenParity|UARTMode::EvenParity)) { // USART_PMODE_t
-                tmpCTRLC = (tmpCTRLC & (USART_PMODE_gm)) | USART_PMODE_EVEN_gc;
+                tmpCTRLC = (tmpCTRLC & ~(USART_PMODE_gm)) | USART_PMODE_EVEN_gc;
             } else if (options & (UARTMode::EvenParity|UARTMode::OddParity)) { // USART_PMODE_t
-                tmpCTRLC = (tmpCTRLC & (USART_PMODE_gm)) | USART_PMODE_ODD_gc;
+                tmpCTRLC = (tmpCTRLC & ~(USART_PMODE_gm)) | USART_PMODE_ODD_gc;
             } else {
-                tmpCTRLC = (tmpCTRLC & (USART_PMODE_gm)) | USART_PMODE_DISABLED_gc;
+                tmpCTRLC = (tmpCTRLC & ~(USART_PMODE_gm)) | USART_PMODE_DISABLED_gc;
             }
 
             if (options & (UARTMode::EvenParity|UARTMode::TwoStopBits)) { // bool
@@ -318,6 +435,8 @@ namespace Motate {
             } else {
                 tmpCTRLC &= ~USART_SBMODE_bm;
             }
+
+            uart_proxy.CTRLC = tmpCTRLC;
 
             /* Enable receiver and transmitter */
             enable();
@@ -331,51 +450,70 @@ namespace Motate {
                     // TODO
                 }
 
-                if (interrupts & UARTInterrupt::OnRxDone) {
-                    // TODO
+                if (interrupts & UARTInterrupt::OnRxReady) {
+                    if (interrupts & UARTInterrupt::PriorityHigh) {
+                        uart_proxy.CTRLA = (uart_proxy.CTRLA & ~USART_RXCINTLVL_gm) | USART_RXCINTLVL_HI_gc;
+                    }
+                    else if (interrupts & UARTInterrupt::PriorityMedium) {
+                        uart_proxy.CTRLA = (uart_proxy.CTRLA & ~USART_RXCINTLVL_gm) | USART_RXCINTLVL_MED_gc;
+                    }
+                    else if (interrupts & UARTInterrupt::PriorityLow) {
+                        uart_proxy.CTRLA = (uart_proxy.CTRLA & ~USART_RXCINTLVL_gm) | USART_RXCINTLVL_LO_gc;
+                    }
+                    else {
+                        uart_proxy.CTRLA = (uart_proxy.CTRLA & ~USART_RXCINTLVL_gm) | USART_RXCINTLVL_OFF_gc;
+                    }
                 }
+
                 if (interrupts & UARTInterrupt::OnTxDone) {
-                    // TODO
+                    if (interrupts & UARTInterrupt::PriorityHigh) {
+                        uart_proxy.CTRLA = (uart_proxy.CTRLA & ~USART_TXCINTLVL_gm) | USART_TXCINTLVL_HI_gc;
+                    }
+                    else if (interrupts & UARTInterrupt::PriorityMedium) {
+                        uart_proxy.CTRLA = (uart_proxy.CTRLA & ~USART_TXCINTLVL_gm) | USART_TXCINTLVL_MED_gc;
+                    }
+                    else if (interrupts & UARTInterrupt::PriorityLow) {
+                        uart_proxy.CTRLA = (uart_proxy.CTRLA & ~USART_TXCINTLVL_gm) | USART_TXCINTLVL_LO_gc;
+                    }
+                    else {
+                        uart_proxy.CTRLA = (uart_proxy.CTRLA & ~USART_TXCINTLVL_gm) | USART_TXCINTLVL_OFF_gc;
+                    }
                 }
 
                 if (interrupts & UARTInterrupt::OnTxReady) {
-                    // TODO
-
-                }
-                if (interrupts & UARTInterrupt::OnIdle) {
-                    // TODO
-                }
+                    // Store the last priority set to restore it later...
+                    if (interrupts & UARTInterrupt::PriorityMask) {
+                        _txReadyPriority = interrupts & UARTInterrupt::PriorityMask;
+                    }
 
 
-                /* Set interrupt priority */
-                if (interrupts & UARTInterrupt::PriorityHighest) {
-                    // TODO
-                }
-                else if (interrupts & UARTInterrupt::PriorityHigh) {
-                    // TODO
-                }
-                else if (interrupts & UARTInterrupt::PriorityMedium) {
-                    // TODO
-                }
-                else if (interrupts & UARTInterrupt::PriorityLow) {
-                    // TODO
-                }
-                else if (interrupts & kInterruptPriorityLowest) {
-                    // TODO
+                    if (interrupts & UARTInterrupt::PriorityHigh) {
+                        uart_proxy.CTRLA = (uart_proxy.CTRLA & ~USART_DREINTLVL_gm) | USART_DREINTLVL_HI_gc;
+                    }
+                    else if (interrupts & UARTInterrupt::PriorityMedium) {
+                        uart_proxy.CTRLA = (uart_proxy.CTRLA & ~USART_DREINTLVL_gm) | USART_DREINTLVL_MED_gc;
+                    }
+                    else if (interrupts & UARTInterrupt::PriorityLow) {
+                        uart_proxy.CTRLA = (uart_proxy.CTRLA & ~USART_DREINTLVL_gm) | USART_DREINTLVL_LO_gc;
+                    }
+                    else {
+                        uart_proxy.CTRLA = (uart_proxy.CTRLA & ~USART_DREINTLVL_gm) | USART_DREINTLVL_OFF_gc;
+                    }
                 }
 
                 // TODO -- enable interrupts
             } else {
-
-                // TODO -- disable all interrupts
+                uart_proxy.CTRLA = (uart_proxy.CTRLA & ~USART_RXCINTLVL_gm) | USART_RXCINTLVL_OFF_gc;
+                uart_proxy.CTRLA = (uart_proxy.CTRLA & ~USART_TXCINTLVL_gm) | USART_TXCINTLVL_OFF_gc;
+                uart_proxy.CTRLA = (uart_proxy.CTRLA & ~USART_DREINTLVL_gm) | USART_DREINTLVL_OFF_gc;
             }
         };
 
         void setInterruptTxReady(bool value) {
             if (value) {
-                // TODO
+                this->setInterrupts(UARTInterrupt::OnTxReady | _txReadyPriority);
             } else {
-                // TODO
+                this->setInterrupts(UARTInterrupt::OnTxReady | UARTInterrupt::Off);
             }
         };
 
@@ -385,21 +523,32 @@ namespace Motate {
             return 0;
         }
 
+        // TODO: support 9-bit reads
         int16_t readByte() {
-            // TODO
+            if (uart_proxy.STATUS & USART_RXCIF_bm) {
+                return uart_proxy.DATA;
+            }
             return -1;
         };
 
+        // TODO: support 9-bit writes
         int16_t writeByte(const char value) {
-            // TODO
+            if (uart_proxy.STATUS & USART_DREIF_bm) {
+                uart_proxy.DATA = value;
+                return 1;
+            }
             return -1;
         };
 
         void flush() {
             // Wait for the buffer to be empty
-            // TODO
+            do {} while ((uart_proxy.STATUS & USART_TXCIF_bm) == 0);
         };
     };
+
+
+    template<>
+    struct _UARTHardware<-1> {}; // trap specialization
 
 
     template<pin_number rxPinNumber, pin_number txPinNumber>
@@ -407,9 +556,9 @@ namespace Motate {
         IsUARTRxPin<rxPinNumber>() &&
         IsUARTTxPin<txPinNumber>() &&
         rxPinNumber != txPinNumber &&
-        UARTTxPin<txPinNumber>::moduleId == UARTRxPin<rxPinNumber>::moduleId,
-        /* True:  */ _UARTHardware<0>,
-        /* False: */ _UARTHardware<0xff>
+        UARTTxPin<txPinNumber>::uartNum == UARTRxPin<rxPinNumber>::uartNum,
+        /* True:  */ _UARTHardware<UARTTxPin<txPinNumber>::uartNum>,
+        /* False: */ _UARTHardware<-1>
     >::type;
 
 
@@ -421,8 +570,8 @@ namespace Motate {
         UARTRxPin<rxPinNumber> rxPin;
         UARTTxPin<txPinNumber> txPin;
 
-        static _UARTHardware< UARTGetPeripheralNum<rxPinNumber, txPinNumber>::uartPeripheralNum > hardware;
-        const inline uint8_t uartPeripheralNum() { return hardware.moduleId; };
+        _UARTHardware< UARTGetPeripheralNum<rxPinNumber, txPinNumber>::uartPeripheralNum > hardware;
+        const inline uint8_t uartPeripheralNum() { return hardware.uartNum; };
 
         UART(const uint32_t baud = 115200, const uint16_t options = UARTMode::As8N1) {
             hardware.init();
@@ -433,7 +582,7 @@ namespace Motate {
             setOptions(baud, options, fromConstructor);
         };
 
-        void setOptions(const uint32_t baud, const uint16_t options, const bool fromConstructor=false) {
+        void setOptions(const uint32_t baud, const uint16_t options, const bool fromConstructor=false)  {
             hardware.setOptions(baud, options, fromConstructor);
         };
 
@@ -462,7 +611,7 @@ namespace Motate {
         };
 
         int16_t writeByte(uint8_t data) {
-            hardware.flush();
+            //hardware.flush();
             return hardware.writeByte(data);
         };
 
@@ -479,6 +628,10 @@ namespace Motate {
 
             if (length==0 && *out_ptr==0) {
                 return 0;
+            }
+
+            if (length == 0) {
+                to_write = 0x7FFF;
             }
 
             do {
@@ -533,29 +686,6 @@ namespace Motate {
         };
     };
 
-    template<>
-    USART_t& _UARTHardware<0>::uart_proxy = USARTC0;
-    template<>
-    USART_t& _UARTHardware<1>::uart_proxy = USARTC1;
-    template<>
-    USART_t& _UARTHardware<2>::uart_proxy = USARTD0;
-    template<>
-    USART_t& _UARTHardware<3>::uart_proxy = USARTD1;
-    template<>
-    USART_t& _UARTHardware<4>::uart_proxy = USARTE0;
-    template<>
-    USART_t& _UARTHardware<5>::uart_proxy = USARTE1;
-    template<>
-    USART_t& _UARTHardware<6>::uart_proxy = USARTF0;
-    template<>
-    USART_t& _UARTHardware<7>::uart_proxy = USARTF1;
-
-    struct _UARTHardwareProxy {
-        virtual void uartInterruptHandler() = 0;
-    };
-
-    extern _UARTHardwareProxy *uart0HardwareProxy;
-
     template<uint8_t uartPeripheralNumber, pin_number rtsPinNumber, pin_number ctsPinNumber, typename rxBufferClass, typename txBufferClass>
     struct _BufferedUARTHardware : _UARTHardware<uartPeripheralNumber>, _UARTHardwareProxy {
         rxBufferClass rxBuffer;
@@ -576,12 +706,12 @@ namespace Motate {
         typedef _UARTHardware<uartPeripheralNumber> parent;
 
         _BufferedUARTHardware() {
-            uart0HardwareProxy = this;
+            parent::proxy = this;
         };
 
         void init() {
             parent::init();
-            parent::setInterrupts(UARTInterrupt::OnRxReady | UARTInterrupt::PriorityLowest);
+            parent::setInterrupts(UARTInterrupt::OnRxReady | UARTInterrupt::OnTxReady | UARTInterrupt::PriorityLowest);
         };
 
         void setOptions(const uint32_t baud, const uint16_t options, const bool fromConstructor=false) {
@@ -590,7 +720,7 @@ namespace Motate {
             if (options & UARTMode::RTSCTSFlowControl && IsIRQPin<ctsPinNumber>() && !rtsPin.isNull()) {
                 _rtsCtsFlowControl = true;
                 parent::setInterruptTxReady(!canSend());
-                ctsPin.setInterrupts(kPinInterruptOnChange);
+                ctsPin.setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityLow);
             } else {
                 _rtsCtsFlowControl = false;
             }
@@ -626,7 +756,7 @@ namespace Motate {
 
         bool canSend() {
             if (_rtsCtsFlowControl) {
-                return !ctsPin;
+                return !((bool)ctsPin);
             }
             if (_xonXoffFlowControl) {
                 return _xonXoffCanSend;
@@ -657,12 +787,11 @@ namespace Motate {
             return ret;
         };
 
-        virtual void uartInterruptHandler() { // should be final, but Xcode barfs on the formatting
-            uint16_t interruptCause = parent::getInterruptCause();
-
+        virtual void uartInterruptHandler(const uint16_t interruptCause) { // should be final, but Xcode barfs on the formatting
             if ((interruptCause & (UARTInterrupt::OnTxReady /*| UARTInterrupt::OnTxDone*/))) {
                 if (txDelayUntilTime && SysTickTimer.getValue() < txDelayUntilTime)
                     return;
+
                 txDelayUntilTime = 0;
                 if (_xonXoffFlowControl) {
                     if (_xonXoffStartStopSent == false) {
@@ -714,7 +843,7 @@ namespace Motate {
     };
 
 
-    template<pin_number rxPinNumber = ReversePinLookup<'B',  2>::number, pin_number txPinNumber = ReversePinLookup<'B',  1>::number, pin_number rtsPinNumber = -1, pin_number ctsPinNumber = -1, typename rxBufferClass = Buffer<128>, typename txBufferClass = rxBufferClass>
+    template<pin_number rxPinNumber, pin_number txPinNumber, pin_number rtsPinNumber = -1, pin_number ctsPinNumber = -1, typename rxBufferClass = Buffer<128>, typename txBufferClass = rxBufferClass>
     struct BufferedUART {
         UARTRxPin<rxPinNumber> rxPin;
         UARTTxPin<txPinNumber> txPin;
@@ -844,5 +973,7 @@ namespace Motate {
     //        typename BufferedUART<rxPinNumber, txPinNumber, rtsPinNumber, ctsPinNumber, rxBufferClass, txBufferClass>::hardware_t BufferedUART<rxPinNumber, txPinNumber, rtsPinNumber, ctsPinNumber, rxBufferClass, txBufferClass>::hardware;
     
 }
+
+//#pragma GCC reset_options
 
 #endif /* end of include guard: XMEGAUART_H_ONCE */

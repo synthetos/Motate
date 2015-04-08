@@ -281,7 +281,7 @@ namespace Motate {
         };
 
 
-        uint16_t getInterruptCause() __attribute__ (( noinline )) {
+        static uint16_t getInterruptCause() __attribute__ (( noinline )) {
             uint16_t status = UARTInterrupt::Unknown;
             uint8_t s1 = uart_proxy.S1();
             if (s1 & UART0_S1_TDRE_MASK) {
@@ -328,7 +328,7 @@ namespace Motate {
         IsUARTRxPin<rxPinNumber>() &&
         IsUARTTxPin<txPinNumber>() &&
         rxPinNumber != txPinNumber &&
-        UARTTxPin<txPinNumber>::moduleId == UARTRxPin<rxPinNumber>::moduleId,
+        UARTTxPin<txPinNumber>::uartNum == UARTRxPin<rxPinNumber>::uartNum,
         /* True:  */ _UARTHardware<0>,
         /* False: */ _UARTHardware<0xff>
     >::type;
@@ -455,7 +455,7 @@ namespace Motate {
     };
 
     struct _UARTHardwareProxy {
-        virtual void uartInterruptHandler() = 0;
+        virtual void uartInterruptHandler(uint16_t interruptCause) = 0;
     };
 
     extern _UARTHardwareProxy *uart0HardwareProxy;
@@ -561,9 +561,7 @@ namespace Motate {
             return ret;
         };
 
-        virtual void uartInterruptHandler() { // should be final, but Xcode barfs on the formatting
-            uint16_t interruptCause = parent::getInterruptCause();
-
+        virtual void uartInterruptHandler(uint16_t interruptCause) { // should be final, but Xcode barfs on the formatting
             if ((interruptCause & (UARTInterrupt::OnTxReady /*| UARTInterrupt::OnTxDone*/))) {
                 if (txDelayUntilTime && SysTickTimer.getValue() < txDelayUntilTime)
                     return;

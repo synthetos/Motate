@@ -63,6 +63,9 @@ namespace Motate {
 
     _MAKE_MOTATE_PIN( 151, A, 'A', 6);	// X_MIN
 
+    // *******************************
+    // PWM Pins -- note that for each of these, there must be a "plain" pin above defined
+
     _MAKE_MOTATE_PWM_PIN( 'C',  0, Timer<0>, /*Channel:*/ 0, /*Inverted:*/ false);
     _MAKE_MOTATE_PWM_PIN( 'C',  1, Timer<0>, /*Channel:*/ 1, /*Inverted:*/ false);
     _MAKE_MOTATE_PWM_PIN( 'C',  2, Timer<0>, /*Channel:*/ 2, /*Inverted:*/ false);
@@ -88,6 +91,28 @@ namespace Motate {
     _MAKE_MOTATE_PWM_PIN( 'F',  1, Timer<6>, /*Channel:*/ 1, /*Inverted:*/ false);
     _MAKE_MOTATE_PWM_PIN( 'F',  2, Timer<6>, /*Channel:*/ 2, /*Inverted:*/ false);
     _MAKE_MOTATE_PWM_PIN( 'F',  3, Timer<6>, /*Channel:*/ 3, /*Inverted:*/ false);
+
+
+    // *******************************
+    // USART Pins -- note that for each of these, there must be a "plain" pin above defined
+    // Note that the first number is NOT the "Pin Number", but the internal usart number.
+    // These should never have to change, but may have to be commented out if the pins are
+    // not defined above.
+
+    _MAKE_MOTATE_UART_RX_PIN( 0, 'C', 2);
+    _MAKE_MOTATE_UART_TX_PIN( 0, 'C', 3);
+//    _MAKE_MOTATE_UART_RX_PIN( 1, 'C', 6);
+//    _MAKE_MOTATE_UART_TX_PIN( 1, 'C', 7);
+//    _MAKE_MOTATE_UART_RX_PIN( 2, 'D', 2);
+//    _MAKE_MOTATE_UART_TX_PIN( 2, 'D', 3);
+//    _MAKE_MOTATE_UART_RX_PIN( 3, 'D', 6);
+//    _MAKE_MOTATE_UART_TX_PIN( 3, 'D', 7);
+//    _MAKE_MOTATE_UART_RX_PIN( 4, 'E', 2);
+//    _MAKE_MOTATE_UART_TX_PIN( 4, 'E', 3);
+//    _MAKE_MOTATE_UART_RX_PIN( 5, 'E', 6);
+//    _MAKE_MOTATE_UART_TX_PIN( 5, 'E', 7);
+//    _MAKE_MOTATE_UART_RX_PIN( 6, 'F', 2);
+//    _MAKE_MOTATE_UART_TX_PIN( 6, 'F', 3);
 
 } // namespace Motate
 

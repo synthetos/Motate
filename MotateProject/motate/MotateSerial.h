@@ -67,17 +67,15 @@ MOTATE_SET_USB_SERIAL_NUMBER_STRING( {'0','0','7'} )
 #include "MotateUART.h"
 
 namespace Motate {
-
-    pin_number kRTSPinNumber = 3;
-    pin_number kCTSPinNumber = 2;
-
-    BufferedUART<kSerial_RX, kSerial_TX, kRTSPinNumber, kCTSPinNumber> Serial {115200, UARTMode::XonXoffFlowControl}; // 115200 is the default, as well.
+    // XonXoffFlowControl
+    BufferedUART<kSerial_RX, kSerial_TX, kSerial_RTS, kSerial_CTS> Serial {115200, UARTMode::RTSCTSFlowControl}; // 115200 is the default, as well.
 } // namespace Motate
 
-MOTATE_PIN_INTERRUPT(2) {
+namespace Motate {
+MOTATE_PIN_INTERRUPT(kSerial_CTS) {
     Motate::Serial.pinChangeInterrupt();
 }
-
+}
 
 #endif //defined(__SAM3X8E__) || defined(__SAM3X8C__)
 

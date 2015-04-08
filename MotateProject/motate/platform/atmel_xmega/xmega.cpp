@@ -34,6 +34,10 @@
 #include <Atmel_XMega/XMegaTimers.h>
 #include <xmega_interrupts.h>
 
+extern "C" void __cxa_pure_virtual()
+{
+    while (1);
+}
 
 void xmega_init_clocks(void);
 void CCPWrite(volatile uint8_t * address, uint8_t value);
