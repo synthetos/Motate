@@ -253,7 +253,7 @@ namespace Motate {
     // See https://gcc.gnu.org/onlinedocs/cpp/Common-Predefined-Macros.html
 #define MOTATE_PIN_INTERRUPT(number) \
     Motate::_pinChangeInterrupt MOTATE_PIN_INTERRUPT_NAME( _Motate_PinChange_Interrupt_Trampoline, __COUNTER__ )\
-            __attribute__(( section(".motate.pin_change_interrupts") )) {\
+            __attribute__(( used,section(".motate.pin_change_interrupts") )) {\
         Motate::IRQPin<number>::portLetter,\
         Motate::IRQPin<number>::mask,\
         Motate::IRQPin<number>::interrupt\
