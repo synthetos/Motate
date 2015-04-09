@@ -34,7 +34,9 @@
 namespace Motate {
     struct UUID_t {
         static uint32_t _d[4];
-        static char _stringval[17];
+        static char _stringval[20];
+
+        static const uint16_t length = 20;
 
         UUID_t();
 

@@ -34,6 +34,7 @@
 #include <Atmel_XMega/XMegaTimers.h>
 #include <xmega_interrupts.h>
 
+// This removes about 44K (!!) of unwanted excpetion handling in some cases.
 extern "C" void __cxa_pure_virtual()
 {
     while (1);

@@ -32,13 +32,21 @@
 #include "Atmel_sam3xa/SamUniqueID.h"
 
 namespace Motate {
+    // Declare our static values for storage
+    uint32_t UUID_t::_d[4] = {0, 0, 0, 0};
+    char UUID_t::_stringval[20] { "0000-0000-0000-0000" };
+
     // Define the static global Motate::UUID object;
     UUID_t UUID;
 
-    __I  uint32_t *_UUID_REGISTER = (__I  uint32_t *)0x00080000;
+    volatile uint32_t *_UUID_REGISTER = (volatile  uint32_t *)0x00080000;
 
-    void _readUUID()  __attribute__ ((long_call, section (".ramfunc")));
+    void _readUUID()  __attribute__ ((noinline,long_call,section (".ramfunc")));
     void _readUUID() {
+        // GAH! We disable ALL IRQs, since the Unique ID is actually placed
+        // in the same place in RAM as the interrupt handler table!
+        __disable_irq();
+
         // Run EEFC uuid sequence
         while ((EFC0->EEFC_FSR & EEFC_FSR_FRDY) == 0);
 
@@ -49,40 +57,44 @@ namespace Motate {
         UUID._d[1] = _UUID_REGISTER[1];
         UUID._d[2] = _UUID_REGISTER[2];
         UUID._d[3] = _UUID_REGISTER[3];
+
         EFC0->EEFC_FCR = EEFC_FCR_FCMD_SPUI | EEFC_FCR_FKEY_PASSWD;
         while ((EFC0->EEFC_FSR & EEFC_FSR_FRDY) == 0);
 
         // Memory swap needs some time to stabilize
         for (uint32_t i=0; i<1000000; i++) {
-            __NOP();
+            // force compiler to not optimize this -- NOPs don't work!
+            __asm__ __volatile__("");
         }
+
+        __enable_irq();
     }
 
     UUID_t::UUID_t()
     {
-        _readUUID();
+            _readUUID();
 
-        // Precalculate the _stringval
-        char *p =_stringval;
-        for(int i = 0; i < 16; ++i) {
-            // Network/Big-endian
-            uint8_t byte = (_d[i/4] >> (i%4)) & 0xF;
+            // Precalculate the _stringval
+            char *p =_stringval;
+            for (int i = 0; i < 16; ++i) {
+                // Network/Big-endian
+                uint8_t byte = (_d[i/4] >> (i%4)) & 0xF;
 
-            // Put a dash every four characters
-            if (i > 0 && (i%4) == 0) {
-                *p++ = '-';
-            }
+                // Put a dash every four characters
+                if (i > 0 && (i%4) == 0) {
+                    *p++ = '-';
+                }
 
-            // Put the HEX ASCII in the string
-            if (byte < 0xA) {
-                *p++ = byte + '0';
-            }
-            else
-            {
-                *p++ = (byte - 0xA) + 'a';
+                // Put the HEX ASCII in the string
+                if (byte < 0xA) {
+                    *p++ = byte + '0';
+                }
+                else
+                {
+                    *p++ = (byte - 0xA) + 'a';
+                }
             }
         }
-    }
 
 
     UUID_t::operator const char*()

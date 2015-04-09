@@ -1,4 +1,4 @@
-#
+# 
 # Makefile
 # 
 # Copyright (c) 2012 - 2014 Robert Giseburt
@@ -27,46 +27,16 @@
 #	OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 
-
-#######
+##############################################################################################
+# Start of default section
 #
-# These values must be defined before including this file:
-# $(CHIP)
-# $(CHIP_SERIES)
-# $(CPU_DEV)
 
+PROJECT  = ADCDemo
 
-DEVICE_LIBS          = gcc c
+MOTATE_PATH ?= ../../motate
 
-ifeq ($(NEEDS_PRINTF_FLOAT),1)
-PRINTF_FLOAT_FLAGS = -u _printf_float
-endif
+NEEDS_PRINTF_FLOAT=0
 
-ifeq ($(NEEDS_SCANF_FLOAT),1)
-PRINTF_FLOAT_FLAGS = -u _scanf_float
-endif
+include $(MOTATE_PATH)/Motate.mk
 
-
-# ---------------------------------------------------------------------------------------
-# C Flags (NOT CPP flags)
-
-DEVICE_CFLAGS := -D__$(CHIP)__ -D__$(CHIP_SERIES)__ -D__ARM__  -mcpu=$(CPU_DEV) -mthumb -ffunction-sections -fdata-sections -std=gnu99
-
-#--param max-inline-insns-single=500 -mlong-calls
-
-# ---------------------------------------------------------------------------------------
-# CPP Flags
-
-DEVICE_CPPFLAGS := -D__$(CHIP)__ -D__$(CHIP_SERIES)__ -D__ARM__ -mcpu=$(CPU_DEV) -mthumb -ffunction-sections -fdata-sections -std=gnu++14 -fno-rtti -fno-exceptions -fdiagnostics-show-option
-# --param max-inline-insns-single=500 -mlong-calls
-
-# ---------------------------------------------------------------------------------------
-# Assembly Flags
-
-DEVICE_ASFLAGS  := -D__$(CHIP)__ -D__$(CHIP_SERIES)__ -D__ARM__ -mcpu=$(CPU_DEV) -mthumb
-
-# ---------------------------------------------------------------------------------------
-# Linker Flags
-
-DEVICE_LDFLAGS :=  -Wl,--entry=Reset_Handler -nostartfiles -mcpu=$(CPU_DEV) --specs=nano.specs ${PRINTF_FLOAT_FLAGS} -mthumb -L$(DEVICE_LINKER_SCRIPT_PATH)
-
+# *** EOF ***

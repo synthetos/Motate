@@ -1,8 +1,8 @@
 /*
  * http://github.com/synthetos/motate/
  *
- * Copyright (c) 2014 Robert Giseburt
- * Copyright (c) 2014 Alden S. Hart Jr.
+ * Copyright (c) 2015 Robert Giseburt
+ * Copyright (c) 2015 Alden S. Hart Jr.
  *
  * This file is part of the Motate Library.
  *
@@ -28,52 +28,51 @@
  *
  */
 
-#ifndef arduino_due_pinout_h
-#define arduino_due_pinout_h
-
-#include <MotatePins.h>
+#ifndef pin_assignments_h
+#define pin_assignments_h
 
 namespace Motate {
 
-    // NOT ALL OF THESE PINS ARE ON ALL PLATFORMS
-    // Undefined pins will be equivalent to Motate::NullPin, and return 1 for Pin<>::isNull();
+    /** NOTE: When adding pin definitions here, they must be added to
+     *        ALL board pin assignment files, even if they are defined as -1.
+     **/
 
-    pin_number kSerial_RX                       =   0;
-    pin_number kSerial_TX                       =   1;
+    pin_number kLED1_PinNumber                  =  13;
+    pin_number kLED2_PinNumber                  =  35;
+    pin_number kLED3_PinNumber                  =  73;
 
-    pin_number kSerial0_RX                      =   0;
-    pin_number kSerial0_TX                      =   1;
+    pin_number kFET1_PinNumber                  =  35;
+    pin_number kFET2_PinNumber                  =  -1;
+    pin_number kFET3_PinNumber                  =  -1;
 
-    pin_number kI2C_SDAPinNumber                =  20;
-    pin_number kI2C_SCLPinNumber                =  21;
+//    pin_number kInput1_PinNumber                =  2;
+    pin_number kADCInput1_PinNumber             =  54;
+    pin_number kADCInput2_PinNumber             =  55;
+    pin_number kADCInput3_PinNumber             =  56;
+    pin_number kADCInput4_PinNumber             =  57;
+    pin_number kADCInput5_PinNumber             =  58;
+    pin_number kADCInput6_PinNumber             =  59;
+    pin_number kADCInput7_PinNumber             =  60;
+    pin_number kADCInput8_PinNumber             =  61;
+    pin_number kADCInput9_PinNumber             =  62;
+    pin_number kADCInput10_PinNumber            =  63;
+    pin_number kADCInput11_PinNumber            =  64;
+    pin_number kADCInput12_PinNumber            =  65;
+    pin_number kADCInput13_PinNumber            =  52;
+    pin_number kADCInput14_PinNumber            =  20;
+    pin_number kADCInput15_PinNumber            =  21;
 
-    pin_number kI2C0_SDAPinNumber               =  20;
-    pin_number kI2C0_SCLPinNumber               =  21;
+    //    pin_number kPWM11_PinNumber                 =  53;
 
-    pin_number kSPI_SCKPinNumber                =  76;
-    pin_number kSPI_MISOPinNumber               =  74;
-    pin_number kSPI_MOSIPinNumber               =  75;
-    pin_number kSPI_CS0PinNumber                =  77;
-    pin_number kSPI_CS1PinNumber                =  65;
-    pin_number kSPI_CS2PinNumber                =  52;
-    pin_number kSPI_CS3PinNumber                =  78;
 
-    pin_number kSPI0_SCKPinNumber               =  76;
-    pin_number kSPI0_MISOPinNumber              =  74;
-    pin_number kSPI0_MOSIPinNumber              =  75;
-    pin_number kSPI0_CS0PinNumber               =  77;
-    pin_number kSPI0_CS1PinNumber               =  68;
-    pin_number kSPI0_CS2PinNumber               =  52;
-    pin_number kSPI0_CS3PinNumber               =  78;
-
-    pin_number kLED_USBRXPinNumber              =  72;
-    pin_number kLED_USBTXPinNumber              =  73;
+    pin_number kDebug1_PinNumber                =  12;
+    pin_number kDebug2_PinNumber                =  11;;
 
     /** NOTE: When adding pin definitions here, they must be
      *        added to ALL board pin assignment files, even if
      *        they are defined as -1.
      **/
-
+    
 } // namespace Motate
 
 #endif

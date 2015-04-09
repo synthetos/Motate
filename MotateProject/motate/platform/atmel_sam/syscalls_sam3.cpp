@@ -57,8 +57,6 @@ extern void _exit( int status ) ;
 extern void _kill( int pid, int sig ) ;
 extern int _getpid ( void ) ;
 
-
-
 extern caddr_t _sbrk ( int incr )
 {
     static unsigned char *heap = NULL ;
@@ -148,6 +146,13 @@ extern int _getpid ( void )
 {
     return -1 ;
 }
+
+// This removes about 44K (!!) of unwanted excpetion handling in some cases.
+void __cxa_pure_virtual()
+{
+    while (1);
+}
+
 
 #ifdef __cplusplus
 }

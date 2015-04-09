@@ -104,6 +104,10 @@ DEVICE_INCLUDE_DIRS += $(SAM_PATH)/$(SERIES)/include
 DEVICE_INCLUDE_DIRS += $(MOTATE_PATH)/$(CHIP_SERIES)
 DEVICE_INCLUDE_DIRS += $(MOTATE_PATH)/platform/atmel_sam
 
+# Add this to search for the additional .ld script
+DEVICE_LIB_DIRS     += $(MOTATE_PATH)/platform/atmel_sam
+
+
 CPU_DEV = cortex-m3
 DEVICE_LINKER_SCRIPT = $(DEVICE_PATH)/source/$(GCC_TOOLCHAIN)/$(CHIP_LOWERCASE)_flash.ld
 DEVICE_LINKER_SCRIPT_PATH = $(DEVICE_PATH)/source/$(GCC_TOOLCHAIN)/

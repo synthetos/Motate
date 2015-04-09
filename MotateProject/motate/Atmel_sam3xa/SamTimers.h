@@ -313,6 +313,9 @@ namespace Motate {
         void setDutyCycleForChannel(const uint8_t channel, const float ratio) {
             setExactDutyCycleForChannel(channel, getTopValue() * ratio);
         };
+        float getDutyCycleForChannel(const uint8_t channel) {
+            return (float)getExactDutyCycleForChannel(channel) / getTopValue();
+        };
 
         // Specify channel A/B duty cycle as a integer value from 0 .. TOP.
         // TOP in this case is either RC_RC or 0xFFFF.
@@ -321,6 +324,14 @@ namespace Motate {
                 tcChan()->TC_RA = absolute;
             } else if (channel == 1) {
                 tcChan()->TC_RB = absolute;
+            }
+        };
+
+        uint32_t getExactDutyCycleForChannel(const uint8_t channel) {
+            if (channel == 0) {
+                return tcChan()->TC_RA;
+            } else /*if (channel == 1)*/ {
+                return tcChan()->TC_RB;
             }
         };
 
@@ -480,20 +491,20 @@ namespace Motate {
 
 
         static TimerChannelInterruptOptions getInterruptCause(int16_t &channel) {
-            uint32_t sr = tcChan()->TC_SR;
+            uint32_t sr_ = tcChan()->TC_SR;
             // if it is either an overflow or a RC compare
-            if (sr & (TC_SR_COVFS | TC_SR_CPCS)) {
+            if (sr_ & (TC_SR_COVFS | TC_SR_CPCS)) {
                 return kInterruptOnOverflow;
             }
-            else if (sr & (TC_SR_CPAS)) {
+            else if (sr_ & (TC_SR_CPAS)) {
                 channel = 0;
                 return kInterruptOnMatch;
             }
-            else if (sr & (TC_SR_CPBS)) {
+            else if (sr_ & (TC_SR_CPBS)) {
                 channel = 1;
                 return kInterruptOnMatch;
             }
-            else if (sr & (TC_SR_ETRGS)) {
+            else if (sr_ & (TC_SR_ETRGS)) {
                 channel = 0;
                 return kInterruptOnMatch;
             }
@@ -508,56 +519,56 @@ namespace Motate {
     template<> inline TcChannel * const Timer<0>::tcChan()       { return TC0->TC_CHANNEL + 0; };
     template<> inline const uint32_t    Timer<0>::peripheralId() { return ID_TC0; };
     template<> inline const IRQn_Type   Timer<0>::tcIRQ()        { return TC0_IRQn; };
-    template<> void Timer<0>::interrupt();
+//    template<> void Timer<0>::interrupt();
 
     template<> inline Tc * const        Timer<1>::tc()           { return TC0; };
     template<> inline TcChannel * const Timer<1>::tcChan()       { return TC0->TC_CHANNEL + 1; };
     template<> inline const uint32_t    Timer<1>::peripheralId() { return ID_TC1; };
     template<> inline const IRQn_Type   Timer<1>::tcIRQ()        { return TC1_IRQn; };
-    template<> void Timer<1>::interrupt();
+//    template<> void Timer<1>::interrupt();
 
     template<> inline Tc * const        Timer<2>::tc()           { return TC0; };
     template<> inline TcChannel * const Timer<2>::tcChan()       { return TC0->TC_CHANNEL + 2; };
     template<> inline const uint32_t    Timer<2>::peripheralId() { return ID_TC2; };
     template<> inline const IRQn_Type   Timer<2>::tcIRQ()        { return TC2_IRQn; };
-    template<> void Timer<2>::interrupt();
+//    template<> void Timer<2>::interrupt();
 
     template<> inline Tc * const        Timer<3>::tc()           { return TC1; };
     template<> inline TcChannel * const Timer<3>::tcChan()       { return TC1->TC_CHANNEL + 0; };
     template<> inline const uint32_t    Timer<3>::peripheralId() { return ID_TC3; };
     template<> inline const IRQn_Type   Timer<3>::tcIRQ()        { return TC3_IRQn; };
-    template<> void Timer<3>::interrupt();
+//    template<> void Timer<3>::interrupt();
 
     template<> inline Tc * const        Timer<4>::tc()           { return TC1; };
     template<> inline TcChannel * const Timer<4>::tcChan()       { return TC1->TC_CHANNEL + 1; };
     template<> inline const uint32_t    Timer<4>::peripheralId() { return ID_TC4; };
     template<> inline const IRQn_Type   Timer<4>::tcIRQ()        { return TC4_IRQn; };
-    template<> void Timer<4>::interrupt();
+//    template<> void Timer<4>::interrupt();
 
     template<> inline Tc * const        Timer<5>::tc()           { return TC1; };
     template<> inline TcChannel * const Timer<5>::tcChan()       { return TC1->TC_CHANNEL + 2; };
     template<> inline const uint32_t    Timer<5>::peripheralId() { return ID_TC5; };
     template<> inline const IRQn_Type   Timer<5>::tcIRQ()        { return TC5_IRQn; };
-    template<> void Timer<5>::interrupt();
+//    template<> void Timer<5>::interrupt();
 
 #ifdef TC2
     template<> inline Tc * const        Timer<6>::tc()           { return TC2; };
     template<> inline TcChannel * const Timer<6>::tcChan()       { return TC2->TC_CHANNEL + 0; };
     template<> inline const uint32_t    Timer<6>::peripheralId() { return ID_TC6; };
     template<> inline const IRQn_Type   Timer<6>::tcIRQ()        { return TC6_IRQn; };
-    template<> void Timer<6>::interrupt();
+//    template<> void Timer<6>::interrupt();
 
     template<> inline Tc * const        Timer<7>::tc()           { return TC2; };
     template<> inline TcChannel * const Timer<7>::tcChan()       { return TC2->TC_CHANNEL + 1; };
     template<> inline const uint32_t    Timer<7>::peripheralId() { return ID_TC7; };
     template<> inline const IRQn_Type   Timer<7>::tcIRQ()        { return TC7_IRQn; };
-    template<> void Timer<7>::interrupt();
+//    template<> void Timer<7>::interrupt();
 
     template<> inline Tc * const        Timer<8>::tc()           { return TC2; };
     template<> inline TcChannel * const Timer<8>::tcChan()       { return TC2->TC_CHANNEL + 2; };
     template<> inline const uint32_t    Timer<8>::peripheralId() { return ID_TC8; };
     template<> inline const IRQn_Type   Timer<8>::tcIRQ()        { return TC8_IRQn; };
-    template<> void Timer<8>::interrupt();
+//    template<> void Timer<8>::interrupt();
 #endif
 
 
@@ -571,9 +582,18 @@ namespace Motate {
             Timer<timerNum>::setDutyCycleForChannel(channelNum, ratio);
         };
 
-        void setExactDutyCycle(const uint32_t absolute) {
-            Timer<timerNum>::setExactDutyCycle(channelNum, absolute);
+        float getDutyCycle() {
+            return Timer<timerNum>::getDutyCycleForChannel(channelNum);
         };
+
+        void setExactDutyCycle(const uint32_t absolute) {
+            Timer<timerNum>::setExactDutyCycleForChannel(channelNum, absolute);
+        };
+
+        uint32_t getExactDutyCycle() {
+            return Timer<timerNum>::getExactDutyCycleForChannel(channelNum);
+        };
+
 
         void setOutputOptions(const uint32_t options) {
             Timer<timerNum>::setOutputOptions(channelNum, options);
@@ -587,16 +607,27 @@ namespace Motate {
             Timer<timerNum>::stopPWMOutput(channelNum);
         }
 
-        void setInterrupts(const uint32_t interrupts) {
-            Timer<timerNum>::setInterrupts(interrupts, channelNum);
-        };
+//        void setInterrupts(const uint32_t interrupts) {
+//        };
+
+        TimerChannelInterruptOptions getInterruptCause(int16_t &channel) {
+            channel = 1;
+            return Timer<timerNum>::getInterruptCause(channel);
+        }
+
+        TimerChannelInterruptOptions getInterruptCause() {
+            int16_t channel = 1;
+            return Timer<timerNum>::getInterruptCause(channel);
+        }
 
         // Placeholder for user code.
-        static void interrupt() __attribute__ ((weak));
+        static void interrupt();
     };
 
 
 
+    extern uint32_t pwm_interrupt_cause_cached_1_;
+    extern uint32_t pwm_interrupt_cause_cached_2_;
 
     template <uint8_t timerNum>
     struct PWMTimer {
@@ -794,7 +825,7 @@ namespace Motate {
         // Channel-specific functions. These are Motate channels, but they happen to line-up.
 
         // Specify the duty cycle as a value from 0.0 .. 1.0;
-        void setDutyCycle(const uint8_t channel, const float ratio, bool setOnNext = true) {
+        void setDutyCycleForChannel(const uint8_t channel, const float ratio, bool setOnNext = true) {
             setExactDutyCycle(ratio, setOnNext);
         };
         void setDutyCycle(const float ratio, bool setOnNext = true) {
@@ -804,6 +835,15 @@ namespace Motate {
                 pwmChan()->PWM_CDTY = getTopValue() * ratio;
 
         };
+        float getDutyCycleForChannel(const uint8_t channel) {
+            return getDutyCycle();
+
+        };
+        float getDutyCycle() {
+            return (float)pwmChan()->PWM_CDTY / getTopValue();
+
+        };
+
 
         // Specify channel A/B duty cycle as a integer value from 0 .. TOP.
         // TOP in this case is either RC_RC or 0xFFFF.
@@ -817,6 +857,13 @@ namespace Motate {
                 pwmChan()->PWM_CDTY = absolute;
 
         };
+        uint32_t getExactDutyCycleForChannel(const uint8_t channel) {
+            return getExactDutyCycle();
+        };
+        uint32_t getExactDutyCycle() {
+            return pwmChan()->PWM_CDTY;
+        };
+
 
         void setOutputOptions(const uint32_t channel, const uint32_t options) {
             setOutputOptions(options);
@@ -851,25 +898,17 @@ namespace Motate {
         };
 
         void setInterrupts(const uint32_t interrupts) {
-#if 0
-            // TODO
+            pwm()->PWM_IDR1 = (1 << timerNum);
+            pwm()->PWM_IDR2 = (PWM_IDR2_CMPM0 << timerNum);
+
             if (interrupts != kInterruptsOff) {
-                pwmChan()->TC_IDR = 0xFFFFFFFF;
                 NVIC_EnableIRQ(pwmIRQ());
 
                 if (interrupts & kInterruptOnOverflow) {
-                    // Check to see if we're overflowing on C. See getTopValue() description.
-                    if (pwmChan()->TC_CMR & TC_CMR_CPCTRG) {
-                        pwmChan()->TC_IER = TC_IER_CPCS; // RC Compare
-                    } else {
-                        pwmChan()->TC_IER = TC_IER_COVFS; // Counter Overflow
-                    }
+                    pwm()->PWM_IER1 = (1 << timerNum);
                 }
-                if (interrupts & kInterruptOnMatchA) {
-                    pwmChan()->TC_IER = TC_IER_CPAS; // RA Compare
-                }
-                if (interrupts & kInterruptOnMatchB) {
-                    pwmChan()->TC_IER = TC_IER_CPBS; // RB Compare
+                if (interrupts & kInterruptOnMatch) {
+                    pwm()->PWM_IER2 = (PWM_IER2_CMPM0 << timerNum);
                 }
 
                 /* Set interrupt priority */
@@ -890,38 +929,38 @@ namespace Motate {
                 }
 
             } else {
-                pwmChan()->TC_IDR = 0xFFFFFFFF;
-                NVIC_DisableIRQ(pwmIRQ());
+                pwm()->PWM_IDR1 = (1 << timerNum);
+                pwm()->PWM_IDR2 = (PWM_IDR2_CMPM0 << timerNum);
+
+                // If none of the interrupts are on, we can disable the IRQ altogether.
+                if (0==(pwm()->PWM_IMR1) && 0==(pwm()->PWM_IMR2)) {
+                    NVIC_DisableIRQ(pwmIRQ());
+                }
             }
-#endif
         }
 
         void setInterruptPending() {
             NVIC_SetPendingIRQ(pwmIRQ());
         }
 
+        TimerChannelInterruptOptions getInterruptCause(const uint32_t channel) {
+            return getInterruptCause();
+        }
+
         TimerChannelInterruptOptions getInterruptCause() {
-#if 0
-            uint32_t sr = pwmChan()->TC_SR;
             // if it is either an overflow or a RC compare
-            if (sr & (TC_SR_COVFS | TC_SR_CPCS)) {
+            if (pwm_interrupt_cause_cached_1_ != 0) {
                 return kInterruptOnOverflow;
             }
-            else if (sr & (TC_SR_CPAS)) {
-                return kInterruptOnMatchA;
+            else if (pwm_interrupt_cause_cached_2_ != 0) {
+                return kInterruptOnMatch;
             }
-            else if (sr & (TC_SR_CPBS)) {
-                return kInterruptOnMatchB;
-            }
-            else if (sr & (TC_SR_ETRGS)) {
-                return kInterruptOnMatchA;
-            }
-#endif
+
             return kInterruptUnknown;
         }
 
         // Placeholder for user code.
-        static void interrupt() __attribute__ ((weak));
+        static void interrupt();
     }; // struct PWMTimer
 
     template<> inline Pwm * const       PWMTimer<0>::pwm()           { return PWM; };
@@ -1069,6 +1108,20 @@ namespace Motate {
             __NOP();
         } while ( SysTickTimer.getValue() < doneTime );
     }
+
+    struct Timeout {
+        uint32_t start_, delay_;
+        Timeout() : start_ {0}, delay_ {0} {};
+
+        bool isPast() {
+            return ((SysTickTimer.getValue() - start_) > delay_);
+        };
+
+        void set(uint32_t delay) {
+            start_ = SysTickTimer.getValue();
+            delay_ = delay;
+        }
+    };
 
 } // namespace Motate
 

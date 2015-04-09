@@ -31,7 +31,11 @@
 #if defined(__SAM3X8E__) || defined(__SAM3X8C__)
 
 #include "Atmel_sam3xa/SamTimers.h"
-#include "Reset.h"
+
+extern "C" {
+    void _null_pwm_timer_interrupt() __attribute__ ((unused));
+    void _null_pwm_timer_interrupt() {};
+}
 
 namespace Motate {
 	/* System-wide tick counter */
@@ -52,7 +56,7 @@ extern "C" void SysTick_Handler(void)
 //	if (sysTickHook)
 //		sysTickHook();
 
-	tickReset();
+//	tickReset();
 
 	Motate::SysTickTimer._increment();
 
@@ -61,27 +65,36 @@ extern "C" void SysTick_Handler(void)
 	}
 }
 
-extern "C" {
-
-#define _MAKE_TCx_Handler_DISABLED(x) \
-    void TC##x##_Handler(void) { /* delegate to the TimerChannels */\
-        Motate::TimerChannelInterruptOptions tcio = Motate::Timer<x>::getInterruptCause();\
-        if (  Motate::TimerChannel<x, 0>::interrupt || \
-              tcio == Motate::kInterruptOnMatchA || \
-              tcio == Motate::kInterruptOnOverflow) {\
-            Motate::TimerChannel<x, 0>::interrupt();\
-        }\
-        if (  Motate::TimerChannel<x, 1>::interrupt || \
-              tcio == Motate::kInterruptOnMatchB || \
-              tcio == Motate::kInterruptOnOverflow) {\
-            Motate::TimerChannel<x, 1>::interrupt();\
-        }\
-    }
-
 #define _MAKE_TCx_Handler(x) \
-    void TC##x##_Handler(void) { \
-        Motate::Timer<x>::interrupt(); \
+    namespace Motate { \
+        template<> void TimerChannel<x, 0>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt"))); \
+        template<> void TimerChannel<x, 1>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt"))); \
+        template<> void Timer<x>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt"))); \
+    } \
+    extern "C" \
+    void TC##x##_Handler(void) { /* delegate to the TimerChannels */ \
+        int16_t ch_ = 0; \
+        /*auto tcio =*/ Motate::Timer<x>::getInterruptCause(ch_); \
+        if (  Motate::TimerChannel<x, 0>::interrupt && \
+              ch_  == 0 \
+            ) { \
+            Motate::TimerChannel<x, 0>::interrupt(); \
+        } \
+        if (  Motate::TimerChannel<x, 1>::interrupt || \
+              ch_ == 1 \
+            ) { \
+            Motate::TimerChannel<x, 1>::interrupt(); \
+        } \
+        if (Motate::Timer<x>::interrupt) { \
+            Motate::Timer<x>::interrupt(); \
+        } \
     }
+
+
+//#define _MAKE_TCx_Handler(x) \
+//    void TC##x##_Handler(void) { \
+//        Motate::Timer<x>::interrupt(); \
+//    }
 
     _MAKE_TCx_Handler(0)
     _MAKE_TCx_Handler(1)
@@ -95,6 +108,51 @@ extern "C" {
 
 #undef _MAKE_TCx_Handler
 
+namespace Motate {
+    uint32_t pwm_interrupt_cause_cached_1_ = 0;
+    uint32_t pwm_interrupt_cause_cached_2_ = 0;
+
+    template<> void PWMTimer< 0>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt")));
+    template<> void PWMTimer< 1>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt")));
+    template<> void PWMTimer< 2>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt")));
+    template<> void PWMTimer< 3>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt")));
+    template<> void PWMTimer< 4>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt")));
+    template<> void PWMTimer< 5>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt")));
+    template<> void PWMTimer< 6>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt")));
+    template<> void PWMTimer< 7>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt")));
 }
+
+void PWM_Handler(void) {
+    Motate::pwm_interrupt_cause_cached_1_ = PWM->PWM_ISR1 & 0x00ff;
+    Motate::pwm_interrupt_cause_cached_2_ = PWM->PWM_ISR2 & 0xff00;
+
+    uint32_t pwm_interrupt_cause_ = Motate::pwm_interrupt_cause_cached_1_ | (Motate::pwm_interrupt_cause_cached_2_>>8);
+
+    if (Motate::PWMTimer< 0>::interrupt && (pwm_interrupt_cause_ & (1<<  0))) {
+        Motate::PWMTimer< 0>::interrupt();
+    };
+    if (Motate::PWMTimer< 1>::interrupt && (pwm_interrupt_cause_ & (1<<  1))) {
+        Motate::PWMTimer< 1>::interrupt();
+    };
+    if (Motate::PWMTimer< 2>::interrupt && (pwm_interrupt_cause_ & (1<<  2))) {
+        Motate::PWMTimer< 2>::interrupt();
+    };
+    if (Motate::PWMTimer< 3>::interrupt && (pwm_interrupt_cause_ & (1<<  3))) {
+        Motate::PWMTimer< 3>::interrupt();
+    };
+    if (Motate::PWMTimer< 4>::interrupt && (pwm_interrupt_cause_ & (1<<  4))) {
+        Motate::PWMTimer< 4>::interrupt();
+    };
+    if (Motate::PWMTimer< 5>::interrupt && (pwm_interrupt_cause_ & (1<<  5))) {
+        Motate::PWMTimer< 5>::interrupt();
+    };
+    if (Motate::PWMTimer< 6>::interrupt && (pwm_interrupt_cause_ & (1<<  6))) {
+        Motate::PWMTimer< 6>::interrupt();
+    };
+    if (Motate::PWMTimer< 7>::interrupt && (pwm_interrupt_cause_ & (1<<  7))) {
+        Motate::PWMTimer< 7>::interrupt();
+    };
+}
+
 
 #endif // __SAM3X8E__

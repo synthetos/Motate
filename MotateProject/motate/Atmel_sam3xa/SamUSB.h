@@ -2,7 +2,7 @@
  utility/SamUSB.h - Library for the Motate system
  http://github.com/synthetos/motate/
 
- Copyright (c) 2013 Robert Giseburt
+ Copyright (c) 2015 Robert Giseburt
 
  This file is part of the Motate Library.
 
@@ -32,6 +32,7 @@
 #define SAMUSB_ONCE
 
 #include "MotateUSBHelpers.h"
+#include "MotateUniqueID.h"
 
 #include "sam.h"
 
@@ -149,6 +150,20 @@ length = sizeof(MOTATE_USBSerialNumberString);\
 return MOTATE_USBSerialNumberString;\
 }
 
+#define MOTATE_SET_USB_SERIAL_NUMBER_STRING_FROM_CHIPID() \
+uint16_t MOTATE_USBSerialNumberString[Motate::UUID_t::length]; \
+const uint16_t *Motate::getUSBSerialNumberString(int16_t &length) { \
+    const char *uuid = Motate::UUID; \
+    uint8_t i = Motate::UUID_t::length; \
+    length = i * sizeof(uint16_t); \
+    static bool inited = false; \
+    if (inited == true) { return MOTATE_USBSerialNumberString; } \
+    for (uint8_t j = 0; j < i; j++) { \
+        MOTATE_USBSerialNumberString[j] = *uuid++; \
+    } \
+    return MOTATE_USBSerialNumberString; \
+}
+
     // This needs to be provided in the hardware file
     const uint16_t *getUSBLanguageString(int16_t &length);
 
@@ -167,6 +182,7 @@ return MOTATE_USBSerialNumberString;\
     extern void _resetEndpointBuffer(const uint8_t endpoint);
     extern void _freezeUSBClock();
     extern void _flushEndpoint(uint8_t endpoint);
+    extern void _flushReadEndpoint(uint8_t endpoint);
 
     extern uint32_t _inited;
     extern uint32_t _configuration;
@@ -183,6 +199,9 @@ return MOTATE_USBSerialNumberString;\
 
         static void _init() {
             uint32_t endpoint;
+
+            // FORCE disable the USB hardware:
+            UOTGHS->UOTGHS_CTRL &= ~(UOTGHS_CTRL_USBE);
 
             for (endpoint = 0; endpoint < 10; ++endpoint)
             {
@@ -354,9 +373,13 @@ return MOTATE_USBSerialNumberString;\
             return _sendToEndpoint(endpoint, buffer, length);
         };
 
-        static void flush(const uint8_t ependpoint) {
-            _flushEndpoint(ependpoint);
+        static void flush(const uint8_t endpoint) {
+            _flushEndpoint(endpoint);
         };
+
+        static void flushRead(const uint8_t endpoint) {
+            _flushReadEndpoint(endpoint);
+        }
 
         /* Data is const. The pointer to data is not. */
         static int16_t readFromControl(const uint8_t endpoint, uint8_t *buffer, int16_t length) {
@@ -405,7 +428,7 @@ return MOTATE_USBSerialNumberString;\
                     } else
                         if (kSerialNumberId == stringNum && getUSBSerialNumberString) {
                             string = getUSBSerialNumberString(length);
-			} else
+                        } else
                             return; // This is wrong, but works...?
 
             USBDescriptorStringHeader_t string_header(length);

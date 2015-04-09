@@ -60,7 +60,7 @@ auto &Serial = usb._mixin_0_type::Serial;
 
 MOTATE_SET_USB_VENDOR_STRING( {'S' ,'y', 'n', 't', 'h', 'e', 't', 'o', 's'} )
 MOTATE_SET_USB_PRODUCT_STRING( {'M', 'o', 't', 'a', 't', 'e', ' ', 'D' , 'e', 'm', 'o'} )
-MOTATE_SET_USB_SERIAL_NUMBER_STRING( {'0','0','7'} )
+MOTATE_SET_USB_SERIAL_NUMBER_STRING_FROM_CHIPID()
 
 #else
 

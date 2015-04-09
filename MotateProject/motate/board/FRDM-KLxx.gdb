@@ -7,3 +7,13 @@ target remote | openocd -f ../../motate/board/frdm-kl05z.cfg -c "adapter_khz 50"
 
 # Turn on history saving
 set history save on
+
+define reset
+    monitor reset init
+end
+
+define flash
+    make
+    load
+    reset
+end

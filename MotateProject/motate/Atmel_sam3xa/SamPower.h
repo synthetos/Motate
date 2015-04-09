@@ -31,7 +31,10 @@
 #include <sys/types.h>
 
 namespace Motate {
-    void reset(bool bootloader) __attribute__ ((long_call, section (".ramfunc")));
+    // This is dangerous, let's add another level of namespace in case "use Motate" is in effect.
+    namespace System {
+        void reset(bool bootloader) __attribute__ ((long_call, section (".ramfunc")));
+    }
 }
 
 #endif /* end of include guard: SAMPOWER_H_ONCE */

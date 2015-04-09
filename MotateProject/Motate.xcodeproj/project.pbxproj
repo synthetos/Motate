@@ -14,6 +14,11 @@
 		D443391F196BB69B004A48F9 /* Makefile in Sources */ = {isa = PBXBuildFile; fileRef = D443391C196BB69B004A48F9 /* Makefile */; };
 		D4433920196BB69B004A48F9 /* Makefile in Sources */ = {isa = PBXBuildFile; fileRef = D443391C196BB69B004A48F9 /* Makefile */; };
 		D457117C17053EFA00EA19A8 /* Makefile in Sources */ = {isa = PBXBuildFile; fileRef = D457117B17053EFA00EA19A8 /* Makefile */; };
+		D46B988D1B6AFE810088801D /* adc_demo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D46B985C1B6AFE810088801D /* adc_demo.cpp */; };
+		D46B98AB1B6AFE810088801D /* Makefile in Sources */ = {isa = PBXBuildFile; fileRef = D46B988B1B6AFE810088801D /* Makefile */; };
+		D46B98B21B6D42CC0088801D /* MotateJSON.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D46B98B01B6D42CC0088801D /* MotateJSON.cpp */; };
+		D46B98B31B6D42CC0088801D /* MotateJSON.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D46B98B01B6D42CC0088801D /* MotateJSON.cpp */; };
+		D46B98B41B6D42CC0088801D /* MotateJSON.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D46B98B01B6D42CC0088801D /* MotateJSON.cpp */; };
 		D47E9A951ACC532300476AF2 /* XMegaPins.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D47E9A941ACC532300476AF2 /* XMegaPins.cpp */; };
 		D48992C61965B460004F73A6 /* Makefile in Sources */ = {isa = PBXBuildFile; fileRef = D48992C41965B460004F73A6 /* Makefile */; };
 		D48992C71965B460004F73A6 /* Makefile in Sources */ = {isa = PBXBuildFile; fileRef = D48992C41965B460004F73A6 /* Makefile */; };
@@ -632,7 +637,6 @@
 		D4C79EDE1957C0AE00A1BE28 /* startup_STM32F40x.s in Sources */ = {isa = PBXBuildFile; fileRef = D4C79C821957C0AD00A1BE28 /* startup_STM32F40x.s */; };
 		D4C79EFB1957C0B700A1BE28 /* cortex_handlers.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79EE81957C0B700A1BE28 /* cortex_handlers.c */; };
 		D4C79EFC1957C0B700A1BE28 /* hooks.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79EEB1957C0B700A1BE28 /* hooks.c */; };
-		D4C79EFD1957C0B700A1BE28 /* Reset.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C79EED1957C0B700A1BE28 /* Reset.cpp */; };
 		D4C79EFE1957C0B700A1BE28 /* syscalls_sam3.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C79EF01957C0B700A1BE28 /* syscalls_sam3.cpp */; };
 		D4C79EFF1957C0B700A1BE28 /* syscalls.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C79EF81957C0B700A1BE28 /* syscalls.cpp */; };
 		D4C79F21195BCC9A00A1BE28 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C79F20195BCC9A00A1BE28 /* main.cpp */; };
@@ -881,7 +885,6 @@
 		D4C7A01F19630FA000A1BE28 /* stm32f0xx_hal_dac.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79A391957C0AD00A1BE28 /* stm32f0xx_hal_dac.c */; };
 		D4C7A02019630FA000A1BE28 /* stm32f30x_adc.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79C3A1957C0AD00A1BE28 /* stm32f30x_adc.c */; };
 		D4C7A02119630FA000A1BE28 /* sys.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C79BF01957C0AD00A1BE28 /* sys.cpp */; };
-		D4C7A02219630FA000A1BE28 /* Reset.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C79EED1957C0B700A1BE28 /* Reset.cpp */; };
 		D4C7A02319630FA000A1BE28 /* stm32f0xx_flash.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799FC1957C0AD00A1BE28 /* stm32f0xx_flash.c */; };
 		D4C7A02419630FA000A1BE28 /* system_sam4n.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C794C61957C0AC00A1BE28 /* system_sam4n.c */; };
 		D4C7A02519630FA000A1BE28 /* stm32f30x_i2c.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79C511957C0AD00A1BE28 /* stm32f30x_i2c.c */; };
@@ -1302,6 +1305,9 @@
 		D4E913541ABC5D1D0042A16C /* xmega.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4E910B51ABBAD140042A16C /* xmega.cpp */; };
 		D4E913551ABC5D1D0042A16C /* xmega.h in Sources */ = {isa = PBXBuildFile; fileRef = D4E910B61ABBAD140042A16C /* xmega.h */; };
 		D4E913581ABCB58F0042A16C /* xmega_interrupts.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4E913561ABCB58F0042A16C /* xmega_interrupts.cpp */; };
+		D4F22B891B750B4800C0DDFD /* MotateUtilities.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4F22B871B750B4800C0DDFD /* MotateUtilities.cpp */; };
+		D4F22B8A1B750B4800C0DDFD /* MotateUtilities.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4F22B871B750B4800C0DDFD /* MotateUtilities.cpp */; };
+		D4F22B8B1B750B4800C0DDFD /* MotateUtilities.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4F22B871B750B4800C0DDFD /* MotateUtilities.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -1347,6 +1353,13 @@
 		D443391C196BB69B004A48F9 /* Makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
 		D449BC59197AC3E3000C0C3C /* MotateSerial.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotateSerial.h; sourceTree = "<group>"; };
 		D457117B17053EFA00EA19A8 /* Makefile */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = Makefile; sourceTree = "<group>"; usesTabs = 1; xcLanguageSpecificationIdentifier = xcode.lang.sh; };
+		D46B98221B683C690088801D /* motate_additions.ld */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = motate_additions.ld; sourceTree = "<group>"; };
+		D46B98281B6AFE3F0088801D /* temperature_demo.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = temperature_demo.cpp; sourceTree = "<group>"; };
+		D46B98571B6AFE3F0088801D /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
+		D46B985C1B6AFE810088801D /* adc_demo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = adc_demo.cpp; sourceTree = "<group>"; };
+		D46B988B1B6AFE810088801D /* Makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
+		D46B98B01B6D42CC0088801D /* MotateJSON.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MotateJSON.cpp; sourceTree = "<group>"; };
+		D46B98B11B6D42CC0088801D /* MotateJSON.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotateJSON.h; sourceTree = "<group>"; };
 		D47E9A921ACB2CFE00476AF2 /* xmega_stdcpp_stubs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = xmega_stdcpp_stubs.h; sourceTree = "<group>"; };
 		D47E9A941ACC532300476AF2 /* XMegaPins.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = XMegaPins.cpp; sourceTree = "<group>"; };
 		D48992C01965B118004F73A6 /* MotateBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MotateBuffer.h; path = motate/MotateBuffer.h; sourceTree = SOURCE_ROOT; };
@@ -4433,12 +4446,8 @@
 		D4C79C831957C0AD00A1BE28 /* STM32F407.ld */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = STM32F407.ld; sourceTree = "<group>"; };
 		D4C79EE21957C0B700A1BE28 /* atmel_sam_series.mk */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = atmel_sam_series.mk; sourceTree = "<group>"; };
 		D4C79EE81957C0B700A1BE28 /* cortex_handlers.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cortex_handlers.c; sourceTree = "<group>"; };
-		D4C79EE91957C0B700A1BE28 /* gcc_flash.ld */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = gcc_flash.ld; sourceTree = "<group>"; };
-		D4C79EEA1957C0B700A1BE28 /* gcc_sram.ld */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = gcc_sram.ld; sourceTree = "<group>"; };
 		D4C79EEB1957C0B700A1BE28 /* hooks.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = hooks.c; sourceTree = "<group>"; };
 		D4C79EEC1957C0B700A1BE28 /* make_utilities.mk */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = make_utilities.mk; sourceTree = "<group>"; };
-		D4C79EED1957C0B700A1BE28 /* Reset.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Reset.cpp; sourceTree = "<group>"; };
-		D4C79EEE1957C0B700A1BE28 /* Reset.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Reset.h; sourceTree = "<group>"; };
 		D4C79EEF1957C0B700A1BE28 /* syscalls.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = syscalls.h; sourceTree = "<group>"; };
 		D4C79EF01957C0B700A1BE28 /* syscalls_sam3.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = syscalls_sam3.cpp; sourceTree = "<group>"; };
 		D4C79EF11957C0B700A1BE28 /* atmel_sam.mk */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = atmel_sam.mk; sourceTree = "<group>"; };
@@ -4484,6 +4493,14 @@
 		D4E913361ABBB2370042A16C /* index_xmega */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = index_xmega; sourceTree = BUILT_PRODUCTS_DIR; };
 		D4E913561ABCB58F0042A16C /* xmega_interrupts.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = xmega_interrupts.cpp; sourceTree = "<group>"; };
 		D4E913571ABCB58F0042A16C /* xmega_interrupts.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = xmega_interrupts.h; sourceTree = "<group>"; };
+		D4F22B771B73DC4900C0DDFD /* g2Ref-pinout.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "g2Ref-pinout.h"; sourceTree = "<group>"; };
+		D4F22B781B73DC4900C0DDFD /* motate_pin_assignments.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = motate_pin_assignments.h; sourceTree = "<group>"; };
+		D4F22B791B73DC4900C0DDFD /* g2Ref.gdb */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = g2Ref.gdb; sourceTree = "<group>"; };
+		D4F22B7A1B73DC4900C0DDFD /* g2Ref.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = g2Ref.mk; sourceTree = "<group>"; };
+		D4F22B831B73E63400C0DDFD /* pin_assignments.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = pin_assignments.h; sourceTree = "<group>"; };
+		D4F22B851B73E63400C0DDFD /* pin_assignments.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = pin_assignments.h; sourceTree = "<group>"; };
+		D4F22B871B750B4800C0DDFD /* MotateUtilities.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MotateUtilities.cpp; sourceTree = "<group>"; };
+		D4F22B881B750B4800C0DDFD /* MotateUtilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotateUtilities.h; sourceTree = "<group>"; };
 		D4FEBFF61B0A657A0042EA32 /* MotateUniqueID.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotateUniqueID.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -4535,6 +4552,26 @@
 			);
 			sourceTree = "<group>";
 		};
+		D46B98261B6AFE3F0088801D /* temperature_control */ = {
+			isa = PBXGroup;
+			children = (
+				D46B98281B6AFE3F0088801D /* temperature_demo.cpp */,
+				D46B98571B6AFE3F0088801D /* Makefile */,
+				D4F22B811B73E63400C0DDFD /* board */,
+			);
+			name = temperature_control;
+			path = demos/temperature_control;
+			sourceTree = SOURCE_ROOT;
+		};
+		D46B985A1B6AFE810088801D /* adc */ = {
+			isa = PBXGroup;
+			children = (
+				D46B985C1B6AFE810088801D /* adc_demo.cpp */,
+				D46B988B1B6AFE810088801D /* Makefile */,
+			);
+			path = adc;
+			sourceTree = "<group>";
+		};
 		D48992C21965B460004F73A6 /* uart */ = {
 			isa = PBXGroup;
 			children = (
@@ -4563,6 +4600,8 @@
 				D4E90E271ABB54D40042A16C /* Atmel_XMega */,
 				D48992C01965B118004F73A6 /* MotateBuffer.h */,
 				D4C78F63195201A900A1BE28 /* MotatePins.h */,
+				D46B98B01B6D42CC0088801D /* MotateJSON.cpp */,
+				D46B98B11B6D42CC0088801D /* MotateJSON.h */,
 				D449BC59197AC3E3000C0C3C /* MotateSerial.h */,
 				D4C78F64195201A900A1BE28 /* MotateSPI.h */,
 				D4FEBFF61B0A657A0042EA32 /* MotateUniqueID.h */,
@@ -4572,6 +4611,8 @@
 				D4C78F66195201A900A1BE28 /* MotateUSB.h */,
 				D4C78F67195201A900A1BE28 /* MotateUSBCDC.h */,
 				D4C78F68195201A900A1BE28 /* MotateUSBHelpers.h */,
+				D4F22B871B750B4800C0DDFD /* MotateUtilities.cpp */,
+				D4F22B881B750B4800C0DDFD /* MotateUtilities.h */,
 				D4C79F001957C1E300A1BE28 /* board */,
 				D4C78F841957C0AA00A1BE28 /* cmsis */,
 				D4C79F1119588A8600A1BE28 /* arch */,
@@ -9896,14 +9937,11 @@
 				D4C79EE21957C0B700A1BE28 /* atmel_sam_series.mk */,
 				D40A24041ACE2CCC00406A3A /* atmel_sam.cfg */,
 				D4C79EE81957C0B700A1BE28 /* cortex_handlers.c */,
-				D4C79EE91957C0B700A1BE28 /* gcc_flash.ld */,
-				D4C79EEA1957C0B700A1BE28 /* gcc_sram.ld */,
 				D4C79EEB1957C0B700A1BE28 /* hooks.c */,
 				D4C79EEC1957C0B700A1BE28 /* make_utilities.mk */,
-				D4C79EED1957C0B700A1BE28 /* Reset.cpp */,
-				D4C79EEE1957C0B700A1BE28 /* Reset.h */,
 				D4C79EEF1957C0B700A1BE28 /* syscalls.h */,
 				D4C79EF01957C0B700A1BE28 /* syscalls_sam3.cpp */,
+				D46B98221B683C690088801D /* motate_additions.ld */,
 			);
 			path = atmel_sam;
 			sourceTree = "<group>";
@@ -9920,6 +9958,9 @@
 		D4C79F001957C1E300A1BE28 /* board */ = {
 			isa = PBXGroup;
 			children = (
+				D4F22B761B73DC4900C0DDFD /* g2Ref */,
+				D4F22B791B73DC4900C0DDFD /* g2Ref.gdb */,
+				D4F22B7A1B73DC4900C0DDFD /* g2Ref.mk */,
 				D4C7A1AC19649C2200A1BE28 /* ArduinoDue.gdb */,
 				D4C79F0D1957C2A100A1BE28 /* ArduinoDue.mk */,
 				D4C79F071957C24700A1BE28 /* ArduinoDue */,
@@ -9963,11 +10004,13 @@
 		D4C79F19195BC80800A1BE28 /* demos */ = {
 			isa = PBXGroup;
 			children = (
+				D46B985A1B6AFE810088801D /* adc */,
 				D4433919196BB69B004A48F9 /* buffered_uart */,
 				D48992C21965B460004F73A6 /* uart */,
 				D4C79F22196216A300A1BE28 /* blink */,
 				D4C79F26196216A300A1BE28 /* fade */,
 				D4DD3E5D19BFE1AE0081E1BB /* soft_pwm */,
+				D46B98261B6AFE3F0088801D /* temperature_control */,
 			);
 			path = demos;
 			sourceTree = "<group>";
@@ -10035,6 +10078,40 @@
 			path = atmel_xmega;
 			sourceTree = "<group>";
 		};
+		D4F22B761B73DC4900C0DDFD /* g2Ref */ = {
+			isa = PBXGroup;
+			children = (
+				D4F22B771B73DC4900C0DDFD /* g2Ref-pinout.h */,
+				D4F22B781B73DC4900C0DDFD /* motate_pin_assignments.h */,
+			);
+			path = g2Ref;
+			sourceTree = "<group>";
+		};
+		D4F22B811B73E63400C0DDFD /* board */ = {
+			isa = PBXGroup;
+			children = (
+				D4F22B821B73E63400C0DDFD /* ArduinoDue */,
+				D4F22B841B73E63400C0DDFD /* g2Ref */,
+			);
+			path = board;
+			sourceTree = "<group>";
+		};
+		D4F22B821B73E63400C0DDFD /* ArduinoDue */ = {
+			isa = PBXGroup;
+			children = (
+				D4F22B831B73E63400C0DDFD /* pin_assignments.h */,
+			);
+			path = ArduinoDue;
+			sourceTree = "<group>";
+		};
+		D4F22B841B73E63400C0DDFD /* g2Ref */ = {
+			isa = PBXGroup;
+			children = (
+				D4F22B851B73E63400C0DDFD /* pin_assignments.h */,
+			);
+			path = g2Ref;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXLegacyTarget section */
@@ -10063,6 +10140,34 @@
 			dependencies = (
 			);
 			name = "Motate Due uart";
+			passBuildSettingsInEnvironment = 1;
+			productName = g3_due;
+		};
+		D46B981D1B6835750088801D /* Motate Due adc */ = {
+			isa = PBXLegacyTarget;
+			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 BOARD=Due USE_LTO=1";
+			buildConfigurationList = D46B981E1B6835750088801D /* Build configuration list for PBXLegacyTarget "Motate Due adc" */;
+			buildPhases = (
+			);
+			buildToolPath = /usr/bin/make;
+			buildWorkingDirectory = ./demos/adc;
+			dependencies = (
+			);
+			name = "Motate Due adc";
+			passBuildSettingsInEnvironment = 1;
+			productName = g3_due;
+		};
+		D46B98AC1B6B05EF0088801D /* Motate Due temperature */ = {
+			isa = PBXLegacyTarget;
+			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 BOARD=Due USE_LTO=0";
+			buildConfigurationList = D46B98AD1B6B05EF0088801D /* Build configuration list for PBXLegacyTarget "Motate Due temperature" */;
+			buildPhases = (
+			);
+			buildToolPath = /usr/bin/make;
+			buildWorkingDirectory = ./demos/temperature_control;
+			dependencies = (
+			);
+			name = "Motate Due temperature";
 			passBuildSettingsInEnvironment = 1;
 			productName = g3_due;
 		};
@@ -10164,6 +10269,20 @@
 			passBuildSettingsInEnvironment = 1;
 			productName = g3_due;
 		};
+		D4F22B7C1B73DC5400C0DDFD /* Motate g2Ref temperature */ = {
+			isa = PBXLegacyTarget;
+			buildArgumentsString = "$(ACTION) VERBOSE=1 COLOR=0 BOARD=g2Ref USE_LTO=0";
+			buildConfigurationList = D4F22B7D1B73DC5400C0DDFD /* Build configuration list for PBXLegacyTarget "Motate g2Ref temperature" */;
+			buildPhases = (
+			);
+			buildToolPath = /usr/bin/make;
+			buildWorkingDirectory = ./demos/temperature_control;
+			dependencies = (
+			);
+			name = "Motate g2Ref temperature";
+			passBuildSettingsInEnvironment = 1;
+			productName = g3_due;
+		};
 /* End PBXLegacyTarget section */
 
 /* Begin PBXNativeTarget section */
@@ -10248,6 +10367,9 @@
 				D45710C21705330C00EA19A8 /* Motate Due uart */,
 				D4D4A02F197CD7B400618EF3 /* Motate Due buffered_uart */,
 				D4A74B2319C167020019633A /* Motate Due soft_pwm */,
+				D46B981D1B6835750088801D /* Motate Due adc */,
+				D46B98AC1B6B05EF0088801D /* Motate Due temperature */,
+				D4F22B7C1B73DC5400C0DDFD /* Motate g2Ref temperature */,
 				D4DD3EAD19BFE35F0081E1BB /* Motate FRDM-KL05Z soft_pwm */,
 				D4C78F731954DFAF00A1BE28 /* Motate FRDM-KL05Z uart */,
 				D4C4EF7E196DB49D00D1F791 /* Motate FRDM-KL05Z buffered_uart */,
@@ -10382,6 +10504,7 @@
 				D4C79D501957C0AE00A1BE28 /* stm32f10x_tim.c in Sources */,
 				D4C79E031957C0AE00A1BE28 /* stm32f10x_rcc.c in Sources */,
 				D4C79EA21957C0AE00A1BE28 /* stm32l1xx_dac.c in Sources */,
+				D4F22B891B750B4800C0DDFD /* MotateUtilities.cpp in Sources */,
 				D4C79D481957C0AE00A1BE28 /* stm32f10x_gpio.c in Sources */,
 				D4C79CCA1957C0AE00A1BE28 /* cmsis_nvic.c in Sources */,
 				D4C79CA41957C0AE00A1BE28 /* startup_samd21.c in Sources */,
@@ -10453,6 +10576,7 @@
 				D4C79E3D1957C0AE00A1BE28 /* stm32f4xx_hal_flash.c in Sources */,
 				D4C79D7E1957C0AE00A1BE28 /* stm32f4xx_hal_eth.c in Sources */,
 				D4C79E361957C0AE00A1BE28 /* stm32f4xx_hal_dac.c in Sources */,
+				D46B98B21B6D42CC0088801D /* MotateJSON.cpp in Sources */,
 				D4C79ED91957C0AE00A1BE28 /* startup_STM32F30x.s in Sources */,
 				D4C79CF21957C0AE00A1BE28 /* cmsis_nvic.c in Sources */,
 				D4C79DA81957C0AE00A1BE28 /* cmsis_nvic.c in Sources */,
@@ -10511,7 +10635,6 @@
 				D4C79DCF1957C0AE00A1BE28 /* stm32f0xx_hal_dac.c in Sources */,
 				D4C79EBD1957C0AE00A1BE28 /* stm32f30x_adc.c in Sources */,
 				D4C79E9A1957C0AE00A1BE28 /* sys.cpp in Sources */,
-				D4C79EFD1957C0B700A1BE28 /* Reset.cpp in Sources */,
 				D4C79DB31957C0AE00A1BE28 /* stm32f0xx_flash.c in Sources */,
 				D4C79C9D1957C0AE00A1BE28 /* system_sam4n.c in Sources */,
 				D4C79EC81957C0AE00A1BE28 /* stm32f30x_i2c.c in Sources */,
@@ -10547,6 +10670,7 @@
 				D4C79E8D1957C0AE00A1BE28 /* stm32l0xx_hal_smbus.c in Sources */,
 				D4C79CA21957C0AE00A1BE28 /* startup_samd20.c in Sources */,
 				D4C79DC11957C0AE00A1BE28 /* startup_stm32f030.s in Sources */,
+				D46B988D1B6AFE810088801D /* adc_demo.cpp in Sources */,
 				D4C79CFB1957C0AE00A1BE28 /* sys.cpp in Sources */,
 				D4C79D8A1957C0AE00A1BE28 /* stm32f4xx_hal_iwdg.c in Sources */,
 				D4C79CAA1957C0AE00A1BE28 /* startup_samr21.c in Sources */,
@@ -10720,6 +10844,7 @@
 				D4C79DB11957C0AE00A1BE28 /* stm32f0xx_dma.c in Sources */,
 				D4C79D341957C0AE00A1BE28 /* stm32f0xx_spi.c in Sources */,
 				D4C79D0C1957C0AE00A1BE28 /* vector_realmonitor.c in Sources */,
+				D46B98AB1B6AFE810088801D /* Makefile in Sources */,
 				D4C79E421957C0AE00A1BE28 /* stm32f4xx_hal_hcd.c in Sources */,
 				D4C79E051957C0AE00A1BE28 /* stm32f10x_sdio.c in Sources */,
 				D4C79DC51957C0AE00A1BE28 /* cmsis_nvic.c in Sources */,
@@ -11019,6 +11144,7 @@
 				D4C79F9E19630FA000A1BE28 /* startup_LPC11xx.s in Sources */,
 				D4C79F9F19630FA000A1BE28 /* stm32f10x_tim.c in Sources */,
 				D4C79FA019630FA000A1BE28 /* stm32f10x_rcc.c in Sources */,
+				D4F22B8A1B750B4800C0DDFD /* MotateUtilities.cpp in Sources */,
 				D4C79FA119630FA000A1BE28 /* stm32l1xx_dac.c in Sources */,
 				D4C79FA219630FA000A1BE28 /* stm32f10x_gpio.c in Sources */,
 				D4C79FA319630FA000A1BE28 /* cmsis_nvic.c in Sources */,
@@ -11090,6 +11216,7 @@
 				D4C79FE519630FA000A1BE28 /* stm32f4xx_hal_flash.c in Sources */,
 				D4C79FE619630FA000A1BE28 /* stm32f4xx_hal_eth.c in Sources */,
 				D4C79FE719630FA000A1BE28 /* stm32f4xx_hal_dac.c in Sources */,
+				D46B98B31B6D42CC0088801D /* MotateJSON.cpp in Sources */,
 				D4C79FE819630FA000A1BE28 /* startup_STM32F30x.s in Sources */,
 				D4C79FE919630FA000A1BE28 /* cmsis_nvic.c in Sources */,
 				D4C79FEA19630FA000A1BE28 /* cmsis_nvic.c in Sources */,
@@ -11148,7 +11275,6 @@
 				D4C7A01F19630FA000A1BE28 /* stm32f0xx_hal_dac.c in Sources */,
 				D4C7A02019630FA000A1BE28 /* stm32f30x_adc.c in Sources */,
 				D4C7A02119630FA000A1BE28 /* sys.cpp in Sources */,
-				D4C7A02219630FA000A1BE28 /* Reset.cpp in Sources */,
 				D4C7A02319630FA000A1BE28 /* stm32f0xx_flash.c in Sources */,
 				D4C7A02419630FA000A1BE28 /* system_sam4n.c in Sources */,
 				D4C7A02519630FA000A1BE28 /* stm32f30x_i2c.c in Sources */,
@@ -11557,6 +11683,7 @@
 				D4E913421ABC5D1D0042A16C /* XMegaTimers.h in Sources */,
 				D4E913431ABC5D1D0042A16C /* XMegaUART.cpp in Sources */,
 				D4E913441ABC5D1D0042A16C /* XMegaUART.h in Sources */,
+				D46B98B41B6D42CC0088801D /* MotateJSON.cpp in Sources */,
 				D4E913451ABC5D1D0042A16C /* MotateBuffer.h in Sources */,
 				D4E913461ABC5D1D0042A16C /* MotatePins.h in Sources */,
 				D4E913471ABC5D1D0042A16C /* MotateSerial.h in Sources */,
@@ -11572,6 +11699,7 @@
 				D4E913501ABC5D1D0042A16C /* TinyGv8-pinout.h in Sources */,
 				D4E913511ABC5D1D0042A16C /* avr.mk in Sources */,
 				D4E913521ABC5D1D0042A16C /* syscalls.cpp in Sources */,
+				D4F22B8B1B750B4800C0DDFD /* MotateUtilities.cpp in Sources */,
 				D4E913531ABC5D1D0042A16C /* syscalls.h in Sources */,
 				D4E913541ABC5D1D0042A16C /* xmega.cpp in Sources */,
 				D4E913551ABC5D1D0042A16C /* xmega.h in Sources */,
@@ -11666,6 +11794,7 @@
 					"-Imotate",
 					"-DXCODE_INDEX",
 				);
+				OTHER_LDFLAGS = "-Imotate/board/ArduinoDue/";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 			};
@@ -11706,8 +11835,41 @@
 					"-Imotate",
 					"-DXCODE_INDEX",
 				);
+				OTHER_LDFLAGS = "-Imotate/board/ArduinoDue/";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		D46B981F1B6835750088801D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "Motate Due adc";
+			};
+			name = Debug;
+		};
+		D46B98201B6835750088801D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "Motate Due adc";
+			};
+			name = Release;
+		};
+		D46B98AE1B6B05EF0088801D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "Motate Due temperature";
+			};
+			name = Debug;
+		};
+		D46B98AF1B6B05EF0088801D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "Motate Due temperature";
 			};
 			name = Release;
 		};
@@ -12027,6 +12189,22 @@
 			};
 			name = Release;
 		};
+		D4F22B7E1B73DC5400C0DDFD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "Motate g2Ref temperature";
+			};
+			name = Debug;
+		};
+		D4F22B7F1B73DC5400C0DDFD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PATH = "$PATH:/usr/local/gcc-arm-none-eabi/bin";
+				PRODUCT_NAME = "Motate g2Ref temperature";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -12062,6 +12240,24 @@
 			buildConfigurations = (
 				D457112B17053BFB00EA19A8 /* Debug */,
 				D457112C17053BFB00EA19A8 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D46B981E1B6835750088801D /* Build configuration list for PBXLegacyTarget "Motate Due adc" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D46B981F1B6835750088801D /* Debug */,
+				D46B98201B6835750088801D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D46B98AD1B6B05EF0088801D /* Build configuration list for PBXLegacyTarget "Motate Due temperature" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D46B98AE1B6B05EF0088801D /* Debug */,
+				D46B98AF1B6B05EF0088801D /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -12143,6 +12339,15 @@
 			buildConfigurations = (
 				D4E9135B1AC0891B0042A16C /* Debug */,
 				D4E9135C1AC0891B0042A16C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D4F22B7D1B73DC5400C0DDFD /* Build configuration list for PBXLegacyTarget "Motate g2Ref temperature" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D4F22B7E1B73DC5400C0DDFD /* Debug */,
+				D4F22B7F1B73DC5400C0DDFD /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

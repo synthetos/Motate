@@ -657,6 +657,20 @@ namespace Motate {
         } while ( SysTickTimer.getValue() < doneTime );
     }
 
+    struct Timeout {
+        uint32_t start_, delay_;
+        Timeout() : start_ {0}, delay_ {0} {};
+
+        bool isPast() {
+            return ((SysTickTimer.getValue() - start_) > delay_);
+        };
+
+        void set(uint32_t delay) {
+            start_ = SysTickTimer.getValue();
+            delay_ = delay;
+        }
+    };
+
 } // namespace Motate
 
 #define MOTATE_TIMER_INTERRUPT(number) \
