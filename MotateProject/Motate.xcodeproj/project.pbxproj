@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		D40A24241AD5F7AB00406A3A /* SamID.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D40A24221AD5F7AB00406A3A /* SamID.cpp */; };
 		D443391D196BB69B004A48F9 /* buffered_uart_demo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D443391B196BB69B004A48F9 /* buffered_uart_demo.cpp */; };
 		D443391E196BB69B004A48F9 /* buffered_uart_demo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D443391B196BB69B004A48F9 /* buffered_uart_demo.cpp */; };
 		D443391F196BB69B004A48F9 /* Makefile in Sources */ = {isa = PBXBuildFile; fileRef = D443391C196BB69B004A48F9 /* Makefile */; };
@@ -1336,6 +1337,8 @@
 		D409A5C919B97241009137D7 /* KL05ZSPI.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = KL05ZSPI.h; path = motate/Freescale_klxx/KL05ZSPI.h; sourceTree = SOURCE_ROOT; };
 		D40A24031ACE2C5A00406A3A /* openocd.cfg */ = {isa = PBXFileReference; lastKnownFileType = text; name = openocd.cfg; path = motate/openocd.cfg; sourceTree = "<group>"; };
 		D40A24041ACE2CCC00406A3A /* atmel_sam.cfg */ = {isa = PBXFileReference; lastKnownFileType = text; path = atmel_sam.cfg; sourceTree = "<group>"; };
+		D40A24221AD5F7AB00406A3A /* SamID.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SamID.cpp; sourceTree = "<group>"; };
+		D40A24231AD5F7AB00406A3A /* SamID.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SamID.h; sourceTree = "<group>"; };
 		D443391B196BB69B004A48F9 /* buffered_uart_demo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = buffered_uart_demo.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		D443391C196BB69B004A48F9 /* Makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
 		D449BC59197AC3E3000C0C3C /* MotateSerial.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotateSerial.h; sourceTree = "<group>"; };
@@ -1370,7 +1373,7 @@
 		D4C78F7019538E6B00A1BE28 /* KL05ZPins.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = KL05ZPins.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		D4C78F7F19553EF700A1BE28 /* KL05ZTimers.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = KL05ZTimers.cpp; sourceTree = "<group>"; };
 		D4C78F8019553EF700A1BE28 /* KL05ZTimers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KL05ZTimers.h; sourceTree = "<group>"; };
-		D4C78F821957BF8400A1BE28 /* Motate.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Motate.mk; sourceTree = "<group>"; usesTabs = 1; };
+		D4C78F821957BF8400A1BE28 /* Motate.mk */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = Motate.mk; sourceTree = "<group>"; usesTabs = 1; };
 		D4C78F851957C0AA00A1BE28 /* core_cm0.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = core_cm0.h; sourceTree = "<group>"; };
 		D4C78F861957C0AA00A1BE28 /* core_cm0plus.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = core_cm0plus.h; sourceTree = "<group>"; };
 		D4C78F871957C0AA00A1BE28 /* core_cm3.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = core_cm3.h; sourceTree = "<group>"; };
@@ -4584,6 +4587,8 @@
 		D4C78F59195201A900A1BE28 /* Atmel_sam3xa */ = {
 			isa = PBXGroup;
 			children = (
+				D40A24221AD5F7AB00406A3A /* SamID.cpp */,
+				D40A24231AD5F7AB00406A3A /* SamID.h */,
 				D4C78F5A195201A900A1BE28 /* SamCommon.h */,
 				D4C78F5B195201A900A1BE28 /* SamPins.cpp */,
 				D4C78F5C195201A900A1BE28 /* SamPins.h */,
@@ -10736,6 +10741,7 @@
 				D4C79DEC1957C0AE00A1BE28 /* stm32f0xx_hal_wwdg.c in Sources */,
 				D4C79DA01957C0AE00A1BE28 /* stm32f4xx_hal_usart.c in Sources */,
 				D4C79E271957C0AE00A1BE28 /* stm32f30x_wwdg.c in Sources */,
+				D40A24241AD5F7AB00406A3A /* SamID.cpp in Sources */,
 				D4C79ED11957C0AE00A1BE28 /* stm32f30x_tim.c in Sources */,
 				D4C79DC91957C0AE00A1BE28 /* stm32f0xx_hal_can.c in Sources */,
 				D4C79DF11957C0AE00A1BE28 /* sys.cpp in Sources */,

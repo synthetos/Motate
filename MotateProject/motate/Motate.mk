@@ -42,26 +42,27 @@ export MOTATE_PATH
 
 TOOLS_PATH ?= ${MOTATE_PATH}/../../Tools
 
-SOURCE_DIRS = . ${MOTATE_PATH}
+SOURCE_DIRS ?= .
+SOURCE_DIRS += ${MOTATE_PATH}
 
-FIRST_LINK_SOURCES :=
+FIRST_LINK_SOURCES +=
 
 # List all user directories here
-USER_INCLUDE_DIRS := $(SOURCE_DIRS)
+USER_INCLUDE_DIRS += $(SOURCE_DIRS)
 
 # List the user directory to look for the libraries here
-USER_LIB_DIRS =
+USER_LIB_DIRS +=
 
 # List all user libraries here
-USER_LIBS =
+USER_LIBS +=
 
 # Define optimisation level here
 #OPTIMIZATION ?= 0
 OPTIMIZATION ?= s
 #OPTIMIZATION ?= 3
 
-CFLAGS   :=
-CPPFLAGS :=
+CFLAGS   +=
+CPPFLAGS +=
 
 #
 # End of configuration section
@@ -181,7 +182,7 @@ include ${MOTATE_PATH}/MotateUtilities.mk
 CMSIS_ROOT = ${MOTATE_PATH}/cmsis
 
 
-include $(wildcard ${MOTATE_PATH}/board/*.mk)
+include $(wildcard ./board/*.mk ${MOTATE_PATH}/board/*.mk)
 
 ifneq ("$(_BOARD_FOUND)", "1")
 # errors cannot be indented
