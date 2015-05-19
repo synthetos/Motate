@@ -124,9 +124,9 @@
 #endif /* (defined(__ASSEMBLY__) || defined(__IAR_SYSTEMS_ASM__)) */
 
 /* ========== Instance parameters for SERCOM4 peripheral ========== */
-#define SERCOM4_GCLK_ID_CORE        17
-#define SERCOM4_GCLK_ID_SLOW        12
-#define SERCOM4_INT_MSB             3
-#define SERCOM4_PMSB                3
+#define SERCOM4_GCLK_ID_CORE        17      
+#define SERCOM4_GCLK_ID_SLOW        12      
+#define SERCOM4_INT_MSB             3       
+#define SERCOM4_PMSB                3       
 
 #endif /* _SAMD20_SERCOM4_INSTANCE_ */

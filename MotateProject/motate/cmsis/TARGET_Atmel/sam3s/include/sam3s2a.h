@@ -2,7 +2,7 @@
 /*                  Atmel Microcontroller Software Support                      */
 /*                       SAM Software Package License                           */
 /* ---------------------------------------------------------------------------- */
-/* Copyright (c) 2014, Atmel Corporation                                        */
+/* Copyright (c) 2015, Atmel Corporation                                        */
 /*                                                                              */
 /* All rights reserved.                                                         */
 /*                                                                              */
@@ -58,6 +58,7 @@ typedef enum IRQn
 {
 /******  Cortex-M3 Processor Exceptions Numbers ******************************/
   NonMaskableInt_IRQn   = -14, /**<  2 Non Maskable Interrupt                */
+  HardFault_IRQn        = -13, /**<  3 HardFault Interrupt                   */
   MemoryManagement_IRQn = -12, /**<  4 Cortex-M3 Memory Management Interrupt */
   BusFault_IRQn         = -11, /**<  5 Cortex-M3 Bus Fault Interrupt         */
   UsageFault_IRQn       = -10, /**<  6 Cortex-M3 Usage Fault Interrupt       */
@@ -466,6 +467,25 @@ void WDT_Handler        ( void );
 /* HYSTeresis levels: please refer to Electrical Characteristics */
 #define ACC_ACR_HYST_50MV_MAX	          (0x01UL)
 #define ACC_ACR_HYST_90MV_MAX           (0x11UL)
+
+/* Device characteristics */
+#define CHIP_FREQ_SLCK_RC_MIN           (20000UL)
+#define CHIP_FREQ_SLCK_RC               (32000UL)
+#define CHIP_FREQ_SLCK_RC_MAX           (44000UL)
+#define CHIP_FREQ_MAINCK_RC_4MHZ        (4000000UL)
+#define CHIP_FREQ_MAINCK_RC_8MHZ        (8000000UL)
+#define CHIP_FREQ_MAINCK_RC_12MHZ       (12000000UL)
+#define CHIP_FREQ_CPU_MAX               (120000000UL)
+#define CHIP_FREQ_XTAL_32K              (32768UL)
+#define CHIP_FREQ_XTAL_12M              (12000000UL)
+
+/* Embedded Flash Read Wait State (VDDCORE set at 1.20V) */
+#define CHIP_FREQ_FWS_0                 (20000000UL)  /**< \brief Maximum operating frequency when FWS is 0 */
+#define CHIP_FREQ_FWS_1                 (40000000UL)  /**< \brief Maximum operating frequency when FWS is 1 */
+#define CHIP_FREQ_FWS_2                 (60000000UL)  /**< \brief Maximum operating frequency when FWS is 2 */
+#define CHIP_FREQ_FWS_3                 (80000000UL)  /**< \brief Maximum operating frequency when FWS is 3 */
+#define CHIP_FREQ_FWS_4                 (100000000UL) /**< \brief Maximum operating frequency when FWS is 4 */
+#define CHIP_FREQ_FWS_5                 (123000000UL) /**< \brief Maximum operating frequency when FWS is 5 */
 
 #ifdef __cplusplus
 }

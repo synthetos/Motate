@@ -2,7 +2,7 @@
 /*                  Atmel Microcontroller Software Support                      */
 /*                       SAM Software Package License                           */
 /* ---------------------------------------------------------------------------- */
-/* Copyright (c) 2014, Atmel Corporation                                        */
+/* Copyright (c) 2015, Atmel Corporation                                        */
 /*                                                                              */
 /* All rights reserved.                                                         */
 /*                                                                              */
@@ -155,8 +155,8 @@ typedef struct {
 /* -------- PDMIC_PTSR : (PDMIC Offset: 0x124) Transfer Status Register -------- */
 #define PDMIC_PTSR_RXTEN (0x1u << 0) /**< \brief (PDMIC_PTSR) Receiver Transfer Enable */
 #define PDMIC_PTSR_TXTEN (0x1u << 8) /**< \brief (PDMIC_PTSR) Transmitter Transfer Enable */
-#define PDMIC_PTSR_RXCBEN (0x1u << 16) /**< \brief (PDMIC_PTSR) Receiver Transfer Enable */
-#define PDMIC_PTSR_TXCBEN (0x1u << 18) /**< \brief (PDMIC_PTSR) Transmitter Transfer Enable */
+#define PDMIC_PTSR_RXCBEN (0x1u << 16) /**< \brief (PDMIC_PTSR) Receiver Circular Buffer Enable */
+#define PDMIC_PTSR_TXCBEN (0x1u << 18) /**< \brief (PDMIC_PTSR) Transmitter Circular Buffer Enable */
 #define PDMIC_PTSR_ERR (0x1u << 24) /**< \brief (PDMIC_PTSR) Transfer Bus Error */
 
 /*@}*/

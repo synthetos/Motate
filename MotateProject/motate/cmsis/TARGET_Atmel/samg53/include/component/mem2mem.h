@@ -2,7 +2,7 @@
 /*                  Atmel Microcontroller Software Support                      */
 /*                       SAM Software Package License                           */
 /* ---------------------------------------------------------------------------- */
-/* Copyright (c) 2014, Atmel Corporation                                        */
+/* Copyright (c) 2015, Atmel Corporation                                        */
 /*                                                                              */
 /* All rights reserved.                                                         */
 /*                                                                              */
@@ -125,8 +125,8 @@ typedef struct {
 /* -------- MEM2MEM_PTSR : (MEM2MEM Offset: 0x124) Transfer Status Register -------- */
 #define MEM2MEM_PTSR_RXTEN (0x1u << 0) /**< \brief (MEM2MEM_PTSR) Receiver Transfer Enable */
 #define MEM2MEM_PTSR_TXTEN (0x1u << 8) /**< \brief (MEM2MEM_PTSR) Transmitter Transfer Enable */
-#define MEM2MEM_PTSR_RXCBEN (0x1u << 16) /**< \brief (MEM2MEM_PTSR) Receiver Transfer Enable */
-#define MEM2MEM_PTSR_TXCBEN (0x1u << 18) /**< \brief (MEM2MEM_PTSR) Transmitter Transfer Enable */
+#define MEM2MEM_PTSR_RXCBEN (0x1u << 16) /**< \brief (MEM2MEM_PTSR) Receiver Circular Buffer Enable */
+#define MEM2MEM_PTSR_TXCBEN (0x1u << 18) /**< \brief (MEM2MEM_PTSR) Transmitter Circular Buffer Enable */
 #define MEM2MEM_PTSR_ERR (0x1u << 24) /**< \brief (MEM2MEM_PTSR) Transfer Bus Error */
 
 /*@}*/

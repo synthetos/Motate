@@ -2,7 +2,7 @@
 /*                  Atmel Microcontroller Software Support                      */
 /*                       SAM Software Package License                           */
 /* ---------------------------------------------------------------------------- */
-/* Copyright (c) 2014, Atmel Corporation                                        */
+/* Copyright (c) 2015, Atmel Corporation                                        */
 /*                                                                              */
 /* All rights reserved.                                                         */
 /*                                                                              */
@@ -133,27 +133,27 @@ typedef struct {
 #define TWIHS_CWGR_HOLD_Msk (0x1fu << TWIHS_CWGR_HOLD_Pos) /**< \brief (TWIHS_CWGR) TWD Hold Time Versus TWCK Falling */
 #define TWIHS_CWGR_HOLD(value) ((TWIHS_CWGR_HOLD_Msk & ((value) << TWIHS_CWGR_HOLD_Pos)))
 /* -------- TWIHS_SR : (TWIHS Offset: 0x20) Status Register -------- */
-#define TWIHS_SR_TXCOMP (0x1u << 0) /**< \brief (TWIHS_SR) Transmission Completed (automatically set / reset) */
-#define TWIHS_SR_RXRDY (0x1u << 1) /**< \brief (TWIHS_SR) Receive Holding Register Ready (automatically set / reset) */
-#define TWIHS_SR_TXRDY (0x1u << 2) /**< \brief (TWIHS_SR) Transmit Holding Register Ready (automatically set / reset) */
-#define TWIHS_SR_SVREAD (0x1u << 3) /**< \brief (TWIHS_SR) Slave Read (automatically set / reset) */
-#define TWIHS_SR_SVACC (0x1u << 4) /**< \brief (TWIHS_SR) Slave Access (automatically set / reset) */
-#define TWIHS_SR_GACC (0x1u << 5) /**< \brief (TWIHS_SR) General Call Access (clear on read) */
-#define TWIHS_SR_OVRE (0x1u << 6) /**< \brief (TWIHS_SR) Overrun Error (clear on read) */
-#define TWIHS_SR_UNRE (0x1u << 7) /**< \brief (TWIHS_SR) Underrun Error (clear on read) */
-#define TWIHS_SR_NACK (0x1u << 8) /**< \brief (TWIHS_SR) Not Acknowledged (clear on read) */
-#define TWIHS_SR_ARBLST (0x1u << 9) /**< \brief (TWIHS_SR) Arbitration Lost (clear on read) */
-#define TWIHS_SR_SCLWS (0x1u << 10) /**< \brief (TWIHS_SR) Clock Wait State (automatically set / reset) */
-#define TWIHS_SR_EOSACC (0x1u << 11) /**< \brief (TWIHS_SR) End Of Slave Access (clear on read) */
-#define TWIHS_SR_ENDRX (0x1u << 12) /**< \brief (TWIHS_SR) End of RX Buffer */
-#define TWIHS_SR_ENDTX (0x1u << 13) /**< \brief (TWIHS_SR) End of TX Buffer */
-#define TWIHS_SR_RXBUFF (0x1u << 14) /**< \brief (TWIHS_SR) RX Buffer Full */
-#define TWIHS_SR_TXBUFE (0x1u << 15) /**< \brief (TWIHS_SR) TX Buffer Empty */
-#define TWIHS_SR_MCACK (0x1u << 16) /**< \brief (TWIHS_SR) Master Code Acknowledge */
-#define TWIHS_SR_TOUT (0x1u << 18) /**< \brief (TWIHS_SR) Timeout Error */
-#define TWIHS_SR_PECERR (0x1u << 19) /**< \brief (TWIHS_SR) PEC Error */
-#define TWIHS_SR_SMBDAM (0x1u << 20) /**< \brief (TWIHS_SR) SMBus Default Address Match */
-#define TWIHS_SR_SMBHHM (0x1u << 21) /**< \brief (TWIHS_SR) SMBus Host Header Address Match */
+#define TWIHS_SR_TXCOMP (0x1u << 0) /**< \brief (TWIHS_SR) Transmission Completed (cleared by writing TWIHS_THR) */
+#define TWIHS_SR_RXRDY (0x1u << 1) /**< \brief (TWIHS_SR) Receive Holding Register Ready (cleared by reading TWIHS_RHR) */
+#define TWIHS_SR_TXRDY (0x1u << 2) /**< \brief (TWIHS_SR) Transmit Holding Register Ready (cleared by writing TWIHS_THR) */
+#define TWIHS_SR_SVREAD (0x1u << 3) /**< \brief (TWIHS_SR) Slave Read */
+#define TWIHS_SR_SVACC (0x1u << 4) /**< \brief (TWIHS_SR) Slave Access */
+#define TWIHS_SR_GACC (0x1u << 5) /**< \brief (TWIHS_SR) General Call Access (cleared on read) */
+#define TWIHS_SR_OVRE (0x1u << 6) /**< \brief (TWIHS_SR) Overrun Error (cleared on read) */
+#define TWIHS_SR_UNRE (0x1u << 7) /**< \brief (TWIHS_SR) Underrun Error (cleared on read) */
+#define TWIHS_SR_NACK (0x1u << 8) /**< \brief (TWIHS_SR) Not Acknowledged (cleared on read) */
+#define TWIHS_SR_ARBLST (0x1u << 9) /**< \brief (TWIHS_SR) Arbitration Lost (cleared on read) */
+#define TWIHS_SR_SCLWS (0x1u << 10) /**< \brief (TWIHS_SR) Clock Wait State */
+#define TWIHS_SR_EOSACC (0x1u << 11) /**< \brief (TWIHS_SR) End Of Slave Access (cleared on read) */
+#define TWIHS_SR_ENDRX (0x1u << 12) /**< \brief (TWIHS_SR) End of RX Buffer (cleared by writing TWIHS_RCR or TWIHS_RNCR) */
+#define TWIHS_SR_ENDTX (0x1u << 13) /**< \brief (TWIHS_SR) End of TX Buffer (cleared by writing TWIHS_TCR or TWIHS_TNCR) */
+#define TWIHS_SR_RXBUFF (0x1u << 14) /**< \brief (TWIHS_SR) RX Buffer Full (cleared by writing TWIHS_RCR or TWIHS_RNCR) */
+#define TWIHS_SR_TXBUFE (0x1u << 15) /**< \brief (TWIHS_SR) TX Buffer Empty (cleared by writing TWIHS_TCR or TWIHS_TNCR) */
+#define TWIHS_SR_MCACK (0x1u << 16) /**< \brief (TWIHS_SR) Master Code Acknowledge (cleared on read) */
+#define TWIHS_SR_TOUT (0x1u << 18) /**< \brief (TWIHS_SR) Timeout Error (cleared on read) */
+#define TWIHS_SR_PECERR (0x1u << 19) /**< \brief (TWIHS_SR) PEC Error (cleared on read) */
+#define TWIHS_SR_SMBDAM (0x1u << 20) /**< \brief (TWIHS_SR) SMBus Default Address Match (cleared on read) */
+#define TWIHS_SR_SMBHHM (0x1u << 21) /**< \brief (TWIHS_SR) SMBus Host Header Address Match (cleared on read) */
 #define TWIHS_SR_SCL (0x1u << 24) /**< \brief (TWIHS_SR) SCL line value */
 #define TWIHS_SR_SDA (0x1u << 25) /**< \brief (TWIHS_SR) SDA line value */
 /* -------- TWIHS_IER : (TWIHS Offset: 0x24) Interrupt Enable Register -------- */
@@ -313,8 +313,8 @@ typedef struct {
 /* -------- TWIHS_PTSR : (TWIHS Offset: 0x124) Transfer Status Register -------- */
 #define TWIHS_PTSR_RXTEN (0x1u << 0) /**< \brief (TWIHS_PTSR) Receiver Transfer Enable */
 #define TWIHS_PTSR_TXTEN (0x1u << 8) /**< \brief (TWIHS_PTSR) Transmitter Transfer Enable */
-#define TWIHS_PTSR_RXCBEN (0x1u << 16) /**< \brief (TWIHS_PTSR) Receiver Transfer Enable */
-#define TWIHS_PTSR_TXCBEN (0x1u << 18) /**< \brief (TWIHS_PTSR) Transmitter Transfer Enable */
+#define TWIHS_PTSR_RXCBEN (0x1u << 16) /**< \brief (TWIHS_PTSR) Receiver Circular Buffer Enable */
+#define TWIHS_PTSR_TXCBEN (0x1u << 18) /**< \brief (TWIHS_PTSR) Transmitter Circular Buffer Enable */
 #define TWIHS_PTSR_ERR (0x1u << 24) /**< \brief (TWIHS_PTSR) Transfer Bus Error */
 
 /*@}*/

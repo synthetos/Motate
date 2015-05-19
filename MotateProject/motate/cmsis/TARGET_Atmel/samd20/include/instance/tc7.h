@@ -92,14 +92,14 @@
 #endif /* (defined(__ASSEMBLY__) || defined(__IAR_SYSTEMS_ASM__)) */
 
 /* ========== Instance parameters for TC7 peripheral ========== */
-#define TC7_CC8_NUM                 2
-#define TC7_CC16_NUM                2
-#define TC7_CC32_NUM                2
-#define TC7_DITHERING_EXT           0
-#define TC7_GCLK_ID                 22
-#define TC7_MASTER                  0
-#define TC7_OW_NUM                  2
-#define TC7_PERIOD_EXT              0
-#define TC7_SHADOW_EXT              0
+#define TC7_CC8_NUM                 2       
+#define TC7_CC16_NUM                2       
+#define TC7_CC32_NUM                2       
+#define TC7_DITHERING_EXT           0       
+#define TC7_GCLK_ID                 22      
+#define TC7_MASTER                  0       
+#define TC7_OW_NUM                  2       
+#define TC7_PERIOD_EXT              0       
+#define TC7_SHADOW_EXT              0       
 
 #endif /* _SAMD20_TC7_INSTANCE_ */

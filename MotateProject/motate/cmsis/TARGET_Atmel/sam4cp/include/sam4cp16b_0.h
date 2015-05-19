@@ -2,7 +2,7 @@
 /*                  Atmel Microcontroller Software Support                      */
 /*                       SAM Software Package License                           */
 /* ---------------------------------------------------------------------------- */
-/* Copyright (c) 2014, Atmel Corporation                                        */
+/* Copyright (c) 2015, Atmel Corporation                                        */
 /*                                                                              */
 /* All rights reserved.                                                         */
 /*                                                                              */
@@ -27,8 +27,8 @@
 /* EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.                           */
 /* ---------------------------------------------------------------------------- */
 
-#ifndef _SAM4CP16B_
-#define _SAM4CP16B_
+#ifndef _SAM4CP16B_0_
+#define _SAM4CP16B_0_
 
 /** \addtogroup SAM4CP16B_definitions SAM4CP16B definitions
   This file defines all structures and symbols for SAM4CP16B:
@@ -97,7 +97,7 @@ typedef enum IRQn
   SLCDC_IRQn           = 32, /**< 32 SAM4CP16B Segment LCD Controller (SLCDC) */
   TRNG_IRQn            = 33, /**< 33 SAM4CP16B True Random Generator (TRNG) */
   ICM_IRQn             = 34, /**< 34 SAM4CP16B Integrity Check Module (ICM) */
-  CPKCC_IRQn           = 35, /**< 35 SAM4CP16B Public Key Cryptography Controller (CPKCC) */
+  CPKCC_IRQn           = 35, /**< 35 SAM4C Public Key Cryptography Controller (CPKCC) */
   AES_IRQn             = 36, /**< 36 SAM4CP16B Advanced Enhanced Standard (AES) */
   PIOC_IRQn            = 37, /**< 37 SAM4CP16B Parallel I/O Controller C (PIOC) */
   UART1_IRQn           = 38, /**< 38 SAM4CP16B UART 1 (UART1) */
@@ -161,7 +161,7 @@ typedef struct _DeviceVectors
   void* pfnTC4_Handler;    /* 27 Timer/Counter 4 */
   void* pfnTC5_Handler;    /* 28 Timer/Counter 5 */
   void* pfnADC_Handler;    /* 29 Analog To Digital Converter */
-  void* pfnARM1_Handler;   /* 30 FPU signals : FPIXC, FPOFC, FPUFC, FPIOC, FPDZC, FPIDC, FPIXC */
+  void* pfnARM1_Handler;   /* 30 FPU signals: FPIXC, FPOFC, FPUFC, FPIOC, FPDZC, FPIDC, FPIXC */
   void* pfnIPC0_Handler;   /* 31 Interprocessor communication 0 */
   void* pfnSLCDC_Handler;  /* 32 Segment LCD Controller */
   void* pfnTRNG_Handler;   /* 33 True Random Generator */
@@ -173,8 +173,6 @@ typedef struct _DeviceVectors
   void* pfnIPC1_Handler;   /* 39 Interprocessor communication 1 */
   void* pfnSPI1_Handler;   /* 40 Serial Peripheral Interface 1 */
   void* pfnPWM_Handler;    /* 41 Pulse Width Modulation */
-  void* pvReserved42;      /* SRAM */
-  void* pvReserved43;      /* SMC1 */
 } DeviceVectors;
 
 /* Cortex-M4 core handlers */
@@ -232,7 +230,7 @@ void WDT_Handler        ( void );
  * \brief Configuration of the Cortex-M4 Processor and Core Peripherals 
  */
 
-#define __CM4_REV              0x0001 /**< SAM4CP16B core revision number ([15:8] revision number, [7:0] patch number) */
+#define __CM4_REV              0x0002 /**< SAM4CP16B core revision number ([15:8] revision number, [7:0] patch number) */
 #define __MPU_PRESENT          1      /**< SAM4CP16B does provide a MPU */
 #define __FPU_PRESENT          0      /**< SAM4CP16B does not provide a FPU */
 #define __NVIC_PRIO_BITS       4      /**< SAM4CP16B uses 4 Bits for the Priority Levels */
@@ -364,7 +362,7 @@ void WDT_Handler        ( void );
 #define ID_TC4    (27) /**< \brief Timer/Counter 4 (TC4) */
 #define ID_TC5    (28) /**< \brief Timer/Counter 5 (TC5) */
 #define ID_ADC    (29) /**< \brief Analog To Digital Converter (ADC) */
-#define ID_ARM1   (30) /**< \brief FPU signals : FPIXC, FPOFC, FPUFC, FPIOC, FPDZC, FPIDC, FPIXC (ARM1) */
+#define ID_ARM1   (30) /**< \brief FPU signals: FPIXC, FPOFC, FPUFC, FPIOC, FPDZC, FPIDC, FPIXC (ARM1) */
 #define ID_IPC0   (31) /**< \brief Interprocessor communication 0 (IPC0) */
 #define ID_SLCDC  (32) /**< \brief Segment LCD Controller (SLCDC) */
 #define ID_TRNG   (33) /**< \brief True Random Generator (TRNG) */
@@ -376,6 +374,7 @@ void WDT_Handler        ( void );
 #define ID_IPC1   (39) /**< \brief Interprocessor communication 1 (IPC1) */
 #define ID_SPI1   (40) /**< \brief Serial Peripheral Interface 1 (SPI1) */
 #define ID_PWM    (41) /**< \brief Pulse Width Modulation (PWM) */
+#define ID_SRAM   (42) /**< \brief SRAM1, SRAM2 (SRAM) */
 #define ID_SMC1   (43) /**< \brief Static Memory Controller 1 (SMC1) */
 
 #define ID_PERIPH_COUNT (44) /**< \brief Number of peripheral IDs */

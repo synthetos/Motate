@@ -66,6 +66,6 @@
 #endif /* (defined(__ASSEMBLY__) || defined(__IAR_SYSTEMS_ASM__)) */
 
 /* ========== Instance parameters for WDT peripheral ========== */
-#define WDT_GCLK_ID                 3
+#define WDT_GCLK_ID                 3        // Index of Generic Clock
 
 #endif /* _SAMR21_WDT_INSTANCE_ */

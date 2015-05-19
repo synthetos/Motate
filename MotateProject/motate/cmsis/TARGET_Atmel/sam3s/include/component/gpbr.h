@@ -2,7 +2,7 @@
 /*                  Atmel Microcontroller Software Support                      */
 /*                       SAM Software Package License                           */
 /* ---------------------------------------------------------------------------- */
-/* Copyright (c) 2014, Atmel Corporation                                        */
+/* Copyright (c) 2015, Atmel Corporation                                        */
 /*                                                                              */
 /* All rights reserved.                                                         */
 /*                                                                              */
@@ -31,9 +31,9 @@
 #define _SAM3S_GPBR_COMPONENT_
 
 /* ============================================================================= */
-/**  SOFTWARE API DEFINITION FOR General Purpose Backup Register */
+/**  SOFTWARE API DEFINITION FOR General Purpose Backup Registers */
 /* ============================================================================= */
-/** \addtogroup SAM3S_GPBR General Purpose Backup Register */
+/** \addtogroup SAM3S_GPBR General Purpose Backup Registers */
 /*@{*/
 
 #if !(defined(__ASSEMBLY__) || defined(__IAR_SYSTEMS_ASM__))

@@ -2,7 +2,7 @@
 /*                  Atmel Microcontroller Software Support                      */
 /*                       SAM Software Package License                           */
 /* ---------------------------------------------------------------------------- */
-/* Copyright (c) 2014, Atmel Corporation                                        */
+/* Copyright (c) 2015, Atmel Corporation                                        */
 /*                                                                              */
 /* All rights reserved.                                                         */
 /*                                                                              */
@@ -207,7 +207,7 @@ typedef struct {
 #define   TC_CMR_BSWTRG_TOGGLE (0x3u << 30) /**< \brief (TC_CMR) Toggle */
 /* -------- TC_SMMR : (TC Offset: N/A) Stepper Motor Mode Register -------- */
 #define TC_SMMR_GCEN (0x1u << 0) /**< \brief (TC_SMMR) Gray Count Enable */
-#define TC_SMMR_DOWN (0x1u << 1) /**< \brief (TC_SMMR) DOWN Count */
+#define TC_SMMR_DOWN (0x1u << 1) /**< \brief (TC_SMMR) Down Count */
 /* -------- TC_RAB : (TC Offset: N/A) Register AB -------- */
 #define TC_RAB_RAB_Pos 0
 #define TC_RAB_RAB_Msk (0xffffffffu << TC_RAB_RAB_Pos) /**< \brief (TC_RAB) Register A or Register B */
@@ -275,14 +275,14 @@ typedef struct {
 #define TC_IMR_RXBUFF (0x1u << 9) /**< \brief (TC_IMR) Reception Buffer Full */
 /* -------- TC_EMR : (TC Offset: N/A) Extended Mode Register -------- */
 #define TC_EMR_TRIGSRCA_Pos 0
-#define TC_EMR_TRIGSRCA_Msk (0x3u << TC_EMR_TRIGSRCA_Pos) /**< \brief (TC_EMR) TRIGger SouRCe for input A */
+#define TC_EMR_TRIGSRCA_Msk (0x3u << TC_EMR_TRIGSRCA_Pos) /**< \brief (TC_EMR) Trigger Source for Input A */
 #define   TC_EMR_TRIGSRCA_EXTERNAL_TIOAx (0x0u << 0) /**< \brief (TC_EMR) The trigger/capture input A is driven by external pin TIOAx */
 #define   TC_EMR_TRIGSRCA_PWMx (0x1u << 0) /**< \brief (TC_EMR) The trigger/capture input A is driven internally by PWMx */
 #define TC_EMR_TRIGSRCB_Pos 4
-#define TC_EMR_TRIGSRCB_Msk (0x3u << TC_EMR_TRIGSRCB_Pos) /**< \brief (TC_EMR) TRIGger SouRCe for input B */
+#define TC_EMR_TRIGSRCB_Msk (0x3u << TC_EMR_TRIGSRCB_Pos) /**< \brief (TC_EMR) Trigger Source for Input B */
 #define   TC_EMR_TRIGSRCB_EXTERNAL_TIOBx (0x0u << 4) /**< \brief (TC_EMR) The trigger/capture input B is driven by external pin TIOBx */
 #define   TC_EMR_TRIGSRCB_PWMx (0x1u << 4) /**< \brief (TC_EMR) The trigger/capture input B is driven internally by PWMx */
-#define TC_EMR_NODIVCLK (0x1u << 8) /**< \brief (TC_EMR) NO DIVided CLocK */
+#define TC_EMR_NODIVCLK (0x1u << 8) /**< \brief (TC_EMR) No Divided Clock */
 /* -------- TC_BCR : (TC Offset: 0xC0) Block Control Register -------- */
 #define TC_BCR_SYNC (0x1u << 0) /**< \brief (TC_BCR) Synchro Command */
 /* -------- TC_BMR : (TC Offset: 0xC4) Block Mode Register -------- */
@@ -301,44 +301,46 @@ typedef struct {
 #define   TC_BMR_TC2XC2S_TCLK2 (0x0u << 4) /**< \brief (TC_BMR) Signal connected to XC2: TCLK2 */
 #define   TC_BMR_TC2XC2S_TIOA0 (0x2u << 4) /**< \brief (TC_BMR) Signal connected to XC2: TIOA0 */
 #define   TC_BMR_TC2XC2S_TIOA1 (0x3u << 4) /**< \brief (TC_BMR) Signal connected to XC2: TIOA1 */
-#define TC_BMR_QDEN (0x1u << 8) /**< \brief (TC_BMR) Quadrature Decoder ENabled */
-#define TC_BMR_POSEN (0x1u << 9) /**< \brief (TC_BMR) POSition ENabled */
-#define TC_BMR_SPEEDEN (0x1u << 10) /**< \brief (TC_BMR) SPEED ENabled */
-#define TC_BMR_QDTRANS (0x1u << 11) /**< \brief (TC_BMR) Quadrature Decoding TRANSparent */
-#define TC_BMR_EDGPHA (0x1u << 12) /**< \brief (TC_BMR) EDGe on PHA count mode */
-#define TC_BMR_INVA (0x1u << 13) /**< \brief (TC_BMR) INVerted phA */
-#define TC_BMR_INVB (0x1u << 14) /**< \brief (TC_BMR) INVerted phB */
-#define TC_BMR_INVIDX (0x1u << 15) /**< \brief (TC_BMR) INVerted InDeX */
-#define TC_BMR_SWAP (0x1u << 16) /**< \brief (TC_BMR) SWAP PHA and PHB */
-#define TC_BMR_IDXPHB (0x1u << 17) /**< \brief (TC_BMR) InDeX pin is PHB pin */
-#define TC_BMR_FILTER (0x1u << 19) /**< \brief (TC_BMR) Glitch Filter */
+#define TC_BMR_QDEN (0x1u << 8) /**< \brief (TC_BMR) Quadrature Decoder Enabled */
+#define TC_BMR_POSEN (0x1u << 9) /**< \brief (TC_BMR) Position Enabled */
+#define TC_BMR_SPEEDEN (0x1u << 10) /**< \brief (TC_BMR) Speed Enabled */
+#define TC_BMR_QDTRANS (0x1u << 11) /**< \brief (TC_BMR) Quadrature Decoding Transparent */
+#define TC_BMR_EDGPHA (0x1u << 12) /**< \brief (TC_BMR) Edge on PHA Count Mode */
+#define TC_BMR_INVA (0x1u << 13) /**< \brief (TC_BMR) Inverted PHA */
+#define TC_BMR_INVB (0x1u << 14) /**< \brief (TC_BMR) Inverted PHB */
+#define TC_BMR_INVIDX (0x1u << 15) /**< \brief (TC_BMR) Inverted Index */
+#define TC_BMR_SWAP (0x1u << 16) /**< \brief (TC_BMR) Swap PHA and PHB */
+#define TC_BMR_IDXPHB (0x1u << 17) /**< \brief (TC_BMR) Index Pin is PHB Pin */
+#define TC_BMR_AUTOC (0x1u << 18) /**< \brief (TC_BMR) Auto-Correction of missing pulses */
+#define   TC_BMR_AUTOC_DISABLED (0x0u << 18) /**< \brief (TC_BMR) the detection and auto-correction function is disabled. */
+#define   TC_BMR_AUTOC_ENABLED (0x1u << 18) /**< \brief (TC_BMR) the detection and auto-correction function is enabled. */
 #define TC_BMR_MAXFILT_Pos 20
-#define TC_BMR_MAXFILT_Msk (0x3fu << TC_BMR_MAXFILT_Pos) /**< \brief (TC_BMR) MAXimum FILTer */
+#define TC_BMR_MAXFILT_Msk (0x3fu << TC_BMR_MAXFILT_Pos) /**< \brief (TC_BMR) Maximum Filter */
 #define TC_BMR_MAXFILT(value) ((TC_BMR_MAXFILT_Msk & ((value) << TC_BMR_MAXFILT_Pos)))
 /* -------- TC_QIER : (TC Offset: 0xC8) QDEC Interrupt Enable Register -------- */
-#define TC_QIER_IDX (0x1u << 0) /**< \brief (TC_QIER) InDeX */
-#define TC_QIER_DIRCHG (0x1u << 1) /**< \brief (TC_QIER) DIRection CHanGe */
-#define TC_QIER_QERR (0x1u << 2) /**< \brief (TC_QIER) Quadrature ERRor */
+#define TC_QIER_IDX (0x1u << 0) /**< \brief (TC_QIER) Index */
+#define TC_QIER_DIRCHG (0x1u << 1) /**< \brief (TC_QIER) Direction Change */
+#define TC_QIER_QERR (0x1u << 2) /**< \brief (TC_QIER) Quadrature Error */
 /* -------- TC_QIDR : (TC Offset: 0xCC) QDEC Interrupt Disable Register -------- */
-#define TC_QIDR_IDX (0x1u << 0) /**< \brief (TC_QIDR) InDeX */
-#define TC_QIDR_DIRCHG (0x1u << 1) /**< \brief (TC_QIDR) DIRection CHanGe */
-#define TC_QIDR_QERR (0x1u << 2) /**< \brief (TC_QIDR) Quadrature ERRor */
+#define TC_QIDR_IDX (0x1u << 0) /**< \brief (TC_QIDR) Index */
+#define TC_QIDR_DIRCHG (0x1u << 1) /**< \brief (TC_QIDR) Direction Change */
+#define TC_QIDR_QERR (0x1u << 2) /**< \brief (TC_QIDR) Quadrature Error */
 /* -------- TC_QIMR : (TC Offset: 0xD0) QDEC Interrupt Mask Register -------- */
-#define TC_QIMR_IDX (0x1u << 0) /**< \brief (TC_QIMR) InDeX */
-#define TC_QIMR_DIRCHG (0x1u << 1) /**< \brief (TC_QIMR) DIRection CHanGe */
-#define TC_QIMR_QERR (0x1u << 2) /**< \brief (TC_QIMR) Quadrature ERRor */
+#define TC_QIMR_IDX (0x1u << 0) /**< \brief (TC_QIMR) Index */
+#define TC_QIMR_DIRCHG (0x1u << 1) /**< \brief (TC_QIMR) Direction Change */
+#define TC_QIMR_QERR (0x1u << 2) /**< \brief (TC_QIMR) Quadrature Error */
 /* -------- TC_QISR : (TC Offset: 0xD4) QDEC Interrupt Status Register -------- */
-#define TC_QISR_IDX (0x1u << 0) /**< \brief (TC_QISR) InDeX */
-#define TC_QISR_DIRCHG (0x1u << 1) /**< \brief (TC_QISR) DIRection CHanGe */
-#define TC_QISR_QERR (0x1u << 2) /**< \brief (TC_QISR) Quadrature ERRor */
-#define TC_QISR_DIR (0x1u << 8) /**< \brief (TC_QISR) DIRection */
+#define TC_QISR_IDX (0x1u << 0) /**< \brief (TC_QISR) Index */
+#define TC_QISR_DIRCHG (0x1u << 1) /**< \brief (TC_QISR) Direction Change */
+#define TC_QISR_QERR (0x1u << 2) /**< \brief (TC_QISR) Quadrature Error */
+#define TC_QISR_DIR (0x1u << 8) /**< \brief (TC_QISR) Direction */
 /* -------- TC_FMR : (TC Offset: 0xD8) Fault Mode Register -------- */
-#define TC_FMR_ENCF0 (0x1u << 0) /**< \brief (TC_FMR) ENable Compare Fault Channel 0 */
-#define TC_FMR_ENCF1 (0x1u << 1) /**< \brief (TC_FMR) ENable Compare Fault Channel 1 */
+#define TC_FMR_ENCF0 (0x1u << 0) /**< \brief (TC_FMR) Enable Compare Fault Channel 0 */
+#define TC_FMR_ENCF1 (0x1u << 1) /**< \brief (TC_FMR) Enable Compare Fault Channel 1 */
 /* -------- TC_WPMR : (TC Offset: 0xE4) Write Protection Mode Register -------- */
-#define TC_WPMR_WPEN (0x1u << 0) /**< \brief (TC_WPMR) Write Protect Enable */
+#define TC_WPMR_WPEN (0x1u << 0) /**< \brief (TC_WPMR) Write Protection Enable */
 #define TC_WPMR_WPKEY_Pos 8
-#define TC_WPMR_WPKEY_Msk (0xffffffu << TC_WPMR_WPKEY_Pos) /**< \brief (TC_WPMR) Write Protect KEY */
+#define TC_WPMR_WPKEY_Msk (0xffffffu << TC_WPMR_WPKEY_Pos) /**< \brief (TC_WPMR) Write Protection Key */
 #define   TC_WPMR_WPKEY_PASSWD (0x54494Du << 8) /**< \brief (TC_WPMR) Writing any other value in this field aborts the write operation of the WPEN bit.Always reads as 0. */
 /* -------- TC_RPR : (TC Offset: N/A) Receive Pointer Register -------- */
 #define TC_RPR_RXPTR_Pos 0

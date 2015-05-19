@@ -92,14 +92,14 @@
 #endif /* (defined(__ASSEMBLY__) || defined(__IAR_SYSTEMS_ASM__)) */
 
 /* ========== Instance parameters for TC3 peripheral ========== */
-#define TC3_CC8_NUM                 2
-#define TC3_CC16_NUM                2
-#define TC3_CC32_NUM                2
-#define TC3_DITHERING_EXT           0
-#define TC3_GCLK_ID                 20
-#define TC3_MASTER                  0
-#define TC3_OW_NUM                  2
-#define TC3_PERIOD_EXT              0
-#define TC3_SHADOW_EXT              0
+#define TC3_CC8_NUM                 2       
+#define TC3_CC16_NUM                2       
+#define TC3_CC32_NUM                2       
+#define TC3_DITHERING_EXT           0       
+#define TC3_GCLK_ID                 20      
+#define TC3_MASTER                  0       
+#define TC3_OW_NUM                  2       
+#define TC3_PERIOD_EXT              0       
+#define TC3_SHADOW_EXT              0       
 
 #endif /* _SAMD20_TC3_INSTANCE_ */

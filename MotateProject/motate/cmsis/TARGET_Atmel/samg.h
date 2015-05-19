@@ -1,7 +1,7 @@
 /* ----------------------------------------------------------------------------
  *         SAM Software Package License
  * ----------------------------------------------------------------------------
- * Copyright (c) 2014, Atmel Corporation
+ * Copyright (c) 2015, Atmel Corporation
  *
  * All rights reserved.
  *
@@ -43,15 +43,9 @@
 #include "samg54/include/samg54.h"
 #elif defined (__SAMG54N19__)
 #include "samg54/include/samg54.h"
-#elif defined (__SAMG55G18__)
-#include "samg55/include/samg55.h"
 #elif defined (__SAMG55G19__)
 #include "samg55/include/samg55.h"
-#elif defined (__SAMG55J18__)
-#include "samg55/include/samg55.h"
 #elif defined (__SAMG55J19__)
-#include "samg55/include/samg55.h"
-#elif defined (__SAMG55N19__)
 #include "samg55/include/samg55.h"
 #endif
 

@@ -72,7 +72,7 @@
 #endif /* (defined(__ASSEMBLY__) || defined(__IAR_SYSTEMS_ASM__)) */
 
 /* ========== Instance parameters for I2S peripheral ========== */
-#define I2S_CLK_NUM                 2
+#define I2S_CLK_NUM                 2        // Number of clock units
 #define I2S_DMAC_ID_RX_0            41
 #define I2S_DMAC_ID_RX_1            42
 #define I2S_DMAC_ID_RX_LSB          41
@@ -88,7 +88,7 @@
 #define I2S_GCLK_ID_LSB             35
 #define I2S_GCLK_ID_MSB             36
 #define I2S_GCLK_ID_SIZE            2
-#define I2S_MAX_SLOTS               8
-#define I2S_SER_NUM                 2
+#define I2S_MAX_SLOTS               8        // Max number of data slots in frame
+#define I2S_SER_NUM                 2        // Number of serializers
 
 #endif /* _SAMD21_I2S_INSTANCE_ */

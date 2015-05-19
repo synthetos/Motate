@@ -2,7 +2,7 @@
 /*                  Atmel Microcontroller Software Support                      */
 /*                       SAM Software Package License                           */
 /* ---------------------------------------------------------------------------- */
-/* Copyright (c) 2014, Atmel Corporation                                        */
+/* Copyright (c) 2015, Atmel Corporation                                        */
 /*                                                                              */
 /* All rights reserved.                                                         */
 /*                                                                              */
@@ -58,6 +58,7 @@ typedef struct {
 /* -------- ACC_MR : (ACC Offset: 0x04) Mode Register -------- */
 #define ACC_MR_SELMINUS_Pos 0
 #define ACC_MR_SELMINUS_Msk (0x7u << ACC_MR_SELMINUS_Pos) /**< \brief (ACC_MR) SELection for MINUS comparator input */
+#define ACC_MR_SELMINUS(value) ((ACC_MR_SELMINUS_Msk & ((value) << ACC_MR_SELMINUS_Pos)))
 #define   ACC_MR_SELMINUS_TS (0x0u << 0) /**< \brief (ACC_MR) SelectTS */
 #define   ACC_MR_SELMINUS_ADVREF (0x1u << 0) /**< \brief (ACC_MR) Select ADVREF */
 #define   ACC_MR_SELMINUS_DAC0 (0x2u << 0) /**< \brief (ACC_MR) Select DAC0 */
@@ -68,6 +69,7 @@ typedef struct {
 #define   ACC_MR_SELMINUS_AD3 (0x7u << 0) /**< \brief (ACC_MR) Select AD3 */
 #define ACC_MR_SELPLUS_Pos 4
 #define ACC_MR_SELPLUS_Msk (0x7u << ACC_MR_SELPLUS_Pos) /**< \brief (ACC_MR) SELection for PLUS comparator input */
+#define ACC_MR_SELPLUS(value) ((ACC_MR_SELPLUS_Msk & ((value) << ACC_MR_SELPLUS_Pos)))
 #define   ACC_MR_SELPLUS_AD0 (0x0u << 4) /**< \brief (ACC_MR) Select AD0 */
 #define   ACC_MR_SELPLUS_AD1 (0x1u << 4) /**< \brief (ACC_MR) Select AD1 */
 #define   ACC_MR_SELPLUS_AD2 (0x2u << 4) /**< \brief (ACC_MR) Select AD2 */
@@ -81,6 +83,7 @@ typedef struct {
 #define   ACC_MR_ACEN_EN (0x1u << 8) /**< \brief (ACC_MR) Analog Comparator Enabled. */
 #define ACC_MR_EDGETYP_Pos 9
 #define ACC_MR_EDGETYP_Msk (0x3u << ACC_MR_EDGETYP_Pos) /**< \brief (ACC_MR) EDGE TYPe */
+#define ACC_MR_EDGETYP(value) ((ACC_MR_EDGETYP_Msk & ((value) << ACC_MR_EDGETYP_Pos)))
 #define   ACC_MR_EDGETYP_RISING (0x0u << 9) /**< \brief (ACC_MR) only rising edge of comparator output */
 #define   ACC_MR_EDGETYP_FALLING (0x1u << 9) /**< \brief (ACC_MR) falling edge of comparator output */
 #define   ACC_MR_EDGETYP_ANY (0x2u << 9) /**< \brief (ACC_MR) any edge of comparator output */

@@ -92,14 +92,14 @@
 #endif /* (defined(__ASSEMBLY__) || defined(__IAR_SYSTEMS_ASM__)) */
 
 /* ========== Instance parameters for TC5 peripheral ========== */
-#define TC5_CC8_NUM                 2
-#define TC5_CC16_NUM                2
-#define TC5_CC32_NUM                2
-#define TC5_DITHERING_EXT           0
-#define TC5_GCLK_ID                 21
-#define TC5_MASTER                  0
-#define TC5_OW_NUM                  2
-#define TC5_PERIOD_EXT              0
-#define TC5_SHADOW_EXT              0
+#define TC5_CC8_NUM                 2       
+#define TC5_CC16_NUM                2       
+#define TC5_CC32_NUM                2       
+#define TC5_DITHERING_EXT           0       
+#define TC5_GCLK_ID                 21      
+#define TC5_MASTER                  0       
+#define TC5_OW_NUM                  2       
+#define TC5_PERIOD_EXT              0       
+#define TC5_SHADOW_EXT              0       
 
 #endif /* _SAMD20_TC5_INSTANCE_ */

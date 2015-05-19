@@ -2,7 +2,7 @@
 /*                  Atmel Microcontroller Software Support                      */
 /*                       SAM Software Package License                           */
 /* ---------------------------------------------------------------------------- */
-/* Copyright (c) 2014, Atmel Corporation                                        */
+/* Copyright (c) 2015, Atmel Corporation                                        */
 /*                                                                              */
 /* All rights reserved.                                                         */
 /*                                                                              */
@@ -96,8 +96,8 @@ typedef struct {
 /* -------- PERIPH_PTSR : (PDC Offset: 0x24) Transfer Status Register -------- */
 #define PERIPH_PTSR_RXTEN (0x1u << 0) /**< \brief (PERIPH_PTSR) Receiver Transfer Enable */
 #define PERIPH_PTSR_TXTEN (0x1u << 8) /**< \brief (PERIPH_PTSR) Transmitter Transfer Enable */
-#define PERIPH_PTSR_RXCBEN (0x1u << 16) /**< \brief (PERIPH_PTSR) Receiver Transfer Enable */
-#define PERIPH_PTSR_TXCBEN (0x1u << 18) /**< \brief (PERIPH_PTSR) Transmitter Transfer Enable */
+#define PERIPH_PTSR_RXCBEN (0x1u << 16) /**< \brief (PERIPH_PTSR) Receiver Circular Buffer Enable */
+#define PERIPH_PTSR_TXCBEN (0x1u << 18) /**< \brief (PERIPH_PTSR) Transmitter Circular Buffer Enable */
 #define PERIPH_PTSR_ERR (0x1u << 24) /**< \brief (PERIPH_PTSR) Transfer Bus Error */
 
 /*@}*/

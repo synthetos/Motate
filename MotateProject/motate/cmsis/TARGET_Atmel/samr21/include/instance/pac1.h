@@ -54,6 +54,6 @@
 #endif /* (defined(__ASSEMBLY__) || defined(__IAR_SYSTEMS_ASM__)) */
 
 /* ========== Instance parameters for PAC1 peripheral ========== */
-#define PAC1_WPROT_DEFAULT_VAL      0x00000000
+#define PAC1_WPROT_DEFAULT_VAL      0x00000002 // PAC protection mask at reset
 
 #endif /* _SAMR21_PAC1_INSTANCE_ */

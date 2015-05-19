@@ -2,7 +2,7 @@
 /*                  Atmel Microcontroller Software Support                      */
 /*                       SAM Software Package License                           */
 /* ---------------------------------------------------------------------------- */
-/* Copyright (c) 2014, Atmel Corporation                                        */
+/* Copyright (c) 2015, Atmel Corporation                                        */
 /*                                                                              */
 /* All rights reserved.                                                         */
 /*                                                                              */
@@ -132,7 +132,7 @@ void CAN0_Handler   ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
 void CAN1_Handler   ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
 
 /* Exception Table */
-__attribute__ ((used,section(".vectors")))
+__attribute__ ((section(".vectors")))
 const DeviceVectors exception_table = {
 
         /* Configure Initial Stack Pointer, using linker-generated symbols */

@@ -2,7 +2,7 @@
 /*                  Atmel Microcontroller Software Support                      */
 /*                       SAM Software Package License                           */
 /* ---------------------------------------------------------------------------- */
-/* Copyright (c) 2014, Atmel Corporation                                        */
+/* Copyright (c) 2015, Atmel Corporation                                        */
 /*                                                                              */
 /* All rights reserved.                                                         */
 /*                                                                              */
@@ -123,6 +123,17 @@ SECTIONS
         _estack = .;
     } > ram
 
+    /* heap section */
+    .heap (NOLOAD):
+    {
+        . = ALIGN(8);
+         _sheap = .;
+        . = . + HEAP_SIZE;
+        . = ALIGN(8);
+        _eheap = .;
+    } > ram
+
     . = ALIGN(4);
     _end = . ;
+    _ram_end_ = ORIGIN(ram) + LENGTH(ram) -1 ;
 }

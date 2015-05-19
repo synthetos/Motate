@@ -92,16 +92,16 @@ typedef volatile       uint8_t  RwReg8;  /**< Read-Write  8-bit register (volati
 /** Interrupt Number Definition */
 typedef enum IRQn
 {
-  /******  Cortex-M4 Processor Exceptions Numbers *******************************/
-  NonMaskableInt_IRQn      = -14, /**<  2 Non Maskable Interrupt                */
-  HardFault_IRQn           = -13, /**<  3 Cortex-M4 Hard Fault Interrupt        */
-  MemoryManagement_IRQn    = -12, /**<  4 Cortex-M4 Memory Management Interrupt */
-  BusFault_IRQn            = -11, /**<  5 Cortex-M4 Bus Fault Interrupt         */
-  UsageFault_IRQn          = -10, /**<  6 Cortex-M4 Usage Fault Interrupt       */
-  SVCall_IRQn              = -5,  /**< 11 Cortex-M4 SV Call Interrupt           */
-  DebugMonitor_IRQn        = -4,  /**< 12 Cortex-M4 Debug Monitor Interrupt     */
-  PendSV_IRQn              = -2,  /**< 14 Cortex-M4 Pend SV Interrupt           */
-  SysTick_IRQn             = -1,  /**< 15 Cortex-M4 System Tick Interrupt       */
+  /******  Cortex-M4 Processor Exceptions Numbers ******************************/
+  NonMaskableInt_IRQn      = -14,/**<  2 Non Maskable Interrupt                */
+  HardFault_IRQn           = -13,/**<  3 Cortex-M4 Hard Fault Interrupt        */
+  MemoryManagement_IRQn    = -12,/**<  4 Cortex-M4 Memory Management Interrupt */
+  BusFault_IRQn            = -11,/**<  5 Cortex-M4 Bus Fault Interrupt         */
+  UsageFault_IRQn          = -10,/**<  6 Cortex-M4 Usage Fault Interrupt       */
+  SVCall_IRQn              = -5, /**< 11 Cortex-M4 SV Call Interrupt           */
+  DebugMonitor_IRQn        = -4, /**< 12 Cortex-M4 Debug Monitor Interrupt     */
+  PendSV_IRQn              = -2, /**< 14 Cortex-M4 Pend SV Interrupt           */
+  SysTick_IRQn             = -1, /**< 15 Cortex-M4 System Tick Interrupt       */
   /******  SAM4LS8B-specific Interrupt Numbers ***********************/
   HFLASHC_IRQn             =  0, /**<  0 SAM4LS8B Flash Controller (HFLASHC) */
   PDCA_0_IRQn              =  1, /**<  1 SAM4LS8B Peripheral DMA Controller (PDCA) */
@@ -416,39 +416,39 @@ void TWIM3_Handler               ( void );
 /** \defgroup SAM4LS8B_api Peripheral Software API */
 /*@{*/
 
-#include "component/component_abdacb.h"
-#include "component/component_acifc.h"
-#include "component/component_adcife.h"
-#include "component/component_ast.h"
-#include "component/component_bpm.h"
-#include "component/component_bscif.h"
-#include "component/component_catb.h"
-#include "component/component_chipid.h"
-#include "component/component_crccu.h"
-#include "component/component_dacc.h"
-#include "component/component_eic.h"
-#include "component/component_flashcalw.h"
-#include "component/component_freqm.h"
-#include "component/component_gloc.h"
-#include "component/component_gpio.h"
-#include "component/component_hcache.h"
-#include "component/component_hmatrixb.h"
-#include "component/component_iisc.h"
-#include "component/component_parc.h"
-#include "component/component_pdca.h"
-#include "component/component_pevc.h"
-#include "component/component_picouart.h"
-#include "component/component_pm.h"
-#include "component/component_scif.h"
-#include "component/component_smap.h"
-#include "component/component_spi.h"
-#include "component/component_tc.h"
-#include "component/component_trng.h"
-#include "component/component_twim.h"
-#include "component/component_twis.h"
-#include "component/component_usart.h"
-#include "component/component_usbc.h"
-#include "component/component_wdt.h"
+#include "component/abdacb.h"
+#include "component/acifc.h"
+#include "component/adcife.h"
+#include "component/ast.h"
+#include "component/bpm.h"
+#include "component/bscif.h"
+#include "component/catb.h"
+#include "component/chipid.h"
+#include "component/crccu.h"
+#include "component/dacc.h"
+#include "component/eic.h"
+#include "component/flashcalw.h"
+#include "component/freqm.h"
+#include "component/gloc.h"
+#include "component/gpio.h"
+#include "component/hcache.h"
+#include "component/hmatrixb.h"
+#include "component/iisc.h"
+#include "component/parc.h"
+#include "component/pdca.h"
+#include "component/pevc.h"
+#include "component/picouart.h"
+#include "component/pm.h"
+#include "component/scif.h"
+#include "component/smap.h"
+#include "component/spi.h"
+#include "component/tc.h"
+#include "component/trng.h"
+#include "component/twim.h"
+#include "component/twis.h"
+#include "component/usart.h"
+#include "component/usbc.h"
+#include "component/wdt.h"
 /*@}*/
 
 /* ************************************************************************** */
@@ -457,47 +457,47 @@ void TWIM3_Handler               ( void );
 /** \defgroup SAM4LS8B_reg Registers Access Definitions */
 /*@{*/
 
-#include "instance/instance_abdacb.h"
-#include "instance/instance_acifc.h"
-#include "instance/instance_adcife.h"
-#include "instance/instance_ast.h"
-#include "instance/instance_bpm.h"
-#include "instance/instance_bscif.h"
-#include "instance/instance_catb.h"
-#include "instance/instance_chipid.h"
-#include "instance/instance_crccu.h"
-#include "instance/instance_dacc.h"
-#include "instance/instance_eic.h"
-#include "instance/instance_hflashc.h"
-#include "instance/instance_freqm.h"
-#include "instance/instance_gloc.h"
-#include "instance/instance_gpio.h"
-#include "instance/instance_hcache.h"
-#include "instance/instance_hmatrix.h"
-#include "instance/instance_iisc.h"
-#include "instance/instance_parc.h"
-#include "instance/instance_pdca.h"
-#include "instance/instance_pevc.h"
-#include "instance/instance_picouart.h"
-#include "instance/instance_pm.h"
-#include "instance/instance_scif.h"
-#include "instance/instance_smap.h"
-#include "instance/instance_spi.h"
-#include "instance/instance_tc0.h"
-#include "instance/instance_tc1.h"
-#include "instance/instance_trng.h"
-#include "instance/instance_twim0.h"
-#include "instance/instance_twim1.h"
-#include "instance/instance_twim2.h"
-#include "instance/instance_twim3.h"
-#include "instance/instance_twis0.h"
-#include "instance/instance_twis1.h"
-#include "instance/instance_usart0.h"
-#include "instance/instance_usart1.h"
-#include "instance/instance_usart2.h"
-#include "instance/instance_usart3.h"
-#include "instance/instance_usbc.h"
-#include "instance/instance_wdt.h"
+#include "instance/abdacb.h"
+#include "instance/acifc.h"
+#include "instance/adcife.h"
+#include "instance/ast.h"
+#include "instance/bpm.h"
+#include "instance/bscif.h"
+#include "instance/catb.h"
+#include "instance/chipid.h"
+#include "instance/crccu.h"
+#include "instance/dacc.h"
+#include "instance/eic.h"
+#include "instance/hflashc.h"
+#include "instance/freqm.h"
+#include "instance/gloc.h"
+#include "instance/gpio.h"
+#include "instance/hcache.h"
+#include "instance/hmatrix.h"
+#include "instance/iisc.h"
+#include "instance/parc.h"
+#include "instance/pdca.h"
+#include "instance/pevc.h"
+#include "instance/picouart.h"
+#include "instance/pm.h"
+#include "instance/scif.h"
+#include "instance/smap.h"
+#include "instance/spi.h"
+#include "instance/tc0.h"
+#include "instance/tc1.h"
+#include "instance/trng.h"
+#include "instance/twim0.h"
+#include "instance/twim1.h"
+#include "instance/twim2.h"
+#include "instance/twim3.h"
+#include "instance/twis0.h"
+#include "instance/twis1.h"
+#include "instance/usart0.h"
+#include "instance/usart1.h"
+#include "instance/usart2.h"
+#include "instance/usart3.h"
+#include "instance/usbc.h"
+#include "instance/wdt.h"
 /*@}*/
 
 /* ************************************************************************** */
@@ -509,16 +509,16 @@ void TWIM3_Handler               ( void );
 // Peripheral instances on HTOP0 bridge
 #define ID_IISC           0 /**< \brief Inter-IC Sound (I2S) Controller (IISC) */
 #define ID_SPI            1 /**< \brief Serial Peripheral Interface (SPI) */
-#define ID_TC0            2 /**< \brief Timer/Counter TC (TC0) */
-#define ID_TC1            3 /**< \brief Timer/Counter TC (TC1) */
-#define ID_TWIM0          4 /**< \brief Two-wire Master Interface TWIM (TWIM0) */
-#define ID_TWIS0          5 /**< \brief Two-wire Slave Interface TWIS (TWIS0) */
-#define ID_TWIM1          6 /**< \brief Two-wire Master Interface TWIM (TWIM1) */
-#define ID_TWIS1          7 /**< \brief Two-wire Slave Interface TWIS (TWIS1) */
-#define ID_USART0         8 /**< \brief Universal Synchronous Asynchronous Receiver Transmitter USART (USART0) */
-#define ID_USART1         9 /**< \brief Universal Synchronous Asynchronous Receiver Transmitter USART (USART1) */
-#define ID_USART2        10 /**< \brief Universal Synchronous Asynchronous Receiver Transmitter USART (USART2) */
-#define ID_USART3        11 /**< \brief Universal Synchronous Asynchronous Receiver Transmitter USART (USART3) */
+#define ID_TC0            2 /**< \brief Timer/Counter 0 (TC0) */
+#define ID_TC1            3 /**< \brief Timer/Counter 1 (TC1) */
+#define ID_TWIM0          4 /**< \brief Two-wire Master Interface 0 (TWIM0) */
+#define ID_TWIS0          5 /**< \brief Two-wire Slave Interface 0 (TWIS0) */
+#define ID_TWIM1          6 /**< \brief Two-wire Master Interface 1 (TWIM1) */
+#define ID_TWIS1          7 /**< \brief Two-wire Slave Interface 1 (TWIS1) */
+#define ID_USART0         8 /**< \brief Universal Synchronous Asynchronous Receiver Transmitter 0 (USART0) */
+#define ID_USART1         9 /**< \brief Universal Synchronous Asynchronous Receiver Transmitter 1 (USART1) */
+#define ID_USART2        10 /**< \brief Universal Synchronous Asynchronous Receiver Transmitter 2 (USART2) */
+#define ID_USART3        11 /**< \brief Universal Synchronous Asynchronous Receiver Transmitter 3 (USART3) */
 #define ID_ADCIFE        12 /**< \brief ADC controller interface (ADCIFE) */
 #define ID_DACC          13 /**< \brief DAC Controller (DACC) */
 #define ID_ACIFC         14 /**< \brief Analog Comparator Interface (ACIFC) */
@@ -527,8 +527,8 @@ void TWIM3_Handler               ( void );
 #define ID_TRNG          17 /**< \brief True Random Number Generator (TRNG) */
 #define ID_PARC          18 /**< \brief Parallel Capture (PARC) */
 #define ID_CATB          19 /**< \brief Capacitive Touch Module B (CATB) */
-#define ID_TWIM2         20 /**< \brief Two-wire Master Interface TWIM (TWIM2) */
-#define ID_TWIM3         21 /**< \brief Two-wire Master Interface TWIM (TWIM3) */
+#define ID_TWIM2         21 /**< \brief Two-wire Master Interface 2 (TWIM2) */
+#define ID_TWIM3         22 /**< \brief Two-wire Master Interface 3 (TWIM3) */
 
 // Peripheral instances on HTOP1 bridge
 #define ID_HFLASHC       32 /**< \brief Flash Controller (HFLASHC) */
@@ -803,7 +803,7 @@ void TWIM3_Handler               ( void );
 /** \defgroup SAM4LS8B_gpio GPIO Definitions */
 /*@{*/
 
-#include "pio/pio_sam4ls8b.h"
+#include "pio/sam4ls8b.h"
 /*@}*/
 
 /* ************************************************************************** */
@@ -878,6 +878,8 @@ void TWIM3_Handler               ( void );
 #define FLASH_USER_PAGE_ADDR  (0x00800000U) /**< FLASH_USER_PAGE base address */
 #define HRAMC0_ADDR           (0x20000000U) /**< HRAMC0 base address */
 #define HRAMC1_ADDR           (0x21000000U) /**< HRAMC1 base address */
+
+#define DSU_DID_RESETVALUE    0xAB0B0AE0
 
 /* ************************************************************************** */
 /**  ELECTRICAL DEFINITIONS FOR SAM4LS8B */

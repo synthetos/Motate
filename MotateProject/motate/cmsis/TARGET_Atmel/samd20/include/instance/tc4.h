@@ -92,14 +92,14 @@
 #endif /* (defined(__ASSEMBLY__) || defined(__IAR_SYSTEMS_ASM__)) */
 
 /* ========== Instance parameters for TC4 peripheral ========== */
-#define TC4_CC8_NUM                 2
-#define TC4_CC16_NUM                2
-#define TC4_CC32_NUM                2
-#define TC4_DITHERING_EXT           0
-#define TC4_GCLK_ID                 21
-#define TC4_MASTER                  1
-#define TC4_OW_NUM                  2
-#define TC4_PERIOD_EXT              0
-#define TC4_SHADOW_EXT              0
+#define TC4_CC8_NUM                 2       
+#define TC4_CC16_NUM                2       
+#define TC4_CC32_NUM                2       
+#define TC4_DITHERING_EXT           0       
+#define TC4_GCLK_ID                 21      
+#define TC4_MASTER                  1       
+#define TC4_OW_NUM                  2       
+#define TC4_PERIOD_EXT              0       
+#define TC4_SHADOW_EXT              0       
 
 #endif /* _SAMD20_TC4_INSTANCE_ */

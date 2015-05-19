@@ -2,7 +2,7 @@
 /*                  Atmel Microcontroller Software Support                      */
 /*                       SAM Software Package License                           */
 /* ---------------------------------------------------------------------------- */
-/* Copyright (c) 2014, Atmel Corporation                                        */
+/* Copyright (c) 2015, Atmel Corporation                                        */
 /*                                                                              */
 /* All rights reserved.                                                         */
 /*                                                                              */
@@ -43,6 +43,9 @@ MEMORY
 }
 
 /* The stack size used by the application. NOTE: you need to adjust according to your application. */
-STACK_SIZE = DEFINED(STACK_SIZE) ? STACK_SIZE : 0x3000;
+STACK_SIZE = DEFINED(STACK_SIZE) ? STACK_SIZE : 0x400;
+
+/* The heapsize used by the application. NOTE: you need to adjust according to your application. */
+HEAP_SIZE = DEFINED(HEAP_SIZE) ? HEAP_SIZE : 0x200;
 
 INCLUDE sam3s_flash.ld

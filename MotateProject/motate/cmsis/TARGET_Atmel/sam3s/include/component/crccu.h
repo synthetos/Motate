@@ -2,7 +2,7 @@
 /*                  Atmel Microcontroller Software Support                      */
 /*                       SAM Software Package License                           */
 /* ---------------------------------------------------------------------------- */
-/* Copyright (c) 2014, Atmel Corporation                                        */
+/* Copyright (c) 2015, Atmel Corporation                                        */
 /*                                                                              */
 /* All rights reserved.                                                         */
 /*                                                                              */
@@ -83,6 +83,7 @@ typedef struct {
 #define CRCCU_MR_COMPARE (0x1u << 1) /**< \brief (CRCCU_MR) CRC Compare */
 #define CRCCU_MR_PTYPE_Pos 2
 #define CRCCU_MR_PTYPE_Msk (0x3u << CRCCU_MR_PTYPE_Pos) /**< \brief (CRCCU_MR) Primitive Polynomial */
+#define CRCCU_MR_PTYPE(value) ((CRCCU_MR_PTYPE_Msk & ((value) << CRCCU_MR_PTYPE_Pos)))
 #define   CRCCU_MR_PTYPE_CCITT8023 (0x0u << 2) /**< \brief (CRCCU_MR) Polynom 0x04C11DB7 */
 #define   CRCCU_MR_PTYPE_CASTAGNOLI (0x1u << 2) /**< \brief (CRCCU_MR) Polynom 0x1EDC6F41 */
 #define   CRCCU_MR_PTYPE_CCITT16 (0x2u << 2) /**< \brief (CRCCU_MR) Polynom 0x1021 */

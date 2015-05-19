@@ -2,7 +2,7 @@
 /*                  Atmel Microcontroller Software Support                      */
 /*                       SAM Software Package License                           */
 /* ---------------------------------------------------------------------------- */
-/* Copyright (c) 2014, Atmel Corporation                                        */
+/* Copyright (c) 2015, Atmel Corporation                                        */
 /*                                                                              */
 /* All rights reserved.                                                         */
 /*                                                                              */
@@ -48,6 +48,7 @@ typedef struct {
 #define WDT_CR_WDRSTT (0x1u << 0) /**< \brief (WDT_CR) Watchdog Restart */
 #define WDT_CR_KEY_Pos 24
 #define WDT_CR_KEY_Msk (0xffu << WDT_CR_KEY_Pos) /**< \brief (WDT_CR) Password. */
+#define WDT_CR_KEY(value) ((WDT_CR_KEY_Msk & ((value) << WDT_CR_KEY_Pos)))
 #define   WDT_CR_KEY_PASSWD (0xA5u << 24) /**< \brief (WDT_CR) Writing any other value in this field aborts the write operation. */
 /* -------- WDT_MR : (WDT Offset: 0x04) Mode Register -------- */
 #define WDT_MR_WDV_Pos 0

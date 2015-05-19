@@ -1,7 +1,7 @@
 /* ----------------------------------------------------------------------------
  *         SAM Software Package License
  * ----------------------------------------------------------------------------
- * Copyright (c) 2014, Atmel Corporation
+ * Copyright (c) 2015, Atmel Corporation
  *
  * All rights reserved.
  *
@@ -33,6 +33,10 @@
 #include "sam4cp16b_0.h"
 #elif defined (__SAM4CP16B_1__)
 #include "sam4cp16b_1.h"
+#elif defined (__SAM4CP16C_0__)
+#include "sam4cp16c_0.h"
+#elif defined (__SAM4CP16C_1__)
+#include "sam4cp16c_1.h"
 #else
   #error Library does not support the specified device.
 #endif

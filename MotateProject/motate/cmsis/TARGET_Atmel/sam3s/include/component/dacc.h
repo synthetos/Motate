@@ -2,7 +2,7 @@
 /*                  Atmel Microcontroller Software Support                      */
 /*                       SAM Software Package License                           */
 /* ---------------------------------------------------------------------------- */
-/* Copyright (c) 2014, Atmel Corporation                                        */
+/* Copyright (c) 2015, Atmel Corporation                                        */
 /*                                                                              */
 /* All rights reserved.                                                         */
 /*                                                                              */
@@ -74,6 +74,7 @@ typedef struct {
 #define   DACC_MR_TRGEN_EN (0x1u << 0) /**< \brief (DACC_MR) External trigger mode enabled. */
 #define DACC_MR_TRGSEL_Pos 1
 #define DACC_MR_TRGSEL_Msk (0x7u << DACC_MR_TRGSEL_Pos) /**< \brief (DACC_MR) Trigger Selection */
+#define DACC_MR_TRGSEL(value) ((DACC_MR_TRGSEL_Msk & ((value) << DACC_MR_TRGSEL_Pos)))
 #define   DACC_MR_TRGSEL_TRGSEL0 (0x0u << 1) /**< \brief (DACC_MR) External trigger */
 #define   DACC_MR_TRGSEL_TRGSEL1 (0x1u << 1) /**< \brief (DACC_MR) TIO Output of the Timer Counter Channel 0 */
 #define   DACC_MR_TRGSEL_TRGSEL2 (0x2u << 1) /**< \brief (DACC_MR) TIO Output of the Timer Counter Channel 1 */
@@ -94,6 +95,7 @@ typedef struct {
 #define DACC_MR_REFRESH(value) ((DACC_MR_REFRESH_Msk & ((value) << DACC_MR_REFRESH_Pos)))
 #define DACC_MR_USER_SEL_Pos 16
 #define DACC_MR_USER_SEL_Msk (0x3u << DACC_MR_USER_SEL_Pos) /**< \brief (DACC_MR) User Channel Selection */
+#define DACC_MR_USER_SEL(value) ((DACC_MR_USER_SEL_Msk & ((value) << DACC_MR_USER_SEL_Pos)))
 #define   DACC_MR_USER_SEL_CHANNEL0 (0x0u << 16) /**< \brief (DACC_MR) Channel 0 */
 #define   DACC_MR_USER_SEL_CHANNEL1 (0x1u << 16) /**< \brief (DACC_MR) Channel 1 */
 #define DACC_MR_TAG (0x1u << 20) /**< \brief (DACC_MR) Tag Selection Mode */
@@ -104,6 +106,7 @@ typedef struct {
 #define   DACC_MR_MAXS_MAXIMUM (0x1u << 21) /**< \brief (DACC_MR) Max Speed Mode enabled */
 #define DACC_MR_STARTUP_Pos 24
 #define DACC_MR_STARTUP_Msk (0x3fu << DACC_MR_STARTUP_Pos) /**< \brief (DACC_MR) Startup Time Selection */
+#define DACC_MR_STARTUP(value) ((DACC_MR_STARTUP_Msk & ((value) << DACC_MR_STARTUP_Pos)))
 #define   DACC_MR_STARTUP_0 (0x0u << 24) /**< \brief (DACC_MR) 0 periods of DACClock */
 #define   DACC_MR_STARTUP_8 (0x1u << 24) /**< \brief (DACC_MR) 8 periods of DACClock */
 #define   DACC_MR_STARTUP_16 (0x2u << 24) /**< \brief (DACC_MR) 16 periods of DACClock */
@@ -183,6 +186,7 @@ typedef struct {
 #define DACC_WPMR_WPEN (0x1u << 0) /**< \brief (DACC_WPMR) Write Protect Enable */
 #define DACC_WPMR_WPKEY_Pos 8
 #define DACC_WPMR_WPKEY_Msk (0xffffffu << DACC_WPMR_WPKEY_Pos) /**< \brief (DACC_WPMR) Write Protect KEY */
+#define DACC_WPMR_WPKEY(value) ((DACC_WPMR_WPKEY_Msk & ((value) << DACC_WPMR_WPKEY_Pos)))
 #define   DACC_WPMR_WPKEY_PASSWD (0x444143u << 8) /**< \brief (DACC_WPMR) Writing any other value in this field aborts the write operation of the WPEN bit.Always reads as 0. */
 /* -------- DACC_WPSR : (DACC Offset: 0xE8) Write Protect Status register -------- */
 #define DACC_WPSR_WPROTERR (0x1u << 0) /**< \brief (DACC_WPSR) Write protection error */

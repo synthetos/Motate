@@ -2,7 +2,7 @@
 /*                  Atmel Microcontroller Software Support                      */
 /*                       SAM Software Package License                           */
 /* ---------------------------------------------------------------------------- */
-/* Copyright (c) 2014, Atmel Corporation                                        */
+/* Copyright (c) 2015, Atmel Corporation                                        */
 /*                                                                              */
 /* All rights reserved.                                                         */
 /*                                                                              */
@@ -76,6 +76,7 @@ typedef struct {
 /* -------- ADC_CR : (ADC Offset: 0x00) Control Register -------- */
 #define ADC_CR_SWRST (0x1u << 0) /**< \brief (ADC_CR) Software Reset */
 #define ADC_CR_START (0x1u << 1) /**< \brief (ADC_CR) Start Conversion */
+#define ADC_CR_CMPRST (0x1u << 4) /**< \brief (ADC_CR) Comparison Restart */
 /* -------- ADC_MR : (ADC Offset: 0x04) Mode Register -------- */
 #define ADC_MR_TRGEN (0x1u << 0) /**< \brief (ADC_MR) Trigger Enable */
 #define   ADC_MR_TRGEN_DIS (0x0u << 0) /**< \brief (ADC_MR) Hardware triggers are disabled. Starting a conversion is only possible by software. */
@@ -89,7 +90,7 @@ typedef struct {
 #define   ADC_MR_TRGSEL_ADC_TRIG4 (0x4u << 1) /**< \brief (ADC_MR) RTCOUT0 */
 #define   ADC_MR_TRGSEL_ADC_TRIG5 (0x5u << 1) /**< \brief (ADC_MR) RTTINC */
 #define ADC_MR_LOWRES (0x1u << 4) /**< \brief (ADC_MR) Resolution */
-#define   ADC_MR_LOWRES_BITS_10 (0x0u << 4) /**< \brief (ADC_MR) 10-bit resolution. For higher resolution by averaging, please refer to "ADC Extended Mode Register" on page 76. */
+#define   ADC_MR_LOWRES_BITS_10 (0x0u << 4) /**< \brief (ADC_MR) 10-bit resolution. For higher resolution by averaging, please refer to "ADC Extended Mode Register" on page 77. */
 #define   ADC_MR_LOWRES_BITS_8 (0x1u << 4) /**< \brief (ADC_MR) 8-bit resolution */
 #define ADC_MR_SLEEP (0x1u << 5) /**< \brief (ADC_MR) Sleep Mode */
 #define   ADC_MR_SLEEP_NORMAL (0x0u << 5) /**< \brief (ADC_MR) Normal Mode: The ADC core and reference voltage circuitry are kept ON between conversions. */
@@ -120,7 +121,7 @@ typedef struct {
 #define   ADC_MR_STARTUP_SUT960 (0xFu << 16) /**< \brief (ADC_MR) 960 periods of ADCCLK */
 #define ADC_MR_DIV1 (0x1u << 22) /**< \brief (ADC_MR) ADC Clock Prescaler Division forced to 1 */
 #define   ADC_MR_DIV1_NO_DIV1 (0x0u << 22) /**< \brief (ADC_MR) The PRESCAL field is used to generate the ADC clock unless DIV3 is written to 1. */
-#define   ADC_MR_DIV1_FORCE_DIV1 (0x1u << 22) /**< \brief (ADC_MR) The ADC clock equals peripheral clock (PRESCAL and DIV3 fields have no effects). */
+#define   ADC_MR_DIV1_FORCE_DIV1 (0x1u << 22) /**< \brief (ADC_MR) The ADC clock equals peripheral clock (PRESCAL and DIV3 fields have no effect). */
 #define ADC_MR_TRACKTIM_Pos 24
 #define ADC_MR_TRACKTIM_Msk (0xfu << ADC_MR_TRACKTIM_Pos) /**< \brief (ADC_MR) Tracking Time */
 #define ADC_MR_TRACKTIM(value) ((ADC_MR_TRACKTIM_Msk & ((value) << ADC_MR_TRACKTIM_Pos)))
@@ -233,20 +234,20 @@ typedef struct {
 #define ADC_IMR_ENDRX (0x1u << 27) /**< \brief (ADC_IMR) End of Receive Buffer Interrupt Mask */
 #define ADC_IMR_RXBUFF (0x1u << 28) /**< \brief (ADC_IMR) Receive Buffer Full Interrupt Mask */
 /* -------- ADC_ISR : (ADC Offset: 0x30) Interrupt Status Register -------- */
-#define ADC_ISR_EOC0 (0x1u << 0) /**< \brief (ADC_ISR) End of Conversion 0 */
-#define ADC_ISR_EOC1 (0x1u << 1) /**< \brief (ADC_ISR) End of Conversion 1 */
-#define ADC_ISR_EOC2 (0x1u << 2) /**< \brief (ADC_ISR) End of Conversion 2 */
-#define ADC_ISR_EOC3 (0x1u << 3) /**< \brief (ADC_ISR) End of Conversion 3 */
-#define ADC_ISR_EOC4 (0x1u << 4) /**< \brief (ADC_ISR) End of Conversion 4 */
-#define ADC_ISR_EOC5 (0x1u << 5) /**< \brief (ADC_ISR) End of Conversion 5 */
-#define ADC_ISR_EOC6 (0x1u << 6) /**< \brief (ADC_ISR) End of Conversion 6 */
-#define ADC_ISR_EOC7 (0x1u << 7) /**< \brief (ADC_ISR) End of Conversion 7 */
-#define ADC_ISR_LCCHG (0x1u << 19) /**< \brief (ADC_ISR) Last Channel Change */
-#define ADC_ISR_DRDY (0x1u << 24) /**< \brief (ADC_ISR) Data Ready */
-#define ADC_ISR_GOVRE (0x1u << 25) /**< \brief (ADC_ISR) General Overrun Error */
-#define ADC_ISR_COMPE (0x1u << 26) /**< \brief (ADC_ISR) Comparison Event */
-#define ADC_ISR_ENDRX (0x1u << 27) /**< \brief (ADC_ISR) End of Receiver Transfer */
-#define ADC_ISR_RXBUFF (0x1u << 28) /**< \brief (ADC_ISR) Reception Buffer Full */
+#define ADC_ISR_EOC0 (0x1u << 0) /**< \brief (ADC_ISR) End of Conversion 0 (automatically set / cleared) */
+#define ADC_ISR_EOC1 (0x1u << 1) /**< \brief (ADC_ISR) End of Conversion 1 (automatically set / cleared) */
+#define ADC_ISR_EOC2 (0x1u << 2) /**< \brief (ADC_ISR) End of Conversion 2 (automatically set / cleared) */
+#define ADC_ISR_EOC3 (0x1u << 3) /**< \brief (ADC_ISR) End of Conversion 3 (automatically set / cleared) */
+#define ADC_ISR_EOC4 (0x1u << 4) /**< \brief (ADC_ISR) End of Conversion 4 (automatically set / cleared) */
+#define ADC_ISR_EOC5 (0x1u << 5) /**< \brief (ADC_ISR) End of Conversion 5 (automatically set / cleared) */
+#define ADC_ISR_EOC6 (0x1u << 6) /**< \brief (ADC_ISR) End of Conversion 6 (automatically set / cleared) */
+#define ADC_ISR_EOC7 (0x1u << 7) /**< \brief (ADC_ISR) End of Conversion 7 (automatically set / cleared) */
+#define ADC_ISR_LCCHG (0x1u << 19) /**< \brief (ADC_ISR) Last Channel Change (cleared on read) */
+#define ADC_ISR_DRDY (0x1u << 24) /**< \brief (ADC_ISR) Data Ready (automatically set / cleared) */
+#define ADC_ISR_GOVRE (0x1u << 25) /**< \brief (ADC_ISR) General Overrun Error (cleared on read) */
+#define ADC_ISR_COMPE (0x1u << 26) /**< \brief (ADC_ISR) Comparison Event (cleared on read) */
+#define ADC_ISR_ENDRX (0x1u << 27) /**< \brief (ADC_ISR) End of Receive Transfer (cleared by writing ADC_RCR or ADC_RNCR) */
+#define ADC_ISR_RXBUFF (0x1u << 28) /**< \brief (ADC_ISR) Receive Buffer Full (cleared by writing ADC_RCR or ADC_RNCR) */
 /* -------- ADC_LCTMR : (ADC Offset: 0x34) Last Channel Trigger Mode Register -------- */
 #define ADC_LCTMR_DUALTRIG (0x1u << 0) /**< \brief (ADC_LCTMR) Dual Trigger ON */
 #define ADC_LCTMR_CMPMOD_Pos 4
@@ -278,6 +279,9 @@ typedef struct {
 #define   ADC_EMR_CMPMODE_HIGH (0x1u << 0) /**< \brief (ADC_EMR) Generates an event when the converted data is higher than the high threshold of the window. */
 #define   ADC_EMR_CMPMODE_IN (0x2u << 0) /**< \brief (ADC_EMR) Generates an event when the converted data is in the comparison window. */
 #define   ADC_EMR_CMPMODE_OUT (0x3u << 0) /**< \brief (ADC_EMR) Generates an event when the converted data is out of the comparison window. */
+#define ADC_EMR_CMPTYPE (0x1u << 2) /**< \brief (ADC_EMR) Comparison Type */
+#define   ADC_EMR_CMPTYPE_FLAG_ONLY (0x0u << 2) /**< \brief (ADC_EMR) Any conversion is performed and comparison function drives the COMPE flag. */
+#define   ADC_EMR_CMPTYPE_START_CONDITION (0x1u << 2) /**< \brief (ADC_EMR) Comparison conditions must be met to start the storage of all conversions until the CMPRST bit is set. */
 #define ADC_EMR_CMPSEL_Pos 4
 #define ADC_EMR_CMPSEL_Msk (0xfu << ADC_EMR_CMPSEL_Pos) /**< \brief (ADC_EMR) Comparison Selected Channel */
 #define ADC_EMR_CMPSEL(value) ((ADC_EMR_CMPSEL_Msk & ((value) << ADC_EMR_CMPSEL_Pos)))
@@ -293,6 +297,9 @@ typedef struct {
 #define ADC_EMR_ASTE (0x1u << 20) /**< \brief (ADC_EMR) Averaging on Single Trigger Event */
 #define   ADC_EMR_ASTE_MULTI_TRIG_AVERAGE (0x0u << 20) /**< \brief (ADC_EMR) The average requests several trigger events. */
 #define   ADC_EMR_ASTE_SINGLE_TRIG_AVERAGE (0x1u << 20) /**< \brief (ADC_EMR) The average requests only one trigger event. */
+#define ADC_EMR_SRCCLK (0x1u << 21) /**< \brief (ADC_EMR) External Clock Selection */
+#define   ADC_EMR_SRCCLK_PERIPH_CLK (0x0u << 21) /**< \brief (ADC_EMR) The peripheral clock is the source for the ADC prescaler. */
+#define   ADC_EMR_SRCCLK_PMC_PCK (0x1u << 21) /**< \brief (ADC_EMR) PMC PCKx is the source clock for the ADC prescaler, thus the ADC clock can be independent of the core/peripheral clock. */
 #define ADC_EMR_TAG (0x1u << 24) /**< \brief (ADC_EMR) Tag of the ADC_LCDR */
 /* -------- ADC_CWR : (ADC Offset: 0x44) Compare Window Register -------- */
 #define ADC_CWR_LOWTHRES_Pos 0
@@ -342,8 +349,8 @@ typedef struct {
 /* -------- ADC_PTSR : (ADC Offset: 0x124) Transfer Status Register -------- */
 #define ADC_PTSR_RXTEN (0x1u << 0) /**< \brief (ADC_PTSR) Receiver Transfer Enable */
 #define ADC_PTSR_TXTEN (0x1u << 8) /**< \brief (ADC_PTSR) Transmitter Transfer Enable */
-#define ADC_PTSR_RXCBEN (0x1u << 16) /**< \brief (ADC_PTSR) Receiver Transfer Enable */
-#define ADC_PTSR_TXCBEN (0x1u << 18) /**< \brief (ADC_PTSR) Transmitter Transfer Enable */
+#define ADC_PTSR_RXCBEN (0x1u << 16) /**< \brief (ADC_PTSR) Receiver Circular Buffer Enable */
+#define ADC_PTSR_TXCBEN (0x1u << 18) /**< \brief (ADC_PTSR) Transmitter Circular Buffer Enable */
 #define ADC_PTSR_ERR (0x1u << 24) /**< \brief (ADC_PTSR) Transfer Bus Error */
 
 /*@}*/

@@ -2,7 +2,7 @@
 /*                  Atmel Microcontroller Software Support                      */
 /*                       SAM Software Package License                           */
 /* ---------------------------------------------------------------------------- */
-/* Copyright (c) 2014, Atmel Corporation                                        */
+/* Copyright (c) 2015, Atmel Corporation                                        */
 /*                                                                              */
 /* All rights reserved.                                                         */
 /*                                                                              */
@@ -158,6 +158,7 @@ typedef struct {
 #define UDP_CSR_DIR (0x1u << 7) /**< \brief (UDP_CSR[8]) Transfer Direction (only available for control endpoints) */
 #define UDP_CSR_EPTYPE_Pos 8
 #define UDP_CSR_EPTYPE_Msk (0x7u << UDP_CSR_EPTYPE_Pos) /**< \brief (UDP_CSR[8]) Endpoint Type */
+#define UDP_CSR_EPTYPE(value) ((UDP_CSR_EPTYPE_Msk & ((value) << UDP_CSR_EPTYPE_Pos)))
 #define   UDP_CSR_EPTYPE_CTRL (0x0u << 8) /**< \brief (UDP_CSR[8]) Control */
 #define   UDP_CSR_EPTYPE_ISO_OUT (0x1u << 8) /**< \brief (UDP_CSR[8]) Isochronous OUT */
 #define   UDP_CSR_EPTYPE_BULK_OUT (0x2u << 8) /**< \brief (UDP_CSR[8]) Bulk OUT */

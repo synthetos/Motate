@@ -2,7 +2,7 @@
 /*                  Atmel Microcontroller Software Support                      */
 /*                       SAM Software Package License                           */
 /* ---------------------------------------------------------------------------- */
-/* Copyright (c) 2014, Atmel Corporation                                        */
+/* Copyright (c) 2015, Atmel Corporation                                        */
 /*                                                                              */
 /* All rights reserved.                                                         */
 /*                                                                              */
@@ -80,7 +80,7 @@ typedef struct {
 #define   SUPC_MR_BODDIS_DISABLE (0x1u << 13) /**< \brief (SUPC_MR) The core brownout detector is disabled. */
 #define SUPC_MR_OSCBYPASS (0x1u << 20) /**< \brief (SUPC_MR) Oscillator Bypass */
 #define   SUPC_MR_OSCBYPASS_NO_EFFECT (0x0u << 20) /**< \brief (SUPC_MR) No effect. Clock selection depends on XTALSEL value. */
-#define   SUPC_MR_OSCBYPASS_BYPASS (0x1u << 20) /**< \brief (SUPC_MR) The 32 kHz crystal oscillator is selected and put in bypass mode. */
+#define   SUPC_MR_OSCBYPASS_BYPASS (0x1u << 20) /**< \brief (SUPC_MR) The 32 kHz crystal oscillator is bypassed if XTALSEL=1. OSCBYPASS must be set prior to write XTALSEL=1. */
 #define SUPC_MR_PSWITCH1 (0x1u << 22) /**< \brief (SUPC_MR) SRAM1 Power Switch */
 #define   SUPC_MR_PSWITCH1_OFF (0x0u << 22) /**< \brief (SUPC_MR) The SRAM1 is not powered. */
 #define   SUPC_MR_PSWITCH1_ON (0x1u << 22) /**< \brief (SUPC_MR) The SRAM1 is powered. */
@@ -91,13 +91,13 @@ typedef struct {
 #define SUPC_MR_KEY_Msk (0xffu << SUPC_MR_KEY_Pos) /**< \brief (SUPC_MR) Password Key */
 #define   SUPC_MR_KEY_PASSWD (0xA5u << 24) /**< \brief (SUPC_MR) Writing any other value in this field aborts the write operation.Always reads as 0. */
 /* -------- SUPC_SR : (SUPC Offset: 0x14) Supply Controller Status Register -------- */
-#define SUPC_SR_BODRSTS (0x1u << 3) /**< \brief (SUPC_SR) Brownout Detector Reset Status */
-#define   SUPC_SR_BODRSTS_NO (0x0u << 3) /**< \brief (SUPC_SR) No core brownout rising edge event has been detected since the last read of the SUPC_SR. */
-#define   SUPC_SR_BODRSTS_PRESENT (0x1u << 3) /**< \brief (SUPC_SR) At least one brownout output rising edge event has been detected since the last read of the SUPC_SR. */
-#define SUPC_SR_SMRSTS (0x1u << 4) /**< \brief (SUPC_SR) Supply Monitor Reset Status */
-#define   SUPC_SR_SMRSTS_NO (0x0u << 4) /**< \brief (SUPC_SR) No supply monitor detection has generated a core reset since the last read of the SUPC_SR. */
-#define   SUPC_SR_SMRSTS_PRESENT (0x1u << 4) /**< \brief (SUPC_SR) At least one supply monitor detection has generated a core reset since the last read of the SUPC_SR. */
-#define SUPC_SR_SMS (0x1u << 5) /**< \brief (SUPC_SR) Supply Monitor Status */
+#define SUPC_SR_BODRSTS (0x1u << 3) /**< \brief (SUPC_SR) Brownout Detector Reset Status (cleared on read) */
+#define   SUPC_SR_BODRSTS_NO (0x0u << 3) /**< \brief (SUPC_SR) No core brownout rising edge event has been detected since the last read of SUPC_SR. */
+#define   SUPC_SR_BODRSTS_PRESENT (0x1u << 3) /**< \brief (SUPC_SR) At least one brownout output rising edge event has been detected since the last read of SUPC_SR. */
+#define SUPC_SR_SMRSTS (0x1u << 4) /**< \brief (SUPC_SR) Supply Monitor Reset Status (cleared on read) */
+#define   SUPC_SR_SMRSTS_NO (0x0u << 4) /**< \brief (SUPC_SR) No supply monitor detection has generated a core reset since the last read of SUPC_SR. */
+#define   SUPC_SR_SMRSTS_PRESENT (0x1u << 4) /**< \brief (SUPC_SR) At least one supply monitor detection has generated a core reset since the last read of SUPC_SR. */
+#define SUPC_SR_SMS (0x1u << 5) /**< \brief (SUPC_SR) Supply Monitor Status (cleared on read) */
 #define   SUPC_SR_SMS_NO (0x0u << 5) /**< \brief (SUPC_SR) No supply monitor detection since the last read of SUPC_SR. */
 #define   SUPC_SR_SMS_PRESENT (0x1u << 5) /**< \brief (SUPC_SR) At least one supply monitor detection since the last read of SUPC_SR. */
 #define SUPC_SR_SMOS (0x1u << 6) /**< \brief (SUPC_SR) Supply Monitor Output Status */

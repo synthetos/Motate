@@ -2,7 +2,7 @@
 /*                  Atmel Microcontroller Software Support                      */
 /*                       SAM Software Package License                           */
 /* ---------------------------------------------------------------------------- */
-/* Copyright (c) 2014, Atmel Corporation                                        */
+/* Copyright (c) 2015, Atmel Corporation                                        */
 /*                                                                              */
 /* All rights reserved.                                                         */
 /*                                                                              */
@@ -74,10 +74,6 @@ SECTIONS
         KEEP (*(EXCLUDE_FILE (*crtend.o) .dtors))
         KEEP (*(SORT(.dtors.*)))
         KEEP (*crtend.o(.dtors))
-
-        PROVIDE(motate_pin_change_interrupts_start = .);
-        KEEP( *(.motate.pin_change_interrupts));
-        PROVIDE(motate_pin_change_interrupts_end = .);
 
         . = ALIGN(4);
         _efixed = .;            /* End of text section */

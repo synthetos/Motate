@@ -2,7 +2,7 @@
 /*                  Atmel Microcontroller Software Support                      */
 /*                       SAM Software Package License                           */
 /* ---------------------------------------------------------------------------- */
-/* Copyright (c) 2014, Atmel Corporation                                        */
+/* Copyright (c) 2015, Atmel Corporation                                        */
 /*                                                                              */
 /* All rights reserved.                                                         */
 /*                                                                              */
@@ -153,7 +153,7 @@ const DeviceVectors exception_table = {
         .pfnTC4_Handler    = (void*) TC4_Handler,    /* 27 Timer/Counter 4 */
         .pfnTC5_Handler    = (void*) TC5_Handler,    /* 28 Timer/Counter 5 */
         .pfnADC_Handler    = (void*) ADC_Handler,    /* 29 Analog To Digital Converter */
-        .pfnARM1_Handler   = (void*) ARM1_Handler,   /* 30 FPU signals : FPIXC, FPOFC, FPUFC, FPIOC, FPDZC, FPIDC, FPIXC */
+        .pfnARM1_Handler   = (void*) ARM1_Handler,   /* 30 FPU signals: FPIXC, FPOFC, FPUFC, FPIOC, FPDZC, FPIDC, FPIXC */
         .pfnIPC0_Handler   = (void*) IPC0_Handler,   /* 31 Interprocessor communication 0 */
         .pfnSLCDC_Handler  = (void*) SLCDC_Handler,  /* 32 Segment LCD Controller */
         .pfnTRNG_Handler   = (void*) TRNG_Handler,   /* 33 True Random Generator */
@@ -164,9 +164,7 @@ const DeviceVectors exception_table = {
         .pfnUART1_Handler  = (void*) UART1_Handler,  /* 38 UART 1 */
         .pfnIPC1_Handler   = (void*) IPC1_Handler,   /* 39 Interprocessor communication 1 */
         .pfnSPI1_Handler   = (void*) SPI1_Handler,   /* 40 Serial Peripheral Interface 1 */
-        .pfnPWM_Handler    = (void*) PWM_Handler,    /* 41 Pulse Width Modulation */
-        .pvReserved42      = (void*) (0UL),          /* 42 Reserved */
-        .pvReserved43      = (void*) (0UL)           /* 43 Reserved */
+        .pfnPWM_Handler    = (void*) PWM_Handler    /* 41 Pulse Width Modulation */
 };
 
 /**

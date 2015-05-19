@@ -2,7 +2,7 @@
 /*                  Atmel Microcontroller Software Support                      */
 /*                       SAM Software Package License                           */
 /* ---------------------------------------------------------------------------- */
-/* Copyright (c) 2014, Atmel Corporation                                        */
+/* Copyright (c) 2015, Atmel Corporation                                        */
 /*                                                                              */
 /* All rights reserved.                                                         */
 /*                                                                              */
@@ -1259,38 +1259,38 @@ typedef struct {
 #define PIO_AIMDR_P30 (0x1u << 30) /**< \brief (PIO_AIMDR) Additional Interrupt Modes Disable */
 #define PIO_AIMDR_P31 (0x1u << 31) /**< \brief (PIO_AIMDR) Additional Interrupt Modes Disable */
 /* -------- PIO_AIMMR : (PIO Offset: 0x00B8) Additional Interrupt Modes Mask Register -------- */
-#define PIO_AIMMR_P0 (0x1u << 0) /**< \brief (PIO_AIMMR) Peripheral CD Status */
-#define PIO_AIMMR_P1 (0x1u << 1) /**< \brief (PIO_AIMMR) Peripheral CD Status */
-#define PIO_AIMMR_P2 (0x1u << 2) /**< \brief (PIO_AIMMR) Peripheral CD Status */
-#define PIO_AIMMR_P3 (0x1u << 3) /**< \brief (PIO_AIMMR) Peripheral CD Status */
-#define PIO_AIMMR_P4 (0x1u << 4) /**< \brief (PIO_AIMMR) Peripheral CD Status */
-#define PIO_AIMMR_P5 (0x1u << 5) /**< \brief (PIO_AIMMR) Peripheral CD Status */
-#define PIO_AIMMR_P6 (0x1u << 6) /**< \brief (PIO_AIMMR) Peripheral CD Status */
-#define PIO_AIMMR_P7 (0x1u << 7) /**< \brief (PIO_AIMMR) Peripheral CD Status */
-#define PIO_AIMMR_P8 (0x1u << 8) /**< \brief (PIO_AIMMR) Peripheral CD Status */
-#define PIO_AIMMR_P9 (0x1u << 9) /**< \brief (PIO_AIMMR) Peripheral CD Status */
-#define PIO_AIMMR_P10 (0x1u << 10) /**< \brief (PIO_AIMMR) Peripheral CD Status */
-#define PIO_AIMMR_P11 (0x1u << 11) /**< \brief (PIO_AIMMR) Peripheral CD Status */
-#define PIO_AIMMR_P12 (0x1u << 12) /**< \brief (PIO_AIMMR) Peripheral CD Status */
-#define PIO_AIMMR_P13 (0x1u << 13) /**< \brief (PIO_AIMMR) Peripheral CD Status */
-#define PIO_AIMMR_P14 (0x1u << 14) /**< \brief (PIO_AIMMR) Peripheral CD Status */
-#define PIO_AIMMR_P15 (0x1u << 15) /**< \brief (PIO_AIMMR) Peripheral CD Status */
-#define PIO_AIMMR_P16 (0x1u << 16) /**< \brief (PIO_AIMMR) Peripheral CD Status */
-#define PIO_AIMMR_P17 (0x1u << 17) /**< \brief (PIO_AIMMR) Peripheral CD Status */
-#define PIO_AIMMR_P18 (0x1u << 18) /**< \brief (PIO_AIMMR) Peripheral CD Status */
-#define PIO_AIMMR_P19 (0x1u << 19) /**< \brief (PIO_AIMMR) Peripheral CD Status */
-#define PIO_AIMMR_P20 (0x1u << 20) /**< \brief (PIO_AIMMR) Peripheral CD Status */
-#define PIO_AIMMR_P21 (0x1u << 21) /**< \brief (PIO_AIMMR) Peripheral CD Status */
-#define PIO_AIMMR_P22 (0x1u << 22) /**< \brief (PIO_AIMMR) Peripheral CD Status */
-#define PIO_AIMMR_P23 (0x1u << 23) /**< \brief (PIO_AIMMR) Peripheral CD Status */
-#define PIO_AIMMR_P24 (0x1u << 24) /**< \brief (PIO_AIMMR) Peripheral CD Status */
-#define PIO_AIMMR_P25 (0x1u << 25) /**< \brief (PIO_AIMMR) Peripheral CD Status */
-#define PIO_AIMMR_P26 (0x1u << 26) /**< \brief (PIO_AIMMR) Peripheral CD Status */
-#define PIO_AIMMR_P27 (0x1u << 27) /**< \brief (PIO_AIMMR) Peripheral CD Status */
-#define PIO_AIMMR_P28 (0x1u << 28) /**< \brief (PIO_AIMMR) Peripheral CD Status */
-#define PIO_AIMMR_P29 (0x1u << 29) /**< \brief (PIO_AIMMR) Peripheral CD Status */
-#define PIO_AIMMR_P30 (0x1u << 30) /**< \brief (PIO_AIMMR) Peripheral CD Status */
-#define PIO_AIMMR_P31 (0x1u << 31) /**< \brief (PIO_AIMMR) Peripheral CD Status */
+#define PIO_AIMMR_P0 (0x1u << 0) /**< \brief (PIO_AIMMR) IO Line Index */
+#define PIO_AIMMR_P1 (0x1u << 1) /**< \brief (PIO_AIMMR) IO Line Index */
+#define PIO_AIMMR_P2 (0x1u << 2) /**< \brief (PIO_AIMMR) IO Line Index */
+#define PIO_AIMMR_P3 (0x1u << 3) /**< \brief (PIO_AIMMR) IO Line Index */
+#define PIO_AIMMR_P4 (0x1u << 4) /**< \brief (PIO_AIMMR) IO Line Index */
+#define PIO_AIMMR_P5 (0x1u << 5) /**< \brief (PIO_AIMMR) IO Line Index */
+#define PIO_AIMMR_P6 (0x1u << 6) /**< \brief (PIO_AIMMR) IO Line Index */
+#define PIO_AIMMR_P7 (0x1u << 7) /**< \brief (PIO_AIMMR) IO Line Index */
+#define PIO_AIMMR_P8 (0x1u << 8) /**< \brief (PIO_AIMMR) IO Line Index */
+#define PIO_AIMMR_P9 (0x1u << 9) /**< \brief (PIO_AIMMR) IO Line Index */
+#define PIO_AIMMR_P10 (0x1u << 10) /**< \brief (PIO_AIMMR) IO Line Index */
+#define PIO_AIMMR_P11 (0x1u << 11) /**< \brief (PIO_AIMMR) IO Line Index */
+#define PIO_AIMMR_P12 (0x1u << 12) /**< \brief (PIO_AIMMR) IO Line Index */
+#define PIO_AIMMR_P13 (0x1u << 13) /**< \brief (PIO_AIMMR) IO Line Index */
+#define PIO_AIMMR_P14 (0x1u << 14) /**< \brief (PIO_AIMMR) IO Line Index */
+#define PIO_AIMMR_P15 (0x1u << 15) /**< \brief (PIO_AIMMR) IO Line Index */
+#define PIO_AIMMR_P16 (0x1u << 16) /**< \brief (PIO_AIMMR) IO Line Index */
+#define PIO_AIMMR_P17 (0x1u << 17) /**< \brief (PIO_AIMMR) IO Line Index */
+#define PIO_AIMMR_P18 (0x1u << 18) /**< \brief (PIO_AIMMR) IO Line Index */
+#define PIO_AIMMR_P19 (0x1u << 19) /**< \brief (PIO_AIMMR) IO Line Index */
+#define PIO_AIMMR_P20 (0x1u << 20) /**< \brief (PIO_AIMMR) IO Line Index */
+#define PIO_AIMMR_P21 (0x1u << 21) /**< \brief (PIO_AIMMR) IO Line Index */
+#define PIO_AIMMR_P22 (0x1u << 22) /**< \brief (PIO_AIMMR) IO Line Index */
+#define PIO_AIMMR_P23 (0x1u << 23) /**< \brief (PIO_AIMMR) IO Line Index */
+#define PIO_AIMMR_P24 (0x1u << 24) /**< \brief (PIO_AIMMR) IO Line Index */
+#define PIO_AIMMR_P25 (0x1u << 25) /**< \brief (PIO_AIMMR) IO Line Index */
+#define PIO_AIMMR_P26 (0x1u << 26) /**< \brief (PIO_AIMMR) IO Line Index */
+#define PIO_AIMMR_P27 (0x1u << 27) /**< \brief (PIO_AIMMR) IO Line Index */
+#define PIO_AIMMR_P28 (0x1u << 28) /**< \brief (PIO_AIMMR) IO Line Index */
+#define PIO_AIMMR_P29 (0x1u << 29) /**< \brief (PIO_AIMMR) IO Line Index */
+#define PIO_AIMMR_P30 (0x1u << 30) /**< \brief (PIO_AIMMR) IO Line Index */
+#define PIO_AIMMR_P31 (0x1u << 31) /**< \brief (PIO_AIMMR) IO Line Index */
 /* -------- PIO_ESR : (PIO Offset: 0x00C0) Edge Select Register -------- */
 #define PIO_ESR_P0 (0x1u << 0) /**< \brief (PIO_ESR) Edge Interrupt Selection */
 #define PIO_ESR_P1 (0x1u << 1) /**< \brief (PIO_ESR) Edge Interrupt Selection */

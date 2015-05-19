@@ -1,7 +1,7 @@
 /* ----------------------------------------------------------------------------
  *         SAM Software Package License
  * ----------------------------------------------------------------------------
- * Copyright (c) 2014, Atmel Corporation
+ * Copyright (c) 2015, Atmel Corporation
  *
  * All rights reserved.
  *
@@ -51,6 +51,10 @@
 #include "samd20g17.h"
 #elif defined (__SAMD20G18__)
 #include "samd20g18.h"
+#elif defined (__SAMD20G17U__)
+#include "samd20g17u.h"
+#elif defined (__SAMD20G18U__)
+#include "samd20g18u.h"
 #elif defined (__SAMD20J14__)
 #include "samd20j14.h"
 #elif defined (__SAMD20J15__)

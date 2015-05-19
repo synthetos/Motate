@@ -82,20 +82,36 @@ void SERCOM0_Handler         ( void ) __attribute__ ((weak, alias("Dummy_Handler
 void SERCOM1_Handler         ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
 void SERCOM2_Handler         ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
 void SERCOM3_Handler         ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
+#ifdef ID_SERCOM4
 void SERCOM4_Handler         ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
+#endif
+#ifdef ID_SERCOM5
 void SERCOM5_Handler         ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
+#endif
 void TC0_Handler             ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
 void TC1_Handler             ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
 void TC2_Handler             ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
 void TC3_Handler             ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
 void TC4_Handler             ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
 void TC5_Handler             ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
+#ifdef ID_TC6
 void TC6_Handler             ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
+#endif
+#ifdef ID_TC7
 void TC7_Handler             ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
+#endif
+#ifdef ID_ADC
 void ADC_Handler             ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
+#endif
+#ifdef ID_AC
 void AC_Handler              ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
+#endif
+#ifdef ID_DAC
 void DAC_Handler             ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
+#endif
+#ifdef ID_PTC
 void PTC_Handler             ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
+#endif
 
 /* Exception Table */
 __attribute__ ((section(".vectors")))
@@ -132,20 +148,52 @@ const DeviceVectors exception_table = {
         (void*) SERCOM1_Handler,        /*  8 Serial Communication Interface 1 */
         (void*) SERCOM2_Handler,        /*  9 Serial Communication Interface 2 */
         (void*) SERCOM3_Handler,        /* 10 Serial Communication Interface 3 */
+#ifdef ID_SERCOM4
         (void*) SERCOM4_Handler,        /* 11 Serial Communication Interface 4 */
+#else
+        (void*) (0UL), /* Reserved */
+#endif
+#ifdef ID_SERCOM5
         (void*) SERCOM5_Handler,        /* 12 Serial Communication Interface 5 */
+#else
+        (void*) (0UL), /* Reserved */
+#endif
         (void*) TC0_Handler,            /* 13 Basic Timer Counter 0 */
         (void*) TC1_Handler,            /* 14 Basic Timer Counter 1 */
         (void*) TC2_Handler,            /* 15 Basic Timer Counter 2 */
         (void*) TC3_Handler,            /* 16 Basic Timer Counter 3 */
         (void*) TC4_Handler,            /* 17 Basic Timer Counter 4 */
         (void*) TC5_Handler,            /* 18 Basic Timer Counter 5 */
+#ifdef ID_TC6
         (void*) TC6_Handler,            /* 19 Basic Timer Counter 6 */
+#else
+        (void*) (0UL), /* Reserved */
+#endif
+#ifdef ID_TC7
         (void*) TC7_Handler,            /* 20 Basic Timer Counter 7 */
+#else
+        (void*) (0UL), /* Reserved */
+#endif
+#ifdef ID_ADC
         (void*) ADC_Handler,            /* 21 Analog Digital Converter */
+#else
+        (void*) (0UL), /* Reserved */
+#endif
+#ifdef ID_AC
         (void*) AC_Handler,             /* 22 Analog Comparators */
+#else
+        (void*) (0UL), /* Reserved */
+#endif
+#ifdef ID_DAC
         (void*) DAC_Handler,            /* 23 Digital Analog Converter */
+#else
+        (void*) (0UL), /* Reserved */
+#endif
+#ifdef ID_PTC
         (void*) PTC_Handler             /* 24 Peripheral Touch Controller */
+#else
+        (void*) (0UL)  /* Reserved */
+#endif
 };
 
 /**

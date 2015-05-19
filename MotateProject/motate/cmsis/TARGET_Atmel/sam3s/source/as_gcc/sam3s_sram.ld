@@ -2,7 +2,7 @@
 /*                  Atmel Microcontroller Software Support                      */
 /*                       SAM Software Package License                           */
 /* ---------------------------------------------------------------------------- */
-/* Copyright (c) 2014, Atmel Corporation                                        */
+/* Copyright (c) 2015, Atmel Corporation                                        */
 /*                                                                              */
 /* All rights reserved.                                                         */
 /*                                                                              */
@@ -79,12 +79,12 @@ SECTIONS
         _efixed = .;            /* End of text section */
     } > ram
 
-    . = ALIGN(4);
+    . = ALIGN(8);
     _etext = .;
 
     .relocate : AT (_etext)
     {
-        . = ALIGN(4);
+        . = ALIGN(8);
         _srelocate = .;
         *(.ramfunc .ramfunc.*);
         *(.data .data.*);
@@ -115,6 +115,16 @@ SECTIONS
         _estack = .;
     } > ram
 
+    /* heap section */
+    .heap (NOLOAD):
+    {
+        . = ALIGN(8);
+         _sheap = .;
+        . = . + HEAP_SIZE;
+        . = ALIGN(8);
+        _eheap = .;
+    } > ram
+
     /* .ARM.exidx is sorted, so has to go in its own output section.  */
     PROVIDE_HIDDEN (__exidx_start = .);
     .ARM.exidx :
@@ -125,4 +135,5 @@ SECTIONS
 
     . = ALIGN(4);
     _end = . ;
+    _ram_end_ = ORIGIN(ram) + LENGTH(ram) -1 ;
 }

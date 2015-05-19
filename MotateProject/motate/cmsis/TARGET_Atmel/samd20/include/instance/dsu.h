@@ -104,6 +104,6 @@
 #endif /* (defined(__ASSEMBLY__) || defined(__IAR_SYSTEMS_ASM__)) */
 
 /* ========== Instance parameters for DSU peripheral ========== */
-#define DSU_CLK_HSB_ID              3
+#define DSU_CLK_HSB_ID              3       
 
 #endif /* _SAMD20_DSU_INSTANCE_ */

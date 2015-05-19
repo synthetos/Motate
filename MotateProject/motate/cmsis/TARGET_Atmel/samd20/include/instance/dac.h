@@ -68,6 +68,6 @@
 #endif /* (defined(__ASSEMBLY__) || defined(__IAR_SYSTEMS_ASM__)) */
 
 /* ========== Instance parameters for DAC peripheral ========== */
-#define DAC_GCLK_ID                 26
+#define DAC_GCLK_ID                 26      
 
 #endif /* _SAMD20_DAC_INSTANCE_ */

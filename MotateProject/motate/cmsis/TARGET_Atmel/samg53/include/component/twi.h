@@ -2,7 +2,7 @@
 /*                  Atmel Microcontroller Software Support                      */
 /*                       SAM Software Package License                           */
 /* ---------------------------------------------------------------------------- */
-/* Copyright (c) 2014, Atmel Corporation                                        */
+/* Copyright (c) 2015, Atmel Corporation                                        */
 /*                                                                              */
 /* All rights reserved.                                                         */
 /*                                                                              */
@@ -109,21 +109,21 @@ typedef struct {
 #define TWI_CWGR_HOLD_Msk (0x1fu << TWI_CWGR_HOLD_Pos) /**< \brief (TWI_CWGR) TWD Hold Time versus TWCK falling */
 #define TWI_CWGR_HOLD(value) ((TWI_CWGR_HOLD_Msk & ((value) << TWI_CWGR_HOLD_Pos)))
 /* -------- TWI_SR : (TWI Offset: 0x20) Status Register -------- */
-#define TWI_SR_TXCOMP (0x1u << 0) /**< \brief (TWI_SR) Transmission Completed (automatically set / reset) */
-#define TWI_SR_RXRDY (0x1u << 1) /**< \brief (TWI_SR) Receive Holding Register Ready (automatically set / reset) */
-#define TWI_SR_TXRDY (0x1u << 2) /**< \brief (TWI_SR) Transmit Holding Register Ready (automatically set / reset) */
-#define TWI_SR_SVREAD (0x1u << 3) /**< \brief (TWI_SR) Slave Read (automatically set / reset) */
-#define TWI_SR_SVACC (0x1u << 4) /**< \brief (TWI_SR) Slave Access (automatically set / reset) */
-#define TWI_SR_GACC (0x1u << 5) /**< \brief (TWI_SR) General Call Access (clear on read) */
-#define TWI_SR_OVRE (0x1u << 6) /**< \brief (TWI_SR) Overrun Error (clear on read) */
-#define TWI_SR_NACK (0x1u << 8) /**< \brief (TWI_SR) Not Acknowledged (clear on read) */
-#define TWI_SR_ARBLST (0x1u << 9) /**< \brief (TWI_SR) Arbitration Lost (clear on read) */
-#define TWI_SR_SCLWS (0x1u << 10) /**< \brief (TWI_SR) Clock Wait State (automatically set / reset) */
-#define TWI_SR_EOSACC (0x1u << 11) /**< \brief (TWI_SR) End Of Slave Access (clear on read) */
-#define TWI_SR_ENDRX (0x1u << 12) /**< \brief (TWI_SR) End of RX buffer */
-#define TWI_SR_ENDTX (0x1u << 13) /**< \brief (TWI_SR) End of TX buffer */
-#define TWI_SR_RXBUFF (0x1u << 14) /**< \brief (TWI_SR) RX Buffer Full */
-#define TWI_SR_TXBUFE (0x1u << 15) /**< \brief (TWI_SR) TX Buffer Empty */
+#define TWI_SR_TXCOMP (0x1u << 0) /**< \brief (TWI_SR) Transmission Completed (cleared by writing TWI_THR) */
+#define TWI_SR_RXRDY (0x1u << 1) /**< \brief (TWI_SR) Receive Holding Register Ready (cleared by reading TWI_RHR) */
+#define TWI_SR_TXRDY (0x1u << 2) /**< \brief (TWI_SR) Transmit Holding Register Ready (cleared by writing TWI_THR) */
+#define TWI_SR_SVREAD (0x1u << 3) /**< \brief (TWI_SR) Slave Read */
+#define TWI_SR_SVACC (0x1u << 4) /**< \brief (TWI_SR) Slave Access */
+#define TWI_SR_GACC (0x1u << 5) /**< \brief (TWI_SR) General Call Access (cleared on read) */
+#define TWI_SR_OVRE (0x1u << 6) /**< \brief (TWI_SR) Overrun Error (cleared on read) */
+#define TWI_SR_NACK (0x1u << 8) /**< \brief (TWI_SR) Not Acknowledged (cleared on read) */
+#define TWI_SR_ARBLST (0x1u << 9) /**< \brief (TWI_SR) Arbitration Lost (cleared on read) */
+#define TWI_SR_SCLWS (0x1u << 10) /**< \brief (TWI_SR) Clock Wait State */
+#define TWI_SR_EOSACC (0x1u << 11) /**< \brief (TWI_SR) End Of Slave Access (cleared on read) */
+#define TWI_SR_ENDRX (0x1u << 12) /**< \brief (TWI_SR) End of RX buffer (cleared by writing TWI_RCR or TWI_RNCR) */
+#define TWI_SR_ENDTX (0x1u << 13) /**< \brief (TWI_SR) End of TX buffer (cleared by writing TWI_TCR or TWI_TNCR) */
+#define TWI_SR_RXBUFF (0x1u << 14) /**< \brief (TWI_SR) RX Buffer Full (cleared by writing TWI_RCR or TWI_RNCR) */
+#define TWI_SR_TXBUFE (0x1u << 15) /**< \brief (TWI_SR) TX Buffer Empty (cleared by writing TWI_TCR or TWI_TNCR) */
 /* -------- TWI_IER : (TWI Offset: 0x24) Interrupt Enable Register -------- */
 #define TWI_IER_TXCOMP (0x1u << 0) /**< \brief (TWI_IER) Transmission Completed Interrupt Enable */
 #define TWI_IER_RXRDY (0x1u << 1) /**< \brief (TWI_IER) Receive Holding Register Ready Interrupt Enable */
@@ -230,8 +230,8 @@ typedef struct {
 /* -------- TWI_PTSR : (TWI Offset: 0x124) Transfer Status Register -------- */
 #define TWI_PTSR_RXTEN (0x1u << 0) /**< \brief (TWI_PTSR) Receiver Transfer Enable */
 #define TWI_PTSR_TXTEN (0x1u << 8) /**< \brief (TWI_PTSR) Transmitter Transfer Enable */
-#define TWI_PTSR_RXCBEN (0x1u << 16) /**< \brief (TWI_PTSR) Receiver Transfer Enable */
-#define TWI_PTSR_TXCBEN (0x1u << 18) /**< \brief (TWI_PTSR) Transmitter Transfer Enable */
+#define TWI_PTSR_RXCBEN (0x1u << 16) /**< \brief (TWI_PTSR) Receiver Circular Buffer Enable */
+#define TWI_PTSR_TXCBEN (0x1u << 18) /**< \brief (TWI_PTSR) Transmitter Circular Buffer Enable */
 #define TWI_PTSR_ERR (0x1u << 24) /**< \brief (TWI_PTSR) Transfer Bus Error */
 
 /*@}*/

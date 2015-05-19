@@ -2,7 +2,7 @@
 /*                  Atmel Microcontroller Software Support                      */
 /*                       SAM Software Package License                           */
 /* ---------------------------------------------------------------------------- */
-/* Copyright (c) 2014, Atmel Corporation                                        */
+/* Copyright (c) 2015, Atmel Corporation                                        */
 /*                                                                              */
 /* All rights reserved.                                                         */
 /*                                                                              */
@@ -97,17 +97,17 @@ typedef struct {
 #define SPI_TDR_PCS(value) ((SPI_TDR_PCS_Msk & ((value) << SPI_TDR_PCS_Pos)))
 #define SPI_TDR_LASTXFER (0x1u << 24) /**< \brief (SPI_TDR) Last Transfer */
 /* -------- SPI_SR : (SPI Offset: 0x10) Status Register -------- */
-#define SPI_SR_RDRF (0x1u << 0) /**< \brief (SPI_SR) Receive Data Register Full */
-#define SPI_SR_TDRE (0x1u << 1) /**< \brief (SPI_SR) Transmit Data Register Empty */
-#define SPI_SR_MODF (0x1u << 2) /**< \brief (SPI_SR) Mode Fault Error */
-#define SPI_SR_OVRES (0x1u << 3) /**< \brief (SPI_SR) Overrun Error Status */
-#define SPI_SR_ENDRX (0x1u << 4) /**< \brief (SPI_SR) End of RX Buffer */
-#define SPI_SR_ENDTX (0x1u << 5) /**< \brief (SPI_SR) End of TX Buffer */
-#define SPI_SR_RXBUFF (0x1u << 6) /**< \brief (SPI_SR) RX Buffer Full */
-#define SPI_SR_TXBUFE (0x1u << 7) /**< \brief (SPI_SR) TX Buffer Empty */
-#define SPI_SR_NSSR (0x1u << 8) /**< \brief (SPI_SR) NSS Rising */
-#define SPI_SR_TXEMPTY (0x1u << 9) /**< \brief (SPI_SR) Transmission Registers Empty */
-#define SPI_SR_UNDES (0x1u << 10) /**< \brief (SPI_SR) Underrun Error Status (Slave mode Only) */
+#define SPI_SR_RDRF (0x1u << 0) /**< \brief (SPI_SR) Receive Data Register Full (cleared by reading SPI_RDR) */
+#define SPI_SR_TDRE (0x1u << 1) /**< \brief (SPI_SR) Transmit Data Register Empty (cleared by writing SPI_TDR) */
+#define SPI_SR_MODF (0x1u << 2) /**< \brief (SPI_SR) Mode Fault Error (cleared on read) */
+#define SPI_SR_OVRES (0x1u << 3) /**< \brief (SPI_SR) Overrun Error Status (cleared on read) */
+#define SPI_SR_ENDRX (0x1u << 4) /**< \brief (SPI_SR) End of RX Buffer (cleared by writing SPI_RCR or SPI_RNCR) */
+#define SPI_SR_ENDTX (0x1u << 5) /**< \brief (SPI_SR) End of TX Buffer (cleared by writing SPI_TCR or SPI_TNCR) */
+#define SPI_SR_RXBUFF (0x1u << 6) /**< \brief (SPI_SR) RX Buffer Full (cleared by writing SPI_RCR or SPI_RNCR) */
+#define SPI_SR_TXBUFE (0x1u << 7) /**< \brief (SPI_SR) TX Buffer Empty (cleared by writing SPI_TCR or SPI_TNCR) */
+#define SPI_SR_NSSR (0x1u << 8) /**< \brief (SPI_SR) NSS Rising (cleared on read) */
+#define SPI_SR_TXEMPTY (0x1u << 9) /**< \brief (SPI_SR) Transmission Registers Empty (cleared by writing SPI_TDR) */
+#define SPI_SR_UNDES (0x1u << 10) /**< \brief (SPI_SR) Underrun Error Status (Slave mode only) (cleared on read) */
 #define SPI_SR_SPIENS (0x1u << 16) /**< \brief (SPI_SR) SPI Enable Status */
 /* -------- SPI_IER : (SPI Offset: 0x14) Interrupt Enable Register -------- */
 #define SPI_IER_RDRF (0x1u << 0) /**< \brief (SPI_IER) Receive Data Register Full Interrupt Enable */
@@ -173,7 +173,7 @@ typedef struct {
 /* -------- SPI_WPMR : (SPI Offset: 0xE4) Write Protection Mode Register -------- */
 #define SPI_WPMR_WPEN (0x1u << 0) /**< \brief (SPI_WPMR) Write Protection Enable */
 #define SPI_WPMR_WPKEY_Pos 8
-#define SPI_WPMR_WPKEY_Msk (0xffffffu << SPI_WPMR_WPKEY_Pos) /**< \brief (SPI_WPMR) Write Protect Key */
+#define SPI_WPMR_WPKEY_Msk (0xffffffu << SPI_WPMR_WPKEY_Pos) /**< \brief (SPI_WPMR) Write Protection Key */
 #define   SPI_WPMR_WPKEY_PASSWD (0x535049u << 8) /**< \brief (SPI_WPMR) Writing any other value in this field aborts the write operation of the WPEN bit.Always reads as 0. */
 /* -------- SPI_WPSR : (SPI Offset: 0xE8) Write Protection Status Register -------- */
 #define SPI_WPSR_WPVS (0x1u << 0) /**< \brief (SPI_WPSR) Write Protection Violation Status */
@@ -224,8 +224,8 @@ typedef struct {
 /* -------- SPI_PTSR : (SPI Offset: 0x124) Transfer Status Register -------- */
 #define SPI_PTSR_RXTEN (0x1u << 0) /**< \brief (SPI_PTSR) Receiver Transfer Enable */
 #define SPI_PTSR_TXTEN (0x1u << 8) /**< \brief (SPI_PTSR) Transmitter Transfer Enable */
-#define SPI_PTSR_RXCBEN (0x1u << 16) /**< \brief (SPI_PTSR) Receiver Transfer Enable */
-#define SPI_PTSR_TXCBEN (0x1u << 18) /**< \brief (SPI_PTSR) Transmitter Transfer Enable */
+#define SPI_PTSR_RXCBEN (0x1u << 16) /**< \brief (SPI_PTSR) Receiver Circular Buffer Enable */
+#define SPI_PTSR_TXCBEN (0x1u << 18) /**< \brief (SPI_PTSR) Transmitter Circular Buffer Enable */
 #define SPI_PTSR_ERR (0x1u << 24) /**< \brief (SPI_PTSR) Transfer Bus Error */
 
 /*@}*/

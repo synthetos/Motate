@@ -90,9 +90,9 @@
 #endif /* (defined(__ASSEMBLY__) || defined(__IAR_SYSTEMS_ASM__)) */
 
 /* ========== Instance parameters for ADC peripheral ========== */
-#define ADC_EXTCHANNEL_MSB          19
-#define ADC_GCLK_ID                 23
-#define ADC_RESULT_BITS             16
-#define ADC_RESULT_MSB              (ADC_RESULT_BITS-1)
+#define ADC_EXTCHANNEL_MSB          19       // Number of external channels
+#define ADC_GCLK_ID                 23       // Index of Generic Clock
+#define ADC_RESULT_BITS             16       // Size of RESULT.RESULT bitfield
+#define ADC_RESULT_MSB              15       // Size of Result
 
 #endif /* _SAMD20_ADC_INSTANCE_ */

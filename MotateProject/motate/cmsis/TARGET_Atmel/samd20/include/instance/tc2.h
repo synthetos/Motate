@@ -92,14 +92,14 @@
 #endif /* (defined(__ASSEMBLY__) || defined(__IAR_SYSTEMS_ASM__)) */
 
 /* ========== Instance parameters for TC2 peripheral ========== */
-#define TC2_CC8_NUM                 2
-#define TC2_CC16_NUM                2
-#define TC2_CC32_NUM                2
-#define TC2_DITHERING_EXT           0
-#define TC2_GCLK_ID                 20
-#define TC2_MASTER                  1
-#define TC2_OW_NUM                  2
-#define TC2_PERIOD_EXT              0
-#define TC2_SHADOW_EXT              0
+#define TC2_CC8_NUM                 2       
+#define TC2_CC16_NUM                2       
+#define TC2_CC32_NUM                2       
+#define TC2_DITHERING_EXT           0       
+#define TC2_GCLK_ID                 20      
+#define TC2_MASTER                  1       
+#define TC2_OW_NUM                  2       
+#define TC2_PERIOD_EXT              0       
+#define TC2_SHADOW_EXT              0       
 
 #endif /* _SAMD20_TC2_INSTANCE_ */

@@ -92,20 +92,20 @@
 #endif /* (defined(__ASSEMBLY__) || defined(__IAR_SYSTEMS_ASM__)) */
 
 /* ========== Instance parameters for TC6 peripheral ========== */
-#define TC6_CC8_NUM                 2
-#define TC6_CC16_NUM                2
-#define TC6_CC32_NUM                2
-#define TC6_DITHERING_EXT           0
+#define TC6_CC8_NUM                 2        // Number of 8-bit Counters
+#define TC6_CC16_NUM                2        // Number of 16-bit Counters
+#define TC6_CC32_NUM                2        // Number of 32-bit Counters
+#define TC6_DITHERING_EXT           0        // Dithering feature implemented
 #define TC6_DMAC_ID_MC_0            34
 #define TC6_DMAC_ID_MC_1            35
 #define TC6_DMAC_ID_MC_LSB          34
 #define TC6_DMAC_ID_MC_MSB          35
 #define TC6_DMAC_ID_MC_SIZE         2
-#define TC6_DMAC_ID_OVF             33
-#define TC6_GCLK_ID                 29
-#define TC6_MASTER                  1
-#define TC6_OW_NUM                  2
-#define TC6_PERIOD_EXT              0
-#define TC6_SHADOW_EXT              0
+#define TC6_DMAC_ID_OVF             33       // Indexes of DMA Overflow trigger
+#define TC6_GCLK_ID                 29       // Index of Generic Clock
+#define TC6_MASTER                  1       
+#define TC6_OW_NUM                  2        // Number of Output Waveforms
+#define TC6_PERIOD_EXT              0        // Period feature implemented
+#define TC6_SHADOW_EXT              0        // Shadow feature implemented
 
 #endif /* _SAMD21_TC6_INSTANCE_ */

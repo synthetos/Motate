@@ -1,7 +1,7 @@
 /* ----------------------------------------------------------------------------
  *         SAM Software Package License
  * ----------------------------------------------------------------------------
- * Copyright (c) 2014, Atmel Corporation
+ * Copyright (c) 2015, Atmel Corporation
  *
  * All rights reserved.
  *
@@ -56,6 +56,10 @@
 #elif defined (__SAM4CP16B_0__)
 #include "sam4cp/include/sam4cp.h"
 #elif defined (__SAM4CP16B_1__)
+#include "sam4cp/include/sam4cp.h"
+#elif defined (__SAM4CP16C_0__)
+#include "sam4cp/include/sam4cp.h"
+#elif defined (__SAM4CP16C_1__)
 #include "sam4cp/include/sam4cp.h"
 #elif defined (__SAM4C32C_0__)
 #include "sam4c32/include/sam4c32.h"

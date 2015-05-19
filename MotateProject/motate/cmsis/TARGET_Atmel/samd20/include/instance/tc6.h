@@ -92,14 +92,14 @@
 #endif /* (defined(__ASSEMBLY__) || defined(__IAR_SYSTEMS_ASM__)) */
 
 /* ========== Instance parameters for TC6 peripheral ========== */
-#define TC6_CC8_NUM                 2
-#define TC6_CC16_NUM                2
-#define TC6_CC32_NUM                2
-#define TC6_DITHERING_EXT           0
-#define TC6_GCLK_ID                 22
-#define TC6_MASTER                  1
-#define TC6_OW_NUM                  2
-#define TC6_PERIOD_EXT              0
-#define TC6_SHADOW_EXT              0
+#define TC6_CC8_NUM                 2       
+#define TC6_CC16_NUM                2       
+#define TC6_CC32_NUM                2       
+#define TC6_DITHERING_EXT           0       
+#define TC6_GCLK_ID                 22      
+#define TC6_MASTER                  1       
+#define TC6_OW_NUM                  2       
+#define TC6_PERIOD_EXT              0       
+#define TC6_SHADOW_EXT              0       
 
 #endif /* _SAMD20_TC6_INSTANCE_ */

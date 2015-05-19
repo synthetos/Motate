@@ -2,7 +2,7 @@
 /*                  Atmel Microcontroller Software Support                      */
 /*                       SAM Software Package License                           */
 /* ---------------------------------------------------------------------------- */
-/* Copyright (c) 2014, Atmel Corporation                                        */
+/* Copyright (c) 2015, Atmel Corporation                                        */
 /*                                                                              */
 /* All rights reserved.                                                         */
 /*                                                                              */
@@ -210,8 +210,8 @@ typedef struct {
 /* -------- UART_PTSR : (UART Offset: 0x124) Transfer Status Register -------- */
 #define UART_PTSR_RXTEN (0x1u << 0) /**< \brief (UART_PTSR) Receiver Transfer Enable */
 #define UART_PTSR_TXTEN (0x1u << 8) /**< \brief (UART_PTSR) Transmitter Transfer Enable */
-#define UART_PTSR_RXCBEN (0x1u << 16) /**< \brief (UART_PTSR) Receiver Transfer Enable */
-#define UART_PTSR_TXCBEN (0x1u << 18) /**< \brief (UART_PTSR) Transmitter Transfer Enable */
+#define UART_PTSR_RXCBEN (0x1u << 16) /**< \brief (UART_PTSR) Receiver Circular Buffer Enable */
+#define UART_PTSR_TXCBEN (0x1u << 18) /**< \brief (UART_PTSR) Transmitter Circular Buffer Enable */
 #define UART_PTSR_ERR (0x1u << 24) /**< \brief (UART_PTSR) Transfer Bus Error */
 
 /*@}*/
