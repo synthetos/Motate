@@ -1,6 +1,6 @@
 /*
  * SamID.h - motate function to retrieve the processor unique ID
- * This file is part of the TinyG project
+ * This file is part of the Motate project, imported from the TinyG project
  *
  * Copyright (c) 2015 Robert Giseburt
  * Copyright (c) 2014 Tom Cauchois
@@ -26,52 +26,69 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include <sam.h>
-#include <string.h>
-#include "Atmel_sam3xa/SamID.h"
+#if defined(__SAM3X8E__) || defined(__SAM3X8C__)
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-    static struct uuid stored_uuid = { 0, 0, 0, 0 };
-    static uint16_t uuid_string16[UNIQUE_ID_STRING_LEN] = {0};
-    
-    __attribute__ ((long_call, section (".ramfunc")))
-    void cacheUniqueId()
-    {
+#include <sam.h>
+#include "Atmel_sam3xa/SamUniqueID.h"
+
+namespace Motate {
+    // Define the static global Motate::UUID object;
+    UUID_t UUID;
+
+    __I  uint32_t *_UUID_REGISTER = (__I  uint32_t *)0x00080000;
+
+    void _readUUID()  __attribute__ ((long_call, section (".ramfunc")));
+    void _readUUID() {
         // Run EEFC uuid sequence
-        const int EEFC_FCMD_STUI = 0x0E;
-        const int EEFC_FCMD_SPUI = 0x0F;
-        const int EEFC_KEY = 0x5A;
         while ((EFC0->EEFC_FSR & EEFC_FSR_FRDY) == 0);
-        EFC0->EEFC_FCR = EEFC_FCR_FCMD(EEFC_FCR_FCMD_STUI) | EEFC_FCR_FKEY(EEFC_FCR_FKEY_PASSWD);
+
+        EFC0->EEFC_FCR = EEFC_FCR_FCMD_STUI | EEFC_FCR_FKEY_PASSWD;
         while ((EFC0->EEFC_FSR & EEFC_FSR_FRDY) == 1);
         // Read unique id @ 0x00080000
-        stored_uuid.d0 = *(volatile unsigned long*)0x00080000;
-        stored_uuid.d1 = *(volatile unsigned long*)0x00080004;
-        stored_uuid.d2 = *(volatile unsigned long*)0x00080008;
-        stored_uuid.d3 = *(volatile unsigned long*)0x0008000C;
-        EFC0->EEFC_FCR = EEFC_FCR_FCMD(EEFC_FCR_FCMD_SPUI) | EEFC_FCR_FKEY(EEFC_FCR_FKEY_PASSWD);
+        UUID._d[0] = _UUID_REGISTER[0];
+        UUID._d[1] = _UUID_REGISTER[1];
+        UUID._d[2] = _UUID_REGISTER[2];
+        UUID._d[3] = _UUID_REGISTER[3];
+        EFC0->EEFC_FCR = EEFC_FCR_FCMD_SPUI | EEFC_FCR_FKEY_PASSWD;
         while ((EFC0->EEFC_FSR & EEFC_FSR_FRDY) == 0);
-        
+
         // Memory swap needs some time to stabilize
-        for (uint32_t i=0; i<1000000; i++)
-            // force compiler to not optimize this
-            __asm__ __volatile__("");
+        for (uint32_t i=0; i<1000000; i++) {
+            __NOP();
+        }
     }
 
-    const uint16_t* readUniqueIdString()
+    UUID_t::UUID_t()
     {
-        if(uuid_string16[0] == 0) {
-            for(int i = 0; i < UNIQUE_ID_STRING_LEN; ++i) {
-                unsigned long nibble = (((i >= 8) ? stored_uuid.d1 : stored_uuid.d0) >> ((i % 8) * 4)) & 0xF;
-                if(nibble < 0xA) uuid_string16[i] = nibble + '0';
-                else uuid_string16[i] = (nibble - 0xA) + 'a';
+        _readUUID();
+
+        // Precalculate the _stringval
+        char *p =_stringval;
+        for(int i = 0; i < 16; ++i) {
+            // Network/Big-endian
+            uint8_t byte = (_d[i/4] >> (i%4)) & 0xF;
+
+            // Put a dash every four characters
+            if (i > 0 && (i%4) == 0) {
+                *p++ = '-';
+            }
+
+            // Put the HEX ASCII in the string
+            if (byte < 0xA) {
+                *p++ = byte + '0';
+            }
+            else
+            {
+                *p++ = (byte - 0xA) + 'a';
             }
         }
-        return uuid_string16;
     }
-    
-#ifdef __cplusplus
+
+
+    UUID_t::operator const char*()
+    {
+        return _stringval;
+    }
 }
+
 #endif

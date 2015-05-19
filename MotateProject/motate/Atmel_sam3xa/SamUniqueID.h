@@ -1,7 +1,8 @@
 /*
  * UniqueId.h - utility function for getting processor unique id
- * This file is part of the TinyG project
+ * This file is part of the Motate project, imported from the TinyG project
  *
+ * Copyright (c) 2015 Robert Giseburt
  * Copyright (c) 2014 Tom Cauchois
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
@@ -30,19 +31,18 @@
 
 #include <sys/types.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-    
-    struct uuid { unsigned long d0, d1, d2, d3; };
-    
-    void cacheUniqueId();
-    struct uuid* readUniqueId();
-    const uint16_t* readUniqueIdString();
-    const int16_t UNIQUE_ID_STRING_LEN = 12;
-    
-#ifdef __cplusplus
+namespace Motate {
+    struct UUID_t {
+        static uint32_t _d[4];
+        static char _stringval[17];
+
+        UUID_t();
+
+        operator const char*();
+
+    };
+
+    extern UUID_t UUID;
 }
-#endif
 
 #endif /* defined(__TinyG2__UniqueId__) */
