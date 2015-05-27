@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		D40A24241AD5F7AB00406A3A /* SamUniqueID.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D40A24221AD5F7AB00406A3A /* SamUniqueID.cpp */; };
+		D43C7AEE1B1569FF007440D6 /* SamPower.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D43C7AED1B1569FF007440D6 /* SamPower.cpp */; };
 		D443391D196BB69B004A48F9 /* buffered_uart_demo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D443391B196BB69B004A48F9 /* buffered_uart_demo.cpp */; };
 		D443391E196BB69B004A48F9 /* buffered_uart_demo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D443391B196BB69B004A48F9 /* buffered_uart_demo.cpp */; };
 		D443391F196BB69B004A48F9 /* Makefile in Sources */ = {isa = PBXBuildFile; fileRef = D443391C196BB69B004A48F9 /* Makefile */; };
@@ -1339,6 +1340,9 @@
 		D40A24041ACE2CCC00406A3A /* atmel_sam.cfg */ = {isa = PBXFileReference; lastKnownFileType = text; path = atmel_sam.cfg; sourceTree = "<group>"; };
 		D40A24221AD5F7AB00406A3A /* SamUniqueID.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SamUniqueID.cpp; sourceTree = "<group>"; };
 		D40A24231AD5F7AB00406A3A /* SamUniqueID.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SamUniqueID.h; sourceTree = "<group>"; };
+		D43C7AEA1B15689A007440D6 /* MotatePower.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotatePower.h; sourceTree = "<group>"; };
+		D43C7AEC1B156937007440D6 /* SamPower.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SamPower.h; sourceTree = "<group>"; };
+		D43C7AED1B1569FF007440D6 /* SamPower.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SamPower.cpp; sourceTree = "<group>"; };
 		D443391B196BB69B004A48F9 /* buffered_uart_demo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = buffered_uart_demo.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		D443391C196BB69B004A48F9 /* Makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
 		D449BC59197AC3E3000C0C3C /* MotateSerial.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotateSerial.h; sourceTree = "<group>"; };
@@ -4562,6 +4566,7 @@
 				D449BC59197AC3E3000C0C3C /* MotateSerial.h */,
 				D4C78F64195201A900A1BE28 /* MotateSPI.h */,
 				D4FEBFF61B0A657A0042EA32 /* MotateUniqueID.h */,
+				D43C7AEA1B15689A007440D6 /* MotatePower.h */,
 				D4C78F65195201A900A1BE28 /* MotateTimers.h */,
 				D4C7A1AB1963B66D00A1BE28 /* MotateUART.h */,
 				D4C78F66195201A900A1BE28 /* MotateUSB.h */,
@@ -4594,6 +4599,8 @@
 				D4C78F5A195201A900A1BE28 /* SamCommon.h */,
 				D4C78F5B195201A900A1BE28 /* SamPins.cpp */,
 				D4C78F5C195201A900A1BE28 /* SamPins.h */,
+				D43C7AEC1B156937007440D6 /* SamPower.h */,
+				D43C7AED1B1569FF007440D6 /* SamPower.cpp */,
 				D4C78F5D195201A900A1BE28 /* SamSPI.cpp */,
 				D4C78F5E195201A900A1BE28 /* SamSPI.h */,
 				D4C78F5F195201A900A1BE28 /* SamTimers.cpp */,
@@ -10316,6 +10323,7 @@
 				D4C79E151957C0AE00A1BE28 /* stm32f30x_dac.c in Sources */,
 				D4C79CE21957C0AE00A1BE28 /* startup_LPC11xx.s in Sources */,
 				D4C79EBF1957C0AE00A1BE28 /* stm32f30x_comp.c in Sources */,
+				D43C7AEE1B1569FF007440D6 /* SamPower.cpp in Sources */,
 				D4C79E471957C0AE00A1BE28 /* stm32f4xx_hal_irda.c in Sources */,
 				D4C79E4E1957C0AE00A1BE28 /* stm32f4xx_hal_pwr.c in Sources */,
 				D4C79CD21957C0AE00A1BE28 /* startup_LPC11xx.s in Sources */,

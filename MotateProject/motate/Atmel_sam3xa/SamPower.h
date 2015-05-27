@@ -1,9 +1,8 @@
 /*
- * UniqueId.h - utility function for getting processor unique id
+ * SamPower.h - library for controlling the power on a Atmel sam3x8
  * This file is part of the Motate project, imported from the TinyG project
  *
  * Copyright (c) 2015 Robert Giseburt
- * Copyright (c) 2014 Tom Cauchois
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -26,23 +25,13 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef SAMUNIQUEID_H_ONCE
-#define SAMUNIQUEID_H_ONCE
+#ifndef SAMPOWER_H_ONCE
+#define SAMPOWER_H_ONCE
 
 #include <sys/types.h>
 
 namespace Motate {
-    struct UUID_t {
-        static uint32_t _d[4];
-        static char _stringval[17];
-
-        UUID_t();
-
-        operator const char*();
-
-    };
-
-    extern UUID_t UUID;
+    void reset(bool bootloader) __attribute__ ((long_call, section (".ramfunc")));
 }
 
-#endif /* end of include guard: SAMUNIQUEID_H_ONCE */
+#endif /* end of include guard: SAMPOWER_H_ONCE */
