@@ -215,9 +215,56 @@ CP      = cp
 # NOTE: Atmel Studio 6.1 will default to the wrong mkdir that doesn't understand -p.
 #       So, in AS6.1, we have to pass MKDIR=gmkdir in the command line.
 MKDIR   ?= mkdir
+GIT     ?= git
 
 SHELL = bash
-export PATH := $(PATH):../Tools/gcc-$(CROSS_COMPILE)/bin
+
+# Here we use some heuristics to find the OS.
+# We only use this now for fiding if we're on windows.
+ifneq (,$(findstring /cygdrive/,$(PATH)))
+OS := WIN32
+PATH := $(PATH);../Tools/gcc-$(CROSS_COMPILE)/bin;C:\Program Files (x86)/Git/bin/;C:\Program Files/Git/bin
+else
+ifneq (,$(findstring WINDOWS,$(PATH)))
+OS := WIN32
+PATH := $(PATH);../Tools/gcc-$(CROSS_COMPILE)/bin;C:\Program Files (x86)/Git/bin/;C:\Program Files/Git/bin
+else
+ifneq (,$(findstring Atmel Studio,$(PATH)))
+OS := WIN32
+PATH := $(PATH);../Tools/gcc-$(CROSS_COMPILE)/bin;C:\Program Files (x86)/Git/bin/;C:\Program Files/Git/bin
+else
+
+UNAME := $(shell uname -s)
+
+ifeq (Darwin,${UNAME})
+OS = OSX
+else
+ifeq (Linux,${UNAME})
+OS = LINUX
+endif #LINUX
+endif #Darwin
+
+
+PATH := $(PATH):../Tools/gcc-$(CROSS_COMPILE)/bin
+
+endif #Atmel Studio
+endif #cygdrive
+endif #WINDOWS
+
+export PATH
+
+
+ifneq ($(NOT_IN_GIT),1)
+	GIT_LOCATED = $(GIT)
+	GIT_VERSION = $(shell $(GIT) describe --abbrev=4 --dirty --always --tags)
+	GIT_EXACT_VERSION = $(shell $(GIT) describe --abbrev=0 --tags)
+
+	# Push the git version into the code -- the ""s must be escaped and make it into the code intact
+	DEVICE_DEFINES += GIT_VERSION=\"$(GIT_VERSION)\" GIT_EXACT_VERSION=$(GIT_EXACT_VERSION)
+else
+   # Push the git version into the code -- the ""s must be escaped and make it into the code intact
+   DEVICE_DEFINES += GIT_VERSION=\"UNKNOWN-not-from-git\" GIT_EXACT_VERSION=0.0
+endif
 
 
 # ---------------------------------------------------------------------------------------
