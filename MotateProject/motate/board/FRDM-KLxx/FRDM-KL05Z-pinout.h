@@ -70,9 +70,14 @@ namespace Motate {
     pin_number kLED2_PinNumber                  =  17;
     pin_number kLED3_PinNumber                  =   8;
 
+
     pin_number kLED_USBRXPinNumber              =  -1;
     pin_number kLED_USBTXPinNumber              =  -1;
 
+    pin_number kSerial_RTS                      =  2;
+    pin_number kSerial_CTS                      =  3;
+
+    pin_number kInput1_PinNumber                =  4;
 
     /** NOTE: When adding pin definitions here, they must be
      *        added to ALL board pin assignment files, even if

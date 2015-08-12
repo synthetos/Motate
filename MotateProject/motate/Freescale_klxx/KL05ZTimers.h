@@ -497,6 +497,7 @@ namespace Motate {
     }
 
 #define MOTATE_TIMER_INTERRUPT(number) template<> void Motate::Timer<number>::interrupt()
+#define MOTATE_TIMER_CHANNEL_INTERRUPT(t, ch) template<> void Motate::TimerChannel<t, ch>::interrupt()
 
 } // namespace Motate
 

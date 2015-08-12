@@ -32,26 +32,73 @@
 
 #include "Freescale_klxx/KL05ZPins.h"
 
-using namespace Motate;
-
 
 #if 1
 
-extern _pinChangeInterrupt motate_pin_change_interrupts_start;
-extern _pinChangeInterrupt motate_pin_change_interrupts_end;
+extern "C" {
+    void _null_pin_change_interrupt() __attribute__ ((unused));
+    void _null_pin_change_interrupt() {};
+}
 
+namespace Motate {
+
+#define _TEMP_MAKE_IRQ_INTERRUPT( registerChar, registerPin) \
+    void IRQPin< ReversePinLookup< registerChar, registerPin >::number >::interrupt() __attribute__ ((weak, alias("_null_pin_change_interrupt")));
+
+    // Interrupt pins
+    // PTA0/PTA1/PTA7/PTA10/PTA11/PTA12/PTA16/PTA17/PTA18
+    _TEMP_MAKE_IRQ_INTERRUPT( 'A',  0 );
+    _TEMP_MAKE_IRQ_INTERRUPT( 'A',  1 );
+    _TEMP_MAKE_IRQ_INTERRUPT( 'A',  7 );
+    _TEMP_MAKE_IRQ_INTERRUPT( 'A', 10 );
+    _TEMP_MAKE_IRQ_INTERRUPT( 'A', 11 );
+    _TEMP_MAKE_IRQ_INTERRUPT( 'A', 12 );
+    _TEMP_MAKE_IRQ_INTERRUPT( 'A', 16 );
+    _TEMP_MAKE_IRQ_INTERRUPT( 'A', 17 );
+    _TEMP_MAKE_IRQ_INTERRUPT( 'A', 18 );
+
+    // PTB0/PTB1/PTB2/PTB3/PTB4/PTB5/PTB6/PTB7/PTB14
+    _TEMP_MAKE_IRQ_INTERRUPT( 'B',  0 );
+    _TEMP_MAKE_IRQ_INTERRUPT( 'B',  1 );
+    _TEMP_MAKE_IRQ_INTERRUPT( 'B',  2 );
+    _TEMP_MAKE_IRQ_INTERRUPT( 'B',  3 );
+    _TEMP_MAKE_IRQ_INTERRUPT( 'B',  4 );
+    _TEMP_MAKE_IRQ_INTERRUPT( 'B',  5 );
+    _TEMP_MAKE_IRQ_INTERRUPT( 'B',  6 );
+    _TEMP_MAKE_IRQ_INTERRUPT( 'B',  7 );
+    _TEMP_MAKE_IRQ_INTERRUPT( 'B', 14 );
+
+#undef _TEMP_MAKE_IRQ_INTERRUPT
+
+}// namespace
+
+using Motate::IRQPin;
+using Motate::ReversePinLookup;
 
 extern "C" void PORTA_IRQHandler(void) {
     uint32_t isr = PORTA->ISFR;
 
-    _pinChangeInterrupt *current = &motate_pin_change_interrupts_start;
-    while (current != &motate_pin_change_interrupts_end) {
-        if (current->portLetter == 'A' && isr & current->mask) {
-            current->interrupt();
-            PORTA->ISFR |= current->mask;
-        }
-        current++;
+#define _TEMP_MAKE_IRQ_INTERRUPT(registerChar, registerPin) \
+    if (IRQPin< ReversePinLookup< registerChar, registerPin >::number >::interrupt && \
+        isr & IRQPin< ReversePinLookup< registerChar, registerPin >::number >::mask) \
+    { \
+        IRQPin< ReversePinLookup< registerChar, registerPin >::number >::interrupt(); \
+        PORTA->ISFR |= IRQPin< ReversePinLookup< registerChar, registerPin >::number >::mask; \
     }
+
+    // Interrupt pins
+    // PTA0/PTA1/PTA7/PTA10/PTA11/PTA12/PTA16/PTA17/PTA18
+    _TEMP_MAKE_IRQ_INTERRUPT( 'A',  0 );
+    _TEMP_MAKE_IRQ_INTERRUPT( 'A',  1 );
+    _TEMP_MAKE_IRQ_INTERRUPT( 'A',  7 );
+    _TEMP_MAKE_IRQ_INTERRUPT( 'A', 10 );
+    _TEMP_MAKE_IRQ_INTERRUPT( 'A', 11 );
+    _TEMP_MAKE_IRQ_INTERRUPT( 'A', 12 );
+    _TEMP_MAKE_IRQ_INTERRUPT( 'A', 16 );
+    _TEMP_MAKE_IRQ_INTERRUPT( 'A', 17 );
+    _TEMP_MAKE_IRQ_INTERRUPT( 'A', 18 );
+
+#undef _TEMP_MAKE_IRQ_INTERRUPT
 
     NVIC_ClearPendingIRQ(PORTA_IRQn);
 }
@@ -60,15 +107,27 @@ extern "C" void PORTA_IRQHandler(void) {
 extern "C" void PORTB_IRQHandler(void) {
     uint32_t isr = PORTB->ISFR;
 
-    _pinChangeInterrupt *current = &motate_pin_change_interrupts_start;
-    while (current != &motate_pin_change_interrupts_end) {
-        if (current->portLetter == 'B' && isr & current->mask) {
-            current->interrupt();
-            PORTA->ISFR |= current->mask;
-        }
-        current++;
+#define _TEMP_MAKE_IRQ_INTERRUPT(registerChar, registerPin) \
+    if (IRQPin< ReversePinLookup< registerChar, registerPin >::number >::interrupt && \
+        isr & IRQPin< ReversePinLookup< registerChar, registerPin >::number >::mask) \
+    { \
+        IRQPin< ReversePinLookup< registerChar, registerPin >::number >::interrupt(); \
+        PORTB->ISFR |= IRQPin< ReversePinLookup< registerChar, registerPin >::number >::mask; \
     }
-    
+
+    // PTB0/PTB1/PTB2/PTB3/PTB4/PTB5/PTB6/PTB7/PTB14
+    _TEMP_MAKE_IRQ_INTERRUPT( 'B',  0 );
+    _TEMP_MAKE_IRQ_INTERRUPT( 'B',  1 );
+    _TEMP_MAKE_IRQ_INTERRUPT( 'B',  2 );
+    _TEMP_MAKE_IRQ_INTERRUPT( 'B',  3 );
+    _TEMP_MAKE_IRQ_INTERRUPT( 'B',  4 );
+    _TEMP_MAKE_IRQ_INTERRUPT( 'B',  5 );
+    _TEMP_MAKE_IRQ_INTERRUPT( 'B',  6 );
+    _TEMP_MAKE_IRQ_INTERRUPT( 'B',  7 );
+    _TEMP_MAKE_IRQ_INTERRUPT( 'B', 14 );
+
+#undef _TEMP_MAKE_IRQ_INTERRUPT
+
     NVIC_ClearPendingIRQ(PORTB_IRQn);
 }
 

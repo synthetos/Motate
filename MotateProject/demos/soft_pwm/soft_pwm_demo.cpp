@@ -12,7 +12,7 @@ timer_number kBlinkTimerChNumber = 0;
 TimerChannel<kBlinkTimerNumber, kBlinkTimerChNumber>
                 blinkTimer(kTimerUpToMatch, /*Hz: */ 1000);
 
-PWMOutputPin<kPWM11_PinNumber> led2_pin;
+PWMOutputPin<kLED1_PinNumber> led2_pin;
 
 
 float duty_cycle = 0.01;

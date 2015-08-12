@@ -81,6 +81,13 @@ namespace Motate {
     _MAKE_MOTATE_PIN(21, B, 'B', 13);	// A5
 
 
+    // Not pinned out, but assigned numbers to make compiling work:
+    _MAKE_MOTATE_PIN(100, A, 'A',  1);
+    _MAKE_MOTATE_PIN(101, A, 'A', 16);
+    _MAKE_MOTATE_PIN(102, A, 'A', 17);
+    _MAKE_MOTATE_PIN(103, A, 'A', 18);
+    _MAKE_MOTATE_PIN(104, B, 'B', 14);
+
     // PWM Pins (in the order they are in the KL05* Reference Manual, pages 147-149 (rougly pin order):
     _MAKE_MOTATE_PWM_PIN( 'B',  6, Timer<0>, /*Channel:*/ 3, /*PinMux:*/ 2, /*Inverted:*/ false);
     _MAKE_MOTATE_PWM_PIN( 'B',  7, Timer<0>, /*Channel:*/ 2, /*PinMux:*/ 2, /*Inverted:*/ false);
@@ -98,14 +105,14 @@ namespace Motate {
     // Interrupt pins
     // PTA0/PTA1/PTA7/PTA10/PTA11/PTA12/PTA16/PTA17/PTA18
     _MAKE_MOTATE_GPIO_IRQ_PIN( 'A',  0 );
-//    _MAKE_MOTATE_GPIO_IRQ_PIN( 'A',  1 );
+    _MAKE_MOTATE_GPIO_IRQ_PIN( 'A',  1 );
     _MAKE_MOTATE_GPIO_IRQ_PIN( 'A',  7 );
     _MAKE_MOTATE_GPIO_IRQ_PIN( 'A', 10 );
     _MAKE_MOTATE_GPIO_IRQ_PIN( 'A', 11 );
     _MAKE_MOTATE_GPIO_IRQ_PIN( 'A', 12 );
-//    _MAKE_MOTATE_GPIO_IRQ_PIN( 'A', 16 );
-//    _MAKE_MOTATE_GPIO_IRQ_PIN( 'A', 17 );
-//    _MAKE_MOTATE_GPIO_IRQ_PIN( 'A', 18 );
+    _MAKE_MOTATE_GPIO_IRQ_PIN( 'A', 16 );
+    _MAKE_MOTATE_GPIO_IRQ_PIN( 'A', 17 );
+    _MAKE_MOTATE_GPIO_IRQ_PIN( 'A', 18 );
 
     // PTB0/PTB1/PTB2/PTB3/PTB4/PTB5/PTB6/PTB7/PTB14
     _MAKE_MOTATE_GPIO_IRQ_PIN( 'B',  0 );
@@ -116,7 +123,7 @@ namespace Motate {
     _MAKE_MOTATE_GPIO_IRQ_PIN( 'B',  5 );
     _MAKE_MOTATE_GPIO_IRQ_PIN( 'B',  6 );
     _MAKE_MOTATE_GPIO_IRQ_PIN( 'B',  7 );
-//    _MAKE_MOTATE_GPIO_IRQ_PIN( 'B', 14 );
+    _MAKE_MOTATE_GPIO_IRQ_PIN( 'B', 14 );
 
     // SPI pins
     _MAKE_MOTATE_SPI_CS_PIN( 'A',  5, /*PinMux:*/ 3);

@@ -113,17 +113,17 @@ namespace Motate {
     struct _UARTHardware<0u> {
         // Template specialize this for KLxx with multiple UARTs
         struct uart_proxy_t {
-            static constexpr volatile char &BDH() { return (char &)(UART0->BDH); };
-            static constexpr volatile char &BDL() { return (char &)(UART0->BDL); };
+            static volatile char &BDH() { return (char &)(UART0->BDH); };
+            static volatile char &BDL() { return (char &)(UART0->BDL); };
 
-            static constexpr volatile char &C1() { return (char &)(UART0->C1); };
-            static constexpr volatile char &C2() { return (char &)(UART0->C2); };
-            static constexpr volatile char &S1() { return (char &)(UART0->S1); };
-            static constexpr volatile char &S2() { return (char &)(UART0->S2); };
-            static constexpr volatile char &C3() { return (char &)(UART0->C3); };
-            static constexpr volatile char &D () { return (char &)(UART0->D);  };
-            static constexpr volatile char &C4() { return (char &)(UART0->C4); };
-            static constexpr volatile char &C5() { return (char &)(UART0->C5); };
+            static volatile char &C1() { return (char &)(UART0->C1); };
+            static volatile char &C2() { return (char &)(UART0->C2); };
+            static volatile char &S1() { return (char &)(UART0->S1); };
+            static volatile char &S2() { return (char &)(UART0->S2); };
+            static volatile char &C3() { return (char &)(UART0->C3); };
+            static volatile char &D () { return (char &)(UART0->D);  };
+            static volatile char &C4() { return (char &)(UART0->C4); };
+            static volatile char &C5() { return (char &)(UART0->C5); };
         };
 
         static uart_proxy_t uart_proxy;
