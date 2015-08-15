@@ -155,6 +155,7 @@ namespace Motate {
         static TcChannel * const tcChan();
         static const uint32_t peripheralId(); // ID_TC0 .. ID_TC8
         static const IRQn_Type tcIRQ();
+        static uint32_t _interrupt_cause_cached;
 
         typedef SamCommon< Timer<timerNum> > common;
 
@@ -491,9 +492,10 @@ namespace Motate {
 
 
         static TimerChannelInterruptOptions getInterruptCause(int16_t &channel) {
-            uint32_t sr_ = tcChan()->TC_SR;
+            uint32_t sr_ = _interrupt_cause_cached;
             // if it is either an overflow or a RC compare
             if (sr_ & (TC_SR_COVFS | TC_SR_CPCS)) {
+                channel = -1;
                 return kInterruptOnOverflow;
             }
             else if (sr_ & (TC_SR_CPAS)) {
@@ -512,7 +514,7 @@ namespace Motate {
         }
 
         // Placeholder for user code.
-        static void interrupt() __attribute__ (( weak ));
+        static void interrupt();
     };
 
     template<> inline Tc * const        Timer<0>::tc()           { return TC0; };
@@ -607,8 +609,9 @@ namespace Motate {
             Timer<timerNum>::stopPWMOutput(channelNum);
         }
 
-//        void setInterrupts(const uint32_t interrupts) {
-//        };
+        void setInterrupts(const uint32_t interrupts) {
+            Timer<timerNum>::setInterrupts(interrupts, channelNum);
+        };
 
         TimerChannelInterruptOptions getInterruptCause(int16_t &channel) {
             channel = 1;

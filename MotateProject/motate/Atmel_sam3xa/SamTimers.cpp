@@ -70,18 +70,20 @@ extern "C" void SysTick_Handler(void)
         template<> void TimerChannel<x, 0>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt"))); \
         template<> void TimerChannel<x, 1>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt"))); \
         template<> void Timer<x>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt"))); \
+        template<> uint32_t Timer<x>::_interrupt_cause_cached = 0; \
     } \
     extern "C" \
     void TC##x##_Handler(void) { /* delegate to the TimerChannels */ \
+        Motate::Timer<x>::_interrupt_cause_cached = Motate::Timer<x>::tcChan()->TC_SR;\
         int16_t ch_ = 0; \
         /*auto tcio =*/ Motate::Timer<x>::getInterruptCause(ch_); \
         if (  Motate::TimerChannel<x, 0>::interrupt && \
-              ch_  == 0 \
+              (ch_  == 0 || ch_  == -1) \
             ) { \
             Motate::TimerChannel<x, 0>::interrupt(); \
         } \
         if (  Motate::TimerChannel<x, 1>::interrupt || \
-              ch_ == 1 \
+              (ch_  == 1 || ch_  == -1) \
             ) { \
             Motate::TimerChannel<x, 1>::interrupt(); \
         } \
@@ -89,12 +91,6 @@ extern "C" void SysTick_Handler(void)
             Motate::Timer<x>::interrupt(); \
         } \
     }
-
-
-//#define _MAKE_TCx_Handler(x) \
-//    void TC##x##_Handler(void) { \
-//        Motate::Timer<x>::interrupt(); \
-//    }
 
     _MAKE_TCx_Handler(0)
     _MAKE_TCx_Handler(1)
