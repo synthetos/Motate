@@ -223,15 +223,15 @@ SHELL = bash
 # We only use this now for fiding if we're on windows.
 ifneq (,$(findstring /cygdrive/,$(PATH)))
 OS := WIN32
-PATH := $(PATH);../Tools/gcc-$(CROSS_COMPILE)/bin;C:\Program Files (x86)/Git/bin/;C:\Program Files/Git/bin
+PATH := $(TOOLS_PATH)/gcc-$(CROSS_COMPILE)/bin;$(PATH);C:\Program Files (x86)/Git/bin/;C:\Program Files/Git/bin
 else
 ifneq (,$(findstring WINDOWS,$(PATH)))
 OS := WIN32
-PATH := $(PATH);../Tools/gcc-$(CROSS_COMPILE)/bin;C:\Program Files (x86)/Git/bin/;C:\Program Files/Git/bin
+PATH := $(TOOLS_PATH)/gcc-$(CROSS_COMPILE)/bin;$(PATH);C:\Program Files (x86)/Git/bin/;C:\Program Files/Git/bin
 else
 ifneq (,$(findstring Atmel Studio,$(PATH)))
 OS := WIN32
-PATH := $(PATH);../Tools/gcc-$(CROSS_COMPILE)/bin;C:\Program Files (x86)/Git/bin/;C:\Program Files/Git/bin
+PATH := $(TOOLS_PATH)/gcc-$(CROSS_COMPILE)/bin;$(PATH);C:\Program Files (x86)/Git/bin/;C:\Program Files/Git/bin
 else
 
 UNAME := $(shell uname -s)
@@ -245,9 +245,9 @@ endif #LINUX
 endif #Darwin
 
 
-PATH := $(PATH):../Tools/gcc-$(CROSS_COMPILE)/bin
+PATH := $(TOOLS_PATH)/gcc-$(CROSS_COMPILE)/bin:$(PATH)
 
-endif #Atmel Studio
+endif #Atmel Studio else
 endif #cygdrive
 endif #WINDOWS
 
