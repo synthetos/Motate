@@ -888,6 +888,16 @@ static Port ## registerLetter port ## registerLetter;
     typedef Pin<-1> NullPin;
     static NullPin nullPin;
 
+
+    _MAKE_MOTATE_PORT32(A, 'A');
+    _MAKE_MOTATE_PORT32(B, 'B');
+#ifdef PORTC
+    _MAKE_MOTATE_PORT32(C, 'C');
+#endif
+#ifdef PORTD
+    _MAKE_MOTATE_PORT32(D, 'D');
+#endif
+
 } // end namespace Motate
 
 

@@ -105,30 +105,11 @@ extern int _read(int file, char *ptr, int len)
     return 0 ;
 }
 
-extern int _write( int file, char *ptr, int len )
-{
-//	size_t written = SerialUSB.write((const uint8_t *)ptr, len);
-//	spi.write((const uint8_t *)ptr, len);
-//	return written;
-
-	return 0;
-
-/*
-    int iIndex ;
-//    for ( ; *ptr != 0 ; ptr++ )
-    for ( iIndex=0 ; iIndex < len ; iIndex++, ptr++ )
-    {
-//        UART_PutChar( *ptr ) ;
-
-		// Check if the transmitter is ready
-		  while ((UART->UART_SR & UART_SR_TXRDY) != UART_SR_TXRDY);
-
-		  // Send character
-		  UART->UART_THR = *ptr;
-    }
-    return iIndex ;
-*/
-}
+// We leave this for the user to implement, if they use it:
+//extern int _write( int file, char *ptr, int len )
+//{
+//	return 0;
+//}
 
 extern void _exit( int status )
 {

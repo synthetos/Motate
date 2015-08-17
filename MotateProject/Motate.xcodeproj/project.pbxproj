@@ -1365,6 +1365,7 @@
 		D48992C01965B118004F73A6 /* MotateBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MotateBuffer.h; path = motate/MotateBuffer.h; sourceTree = SOURCE_ROOT; };
 		D48992C41965B460004F73A6 /* Makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
 		D48992C51965B460004F73A6 /* uart_demo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = uart_demo.cpp; sourceTree = "<group>"; };
+		D49367C41B825324000BB759 /* motate_chip_pin_functions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = motate_chip_pin_functions.h; sourceTree = "<group>"; };
 		D4A74B2119C15DB00019633A /* frdm-kl05z.cfg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "frdm-kl05z.cfg"; sourceTree = "<group>"; };
 		D4C77F6D1950912300A1BE28 /* Tools.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Tools.xcodeproj; path = ../Tools/Tools.xcodeproj; sourceTree = "<group>"; };
 		D4C78F54195201A900A1BE28 /* AvrPins.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AvrPins.h; sourceTree = "<group>"; };
@@ -9942,6 +9943,7 @@
 				D4C79EEF1957C0B700A1BE28 /* syscalls.h */,
 				D4C79EF01957C0B700A1BE28 /* syscalls_sam3.cpp */,
 				D46B98221B683C690088801D /* motate_additions.ld */,
+				D49367C41B825324000BB759 /* motate_chip_pin_functions.h */,
 			);
 			path = atmel_sam;
 			sourceTree = "<group>";
