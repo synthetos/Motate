@@ -315,9 +315,9 @@ LDFLAGS += $(LIBS) $(USER_LIBS) $(DEBUG_SYMBOLS) -O$(OPTIMIZATION) -Wl,--cref -W
 
 # Directories where source files can be found
 
-C_SOURCES   = $(foreach dir, $(SOURCE_DIRS), $(wildcard $(dir)/*.c) )
-CXX_SOURCES = $(foreach dir, $(SOURCE_DIRS), $(wildcard $(dir)/*.cpp) )
-ASM_SOURCES = $(foreach dir, $(SOURCE_DIRS), $(wildcard $(dir)/*.s) )
+C_SOURCES   = $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.c) )
+CXX_SOURCES = $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.cpp) )
+ASM_SOURCES = $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.s $(dir)/*.S) )
 
 C_OBJECTS   := $(addsuffix .o,$(basename $(C_SOURCES)))
 CXX_OBJECTS := $(addsuffix .o,$(basename $(CXX_SOURCES)))
@@ -446,7 +446,17 @@ $(ALL_OTHER_C_OBJECTS): $(OUTDIR)/%.o: %.c
 	@echo $(START_BOLD)"Compiling c $<"; echo "    -> $@" $(END_BOLD)
 	$(QUIET)$(CC) $(CFLAGS) $(DEPFLAGS) -c -o $@ $<
 
+$(MOTATE_ASM_OBJECTS): $(OUTDIR)/motate/%.o: $(MOTATE_PATH)/%.s
+	$(QUIET)$(MKDIR) -p "$(@D)" "$(DEPDIR)" "$(BIN)"
+	@echo $(START_BOLD)"Compiling $<"; echo "    -> $@"  $(END_BOLD)
+	$(QUIET)$(CC) $(ASFLAGS) $(DEPFLAGS) -c -o $@ $<
+
 $(MOTATE_ASM_OBJECTS): $(OUTDIR)/motate/%.o: $(MOTATE_PATH)/%.S
+	$(QUIET)$(MKDIR) -p "$(@D)" "$(DEPDIR)" "$(BIN)"
+	@echo $(START_BOLD)"Compiling $<"; echo "    -> $@"  $(END_BOLD)
+	$(QUIET)$(CC) $(ASFLAGS) $(DEPFLAGS) -c -o $@ $<
+
+$(ALL_OTHER_ASM_OBJECTS): $(OUTDIR)/%.o: %.s
 	$(QUIET)$(MKDIR) -p "$(@D)" "$(DEPDIR)" "$(BIN)"
 	@echo $(START_BOLD)"Compiling $<"; echo "    -> $@"  $(END_BOLD)
 	$(QUIET)$(CC) $(ASFLAGS) $(DEPFLAGS) -c -o $@ $<
