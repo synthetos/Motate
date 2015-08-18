@@ -7,9 +7,9 @@
 
 
 define CREATE_DEVICE_LIBRARY
-$(1)_C_SOURCES   := $(foreach dir,$($(1)_SOURCE_DIRS), $(wildcard $(dir)/*.c) )
-$(1)_CXX_SOURCES := $(foreach dir,$($(1)_SOURCE_DIRS), $(wildcard $(dir)/*.cpp) )
-$(1)_ASM_SOURCES := $(foreach dir,$($(1)_SOURCE_DIRS), $(wildcard $(dir)/*.s) )
+$(1)_C_SOURCES   := $(foreach dir,$($(1)_SOURCE_DIRS),$(wildcard $(dir)/*.c) )
+$(1)_CXX_SOURCES := $(foreach dir,$($(1)_SOURCE_DIRS),$(wildcard $(dir)/*.cpp) )
+$(1)_ASM_SOURCES := $(foreach dir,$($(1)_SOURCE_DIRS),$(wildcard $(dir)/*.s) $(wildcard $(dir)/*.S) )
 
 $(1)_C_OBJECTS   := $$(addsuffix .o,$$(basename $$($(1)_C_SOURCES)))
 $(1)_CXX_OBJECTS := $$(addsuffix .o,$$(basename $$($(1)_CXX_SOURCES)))

@@ -71,7 +71,7 @@ endif #eq ($(ARCH), 'gcc-arm-none-eabi')
 
 
 
-ifeq ($(shell PATH=$(TOOLS_SUBPATH)/bin/:${PATH} command -v $(TEST_COMMAND) >/dev/null 2>&1 || echo "yes"), yes)
+ifeq ($(shell PATH=$(TOOLS_SUBPATH)/bin/ command -v $(TEST_COMMAND) >/dev/null 2>&1 || echo "yes"), yes)
 TOOLS_SUBPATH_IF_NEEDED = $(TOOLS_SUBPATH)
 endif
 
