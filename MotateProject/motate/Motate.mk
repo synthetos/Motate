@@ -451,17 +451,7 @@ $(MOTATE_ASM_OBJECTS): $(OUTDIR)/motate/%.o: $(MOTATE_PATH)/%.s
 	@echo $(START_BOLD)"Compiling $<"; echo "    -> $@"  $(END_BOLD)
 	$(QUIET)$(CC) $(ASFLAGS) $(DEPFLAGS) -c -o $@ $<
 
-$(MOTATE_ASM_OBJECTS): $(OUTDIR)/motate/%.o: $(MOTATE_PATH)/%.S
-	$(QUIET)$(MKDIR) -p "$(@D)" "$(DEPDIR)" "$(BIN)"
-	@echo $(START_BOLD)"Compiling $<"; echo "    -> $@"  $(END_BOLD)
-	$(QUIET)$(CC) $(ASFLAGS) $(DEPFLAGS) -c -o $@ $<
-
 $(ALL_OTHER_ASM_OBJECTS): $(OUTDIR)/%.o: %.s
-	$(QUIET)$(MKDIR) -p "$(@D)" "$(DEPDIR)" "$(BIN)"
-	@echo $(START_BOLD)"Compiling $<"; echo "    -> $@"  $(END_BOLD)
-	$(QUIET)$(CC) $(ASFLAGS) $(DEPFLAGS) -c -o $@ $<
-
-$(ALL_OTHER_ASM_OBJECTS): $(OUTDIR)/%.o: %.S
 	$(QUIET)$(MKDIR) -p "$(@D)" "$(DEPDIR)" "$(BIN)"
 	@echo $(START_BOLD)"Compiling $<"; echo "    -> $@"  $(END_BOLD)
 	$(QUIET)$(CC) $(ASFLAGS) $(DEPFLAGS) -c -o $@ $<
