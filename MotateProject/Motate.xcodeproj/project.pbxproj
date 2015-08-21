@@ -24,6 +24,7 @@
 		D48992C71965B460004F73A6 /* Makefile in Sources */ = {isa = PBXBuildFile; fileRef = D48992C41965B460004F73A6 /* Makefile */; };
 		D48992C81965B460004F73A6 /* uart_demo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D48992C51965B460004F73A6 /* uart_demo.cpp */; };
 		D48992C91965B460004F73A6 /* uart_demo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D48992C51965B460004F73A6 /* uart_demo.cpp */; };
+		D49367D61B86399E000BB759 /* SamServiceCall.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D49367D41B86399E000BB759 /* SamServiceCall.cpp */; };
 		D4C78F69195201A900A1BE28 /* AvrUSB.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C78F56195201A900A1BE28 /* AvrUSB.cpp */; };
 		D4C78F6A195201A900A1BE28 /* SamPins.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C78F5B195201A900A1BE28 /* SamPins.cpp */; };
 		D4C78F6B195201A900A1BE28 /* SamSPI.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C78F5D195201A900A1BE28 /* SamSPI.cpp */; };
@@ -1358,39 +1359,42 @@
 		D46B98571B6AFE3F0088801D /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
 		D46B985C1B6AFE810088801D /* adc_demo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = adc_demo.cpp; sourceTree = "<group>"; };
 		D46B988B1B6AFE810088801D /* Makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
-		D46B98B01B6D42CC0088801D /* MotateJSON.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MotateJSON.cpp; sourceTree = "<group>"; };
-		D46B98B11B6D42CC0088801D /* MotateJSON.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotateJSON.h; sourceTree = "<group>"; };
+		D46B98B01B6D42CC0088801D /* MotateJSON.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = MotateJSON.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
+		D46B98B11B6D42CC0088801D /* MotateJSON.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = MotateJSON.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		D47E9A921ACB2CFE00476AF2 /* xmega_stdcpp_stubs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = xmega_stdcpp_stubs.h; sourceTree = "<group>"; };
-		D47E9A941ACC532300476AF2 /* XMegaPins.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = XMegaPins.cpp; sourceTree = "<group>"; };
+		D47E9A941ACC532300476AF2 /* XMegaPins.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = XMegaPins.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		D48992C01965B118004F73A6 /* MotateBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MotateBuffer.h; path = motate/MotateBuffer.h; sourceTree = SOURCE_ROOT; };
 		D48992C41965B460004F73A6 /* Makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
 		D48992C51965B460004F73A6 /* uart_demo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = uart_demo.cpp; sourceTree = "<group>"; };
 		D49367C41B825324000BB759 /* motate_chip_pin_functions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = motate_chip_pin_functions.h; sourceTree = "<group>"; };
+		D49367D31B8638F0000BB759 /* MotateServiceCall.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotateServiceCall.h; sourceTree = "<group>"; };
+		D49367D41B86399E000BB759 /* SamServiceCall.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SamServiceCall.cpp; sourceTree = "<group>"; };
+		D49367D51B86399E000BB759 /* SamServiceCall.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SamServiceCall.h; sourceTree = "<group>"; };
 		D4A74B2119C15DB00019633A /* frdm-kl05z.cfg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "frdm-kl05z.cfg"; sourceTree = "<group>"; };
 		D4C77F6D1950912300A1BE28 /* Tools.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Tools.xcodeproj; path = ../Tools/Tools.xcodeproj; sourceTree = "<group>"; };
-		D4C78F54195201A900A1BE28 /* AvrPins.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AvrPins.h; sourceTree = "<group>"; };
-		D4C78F55195201A900A1BE28 /* AvrTimers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AvrTimers.h; sourceTree = "<group>"; };
+		D4C78F54195201A900A1BE28 /* AvrPins.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = AvrPins.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
+		D4C78F55195201A900A1BE28 /* AvrTimers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = AvrTimers.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		D4C78F56195201A900A1BE28 /* AvrUSB.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AvrUSB.cpp; sourceTree = "<group>"; };
 		D4C78F57195201A900A1BE28 /* AvrUSB.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AvrUSB.h; sourceTree = "<group>"; };
-		D4C78F5A195201A900A1BE28 /* SamCommon.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SamCommon.h; sourceTree = "<group>"; };
-		D4C78F5B195201A900A1BE28 /* SamPins.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SamPins.cpp; sourceTree = "<group>"; };
+		D4C78F5A195201A900A1BE28 /* SamCommon.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = SamCommon.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
+		D4C78F5B195201A900A1BE28 /* SamPins.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = SamPins.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		D4C78F5C195201A900A1BE28 /* SamPins.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = SamPins.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		D4C78F5D195201A900A1BE28 /* SamSPI.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SamSPI.cpp; sourceTree = "<group>"; };
 		D4C78F5E195201A900A1BE28 /* SamSPI.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SamSPI.h; sourceTree = "<group>"; };
-		D4C78F5F195201A900A1BE28 /* SamTimers.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SamTimers.cpp; sourceTree = "<group>"; };
-		D4C78F60195201A900A1BE28 /* SamTimers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SamTimers.h; sourceTree = "<group>"; };
+		D4C78F5F195201A900A1BE28 /* SamTimers.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = SamTimers.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
+		D4C78F60195201A900A1BE28 /* SamTimers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = SamTimers.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		D4C78F61195201A900A1BE28 /* SamUSB.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SamUSB.cpp; sourceTree = "<group>"; };
 		D4C78F62195201A900A1BE28 /* SamUSB.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SamUSB.h; sourceTree = "<group>"; };
-		D4C78F63195201A900A1BE28 /* MotatePins.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotatePins.h; sourceTree = "<group>"; };
+		D4C78F63195201A900A1BE28 /* MotatePins.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = MotatePins.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		D4C78F64195201A900A1BE28 /* MotateSPI.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotateSPI.h; sourceTree = "<group>"; };
-		D4C78F65195201A900A1BE28 /* MotateTimers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotateTimers.h; sourceTree = "<group>"; };
+		D4C78F65195201A900A1BE28 /* MotateTimers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = MotateTimers.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		D4C78F66195201A900A1BE28 /* MotateUSB.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotateUSB.h; sourceTree = "<group>"; };
 		D4C78F67195201A900A1BE28 /* MotateUSBCDC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotateUSBCDC.h; sourceTree = "<group>"; };
 		D4C78F68195201A900A1BE28 /* MotateUSBHelpers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotateUSBHelpers.h; sourceTree = "<group>"; };
-		D4C78F6F19538E6B00A1BE28 /* KL05ZPins.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = KL05ZPins.cpp; sourceTree = "<group>"; };
+		D4C78F6F19538E6B00A1BE28 /* KL05ZPins.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = KL05ZPins.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		D4C78F7019538E6B00A1BE28 /* KL05ZPins.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = KL05ZPins.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
-		D4C78F7F19553EF700A1BE28 /* KL05ZTimers.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = KL05ZTimers.cpp; sourceTree = "<group>"; };
-		D4C78F8019553EF700A1BE28 /* KL05ZTimers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KL05ZTimers.h; sourceTree = "<group>"; };
+		D4C78F7F19553EF700A1BE28 /* KL05ZTimers.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = KL05ZTimers.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
+		D4C78F8019553EF700A1BE28 /* KL05ZTimers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = KL05ZTimers.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		D4C78F821957BF8400A1BE28 /* Motate.mk */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = Motate.mk; sourceTree = "<group>"; usesTabs = 1; };
 		D4C78F851957C0AA00A1BE28 /* core_cm0.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = core_cm0.h; sourceTree = "<group>"; };
 		D4C78F861957C0AA00A1BE28 /* core_cm0plus.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = core_cm0plus.h; sourceTree = "<group>"; };
@@ -4500,8 +4504,8 @@
 		D4F22B7A1B73DC4900C0DDFD /* g2Ref.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = g2Ref.mk; sourceTree = "<group>"; };
 		D4F22B831B73E63400C0DDFD /* pin_assignments.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = pin_assignments.h; sourceTree = "<group>"; };
 		D4F22B851B73E63400C0DDFD /* pin_assignments.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = pin_assignments.h; sourceTree = "<group>"; };
-		D4F22B871B750B4800C0DDFD /* MotateUtilities.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MotateUtilities.cpp; sourceTree = "<group>"; };
-		D4F22B881B750B4800C0DDFD /* MotateUtilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotateUtilities.h; sourceTree = "<group>"; };
+		D4F22B871B750B4800C0DDFD /* MotateUtilities.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = MotateUtilities.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
+		D4F22B881B750B4800C0DDFD /* MotateUtilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = MotateUtilities.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		D4FEBFF61B0A657A0042EA32 /* MotateUniqueID.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotateUniqueID.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -4604,6 +4608,7 @@
 				D46B98B01B6D42CC0088801D /* MotateJSON.cpp */,
 				D46B98B11B6D42CC0088801D /* MotateJSON.h */,
 				D449BC59197AC3E3000C0C3C /* MotateSerial.h */,
+				D49367D31B8638F0000BB759 /* MotateServiceCall.h */,
 				D4C78F64195201A900A1BE28 /* MotateSPI.h */,
 				D4FEBFF61B0A657A0042EA32 /* MotateUniqueID.h */,
 				D43C7AEA1B15689A007440D6 /* MotatePower.h */,
@@ -4636,6 +4641,8 @@
 		D4C78F59195201A900A1BE28 /* Atmel_sam3xa */ = {
 			isa = PBXGroup;
 			children = (
+				D49367D41B86399E000BB759 /* SamServiceCall.cpp */,
+				D49367D51B86399E000BB759 /* SamServiceCall.h */,
 				D40A24221AD5F7AB00406A3A /* SamUniqueID.cpp */,
 				D40A24231AD5F7AB00406A3A /* SamUniqueID.h */,
 				D4C78F5A195201A900A1BE28 /* SamCommon.h */,
@@ -10513,6 +10520,7 @@
 				D4C79E451957C0AE00A1BE28 /* stm32f4xx_hal_i2s.c in Sources */,
 				D4C79E9F1957C0AE00A1BE28 /* stm32l1xx_aes_util.c in Sources */,
 				D4C79E0C1957C0AE00A1BE28 /* sys.cpp in Sources */,
+				D49367D61B86399E000BB759 /* SamServiceCall.cpp in Sources */,
 				D4C79D7D1957C0AE00A1BE28 /* stm32f4xx_hal_dma_ex.c in Sources */,
 				D4C79F2D196216A300A1BE28 /* Makefile in Sources */,
 				D4C79E461957C0AE00A1BE28 /* stm32f4xx_hal_i2s_ex.c in Sources */,
