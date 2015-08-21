@@ -1,5 +1,5 @@
 /*
-  utility/AvrTimers.h - Library for the Arduino-compatible Motate system
+  utility/AvrTimers.h - Library for the Motate system
   http://github.com/synthetos/motate/
 
   Copyright (c) 2013 Robert Giseburt

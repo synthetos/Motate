@@ -1,5 +1,5 @@
 /*
- SamPinss.cpp - Library for the Arduino-compatible Motate system
+ SamPins.cpp - Library for the Motate system
  http://github.com/synthetos/motate/
 
  Copyright (c) 2014 Robert Giseburt

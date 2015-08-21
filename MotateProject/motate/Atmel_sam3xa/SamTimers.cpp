@@ -1,5 +1,5 @@
 /*
-  SamTimers.cpp - Library for the Arduino-compatible Motate system
+  SamTimers.cpp - Library for the Motate system
   http://github.com/synthetos/motate/
 
   Copyright (c) 2013 Robert Giseburt

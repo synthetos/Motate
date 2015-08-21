@@ -1,5 +1,5 @@
 /*
- MotateJSON.cpp - Library for the Arduino-compatible Motate system
+ MotateJSON.cpp - Library for the Motate system
  http://github.com/synthetos/motate/
 
  Copyright (c) 2015 Robert Giseburt

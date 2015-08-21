@@ -1,5 +1,5 @@
 /*
- utility/SamTimers.h - Library for the Arduino-compatible Motate system
+ utility/SamTimers.h - Library for the Motate system
  http://github.com/synthetos/motate/
 
  Copyright (c) 2013 Robert Giseburt
@@ -515,7 +515,7 @@ namespace Motate {
 
         // Placeholder for user code.
         static void interrupt();
-    };
+    }; // Timer<>
 
     template<> inline Tc * const        Timer<0>::tc()           { return TC0; };
     template<> inline TcChannel * const Timer<0>::tcChan()       { return TC0->TC_CHANNEL + 0; };
