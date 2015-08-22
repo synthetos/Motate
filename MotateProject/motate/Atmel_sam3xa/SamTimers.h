@@ -493,9 +493,10 @@ namespace Motate {
 
         static TimerChannelInterruptOptions getInterruptCause(int16_t &channel) {
             uint32_t sr_ = _interrupt_cause_cached;
+            channel = -1;
+
             // if it is either an overflow or a RC compare
             if (sr_ & (TC_SR_COVFS | TC_SR_CPCS)) {
-                channel = -1;
                 return kInterruptOnOverflow;
             }
             else if (sr_ & (TC_SR_CPAS)) {
@@ -507,7 +508,6 @@ namespace Motate {
                 return kInterruptOnMatch;
             }
             else if (sr_ & (TC_SR_ETRGS)) {
-                channel = 0;
                 return kInterruptOnMatch;
             }
             return kInterruptUnknown;

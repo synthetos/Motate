@@ -1,5 +1,5 @@
 /*
-  SamTimers.cpp - Library for the Motate system
+  SamTimers.cpp - Library for the Arduino-compatible Motate system
   http://github.com/synthetos/motate/
 
   Copyright (c) 2013 Robert Giseburt
@@ -98,9 +98,11 @@ extern "C" void SysTick_Handler(void)
     _MAKE_TCx_Handler(3)
     _MAKE_TCx_Handler(4)
     _MAKE_TCx_Handler(5)
+#ifdef TC2
     _MAKE_TCx_Handler(6)
     _MAKE_TCx_Handler(7)
     _MAKE_TCx_Handler(8)
+#endif
 
 #undef _MAKE_TCx_Handler
 
