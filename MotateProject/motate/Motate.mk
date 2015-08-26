@@ -260,9 +260,9 @@ export PATH
 
 
 ifneq ($(NOT_IN_GIT),1)
-	GIT_LOCATED = $(GIT)
-	GIT_VERSION = $(shell $(GIT) describe --abbrev=4 --dirty --always --tags)
-	GIT_EXACT_VERSION = $(shell $(GIT) describe --abbrev=0 --tags)
+	GIT_LOCATED := $(GIT)
+	GIT_VERSION := $(shell $(GIT) describe --abbrev=4 --dirty --always --tags)
+	GIT_EXACT_VERSION := $(shell $(GIT) describe --abbrev=0 --tags)
 
 	# Push the git version into the code -- the ""s must be escaped and make it into the code intact
 	DEVICE_DEFINES += GIT_VERSION=\"$(GIT_VERSION)\" GIT_EXACT_VERSION=$(GIT_EXACT_VERSION)
