@@ -6,3 +6,6 @@ avr-toolchain-*
 gcc-avr
 avr
 *.tar.bz2
+osx
+linux
+win32

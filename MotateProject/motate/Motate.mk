@@ -223,29 +223,34 @@ SHELL = bash
 # We only use this now for fiding if we're on windows.
 ifneq (,$(findstring /cygdrive/,$(PATH)))
 OS := WIN32
-PATH := $(TOOLS_PATH)/gcc-$(CROSS_COMPILE)/bin;$(PATH);C:\Program Files (x86)/Git/bin/;C:\Program Files/Git/bin
+TOOLS_SUBPATH := win32/gcc-$(CROSS_COMPILE)
+PATH := $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin;$(PATH);C:\Program Files (x86)/Git/bin/;C:\Program Files/Git/bin
 else
 ifneq (,$(findstring WINDOWS,$(PATH)))
 OS := WIN32
-PATH := $(TOOLS_PATH)/gcc-$(CROSS_COMPILE)/bin;$(PATH);C:\Program Files (x86)/Git/bin/;C:\Program Files/Git/bin
+TOOLS_SUBPATH := win32/gcc-$(CROSS_COMPILE)
+PATH := $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin;$(PATH);C:\Program Files (x86)/Git/bin/;C:\Program Files/Git/bin
 else
 ifneq (,$(findstring Atmel Studio,$(PATH)))
 OS := WIN32
-PATH := $(TOOLS_PATH)/gcc-$(CROSS_COMPILE)/bin;$(PATH);C:\Program Files (x86)/Git/bin/;C:\Program Files/Git/bin
+TOOLS_SUBPATH := win32/gcc-$(CROSS_COMPILE)
+PATH := $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin;$(PATH);C:\Program Files (x86)/Git/bin/;C:\Program Files/Git/bin
 else
 
 UNAME := $(shell uname -s)
 
 ifeq (Darwin,${UNAME})
 OS = OSX
+TOOLS_SUBPATH := osx/gcc-$(CROSS_COMPILE)
 else
 ifeq (Linux,${UNAME})
 OS = LINUX
+TOOLS_SUBPATH := linux/gcc-$(CROSS_COMPILE)
 endif #LINUX
 endif #Darwin
 
 
-PATH := $(TOOLS_PATH)/gcc-$(CROSS_COMPILE)/bin:$(PATH)
+PATH := $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin:$(PATH)
 
 endif #Atmel Studio else
 endif #cygdrive
