@@ -367,10 +367,11 @@ MK_DIRS =   $(shell                              \
 
 $(eval $(DEVICE_RULES))
 
-.PHONY : MKTOOLS
+# We use MKTOOLS as a "macro" for dependencies later
+MKTOOLS: | $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin
 
-MKTOOLS :
-	@echo Looking for tools...
+$(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin:
+	@echo Installing the necessary tools...
 	cd ${TOOLS_PATH} && make "ARCH=gcc-${CROSS_COMPILE}"
 
 PATH:=${PATH}:${TOOLS_PATH}/gcc-${CROSS_COMPILE}/bin
@@ -415,7 +416,7 @@ endif
 # Generate dependency information
 DEPFLAGS = -MMD -MF $(OBJ)/dep/$(@F).d -MT $(subst $(OUTDIR),$(OBJ),$@)
 
-$(OUTPUT_BIN).elf: MKTOOLS $(ALL_C_OBJECTS) $(ALL_CXX_OBJECTS) $(ALL_ASM_OBJECTS) $(ABS_LINKER_SCRIPT)
+$(OUTPUT_BIN).elf: $(ALL_C_OBJECTS) $(ALL_CXX_OBJECTS) $(ALL_ASM_OBJECTS) $(ABS_LINKER_SCRIPT)
 	@echo $(START_BOLD)"Linking $(OUTPUT_BIN).elf" $(END_BOLD)
 	@echo $(START_BOLD)"Using linker script: $(ABS_LINKER_SCRIPT_TEXT)" $(END_BOLD)
 	$(QUIET)$(CXX) $(LIB_PATH) $(LINKER_SCRIPT_OPTION) $(LIBDIR) -Wl,-Map,"$(OUTPUT_BIN).map" -o ${filter-out MKTOOLS,$@} $(LDFLAGS) $(LD_OPTIONAL) $(LIBS) -Wl,--start-group $(FIRST_LINK_OBJECTS_PATHS) $(filter-out $(FIRST_LINK_OBJECTS_PATHS) $(ABS_LINKER_SCRIPT) MKTOOLS,$+) -Wl,--end-group
@@ -431,31 +432,37 @@ $(OUTPUT_BIN).hex: $(OUTPUT_BIN).elf
 
 ## Note: The motate paths are seperated do to MOTATE_PATH having multple ../ in it.
 
+$(MOTATE_CXX_OBJECTS): | MKTOOLS
 $(MOTATE_CXX_OBJECTS): $(OUTDIR)/motate/%.o: $(MOTATE_PATH)/%.cpp
 	$(QUIET)$(MKDIR) -p "$(@D)" "$(DEPDIR)" "$(BIN)"
 	@echo $(START_BOLD)"Compiling cpp $<"; echo "    -> $@" $(END_BOLD)
 	$(QUIET)$(CXX) $(CPPFLAGS) $(DEPFLAGS) -xc++ -c -o $@ $<
 
+$(ALL_OTHER_CXX_OBJECTS): | MKTOOLS
 $(ALL_OTHER_CXX_OBJECTS): $(OUTDIR)/%.o: %.cpp
 	$(QUIET)$(MKDIR) -p "$(@D)" "$(DEPDIR)" "$(BIN)"
 	@echo $(START_BOLD)"Compiling cpp $<"; echo "    -> $@" $(END_BOLD)
 	$(QUIET)$(CXX) $(CPPFLAGS) $(DEPFLAGS) -xc++ -c -o $@ $<
 
+$(MOTATE_C_OBJECTS): | MKTOOLS
 $(MOTATE_C_OBJECTS): $(OUTDIR)/motate/%.o: $(MOTATE_PATH)/%.c
 	$(QUIET)$(MKDIR) -p "$(@D)" "$(DEPDIR)" "$(BIN)"
 	@echo $(START_BOLD)"Compiling c $<"; echo "    -> $@" $(END_BOLD)
 	$(QUIET)$(CC) $(CFLAGS) $(DEPFLAGS) -c -o $@ $<
 
+$(ALL_OTHER_C_OBJECTS): | MKTOOLS
 $(ALL_OTHER_C_OBJECTS): $(OUTDIR)/%.o: %.c
 	$(QUIET)$(MKDIR) -p "$(@D)" "$(DEPDIR)" "$(BIN)"
 	@echo $(START_BOLD)"Compiling c $<"; echo "    -> $@" $(END_BOLD)
 	$(QUIET)$(CC) $(CFLAGS) $(DEPFLAGS) -c -o $@ $<
 
+$(MOTATE_ASM_OBJECTS): | MKTOOLS
 $(MOTATE_ASM_OBJECTS): $(OUTDIR)/motate/%.o: $(MOTATE_PATH)/%.s
 	$(QUIET)$(MKDIR) -p "$(@D)" "$(DEPDIR)" "$(BIN)"
 	@echo $(START_BOLD)"Compiling $<"; echo "    -> $@"  $(END_BOLD)
 	$(QUIET)$(CC) $(ASFLAGS) $(DEPFLAGS) -c -o $@ $<
 
+$(ALL_OTHER_ASM_OBJECTS): | MKTOOLS
 $(ALL_OTHER_ASM_OBJECTS): $(OUTDIR)/%.o: %.s
 	$(QUIET)$(MKDIR) -p "$(@D)" "$(DEPDIR)" "$(BIN)"
 	@echo $(START_BOLD)"Compiling $<"; echo "    -> $@"  $(END_BOLD)
