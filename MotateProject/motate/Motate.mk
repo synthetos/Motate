@@ -432,42 +432,50 @@ $(OUTPUT_BIN).hex: $(OUTPUT_BIN).elf
 
 ## Note: The motate paths are seperated do to MOTATE_PATH having multple ../ in it.
 
-$(MOTATE_CXX_OBJECTS): | MKTOOLS
+$(MOTATE_CXX_OBJECTS): | MKTOOLS $(sort $(dir $(MOTATE_CXX_OBJECTS))) $(DEPDIR) $(BIN)
 $(MOTATE_CXX_OBJECTS): $(OUTDIR)/motate/%.o: $(MOTATE_PATH)/%.cpp
-	$(QUIET)$(MKDIR) -p "$(@D)" "$(DEPDIR)" "$(BIN)"
 	@echo $(START_BOLD)"Compiling cpp $<"; echo "    -> $@" $(END_BOLD)
 	$(QUIET)$(CXX) $(CPPFLAGS) $(DEPFLAGS) -xc++ -c -o $@ $<
 
-$(ALL_OTHER_CXX_OBJECTS): | MKTOOLS
+$(ALL_OTHER_CXX_OBJECTS): | MKTOOLS $(sort $(dir $(ALL_OTHER_CXX_OBJECTS))) $(DEPDIR) $(BIN)
 $(ALL_OTHER_CXX_OBJECTS): $(OUTDIR)/%.o: %.cpp
-	$(QUIET)$(MKDIR) -p "$(@D)" "$(DEPDIR)" "$(BIN)"
 	@echo $(START_BOLD)"Compiling cpp $<"; echo "    -> $@" $(END_BOLD)
 	$(QUIET)$(CXX) $(CPPFLAGS) $(DEPFLAGS) -xc++ -c -o $@ $<
 
-$(MOTATE_C_OBJECTS): | MKTOOLS
+$(MOTATE_C_OBJECTS): | MKTOOLS $(sort $(dir $(MOTATE_C_OBJECTS))) $(DEPDIR) $(BIN)
 $(MOTATE_C_OBJECTS): $(OUTDIR)/motate/%.o: $(MOTATE_PATH)/%.c
-	$(QUIET)$(MKDIR) -p "$(@D)" "$(DEPDIR)" "$(BIN)"
 	@echo $(START_BOLD)"Compiling c $<"; echo "    -> $@" $(END_BOLD)
 	$(QUIET)$(CC) $(CFLAGS) $(DEPFLAGS) -c -o $@ $<
 
-$(ALL_OTHER_C_OBJECTS): | MKTOOLS
+$(ALL_OTHER_C_OBJECTS): | MKTOOLS $(sort $(dir $(ALL_OTHER_C_OBJECTS))) $(DEPDIR) $(BIN)
 $(ALL_OTHER_C_OBJECTS): $(OUTDIR)/%.o: %.c
-	$(QUIET)$(MKDIR) -p "$(@D)" "$(DEPDIR)" "$(BIN)"
 	@echo $(START_BOLD)"Compiling c $<"; echo "    -> $@" $(END_BOLD)
 	$(QUIET)$(CC) $(CFLAGS) $(DEPFLAGS) -c -o $@ $<
 
-$(MOTATE_ASM_OBJECTS): | MKTOOLS
+$(MOTATE_ASM_OBJECTS): | MKTOOLS $(sort $(dir $(MOTATE_ASM_OBJECTS))) $(DEPDIR) $(BIN)
 $(MOTATE_ASM_OBJECTS): $(OUTDIR)/motate/%.o: $(MOTATE_PATH)/%.s
-	$(QUIET)$(MKDIR) -p "$(@D)" "$(DEPDIR)" "$(BIN)"
 	@echo $(START_BOLD)"Compiling $<"; echo "    -> $@"  $(END_BOLD)
 	$(QUIET)$(CC) $(ASFLAGS) $(DEPFLAGS) -c -o $@ $<
 
-$(ALL_OTHER_ASM_OBJECTS): | MKTOOLS
+$(ALL_OTHER_ASM_OBJECTS): | MKTOOLS $(sort $(dir $(ALL_OTHER_ASM_OBJECTS))) $(DEPDIR) $(BIN)
 $(ALL_OTHER_ASM_OBJECTS): $(OUTDIR)/%.o: %.s
-	$(QUIET)$(MKDIR) -p "$(@D)" "$(DEPDIR)" "$(BIN)"
 	@echo $(START_BOLD)"Compiling $<"; echo "    -> $@"  $(END_BOLD)
 	$(QUIET)$(CC) $(ASFLAGS) $(DEPFLAGS) -c -o $@ $<
 
+
+						   
+# Rules to make the directories:
+$(sort $(dir $(MOTATE_CXX_OBJECTS) $(ALL_OTHER_CXX_OBJECTS) $(MOTATE_C_OBJECTS))):
+	$(QUIET)$(MKDIR) -p "$@"
+
+$(sort $(dir $(ALL_OTHER_C_OBJECTS) $(MOTATE_ASM_OBJECTS) $(ALL_OTHER_ASM_OBJECTS))):
+	$(QUIET)$(MKDIR) -p "$@"
+
+$(DEPDIR) $(BIN):
+	$(QUIET)$(MKDIR) -p "$@"
+
+
+# Rule for debugging
 debug: $(OUTPUT_BIN).elf
 	$(GDB) -x "${BOARD_PATH}.gdb" -ex "monitor reset halt" -readnow -se "$(OUTPUT_BIN).elf"
 
