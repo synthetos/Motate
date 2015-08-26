@@ -92,7 +92,7 @@ SAM_SOURCE_DIRS += $(MOTATE_PATH)/Atmel_$(CHIP_SERIES)
 SAM_SOURCE_DIRS += $(DEVICE_PATH)/source
 SAM_SOURCE_DIRS += $(DEVICE_PATH)/source/$(GCC_TOOLCHAIN)
 SAM_SOURCE_DIRS += $(MOTATE_PATH)/platform/atmel_sam
-FIRST_LINK_SOURCES += $(MOTATE_PATH)/platform/atmel_sam/syscalls_sam3.c
+FIRST_LINK_SOURCES += $(MOTATE_PATH)/platform/atmel_sam/syscalls_sam3.cpp
 
 DEVICE_RULES = $(call CREATE_DEVICE_LIBRARY,SAM,cmsis_sam)
 
