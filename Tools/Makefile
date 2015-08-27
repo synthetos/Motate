@@ -114,7 +114,7 @@ else
 
 ifeq ($(shell command -v curl >/dev/null 2>&1 || echo "missing"), missing)
 ${info On windows git must be installed for the curl command. Please download and install from http://git-scm.com/downloads }
-	${info Current PATH: $(PATH) }
+${info Current PATH: $(PATH) }
 ${error If you called this makefile directly (instead of from compiling Motate, you will get this error. Got back tot he Motate project you want to compile and `make tools`.) }
 endif
 

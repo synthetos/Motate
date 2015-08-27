@@ -226,17 +226,17 @@ SHELL = bash
 ifneq (,$(findstring /cygdrive/,$(PATH)))
 OS := WIN32
 TOOLS_SUBPATH := win32/gcc-$(CROSS_COMPILE)
-PATH := $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin;$(PATH);c:\Program Files\Git\bin;c:\Program Files (x86)\Git\bin
+PATH := $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin;$(PATH);c:\Program Files\Git\bin;c:\Program Files\Git\mingw32\bin;c:\Program Files (x86)\Git\bin
 else
 ifneq (,$(findstring WINDOWS,$(PATH)))
 OS := WIN32
 TOOLS_SUBPATH := win32/gcc-$(CROSS_COMPILE)
-PATH := $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin;$(PATH);c:\Program Files\Git\bin;c:\Program Files (x86)\Git\bin
+PATH := $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin;$(PATH);c:\Program Files\Git\bin;c:\Program Files\Git\mingw32\bin;c:\Program Files (x86)\Git\bin
 else
 ifneq (,$(findstring Atmel Studio,$(PATH)))
 OS := WIN32
 TOOLS_SUBPATH := win32/gcc-$(CROSS_COMPILE)
-PATH := $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin;$(PATH);c:\Program Files\Git\bin;c:\Program Files\Git\mingw64\bin;c:\Program Files (x86)\Git\bin
+PATH := $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin;$(PATH);c:\Program Files\Git\bin;c:\Program Files\Git\mingw32\bin;c:\Program Files (x86)\Git\bin
 else
 
 # Unix/Linux section:
