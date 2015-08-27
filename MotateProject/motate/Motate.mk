@@ -236,7 +236,7 @@ else
 ifneq (,$(findstring Atmel Studio,$(PATH)))
 OS := WIN32
 TOOLS_SUBPATH := win32/gcc-$(CROSS_COMPILE)
-PATH := $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin;$(PATH);c:\Program Files\Git\bin;c:\Program Files (x86)\Git\bin
+PATH := $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin;$(PATH);c:\Program Files\Git\bin;c:\Program Files\Git\mingw64\bin;c:\Program Files (x86)\Git\bin
 else
 
 # Unix/Linux section:
@@ -261,9 +261,6 @@ endif #cygdrive
 endif #WINDOWS
 
 export PATH
-
-$(info PATH:$(PATH))
-
 
 ifeq ($(OS), WIN32)  # atart Windows git check
 ## Additional test added to make sure we have git.
