@@ -262,6 +262,8 @@ endif #WINDOWS
 
 export PATH
 
+$(info PATH:$(PATH))
+
 
 ifeq ($(OS), WIN32)  # atart Windows git check
 ## Additional test added to make sure we have git.
