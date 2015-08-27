@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXFileReference section */
-		D49367DA1B8BA17E000BB759 /* bash_curl.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = bash_curl.sh; sourceTree = "<group>"; };
 		D4C77F691950912300A1BE28 /* Makefile */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; usesTabs = 1; };
 		D4C77F77195099A200A1BE28 /* program-sam.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = "program-sam.sh"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -16,7 +15,6 @@
 		D4C77F601950912300A1BE28 = {
 			isa = PBXGroup;
 			children = (
-				D49367DA1B8BA17E000BB759 /* bash_curl.sh */,
 				D4C77F77195099A200A1BE28 /* program-sam.sh */,
 				D4C77F691950912300A1BE28 /* Makefile */,
 			);

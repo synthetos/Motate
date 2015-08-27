@@ -181,8 +181,10 @@ include ${MOTATE_PATH}/MotateUtilities.mk
 # Common location for the CMSIS directory (might not be used)
 CMSIS_ROOT = ${MOTATE_PATH}/cmsis
 
-
-include $(wildcard ./board/*.mk ${MOTATE_PATH}/board/*.mk)
+# STAR is a stupid hack to make XCode stopthinking the REST OF THE FILE
+# is a comment.
+STAR:=*
+include $(wildcard ./board/$(STAR).mk ${MOTATE_PATH}/board/$(STAR).mk)
 
 ifneq ("$(_BOARD_FOUND)", "1")
 # errors cannot be indented
@@ -224,19 +226,20 @@ SHELL = bash
 ifneq (,$(findstring /cygdrive/,$(PATH)))
 OS := WIN32
 TOOLS_SUBPATH := win32/gcc-$(CROSS_COMPILE)
-PATH := $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin;$(PATH);C:\Program Files (x86)/Git/bin/;C:\Program Files/Git/bin
+PATH := $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin;$(PATH);c:\Program Files\Git\bin;c:\Program Files (x86)\Git\bin
 else
 ifneq (,$(findstring WINDOWS,$(PATH)))
 OS := WIN32
 TOOLS_SUBPATH := win32/gcc-$(CROSS_COMPILE)
-PATH := $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin;$(PATH);C:\Program Files (x86)/Git/bin/;C:\Program Files/Git/bin
+PATH := $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin;$(PATH);c:\Program Files\Git\bin;c:\Program Files (x86)\Git\bin
 else
 ifneq (,$(findstring Atmel Studio,$(PATH)))
 OS := WIN32
 TOOLS_SUBPATH := win32/gcc-$(CROSS_COMPILE)
-PATH := $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin;$(PATH);C:\Program Files (x86)/Git/bin/;C:\Program Files/Git/bin
+PATH := $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin;$(PATH);c:\Program Files\Git\bin;c:\Program Files (x86)\Git\bin
 else
 
+# Unix/Linux section:
 UNAME := $(shell uname -s)
 
 ifeq (Darwin,${UNAME})
@@ -252,11 +255,23 @@ endif #Darwin
 
 PATH := $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin:$(PATH)
 
+# end Unix/linux section
 endif #Atmel Studio else
 endif #cygdrive
 endif #WINDOWS
 
 export PATH
+
+
+ifeq ($(OS), WIN32)  # atart Windows git check
+## Additional test added to make sure we have git.
+## Otherwise, windows will NOT return non-zero for these commands and some wierd
+## failure will happen later.
+
+ifeq ($(shell command -v git >/dev/null 2>&1 || echo "missing"), missing)
+${error On windows git must be installed. Please download and install from http://git-scm.com/downloads }
+endif
+endif # end Windows git check
 
 
 ifneq ($(NOT_IN_GIT),1)
@@ -320,9 +335,9 @@ LDFLAGS += $(LIBS) $(USER_LIBS) $(DEBUG_SYMBOLS) -O$(OPTIMIZATION) -Wl,--cref -W
 
 # Directories where source files can be found
 
-C_SOURCES   = $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.c) )
-CXX_SOURCES = $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.cpp) )
-ASM_SOURCES = $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/*.s $(dir)/*.S) )
+C_SOURCES   = $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/$(STAR).c) )
+CXX_SOURCES = $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/$(STAR).cpp) )
+ASM_SOURCES = $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/$(STAR).s $(dir)/$(STAR).S) )
 
 C_OBJECTS   := $(addsuffix .o,$(basename $(C_SOURCES)))
 CXX_OBJECTS := $(addsuffix .o,$(basename $(CXX_SOURCES)))
@@ -356,28 +371,16 @@ endif
 
 all: $(OUTPUT_BIN).elf $(NEEDS_HEX)
 
-REQUIRED_DIRS := $(BIN) $(OBJ) $(DEPDIR)
-
-MK_DIRS =   $(shell                              \
-              for d in $(REQUIRED_DIRS);         \
-              do                                 \
-              echo "Checking for $${d}"        \
-                [[ -d $$d ]] || mkdir -p $$d;    \
-              done)
-
 $(eval $(DEVICE_RULES))
 
-# We use MKTOOLS as a "macro" for dependencies later
-MKTOOLS: | $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin
+# We use tools as a "macro" for dependencies later
+tools: | $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin
 
 $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin:
 	@echo Installing the necessary tools...
 	cd ${TOOLS_PATH} && make "ARCH=gcc-${CROSS_COMPILE}"
 
-PATH:=${PATH}:${TOOLS_PATH}/gcc-${CROSS_COMPILE}/bin
-
 OUTDIR = $(OBJ)
-REQUIRED_DIRS += $(OUTDIR)
 
 FIRST_LINK_OBJECTS_PATHS := $(addprefix $(OUTDIR)/,$(subst $(MOTATE_PATH),motate,$(FIRST_LINK_OBJECTS)))
 
@@ -419,7 +422,7 @@ DEPFLAGS = -MMD -MF $(OBJ)/dep/$(@F).d -MT $(subst $(OUTDIR),$(OBJ),$@)
 $(OUTPUT_BIN).elf: $(ALL_C_OBJECTS) $(ALL_CXX_OBJECTS) $(ALL_ASM_OBJECTS) $(ABS_LINKER_SCRIPT)
 	@echo $(START_BOLD)"Linking $(OUTPUT_BIN).elf" $(END_BOLD)
 	@echo $(START_BOLD)"Using linker script: $(ABS_LINKER_SCRIPT_TEXT)" $(END_BOLD)
-	$(QUIET)$(CXX) $(LIB_PATH) $(LINKER_SCRIPT_OPTION) $(LIBDIR) -Wl,-Map,"$(OUTPUT_BIN).map" -o ${filter-out MKTOOLS,$@} $(LDFLAGS) $(LD_OPTIONAL) $(LIBS) -Wl,--start-group $(FIRST_LINK_OBJECTS_PATHS) $(filter-out $(FIRST_LINK_OBJECTS_PATHS) $(ABS_LINKER_SCRIPT) MKTOOLS,$+) -Wl,--end-group
+	$(QUIET)$(CXX) $(LIB_PATH) $(LINKER_SCRIPT_OPTION) $(LIBDIR) -Wl,-Map,"$(OUTPUT_BIN).map" -o ${filter-out tools,$@} $(LDFLAGS) $(LD_OPTIONAL) $(LIBS) -Wl,--start-group $(FIRST_LINK_OBJECTS_PATHS) $(filter-out $(FIRST_LINK_OBJECTS_PATHS) $(ABS_LINKER_SCRIPT) tools,$+) -Wl,--end-group
 	@echo $(START_BOLD)"Exporting symbols $(OUTPUT_BIN).elf.txt" $(END_BOLD)
 	$(QUIET)$(NM) "$(OUTPUT_BIN).elf" >"$(OUTPUT_BIN).elf.txt"
 	@echo $(START_BOLD)"Making binary $(OUTPUT_BIN).bin" $(END_BOLD)
@@ -432,32 +435,32 @@ $(OUTPUT_BIN).hex: $(OUTPUT_BIN).elf
 
 ## Note: The motate paths are seperated do to MOTATE_PATH having multple ../ in it.
 
-$(MOTATE_CXX_OBJECTS): | MKTOOLS $(sort $(dir $(MOTATE_CXX_OBJECTS))) $(DEPDIR) $(BIN)
+$(MOTATE_CXX_OBJECTS): | tools $(sort $(dir $(MOTATE_CXX_OBJECTS))) $(DEPDIR) $(BIN)
 $(MOTATE_CXX_OBJECTS): $(OUTDIR)/motate/%.o: $(MOTATE_PATH)/%.cpp
 	@echo $(START_BOLD)"Compiling cpp $<"; echo "    -> $@" $(END_BOLD)
 	$(QUIET)$(CXX) $(CPPFLAGS) $(DEPFLAGS) -xc++ -c -o $@ $<
 
-$(ALL_OTHER_CXX_OBJECTS): | MKTOOLS $(sort $(dir $(ALL_OTHER_CXX_OBJECTS))) $(DEPDIR) $(BIN)
+$(ALL_OTHER_CXX_OBJECTS): | tools $(sort $(dir $(ALL_OTHER_CXX_OBJECTS))) $(DEPDIR) $(BIN)
 $(ALL_OTHER_CXX_OBJECTS): $(OUTDIR)/%.o: %.cpp
 	@echo $(START_BOLD)"Compiling cpp $<"; echo "    -> $@" $(END_BOLD)
 	$(QUIET)$(CXX) $(CPPFLAGS) $(DEPFLAGS) -xc++ -c -o $@ $<
 
-$(MOTATE_C_OBJECTS): | MKTOOLS $(sort $(dir $(MOTATE_C_OBJECTS))) $(DEPDIR) $(BIN)
+$(MOTATE_C_OBJECTS): | tools $(sort $(dir $(MOTATE_C_OBJECTS))) $(DEPDIR) $(BIN)
 $(MOTATE_C_OBJECTS): $(OUTDIR)/motate/%.o: $(MOTATE_PATH)/%.c
 	@echo $(START_BOLD)"Compiling c $<"; echo "    -> $@" $(END_BOLD)
 	$(QUIET)$(CC) $(CFLAGS) $(DEPFLAGS) -c -o $@ $<
 
-$(ALL_OTHER_C_OBJECTS): | MKTOOLS $(sort $(dir $(ALL_OTHER_C_OBJECTS))) $(DEPDIR) $(BIN)
+$(ALL_OTHER_C_OBJECTS): | tools $(sort $(dir $(ALL_OTHER_C_OBJECTS))) $(DEPDIR) $(BIN)
 $(ALL_OTHER_C_OBJECTS): $(OUTDIR)/%.o: %.c
 	@echo $(START_BOLD)"Compiling c $<"; echo "    -> $@" $(END_BOLD)
 	$(QUIET)$(CC) $(CFLAGS) $(DEPFLAGS) -c -o $@ $<
 
-$(MOTATE_ASM_OBJECTS): | MKTOOLS $(sort $(dir $(MOTATE_ASM_OBJECTS))) $(DEPDIR) $(BIN)
+$(MOTATE_ASM_OBJECTS): | tools $(sort $(dir $(MOTATE_ASM_OBJECTS))) $(DEPDIR) $(BIN)
 $(MOTATE_ASM_OBJECTS): $(OUTDIR)/motate/%.o: $(MOTATE_PATH)/%.s
 	@echo $(START_BOLD)"Compiling $<"; echo "    -> $@"  $(END_BOLD)
 	$(QUIET)$(CC) $(ASFLAGS) $(DEPFLAGS) -c -o $@ $<
 
-$(ALL_OTHER_ASM_OBJECTS): | MKTOOLS $(sort $(dir $(ALL_OTHER_ASM_OBJECTS))) $(DEPDIR) $(BIN)
+$(ALL_OTHER_ASM_OBJECTS): | tools $(sort $(dir $(ALL_OTHER_ASM_OBJECTS))) $(DEPDIR) $(BIN)
 $(ALL_OTHER_ASM_OBJECTS): $(OUTDIR)/%.o: %.s
 	@echo $(START_BOLD)"Compiling $<"; echo "    -> $@"  $(END_BOLD)
 	$(QUIET)$(CC) $(ASFLAGS) $(DEPFLAGS) -c -o $@ $<

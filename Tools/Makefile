@@ -69,32 +69,29 @@ endif #eq ($(ARCH), 'gcc-avr')
 EXPAND_COMMAND_OSX = tar xzvf
 TOOLS_SUBPATH_OSX = osx
 TEST_COMMAND_OSX = ${TEST_COMMAND_BASE}
-PATH_OSX := ./gcc-$(CROSS_COMPILE)/bin:$(PATH)
 DOWNLOAD_TOOL_OSX = curl -OL
 
 EXPAND_COMMAND_LINUX = tar xzvf
 TOOLS_SUBPATH_LINUX = linux
 TEST_COMMAND_LINUX = ${TEST_COMMAND_BASE}
-PATH_LINUX := ./gcc-$(CROSS_COMPILE)/bin$(PATH)
 DOWNLOAD_TOOL_LINUX = wget
 
 EXPAND_COMMAND_WIN32 = unzip -d ${TOOLS_EXPANDED_DIRNAME}
 TOOLS_SUBPATH_WIN32 = win32
 TEST_COMMAND_WIN32 = ${TEST_COMMAND_BASE}.exe
-PATH_WIN32 := ./$(TOOLS_SUBPATH_WIN32)/bin;$(PATH);C:\Program Files (x86)/Git/bin/;C:\Program Files/Git/bin
 DOWNLOAD_TOOL_WIN32 = curl -OL
 
 EXPAND_COMMAND = ${EXPAND_COMMAND_${OS}}
 TOOLS_SUBPATH = ${TOOLS_SUBPATH_${OS}}
 TEST_COMMAND = ${TEST_COMMAND_${OS}}
-PATH = ${PATH_${OS}}
 DOWNLOAD_TOOL = ${DOWNLOAD_TOOL_${OS}}
 
-$(info TEST_COMMAND=$(TEST_COMMAND))
-ifeq ($(shell PATH=$(TOOLS_SUBPATH)/$(TOOLS_EASYPATH)/bin/ command -v $(TEST_COMMAND) >/dev/null 2>&1 || echo "yes"), yes)
-TOOLS_FULL_EASYPATH_IF_NEEDED = $(TOOLS_SUBPATH)/$(TOOLS_EASYPATH)
-endif
+# NOTE: We set the PATH in the Motate.mk makefile that calls this!
+# If it's missing stuff, then you're path is wrong!
+#$(info PATH:$(PATH))
 
+# Note the | -- order-only means we don't care about the modification date
+TOOLS_FULL_EASYPATH_IF_NEEDED = | $(TOOLS_SUBPATH)/$(TOOLS_EASYPATH)
 
 all: TOOLS_INSTALLED
 
@@ -110,6 +107,17 @@ $(TOOLS_SUBPATH)/$(TOOLS_EASYPATH): $(TOOLS_SUBPATH)/${TOOLS_EXPANDED_DIRNAME}
 	ln -s "${TOOLS_EXPANDED_DIRNAME}" "${TOOLS_EASYPATH}"
 
 else
+
+## Additional test added to make sure we have curl.
+## Otherwise, windows will NOT return non-zero for these commands and some wierd
+## failure will happen later.
+
+ifeq ($(shell command -v curl >/dev/null 2>&1 || echo "missing"), missing)
+${info On windows git must be installed for the curl command. Please download and install from http://git-scm.com/downloads }
+${error If you called this makefile directly (instead of from compiling Motate, you will get this error. Got back tot he Motate project you want to compile and `make tools`.) }
+endif
+
+# end additional curl test
 
 .ONESHELL:
 ${TOOLS_SUBPATH}/$(TOOLS_EASYPATH): ${TOOLS_SUBPATH}/${TOOLS_EXPANDED_DIRNAME}
