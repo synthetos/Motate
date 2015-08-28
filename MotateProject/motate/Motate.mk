@@ -226,17 +226,17 @@ SHELL = bash
 ifneq (,$(findstring /cygdrive/,$(PATH)))
 OS := WIN32
 TOOLS_SUBPATH := win32/gcc-$(CROSS_COMPILE)
-PATH := $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin;$(PATH);c:\Program Files\Git\bin;c:\Program Files\Git\mingw32\bin;c:\Program Files (x86)\Git\bin
+PATH := $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin;$(PATH);c:\Program Files\Git\bin;c:\Program Files\Git\mingw32\bin;c:\Program Files\Git\mingw64\bin
 else
 ifneq (,$(findstring WINDOWS,$(PATH)))
 OS := WIN32
 TOOLS_SUBPATH := win32/gcc-$(CROSS_COMPILE)
-PATH := $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin;$(PATH);c:\Program Files\Git\bin;c:\Program Files\Git\mingw32\bin;c:\Program Files (x86)\Git\bin
+PATH := $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin;$(PATH);c:\Program Files\Git\bin;c:\Program Files\Git\mingw32\bin;c:\Program Files\Git\mingw64\bin
 else
 ifneq (,$(findstring Atmel Studio,$(PATH)))
 OS := WIN32
 TOOLS_SUBPATH := win32/gcc-$(CROSS_COMPILE)
-PATH := $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin;$(PATH);c:\Program Files\Git\bin;c:\Program Files\Git\mingw32\bin;c:\Program Files (x86)\Git\bin
+PATH := $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin;$(PATH);c:\Program Files\Git\bin;c:\Program Files\Git\mingw32\bin;c:\Program Files\Git\mingw64\bin
 else
 
 # Unix/Linux section:
@@ -408,8 +408,8 @@ LINKER_SCRIPT_OPTION = -T"$(LINKER_SCRIPT)"
 
 else
 
-LINKER_SCRIPT =
-LINKER_SCRIPT_TEXT = "[built in]"
+ABS_LINKER_SCRIPT =
+ABS_LINKER_SCRIPT_TEXT = "[built in]"
 LINKER_SCRIPT_OPTION =
 
 endif
@@ -419,7 +419,7 @@ DEPFLAGS = -MMD -MF $(OBJ)/dep/$(@F).d -MT $(subst $(OUTDIR),$(OBJ),$@)
 
 $(OUTPUT_BIN).elf: $(ALL_C_OBJECTS) $(ALL_CXX_OBJECTS) $(ALL_ASM_OBJECTS) $(LINKER_SCRIPT)
 	@echo $(START_BOLD)"Linking $(OUTPUT_BIN).elf" $(END_BOLD)
-	@echo $(START_BOLD)"Using linker script: $(LINKER_SCRIPT_TEXT)" $(END_BOLD)
+	@echo $(START_BOLD)"Using linker script: $(LINKER_SCRIPT)" $(END_BOLD)
 	$(QUIET)$(CXX) $(LIB_PATH) $(LINKER_SCRIPT_OPTION) $(LIBDIR) -Wl,-Map,"$(OUTPUT_BIN).map" -o ${filter-out tools,$@} $(LDFLAGS) $(LD_OPTIONAL) $(LIBS) -Wl,--start-group $(FIRST_LINK_OBJECTS_PATHS) $(filter-out $(FIRST_LINK_OBJECTS_PATHS) $(LINKER_SCRIPT) tools,$+) -Wl,--end-group
 	@echo $(START_BOLD)"Exporting symbols $(OUTPUT_BIN).elf.txt" $(END_BOLD)
 	$(QUIET)$(NM) "$(OUTPUT_BIN).elf" >"$(OUTPUT_BIN).elf.txt"
