@@ -211,6 +211,7 @@ SIZE    = $(CROSS_COMPILE)-size
 STRIP   = $(CROSS_COMPILE)-strip
 OBJCOPY = $(CROSS_COMPILE)-objcopy
 GDB     = $(CROSS_COMPILE)-gdb
+GDB_PY  = $(CROSS_COMPILE)-gdb-py
 NM      = $(CROSS_COMPILE)-nm
 RM      = rm
 CP      = cp
@@ -226,17 +227,17 @@ SHELL = bash
 ifneq (,$(findstring /cygdrive/,$(PATH)))
 OS := WIN32
 TOOLS_SUBPATH := win32/gcc-$(CROSS_COMPILE)
-PATH := $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin;$(PATH);c:\Program Files\Git\bin;c:\Program Files\Git\mingw32\bin;c:\Program Files\Git\mingw64\bin
+PATH := $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin;$(PATH);c:\Program Files\Git\bin;c:\Program Files\Git\cmd;c:\Program Files\Git\mingw32\bin;c:\Program Files\Git\mingw64\bin
 else
 ifneq (,$(findstring WINDOWS,$(PATH)))
 OS := WIN32
 TOOLS_SUBPATH := win32/gcc-$(CROSS_COMPILE)
-PATH := $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin;$(PATH);c:\Program Files\Git\bin;c:\Program Files\Git\mingw32\bin;c:\Program Files\Git\mingw64\bin
+PATH := $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin;$(PATH);c:\Program Files\Git\bin;c:\Program Files\Git\cmd;c:\Program Files\Git\mingw32\bin;c:\Program Files\Git\mingw64\bin
 else
 ifneq (,$(findstring Atmel Studio,$(PATH)))
 OS := WIN32
 TOOLS_SUBPATH := win32/gcc-$(CROSS_COMPILE)
-PATH := $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin;$(PATH);c:\Program Files\Git\bin;c:\Program Files\Git\mingw32\bin;c:\Program Files\Git\mingw64\bin
+PATH := $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin;$(PATH);c:\Program Files\Git\bin;c:\Program Files\Git\cmd;c:\Program Files\Git\mingw32\bin;c:\Program Files\Git\mingw64\bin
 else
 
 # Unix/Linux section:
@@ -479,6 +480,10 @@ $(DEPDIR) $(BIN):
 # Rule for debugging
 debug: $(OUTPUT_BIN).elf
 	$(GDB) -x "${BOARD_PATH}.gdb" -ex "monitor reset halt" -readnow -se "$(OUTPUT_BIN).elf"
+
+# Rule for debugging (using python-enabled debugger)
+debuggy: $(OUTPUT_BIN).elf
+	$(GDB_PY) -x "${BOARD_PATH}.gdb" -ex "monitor reset halt" -readnow -se "$(OUTPUT_BIN).elf"
 
 flash: $(FLASH_REQUIRES)
 	$(DEVICE_FLASH_CMD)
