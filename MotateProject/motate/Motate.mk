@@ -263,17 +263,6 @@ endif #WINDOWS
 
 export PATH
 
-ifeq ($(OS), WIN32)  # atart Windows git check
-## Additional test added to make sure we have git.
-## Otherwise, windows will NOT return non-zero for these commands and some wierd
-## failure will happen later.
-
-ifeq ($(shell command -v git >/dev/null 2>&1 || echo "missing"), missing)
-${error On windows git must be installed. Please download and install from http://git-scm.com/downloads }
-endif
-endif # end Windows git check
-
-
 ifneq ($(NOT_IN_GIT),1)
 	GIT_LOCATED := $(GIT)
 	GIT_VERSION := $(shell $(GIT) describe --abbrev=4 --dirty --always --tags)
