@@ -211,6 +211,7 @@ SIZE    = $(CROSS_COMPILE)-size
 STRIP   = $(CROSS_COMPILE)-strip
 OBJCOPY = $(CROSS_COMPILE)-objcopy
 GDB     = $(CROSS_COMPILE)-gdb
+GDB_PY  = $(CROSS_COMPILE)-gdb-py
 NM      = $(CROSS_COMPILE)-nm
 RM      = rm
 CP      = cp
@@ -479,6 +480,10 @@ $(DEPDIR) $(BIN):
 # Rule for debugging
 debug: $(OUTPUT_BIN).elf
 	$(GDB) -x "${BOARD_PATH}.gdb" -ex "monitor reset halt" -readnow -se "$(OUTPUT_BIN).elf"
+
+# Rule for debugging (using python-enabled debugger)
+debuggy: $(OUTPUT_BIN).elf
+	$(GDB_PY) -x "${BOARD_PATH}.gdb" -ex "monitor reset halt" -readnow -se "$(OUTPUT_BIN).elf"
 
 flash: $(FLASH_REQUIRES)
 	$(DEVICE_FLASH_CMD)
