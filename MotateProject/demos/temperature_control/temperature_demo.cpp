@@ -364,8 +364,8 @@ void loop() {
                 JSON::parse_json(commands, (char *)read_buffer);
                 commands.exec(&json_base);
                 commands.write(&json_base, write_buffer, sizeof(write_buffer));
-                Serial.write(write_buffer, strlen(write_buffer), /*autoFlush*/ true);
-                Serial.write("\n", 1, /*autoFlush*/ true);
+                Serial.write(write_buffer, strlen(write_buffer));
+                Serial.write("\n", 1);
                 read_buffer_pos = read_buffer;
                 *(read_buffer_pos) = 0;
                 *write_buffer = 0;
@@ -378,8 +378,8 @@ void loop() {
 
         JSON::parse_json(sr, json_str_pool);
         sr.write(&json_base, write_buffer, sizeof(write_buffer));
-        Serial.write(write_buffer, strlen(write_buffer), /*autoFlush*/ true);
-        Serial.write("\n", 1, /*autoFlush*/ true);
+        Serial.write(write_buffer, strlen(write_buffer));
+        Serial.write("\n", 1);
 
         sr_timeout.set(250);
     }
