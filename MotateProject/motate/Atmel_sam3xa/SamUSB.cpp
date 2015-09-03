@@ -362,8 +362,8 @@ namespace Motate {
      *  * There is no ping-pong mode.
      *  * The RWALL (Read/Write ALLowed) bit and the FIFOCON (FIFO CONtrol) are ignored and read zero.
      */
-    int16_t _readFromControlEndpoint(const uint8_t endpoint, uint8_t* data, int16_t len, bool continuation) {
-        uint8_t *ptr_dest = data;
+    int16_t _readFromControlEndpoint(const uint8_t endpoint, char* data, int16_t len, bool continuation) {
+        char *ptr_dest = data;
 
         if (!_inAReceivedSetupInterrupt(0))
             _waitForReceiveOUTAvailable(endpoint, continuation);
@@ -388,8 +388,8 @@ namespace Motate {
         return to_read;
     }
 
-    int16_t _sendToControlEndpoint(const uint8_t endpoint, const uint8_t* data, int16_t length, bool continuation) {
-        const uint8_t *ptr_src = data;
+    int16_t _sendToControlEndpoint(const uint8_t endpoint, const char* data, int16_t length, bool continuation) {
+        const char *ptr_src = data;
 
         _waitForTransmitINAvailable(endpoint, /*reset_needed = */continuation);
 
@@ -509,8 +509,8 @@ namespace Motate {
 
     // Send the data in a buffer to an endpoint.
     // Does not automatically flush UNLESS it fills an endpoint buffer exactly.
-    int16_t _sendToEndpoint(const uint8_t endpoint, const uint8_t* data, int16_t length) {
-        const uint8_t *ptr_src = data;
+    int16_t _sendToEndpoint(const uint8_t endpoint, const char* data, int16_t length) {
+        const char *ptr_src = data;
         int16_t sent = 0;
 
         // While we have more to send AND the buffer is available
@@ -548,7 +548,7 @@ namespace Motate {
     // NOTE: This is the same for control endpoints, since it doesn't attempt to flush.
     // WARNING: The doesn't check to see if the device is ready to send or has buffer available.
     // ONLY USE THIS WHEN YOU KNOW THE STATE OF THE USB DEVICE.
-    void _sendToEndpoint(const uint8_t endpoint, uint8_t data) {
+    void _sendToEndpoint(const uint8_t endpoint, char data) {
         *_endpointBuffer[endpoint]++ = data;
     }
 
@@ -609,7 +609,7 @@ namespace Motate {
 
             _resetEndpointBuffer(0);
             static Setup_t setup;
-            _readFromControlEndpoint(0, (uint8_t*)&setup, 8, /*continuation =*/false);
+            _readFromControlEndpoint(0, (char*)&setup, 8, /*continuation =*/false);
             /****
              • the UOTGHS_DEVEPTISRx.RXSTPI bit, which is set when a new SETUP packet is received and which shall be cleared by firmware to acknowledge the packet and to **free the bank**;
              ****/

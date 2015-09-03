@@ -36,9 +36,6 @@
 
 #include "sam.h"
 
-// This is used to store the buffer sizes -- MOVE TO THE NAMESPACE
-extern uint16_t enpointSizes[10];
-
 namespace Motate {
 
     /*** ENDPOINT CONFIGURATION ***/
@@ -171,11 +168,11 @@ const uint16_t *Motate::getUSBSerialNumberString(int16_t &length) { \
     /*** USBDeviceHardware ***/
 
     extern int32_t _getEndpointBufferCount(const uint8_t endpoint);
-    extern int16_t _readFromControlEndpoint(const uint8_t endpoint, uint8_t* data, int16_t len, bool continuation);
-    extern int16_t _readFromEndpoint(const uint8_t endpoint, uint8_t* data, int16_t len);
+    extern int16_t _readFromControlEndpoint(const uint8_t endpoint, char* data, int16_t len, bool continuation);
+    extern int16_t _readFromEndpoint(const uint8_t endpoint, char* data, int16_t len);
     extern int16_t _readByteFromEndpoint(const uint8_t endpoint);
-    extern int16_t _sendToEndpoint(const uint8_t endpoint, const uint8_t* data, int16_t length);
-    extern int16_t _sendToControlEndpoint(const uint8_t endpoint, const uint8_t* data, int16_t length, bool continuation);
+    extern int16_t _sendToEndpoint(const uint8_t endpoint, const char* data, int16_t length);
+    extern int16_t _sendToControlEndpoint(const uint8_t endpoint, const char* data, int16_t length, bool continuation);
     extern void _unfreezeUSBClock();
     extern void _waitForUsableUSBClock();
     extern void _enableResetInterrupt();
@@ -357,7 +354,7 @@ const uint16_t *Motate::getUSBSerialNumberString(int16_t &length) { \
         };
 
         /* Data is const. The pointer to data is not. */
-        static int16_t read(const uint8_t endpoint, uint8_t *buffer, int16_t length) {
+        static int16_t read(const uint8_t endpoint, char* buffer, int16_t length) {
             if (!_configuration || length < 0)
                 return -1;
             //
@@ -366,7 +363,7 @@ const uint16_t *Motate::getUSBSerialNumberString(int16_t &length) { \
         };
 
         /* Data is const. The pointer to data is not. */
-        static int16_t write(const uint8_t endpoint, const uint8_t * buffer, int16_t length) {
+        static int16_t write(const uint8_t endpoint, const char* buffer, int16_t length) {
             if (!_configuration || length < 0)
                 return -1;
 
@@ -382,7 +379,7 @@ const uint16_t *Motate::getUSBSerialNumberString(int16_t &length) { \
         }
 
         /* Data is const. The pointer to data is not. */
-        static int16_t readFromControl(const uint8_t endpoint, uint8_t *buffer, int16_t length) {
+        static int16_t readFromControl(const uint8_t endpoint, char* buffer, int16_t length) {
             if (!_configuration || length < 0)
                 return -1;
             bool continuation = false;
@@ -398,7 +395,7 @@ const uint16_t *Motate::getUSBSerialNumberString(int16_t &length) { \
         };
 
         /* Data is const. The pointer to data is not. */
-        static int16_t writeToControl(const uint8_t endpoint, const uint8_t *buffer, int16_t length) {
+        static int16_t writeToControl(const uint8_t endpoint, const char* buffer, int16_t length) {
             bool continuation = false;
             int16_t to_send = length;
             while (to_send > 0) {
@@ -445,9 +442,9 @@ const uint16_t *Motate::getUSBSerialNumberString(int16_t &length) { \
             if (to_send > maxLength)
                 to_send = maxLength;
             
-            to_send -= _sendToControlEndpoint(0, (const uint8_t *)(&string_header), to_send > header_size ? header_size : to_send, /*continuation = */false);
+            to_send -= _sendToControlEndpoint(0, (const char *)(&string_header), to_send > header_size ? header_size : to_send, /*continuation = */false);
             
-            const uint8_t * buffer = (const uint8_t *)(string);
+            const char * buffer = (const char *)(string);
             bool continuation = false;
             while (to_send > 0) {
                 int16_t sent = _sendToControlEndpoint(0, buffer, to_send, continuation);

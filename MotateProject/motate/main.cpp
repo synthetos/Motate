@@ -50,6 +50,9 @@ int main(void);
 
 #ifdef __ARM__
 
+// This is used by the anything that may generate a destructor:
+void* __dso_handle = nullptr;
+
 #ifdef __cplusplus
 extern "C"{
 #endif // __cplusplus

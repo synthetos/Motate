@@ -53,14 +53,22 @@ Motate::USBDevice< Motate::USBCDC > usb;
 
 namespace Motate {
 
-auto &Serial = usb._mixin_0_type::Serial;
-//typeof usb._mixin_1_type::Serial &SerialUSB1 = usb._mixin_1_type::Serial;
+    auto &Serial = usb.mixin<0>::Serial;
+//  auto &Serial1 = usb.mixin<1>::Serial;
 
 } // namespace Motate
 
 MOTATE_SET_USB_VENDOR_STRING( {'S' ,'y', 'n', 't', 'h', 'e', 't', 'o', 's'} )
 MOTATE_SET_USB_PRODUCT_STRING( {'M', 'o', 't', 'a', 't', 'e', ' ', 'D' , 'e', 'm', 'o'} )
 MOTATE_SET_USB_SERIAL_NUMBER_STRING_FROM_CHIPID()
+
+struct _USBAttacher {
+    _USBAttacher() {
+        usb.attach();
+    };
+};
+
+static _USBAttacher _attacher;
 
 #else
 

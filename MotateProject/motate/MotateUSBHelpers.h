@@ -408,48 +408,46 @@ namespace Motate {
  
     // Forward declare the USBMixin template.
     // Mixins are described more below.
-    template < typename interface0type, typename interface1type, typename interface2type, int position > struct USBMixin;
+    template < typename usb_parent_type, typename... usb_interface_types > struct USBMixins;
  
     // This is a templated version of the default descriptor.
     // Specializations of this can change the default parameters based on mixin proxies.
-    template < typename interface0type, typename interface1type, typename interface2type > struct USBDefaultDescriptor;
-    template < typename interface0type, typename interface1type, typename interface2type > struct USBDefaultQualifier;
+    template < typename... usb_interface_types > struct USBDefaultDescriptor;
+    template < typename... usb_interface_types > struct USBDefaultQualifier;
  
     // Forward declare the USBMixin template.
     // Mixins are described more below.
-    template < typename interface0type, typename interface1type, typename interface2type, int position > struct USBConfigMixin;
+    template < typename... usb_interface_types > struct USBConfigMixins;
  
-    template<class interface0type, class interface1type = USBNullInterface, class interface2type = USBNullInterface>
+    template<class interface0type, typename... other_interface_types>
     struct USBDescriptorConfiguration_t :
         USBDescriptorConfigurationHeader_t,
-        USBConfigMixin<interface0type, interface1type, interface2type, 0>,
-        USBConfigMixin<interface0type, interface1type, interface2type, 1>,
-        USBConfigMixin<interface0type, interface1type, interface2type, 2>
+        USBConfigMixins<interface0type, other_interface_types...>
     {
         // Shortcut typedefs
-        typedef USBDescriptorConfiguration_t<interface0type, interface1type, interface2type> _this_type;
+        typedef USBDescriptorConfiguration_t<interface0type, other_interface_types...> _this_type;
  
-        typedef USBConfigMixin<interface0type, interface1type, interface2type, 0> _config_mixin_0_type;
-        typedef USBConfigMixin<interface0type, interface1type, interface2type, 1> _config_mixin_1_type;
-        typedef USBConfigMixin<interface0type, interface1type, interface2type, 2> _config_mixin_2_type;
- 
+        typedef USBConfigMixins<interface0type, other_interface_types...> _config_mixins_type;
+
         static const uint8_t _interface_0_number    = 0;
-        static const uint8_t _interface_1_number    = _interface_0_number + _config_mixin_0_type::interfaces;
-        static const uint8_t _interface_2_number    = _interface_1_number + _config_mixin_1_type::interfaces;
-        static const uint8_t _total_interfaces_used = _interface_2_number + _config_mixin_2_type::interfaces;
- 
-        typedef USBMixin<interface0type, interface1type, interface2type, 0> _mixin_0_type;
-        typedef USBMixin<interface0type, interface1type, interface2type, 1> _mixin_1_type;
-        typedef USBMixin<interface0type, interface1type, interface2type, 2> _mixin_2_type;
-        typedef USBDefaultDescriptor<interface0type, interface1type, interface2type> _descriptor_type;
+//        static const uint8_t _interface_1_number    = _interface_0_number + _config_mixin_0_type::interfaces;
+//        static const uint8_t _interface_2_number    = _interface_1_number + _config_mixin_1_type::interfaces;
+//        static const uint8_t _total_interfaces_used = _interface_2_number + _config_mixin_2_type::interfaces;
+
+        static const uint8_t _total_interfaces_used = _config_mixins_type::interfaces;
+
+        typedef USBMixins<interface0type, other_interface_types...> _mixins_type;
+        typedef USBDefaultDescriptor<interface0type, other_interface_types...> _descriptor_type;
  
         // Keep track of the endpoint usage
         // Endpoint zero is the control interface, and is owned by nobody.
         static const uint8_t _interface_0_first_endpoint = 1;
-        static const uint8_t _interface_1_first_endpoint = _interface_0_first_endpoint + _mixin_0_type::endpoints_used;
-        static const uint8_t _interface_2_first_endpoint = _interface_1_first_endpoint + _mixin_1_type::endpoints_used;
-        static const uint8_t _total_endpoints_used       = _interface_2_first_endpoint + _mixin_2_type::endpoints_used;
- 
+//        static const uint8_t _interface_1_first_endpoint = _interface_0_first_endpoint + _mixin_0_type::endpoints_used;
+//        static const uint8_t _interface_2_first_endpoint = _interface_1_first_endpoint + _mixin_1_type::endpoints_used;
+//        static const uint8_t _total_endpoints_used       = _interface_2_first_endpoint + _mixin_2_type::endpoints_used;
+
+        static const uint8_t _total_endpoints_used = _mixins_type::total_endpoints_used;
+
         USBDescriptorConfiguration_t(
                                      uint8_t _ConfigAttributes,
                                      uint16_t _MaxPowerConsumption,
@@ -467,23 +465,124 @@ namespace Motate {
  
                                                /*    _MaxPowerConsumption = */ _MaxPowerConsumption
                                                ),
-            _config_mixin_0_type(_interface_0_first_endpoint, _interface_0_number, _deviceSpeed, _otherConfig),
-            _config_mixin_1_type(_interface_1_first_endpoint, _interface_1_number, _deviceSpeed, _otherConfig),
-            _config_mixin_2_type(_interface_2_first_endpoint, _interface_2_number, _deviceSpeed, _otherConfig)
+            _config_mixins_type(_interface_0_first_endpoint, _interface_0_number, _deviceSpeed, _otherConfig)
         {};
     } ATTR_PACKED;
  
-    // Declare the base (Null) USBConfigMixin
-    // We use template specialization (later) on a combination of *one* of the three interfaces,
-    // along with the position to expose different content into the USBDevice.
-    // This is the same emchanism as USBMixin<>.
-    template < typename usbIFA, typename usbIFB, typename usbIFC, int position >
+    // Declare the base (Null) USBConfigMixins object
+    // We use template specialization to expose different content into the USBDevice.
+    // We then use USBConfigMixinWrapper<> objects to dole out the USBConfigMixin<> objects.
+    // This is the same emchanism as USBMixins<>, with the exception that we don't just care about
+    // position in the interfaces, but we also care about the total number of interfaces being used.
+    // Note that these object don't DO anything other than fill in their structure, which is packed and
+    // sent off tot he USB HOST as-is.
+
+//    template <uint8_t interface_count, typename is_enabled = std::enable_if_t<(interface_count >= 1)>>
+    template < typename usb_interface_type, uint8_t interface_position, uint8_t interface_count>
     struct USBConfigMixin {
         static const uint8_t interfaces = 0;
-        USBConfigMixin (const uint8_t _first_endpoint_number, const uint8_t _first_interface_number, const USBDeviceSpeed_t _device_speed, const bool _other_config) {};
+        constexpr USBConfigMixin (
+                         const uint8_t _first_endpoint_number,
+                         const uint8_t _first_interface_number,
+                         const USBDeviceSpeed_t _device_speed,
+                         const bool _other_config
+                         )
+        {};
         static bool isNull() { return true; };
     };
- 
+
+    template < uint8_t usb_interface_type_count, uint8_t usb_interface_position, typename... usb_other_interface_types >
+    struct USBConfigMixinWrapper;
+
+    template < uint8_t usb_interface_type_count, uint8_t usb_interface_position, typename usb_first_interface_type, typename... usb_other_interface_types >
+    struct USBConfigMixinWrapper <usb_interface_type_count, usb_interface_position, usb_first_interface_type, usb_other_interface_types...> :
+        USBConfigMixin<usb_first_interface_type, usb_interface_position, usb_interface_type_count>,
+        USBConfigMixinWrapper<usb_interface_type_count, usb_interface_position+1, usb_other_interface_types...>
+    {
+        typedef USBConfigMixin<usb_first_interface_type, usb_interface_position, usb_interface_type_count> this_type;
+        typedef USBConfigMixinWrapper<usb_interface_type_count, usb_interface_position+1, usb_other_interface_types...> others_type;
+
+        static const uint8_t endpoints = this_type::endpoints + others_type::endpoints;
+        static const uint8_t interfaces = this_type::interfaces + others_type::interfaces;
+
+        constexpr USBConfigMixinWrapper (
+                                         const uint8_t _first_endpoint_number,
+                                         const uint8_t _first_interface_number,
+                                         const USBDeviceSpeed_t _device_speed,
+                                         const bool _other_config
+                                         ) :
+        this_type(
+                  _first_endpoint_number,
+                  _first_interface_number,
+                  _device_speed,
+                  _other_config),
+        others_type(
+                    _first_endpoint_number + this_type::endpoints,
+                    _first_interface_number + this_type::interfaces,
+                    _device_speed,
+                    _other_config)
+        {};
+    };
+
+    template < uint8_t usb_interface_type_count, uint8_t usb_interface_position, typename usb_first_interface_type >
+    struct USBConfigMixinWrapper <usb_interface_type_count, usb_interface_position, usb_first_interface_type> :
+        USBConfigMixin<usb_first_interface_type, usb_interface_position, usb_interface_type_count>
+    {
+        typedef USBConfigMixin<usb_first_interface_type, usb_interface_position, usb_interface_type_count> this_type;
+
+        static const uint8_t endpoints = this_type::endpoints;
+        static const uint8_t interfaces = this_type::interfaces;
+
+        constexpr USBConfigMixinWrapper (
+                                         const uint8_t _first_endpoint_number,
+                                         const uint8_t _first_interface_number,
+                                         const USBDeviceSpeed_t _device_speed,
+                                         const bool _other_config
+                                         ) :
+        this_type(
+                  _first_endpoint_number,
+                  _first_interface_number,
+                  _device_speed,
+                  _other_config)
+        {};
+    };
+
+    template < typename... usb_interface_types >
+    struct USBConfigMixins {
+        static const uint8_t endpoints = 0;
+        static const uint8_t interfaces = 0;
+        USBConfigMixins (
+                         const uint8_t _first_endpoint_number,
+                         const uint8_t _first_interface_number,
+                         const USBDeviceSpeed_t _device_speed,
+                         const bool _other_config
+                         )
+        {};
+    };
+
+    template < typename usb_first_interface_type, typename... usb_other_interface_types >
+    struct USBConfigMixins <usb_first_interface_type, usb_other_interface_types...> :
+        USBConfigMixinWrapper<sizeof...(usb_other_interface_types)+1, 0, usb_first_interface_type, usb_other_interface_types...>
+    {
+        typedef USBConfigMixinWrapper<sizeof...(usb_other_interface_types)+1, 0, usb_first_interface_type, usb_other_interface_types...> wrapper_type;
+
+        static const uint8_t endpoints = wrapper_type::endpoints;
+        static const uint8_t interfaces = wrapper_type::interfaces;
+
+        constexpr USBConfigMixins (
+                                   const uint8_t _first_endpoint_number,
+                                   const uint8_t _first_interface_number,
+                                   const USBDeviceSpeed_t _device_speed,
+                                   const bool _other_config
+                                   ) :
+            wrapper_type(
+                         _first_endpoint_number,
+                         _first_interface_number,
+                         _device_speed,
+                         _other_config)
+        {};
+    };
+
     /* ############################################# */
     /* #                                           # */
     /* #             DEVICE INTERFACE              # */
