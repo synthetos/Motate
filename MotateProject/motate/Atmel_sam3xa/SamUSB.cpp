@@ -36,6 +36,9 @@
 
 uint16_t endpointSizes[10] = {64, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
+// This is used if a global object has a usable destructor:
+void* __dso_handle = nullptr;
+
 namespace Motate {
     const uint16_t MOTATE_USBLanguageString[] = {0x0409}; // English
     const uint16_t *getUSBLanguageString(int16_t &length) {
