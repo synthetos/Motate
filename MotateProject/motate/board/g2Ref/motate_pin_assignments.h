@@ -35,10 +35,6 @@
 
 namespace Motate {
 
-    // DUE
-    _MAKE_MOTATE_PORT32(A, 'A');
-    _MAKE_MOTATE_PORT32(B, 'B');
-
     // Arduino pin name & function
     _MAKE_MOTATE_PIN(113,   A, 'A',  0);    // kSpindle_DirPinNumber
     _MAKE_MOTATE_PIN(116,   A, 'A',  1);    // kCoolant_EnablePinNumber
