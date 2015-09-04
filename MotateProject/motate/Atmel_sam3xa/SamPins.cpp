@@ -157,6 +157,7 @@ if (ADCPin< LookupADCPinByADC<num>::number >::interrupt) { \
     _INTERNAL_MAKE_ADC_CHECK(11)
     _INTERNAL_MAKE_ADC_CHECK(12)
     _INTERNAL_MAKE_ADC_CHECK(13)
+    _INTERNAL_MAKE_ADC_CHECK(14)
 
 //    NVIC_ClearPendingIRQ(ADC_IRQn);
 }
