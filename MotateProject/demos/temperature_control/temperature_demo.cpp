@@ -289,8 +289,8 @@ PID pid1 { 22.2/255.0, 1.08/255.0, 114.0/255.0};
 
 auto json_base = JSON::parent(
                               thermistor1.json_bindings("t1"),
-//                              thermistor2.json_bindings("t2"),
-//                              thermistor3.json_bindings("thb"),
+                              thermistor2.json_bindings("t2"),
+                              thermistor3.json_bindings("thb"),
 //                              JSON::bind_object("t1",
 //                                                JSON::bind("temp", thermistor1, /*print precision:*/2),
 //                                                JSON::bind_typed<float>("res", thermistor1.resistance_property, /*print precision:*/2)
@@ -304,8 +304,8 @@ auto json_base = JSON::parent(
 //                                                JSON::bind_typed<float>("res", thermistor3.resistance_property, /*print precision:*/2)
 //                                                ),
                               JSON::bind_typed<float>  ("h1", fet_pin1, /*precision:*/ 3),
-//                              JSON::bind_typed<float>  ("h2", fet_pin2, /*precision:*/ 3),
-//                              JSON::bind_typed<bool>   ("hhb", fet_pin3)//,
+                              JSON::bind_typed<float>  ("h2", fet_pin2, /*precision:*/ 3),
+                              JSON::bind_typed<bool>   ("hhb", fet_pin3),
                               pid1.json_bindings("pid1")
                               );
 
