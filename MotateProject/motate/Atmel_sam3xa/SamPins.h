@@ -260,7 +260,7 @@ namespace Motate {
     };\
     template<> void Motate::IRQPin<number>::interrupt()
 
-
+    constexpr uint32_t startup_table[] = { 0, 8, 16, 24, 64, 80, 96, 112, 512, 576, 640, 704, 768, 832, 896, 960 };
 
     // Internal ADC object, and a parent of the ADCPin objects.
     // Handles: Setting options for the ADC module as a whole,
@@ -280,7 +280,6 @@ namespace Motate {
 
             enablePeripheralClock();
             
-            uint32_t startup_table[] = { 0, 8, 16, 24, 64, 80, 96, 112, 512, 576, 640, 704, 768, 832, 896, 960 };
             uint32_t ul_prescal, ul_startup,  ul_mr_startup, ul_real_adc_clock;
             ADC->ADC_CR = ADC_CR_SWRST;
 

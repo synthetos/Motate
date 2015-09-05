@@ -284,7 +284,11 @@ namespace Motate {
         interface_number(new_interface_number),
         _line_state(0x00)
         {};
- 
+
+        USBSerial(const USBSerial&) = delete;
+        USBSerial(USBSerial&& other) = delete;
+
+
         int16_t readByte() {
             return usb.readByte(read_endpoint);
         };

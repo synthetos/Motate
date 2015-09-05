@@ -632,6 +632,9 @@ namespace Motate {
     extern uint32_t pwm_interrupt_cause_cached_1_;
     extern uint32_t pwm_interrupt_cause_cached_2_;
 
+    static constexpr uint32_t divisors[11] = {1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024};
+
+
     template <uint8_t timerNum>
     struct PWMTimer {
 
@@ -740,7 +743,6 @@ namespace Motate {
             uint32_t masterClock = SystemCoreClock;
 
             // Store the divisor temporarily, to avoid looking it up again...
-            uint32_t divisors[11] = {1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024};
             uint8_t divisor_index = 0;
             uint32_t prescaler;
 

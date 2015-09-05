@@ -46,11 +46,22 @@ namespace Motate {
 
         //---- COMPILE-TIME STRING MANIPULATION ----//
 
-    #pragma GCC diagnostic push
-        // We are getting useless warning about the constexpr not being "inlined"
-    #pragma GCC diagnostic ignored "-Winline"
 
         //---- CONFIGURATION ITEMS ----//
+
+        // Workaround some odd bug in gcc where it won't inline this unless it's close...
+        namespace internal {
+            constexpr int internal_strlen(const char *p, const int count_ = 0)
+            {
+                return !p
+                ? 0
+                : (
+                   (*p == 0)
+                   ? count_
+                   : internal_strlen(p+1, count_+1)
+                   );
+            }
+        }
 
         struct binderBase_t  {
             union token_t {
@@ -65,7 +76,7 @@ namespace Motate {
             bool token_is_string_ = true;
             int token_string_len_ = 0;
 
-            constexpr binderBase_t(const char *token) : token_{token}, token_is_string_{true}, token_string_len_{c_strlen(token)} {};
+            constexpr binderBase_t(const char *token) : token_{token}, token_is_string_{true}, token_string_len_{internal::internal_strlen(token)} {};
 
             // Note: When precomputing the token_string_len_ of the string in chars, we INCLUDE the '[' and ']' to simplify the prefix writing routine.
             constexpr binderBase_t(const int index) : token_{index}, token_is_string_{false}, token_string_len_{c_itoa_len(index)+2} {};
@@ -354,7 +365,6 @@ namespace Motate {
 
         //----
 
-
         template <class... extraTypes>
         struct binderList_t {
             constexpr binderList_t(extraTypes&&... extras, bool is_array = false) {};
@@ -371,14 +381,19 @@ namespace Motate {
 
         template <class valueType, class... extraTypes>
         struct binderList_t<valueType, extraTypes...> : binderList_t<extraTypes...> {
-            constexpr binderList_t(valueType&& value, extraTypes&&... extras, bool is_array) : binderList_t<extraTypes...>{std::move(extras)..., is_array}, value_{std::move(value)}, array_{is_array} {};
+
+            constexpr binderList_t(valueType&& value, extraTypes&&... extras, bool is_array) :
+                binderList_t<extraTypes...>{std::move(extras)..., is_array},
+                value_{std::move(value)},
+                array_{is_array}
+            {};
 
             constexpr binderList_t(const binderList_t&) = delete;
 
-            constexpr binderList_t(binderList_t&& other)
-            : binderList_t<extraTypes...>{std::move(other)},
-              value_{std::move(other.value_)},
-              array_{other.array_}
+            constexpr binderList_t(binderList_t&& other) :
+                binderList_t<extraTypes...>{std::move(other)},
+                value_{std::move(other.value_)},
+                array_{other.array_}
             {};
 
             static const int rest_size_ = sizeof...(extraTypes);
@@ -389,9 +404,26 @@ namespace Motate {
             valueType value_;
             bool array_ = false;
 
-            /*constexpr*/ const binderBase_t *find(const char* s) const
+            // Workaround some odd bug in gcc where it won't inline this unless it's close...
+            constexpr int internal_strlen(const char *p, const int count_ = 0) const
             {
-                return (streq(value_.token_.c_, s, c_strlen(s)) ? &value_ : parent_t::find(s));
+                return !p
+                ? 0
+                : (
+                   (*p == 0)
+                   ? count_
+                   : internal_strlen(p+1, count_+1)
+                );
+            }
+
+            constexpr bool matches(const char* s) const
+            {
+                return streq(value_.token_.c_, s, internal_strlen(s));
+            }
+
+            constexpr const binderBase_t *find(const char* s) const
+            {
+                return (matches(s) ? &value_ : parent_t::find(s));
             };
 
             constexpr const binderBase_t *find(const int i) const
@@ -1267,7 +1299,5 @@ namespace Motate {
             char *p_ = skip_whitespace(b_);
             return parse_json_object_(o_, p_, /*depth_=*/-1);
         }
-
-    #pragma GCC diagnostic pop
     }
 } // namespace
