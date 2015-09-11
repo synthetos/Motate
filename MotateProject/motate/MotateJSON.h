@@ -29,7 +29,8 @@
 
 #include <type_traits>
 #include <utility>
-#include <stdio.h>
+#include <cstdint>
+#include <cstdio>
 
 #include "MotateUtilities.h"
 
@@ -44,7 +45,38 @@ namespace Motate {
         using Motate::Private::c_strreverse;
 
 
-        //---- COMPILE-TIME STRING MANIPULATION ----//
+        //---- COMPILE-TIME and RUN-TIME HASHING ----//
+
+        namespace Private
+        {
+            // Credit to https://gist.github.com/filsinger/1255697 for inspiration
+            template <typename S> struct fnv_internal;
+            template <typename S> struct fnv1a;
+
+            template <> struct fnv_internal<uint32_t>
+            {
+                constexpr static uint32_t default_offset_basis = 0x811C9DC5;
+                constexpr static uint32_t prime                = 0x01000193;
+            };
+
+            template <> struct fnv1a<uint32_t> : public fnv_internal<uint32_t>
+            {
+                constexpr static inline uint32_t hash(char const*const aString, const uint32_t val = default_offset_basis)
+                {
+                    return (aString[0] == '\0') ? val : hash( &aString[1], ( val ^ uint32_t(aString[0]) ) * prime);
+                }
+                
+                constexpr static inline uint32_t hash(char const*const aString, const size_t aStrlen, const uint32_t val = default_offset_basis)
+                {
+                    return (aStrlen == 0) ? val : hash( aString + 1, aStrlen - 1, ( val ^ uint32_t(aString[0]) ) * prime);
+                }
+            };
+        } // namespace Private
+
+        typedef uint32_t hash_t;
+        constexpr hash_t hash(const char * const aString) {
+            return Private::fnv1a<uint32_t>::hash(aString);
+        }
 
 
         //---- CONFIGURATION ITEMS ----//
@@ -66,25 +98,27 @@ namespace Motate {
         struct binderBase_t  {
             union token_t {
                 const char *c_;
-                const int i_;
+                const uint32_t i_;
 
                 constexpr token_t(const char *c) : c_{c} {};
-                constexpr token_t(const int i) : i_{i} {};
+                constexpr token_t(const uint32_t i) : i_{i} {};
             };
 
             const token_t token_;
+            const hash_t hash_;
             bool token_is_string_ = true;
             int token_string_len_ = 0;
 
-            constexpr binderBase_t(const char *token) : token_{token}, token_is_string_{true}, token_string_len_{internal::internal_strlen(token)} {};
+            constexpr binderBase_t(const char *token) : token_{token}, hash_{hash(token)}, token_is_string_{true}, token_string_len_{internal::internal_strlen(token)} {};
 
             // Note: When precomputing the token_string_len_ of the string in chars, we INCLUDE the '[' and ']' to simplify the prefix writing routine.
-            constexpr binderBase_t(const int index) : token_{index}, token_is_string_{false}, token_string_len_{c_itoa_len(index)+2} {};
+            constexpr binderBase_t(const uint32_t index) : token_{index}, hash_{index}, token_is_string_{false}, token_string_len_{c_itoa_len(index)+2} {};
 
             constexpr binderBase_t(const binderBase_t&) = delete;
 
             binderBase_t(binderBase_t&& other)
                 : token_{std::move(other.token_)},
+                  hash_{other.hash_},
                   token_is_string_{other.token_is_string_},
                   token_string_len_{other.token_string_len_}
             {
@@ -150,7 +184,8 @@ namespace Motate {
             virtual void set(float) const {};
             virtual void set(bool) const {};
             virtual void set_a(int i, float v) const {};
-            virtual const binderBase_t *find(const char* s) const { return nullptr; };
+            virtual const binderBase_t *find(const char* s) const { return find(hash(s)); };
+            virtual const binderBase_t *find(const hash_t h) const { return nullptr; };
             virtual const binderBase_t *find(int) const { return nullptr; };
         };
 
@@ -220,9 +255,9 @@ namespace Motate {
                 return value_.write(buf, verbose);
             };
 
-            const binderBase_t *find(const char* s) const override
+            const binderBase_t *find(const hash_t h) const override
             {
-                return value_.find(s);
+                return value_.find(h);
             };
 
             const binderBase_t *find(int i) const override
@@ -374,7 +409,7 @@ namespace Motate {
             constexpr binderList_t(binderList_t&& other) {};
 
             static const int rest_size_ = sizeof...(extraTypes);
-            constexpr binderBase_t *find(const char*) const { return nullptr; }
+            constexpr binderBase_t *find(const hash_t) const { return nullptr; }
             constexpr binderBase_t *find(int) const { return nullptr; }
             constexpr bool write(str_buf &buf, bool verbose) const { return true; };
         };
@@ -405,25 +440,35 @@ namespace Motate {
             bool array_ = false;
 
             // Workaround some odd bug in gcc where it won't inline this unless it's close...
-            constexpr int internal_strlen(const char *p, const int count_ = 0) const
-            {
-                return !p
-                ? 0
-                : (
-                   (*p == 0)
-                   ? count_
-                   : internal_strlen(p+1, count_+1)
-                );
-            }
+//            constexpr int internal_strlen(const char *p, const int count_ = 0) const
+//            {
+//                return !p
+//                ? 0
+//                : (
+//                   (*p == 0)
+//                   ? count_
+//                   : internal_strlen(p+1, count_+1)
+//                );
+//            }
+//
+//            constexpr bool matches(const char* s) const
+//            {
+//                return streq(value_.token_.c_, s, internal_strlen(s));
+//            }
 
-            constexpr bool matches(const char* s) const
+            constexpr bool matches(const hash_t h) const
             {
-                return streq(value_.token_.c_, s, internal_strlen(s));
+                return (value_.hash_ == h);
             }
 
             constexpr const binderBase_t *find(const char* s) const
             {
-                return (matches(s) ? &value_ : parent_t::find(s));
+                return find(hash(s));
+            };
+
+            constexpr const binderBase_t *find(const hash_t h) const
+            {
+                return (matches(h) ? &value_ : parent_t::find(h));
             };
 
             constexpr const binderBase_t *find(const int i) const
