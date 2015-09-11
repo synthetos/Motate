@@ -890,10 +890,10 @@ static Port ## registerLetter port ## registerLetter;
 
     _MAKE_MOTATE_PORT32(A, 'A');
     _MAKE_MOTATE_PORT32(B, 'B');
-#ifdef PORTC
+#ifdef PIOC
     _MAKE_MOTATE_PORT32(C, 'C');
 #endif
-#ifdef PORTD
+#ifdef PIOD
     _MAKE_MOTATE_PORT32(D, 'D');
 #endif
 

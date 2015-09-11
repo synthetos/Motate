@@ -36,10 +36,6 @@
 namespace Motate {
 
     // DUE
-    _MAKE_MOTATE_PORT32(A, 'A');
-    _MAKE_MOTATE_PORT32(B, 'B');
-    _MAKE_MOTATE_PORT32(C, 'C');
-    _MAKE_MOTATE_PORT32(D, 'D');
 
     // Arduino pin name & function
     _MAKE_MOTATE_PIN(69,   A, 'A',  0);	// CANTX

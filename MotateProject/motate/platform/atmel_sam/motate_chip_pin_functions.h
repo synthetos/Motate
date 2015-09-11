@@ -62,7 +62,7 @@ namespace Motate {
     _MAKE_MOTATE_PWM_PIN('B', 27, _MOTATE_TEMP_TC(0,1),            /*Peripheral:*/ B, /*Inverted:*/ false);
 
 // SAM3X8C doesn't have a PORT C or D
-#ifdef PORTC
+#ifdef PIOC
     _MAKE_MOTATE_PWM_PIN('C',  2, Motate::PWMTimer<0>, /*Peripheral:*/ B, /*Inverted:*/ false);
     _MAKE_MOTATE_PWM_PIN('C',  3, Motate::PWMTimer<0>, /*Peripheral:*/ B, /*Inverted:*/ true); // INVERTED!
     _MAKE_MOTATE_PWM_PIN('C',  4, Motate::PWMTimer<1>, /*Peripheral:*/ B, /*Inverted:*/ false);
@@ -83,7 +83,7 @@ namespace Motate {
     _MAKE_MOTATE_PWM_PIN('C', 29, _MOTATE_TEMP_TC(7,1),            /*Peripheral:*/ B, /*Inverted:*/ false);
 #endif
 
-#ifdef PORTD
+#ifdef PIOD
     _MAKE_MOTATE_PWM_PIN('D',  7, _MOTATE_TEMP_TC(8, 0),           /*Peripheral:*/ B, /*Inverted:*/ false);
     _MAKE_MOTATE_PWM_PIN('D',  8, _MOTATE_TEMP_TC(8, 1),           /*Peripheral:*/ B, /*Inverted:*/ false);
 #endif
