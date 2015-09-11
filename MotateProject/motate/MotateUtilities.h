@@ -124,11 +124,11 @@ namespace Motate {
             // That forces a specialization to handle values, and only
             // allows this version to handle the "end" of the list.
 
-            constexpr int get_length() const {
+            constexpr int32_t get_length() const {
                 return 0;
             };
 
-            constexpr int copy_to(char * const dest_, int max_len_) const {
+            constexpr int32_t copy_to(char * const dest_, int32_t max_len_) const {
                 return *dest_=0,0;
             };
         };
@@ -138,15 +138,15 @@ namespace Motate {
         struct c_strcpyx_t<const char *, Ts...> : c_strcpyx_t<Ts...>  {
             typedef c_strcpyx_t<Ts...> parent_t;
             const char * const val_;
-            const int length_;
+            const int32_t length_;
 
             constexpr c_strcpyx_t(const char *value, Ts... ts) : c_strcpyx_t<Ts...>{ts...}, val_{value}, length_{c_strlen(val_)} {;}
 
-            constexpr int get_length() const {
+            constexpr int32_t get_length() const {
                 return length_ + parent_t::get_length();
             };
 
-            constexpr int copy_to(char * const dest_, int max_len_, int written_=0) const {
+            constexpr int32_t copy_to(char * const dest_, int32_t max_len_, int32_t written_=0) const {
                 return (
                     written_=c_strcpy(dest_, val_, max_len_),
                     (max_len_ < get_length())
@@ -162,15 +162,15 @@ namespace Motate {
         struct c_strcpyx_t<char *, Ts...> : c_strcpyx_t<Ts...>  {
             typedef c_strcpyx_t<Ts...> parent_t;
             const char * const val_;
-            const int length_;
+            const int32_t length_;
 
             constexpr c_strcpyx_t(const char *value, Ts... ts) : c_strcpyx_t<Ts...>{ts...}, val_{value}, length_{c_strlen(val_)} {;}
 
-            constexpr int get_length() const {
+            constexpr int32_t get_length() const {
                 return length_ + parent_t::get_length();
             };
 
-            constexpr int copy_to(char * const dest_, int max_len_, int written_=0) const {
+            constexpr int32_t copy_to(char * const dest_, int32_t max_len_, int32_t written_=0) const {
                 return (
                         written_=c_strcpy(dest_, val_, max_len_),
                         (max_len_ < get_length())
@@ -181,15 +181,14 @@ namespace Motate {
         };
 
         // Allows for int or const int to be appended to the output.
-        template <typename... Ts>
-        struct c_strcpyx_t<int, Ts...> : c_strcpyx_t<Ts...>  {
+        template <typename int_type, typename... Ts>
+        struct c_strcpyx_t<int_type, Ts...> : c_strcpyx_t<Ts...>  {
             typedef c_strcpyx_t<Ts...> parent_t;
-            const int val_;
+            const int_type val_;
 
-            constexpr c_strcpyx_t(int value, Ts... ts) : c_strcpyx_t<Ts...>{ts...}, val_{value} {;}
+            constexpr c_strcpyx_t(int_type value, Ts... ts) : c_strcpyx_t<Ts...>{ts...}, val_{value} {;}
 
-
-            constexpr int copy_to(char * const dest_, int max_len_, int written_=0) const {
+            constexpr int32_t copy_to(char * const dest_, int32_t max_len_, int32_t written_=0) const {
                 return c_itoa(val_, dest_, max_len_)+parent_t::copy_to((dest_+written_), (max_len_-written_));
             };
         };
@@ -217,13 +216,13 @@ namespace Motate {
 
         struct str_buf {
             char* const &b_;
-            const int l_;
-            mutable int w_ = 0;
-            mutable int r_ = 0;
+            const int32_t l_;
+            mutable int32_t w_ = 0;
+            mutable int32_t r_ = 0;
 
             // typedef int rollback_pos_t;
 
-            constexpr str_buf(char* const &b, int l) : b_{b}, l_{l}, w_{0} {;}
+            constexpr str_buf(char* const &b, int32_t l) : b_{b}, l_{l}, w_{0} {;}
 
             constexpr int get_written() const { return w_; };
 
@@ -238,7 +237,8 @@ namespace Motate {
             /*constexpr*/ bool record_copy_(int w) const {
                 return ((w_ += w), (l_>w_));
             };
-            /*constexpr*/ bool record_copy_zerofail_(int w) const {
+            template <typename int_type>
+            /*constexpr*/ bool record_copy_zerofail_(int_type w) const {
                 return ((w_ += w), (w>0) && (l_>w_));
             };
 
@@ -250,14 +250,15 @@ namespace Motate {
             };
 
             // Copy at most max_len_ characters, returning false if it failed
-            constexpr bool copy(float f, int precision) const {
+            constexpr bool copy(float f, uint8_t precision) const {
                 return (l_>w_)
                     ? record_copy_zerofail_(c_floattoa(f, b_+w_, l_-w_-r_, precision))
                     : false;
             };
 
             // Copy at most max_len_ characters, returning false if it failed
-            constexpr bool copy(int i) const {
+            template <typename int_type>
+            constexpr bool copy(int_type i) const {
                 return (l_>w_)
                     ? record_copy_zerofail_(c_itoa(i, b_+w_, l_-w_-r_))
                     : false;
@@ -279,7 +280,8 @@ namespace Motate {
         }
 
         // Integer part
-        constexpr float c_atof_int_(char *&p_, int v_) {
+        template <typename int_type>
+        constexpr float c_atof_int_(char *&p_, int_type v_) {
             return (*p_ == '.')
             ? (float)(v_) + c_atof_frac_(++p_, 0, 1.0/10.0)
             : (
