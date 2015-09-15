@@ -83,14 +83,14 @@ namespace Motate {
 
         // Workaround some odd bug in gcc where it won't inline this unless it's close...
         namespace internal {
-            constexpr int internal_strlen(const char *p, const int count_ = 0)
+            constexpr int strlen(const char *p, const int count_ = 0)
             {
                 return !p
                 ? 0
                 : (
                    (*p == 0)
                    ? count_
-                   : internal_strlen(p+1, count_+1)
+                   : strlen(p+1, count_+1)
                    );
             }
         }
@@ -108,11 +108,27 @@ namespace Motate {
             const hash_t hash_;
             bool token_is_string_ = true;
             int token_string_len_ = 0;
+            const char *description_;
+            int description_len_ = 0;
 
-            constexpr binderBase_t(const char *token) : token_{token}, hash_{hash(token)}, token_is_string_{true}, token_string_len_{internal::internal_strlen(token)} {};
+            constexpr binderBase_t(const char *token, const char *description)
+                : token_{token},
+                  hash_{hash(token)},
+                  token_is_string_{true},
+                  token_string_len_{internal::strlen(token)},
+                  description_{description},
+                  description_len_{internal::strlen(description)}
+            {};
 
             // Note: When precomputing the token_string_len_ of the string in chars, we INCLUDE the '[' and ']' to simplify the prefix writing routine.
-            constexpr binderBase_t(const uint32_t index) : token_{index}, hash_{index}, token_is_string_{false}, token_string_len_{c_itoa_len(index)+2} {};
+            constexpr binderBase_t(const uint32_t index, const char *description)
+                : token_{index},
+                  hash_{index},
+                  token_is_string_{false},
+                  token_string_len_{c_itoa_len(index)+2},
+                  description_{description},
+                  description_len_{internal::strlen(description)}
+            {};
 
             constexpr binderBase_t(const binderBase_t&) = delete;
 
@@ -120,9 +136,10 @@ namespace Motate {
                 : token_{std::move(other.token_)},
                   hash_{other.hash_},
                   token_is_string_{other.token_is_string_},
-                  token_string_len_{other.token_string_len_}
-            {
-            };
+                  token_string_len_{other.token_string_len_},
+                  description_{other.description_},
+                  description_len_{other.description_len_}
+            {};
 
             virtual const char* get_str() const = 0;
 
@@ -202,7 +219,11 @@ namespace Motate {
 //            constexpr binderType_t(T2 token, valueType& value) : binderBase_t{token}, print_t{}, value_{value} {} ;
 
             template<class T2, class... printSubTs>
-            constexpr binderType_t(T2 token, valueType& value, printSubTs... f) : binderBase_t{token}, print_t{f...}, value_{value} {} ;
+            constexpr binderType_t(T2 token, valueType& value, const char *description, printSubTs... f)
+                : binderBase_t{token, description},
+                  print_t{f...},
+                  value_{value}
+            {};
 
             constexpr binderType_t(const binderType_t&) = delete;
 
@@ -235,15 +256,17 @@ namespace Motate {
             valueType value_;
 
             template<class T2, class... printSubTs>
-            constexpr binderOwner_t(T2 token, valueType&& value, printSubTs... f) : binderBase_t{token}, value_{std::move(value), f...} {} ;
+            constexpr binderOwner_t(T2 token, valueType&& value, const char *description, printSubTs... f)
+                : binderBase_t{token, description},
+                  value_{std::move(value), f...}
+            {};
 
             constexpr binderOwner_t(const binderOwner_t&) = delete;
 
             constexpr binderOwner_t(binderOwner_t&& other)
                 : binderBase_t{std::move(other)},
                   value_{std::move(other.value_)}
-            {
-            };
+            {};
 
             const char* get_str() const override { return ""; };
 
@@ -365,7 +388,11 @@ namespace Motate {
             const char* &value_;
 
             template<class T, class... printSubTs>
-            constexpr binderType_t(T token, const char* &value, printSubTs... f) : binderBase_t{token}, value_{value}, print_t{f...} {} ;
+            constexpr binderType_t(T token, const char* &value, const char *description, printSubTs... f)
+                : binderBase_t{token, description},
+                  value_{value},
+                  print_t{f...}
+            {};
 
             const char* get_str() const override { return value_; };
 
@@ -389,7 +416,11 @@ namespace Motate {
             bool &value_;
 
             template<class T, class... printSubTs>
-            constexpr binderType_t(T token, bool& value, printSubTs... f) : binderBase_t{token}, value_{value}, print_t{f...} {} ;
+            constexpr binderType_t(T token, bool& value, const char *description, printSubTs... f)
+                : binderBase_t{token, description},
+                  value_{value},
+                  print_t{f...}
+            {};
 
             const char* get_str() const override { return value_ ? "true" : "false"; };
             void set(float f) const override { value_ = (bool)f; };
@@ -506,7 +537,11 @@ namespace Motate {
             bool array_ = false;
 
             template <class T>
-            constexpr binderOwner_t(T token, binderList_t<Ts...>&& value) : binderBase_t{token}, value_{std::move(value)}, array_{value_.isArray()} {} ;
+            constexpr binderOwner_t(T token, binderList_t<Ts...>&& value, const char *description)
+                : binderBase_t{token, description},
+                  value_{std::move(value)},
+                  array_{value_.isArray()}
+            {};
 
             constexpr binderOwner_t(const binderOwner_t&) = delete;
 
@@ -680,13 +715,15 @@ namespace Motate {
         // bind... factories - used to simplify creation of binderType_t and related objects
 
         template <typename valueType, typename... extraParamTypes>
-        constexpr bindt_<valueType> bind(const char *token, valueType& valueRef, extraParamTypes... extraParams) {
-            return {token, valueRef, extraParams...};
+        constexpr bindt_<valueType>
+        bind(const char *token, valueType& valueRef, const char *description, extraParamTypes... extraParams) {
+            return {token, valueRef, description, extraParams...};
         }
 
         template <typename subBinderType, typename... extraParamTypes>
-        constexpr binderOwner_t<subBinderType> bind(const char *token, subBinderType&& subBinder, extraParamTypes... extraParams) {
-            return {token, std::move(subBinder), extraParams...};
+        constexpr binderOwner_t<subBinderType>
+        bind(const char *token, subBinderType&& subBinder, const char *description, extraParamTypes... extraParams) {
+            return {token, std::move(subBinder), description, extraParams...};
         }
 
         // Experiment: Array-type binder
@@ -700,42 +737,50 @@ namespace Motate {
         // First, we make a private helper for the list
         namespace Private {
             template <class... subBinderTypes>
-            constexpr binderList_t<subBinderTypes...> bind_object(subBinderTypes&&... subBinders)  {
+            constexpr binderList_t<subBinderTypes...>
+            bind_object(subBinderTypes&&... subBinders)  {
                 return {std::move(subBinders)..., /*isArray:*/false};
             };
+
             template <class... subBinderTypes>
-            constexpr binderList_t<subBinderTypes...> bind_array(subBinderTypes&&... subBinders)  {
+            constexpr binderList_t<subBinderTypes...>
+            bind_array(subBinderTypes&&... subBinders)  {
                 return {std::move(subBinders)..., /*isArray:*/true};
             };
         }
 
         template <class... subBinderTypes>
-        constexpr binderOwner_t<binderList_t<subBinderTypes...>> bind_object(const char * token, subBinderTypes&&... subBinders)  {
-            return bind(token, Private::bind_object(std::move(subBinders)...));
+        constexpr binderOwner_t<binderList_t<subBinderTypes...>>
+        bind_object(const char * token, const char *description, subBinderTypes&&... subBinders)  {
+            return bind(token, Private::bind_object(std::move(subBinders)...), description);
         };
 
         // bind a JSON array, with the contents being other binders (with no names)...
         template <class... subBinderTypes>
-        constexpr binderOwner_t<binderList_t<subBinderTypes...>> bind_array(const char * token, subBinderTypes&&... subBinders)  {
-            return bind(token, Private::bind_array(std::move(subBinders)...));
+        constexpr binderOwner_t<binderList_t<subBinderTypes...>>
+        bind_array(const char * token, const char *description, subBinderTypes&&... subBinders)  {
+            return bind(token, Private::bind_array(std::move(subBinders)...), description);
         };
 
 
         // bind_no_name is to bind an object with an empty name, such as in an array
         template <typename valueType, typename... extraParamTypes>
-        constexpr bindt_<valueType> bind_no_name(valueType& valueRef, extraParamTypes... extraParams) {
-            return {nullptr, valueRef, extraParams...};
+        constexpr bindt_<valueType>
+        bind_no_name(valueType& valueRef, const char *description, extraParamTypes... extraParams) {
+            return {nullptr, valueRef, description, extraParams...};
         }
 
         template <typename subBinderType, typename... extraParamTypes>
-        constexpr binderOwner_t<subBinderType> bind_no_name(subBinderType&& subBinder, extraParamTypes... extraParams) {
-            return {nullptr, std::move(subBinder), extraParams...};
+        constexpr binderOwner_t<subBinderType>
+        bind_no_name(subBinderType&& subBinder, const char *description, extraParamTypes... extraParams) {
+            return {nullptr, std::move(subBinder), description, extraParams...};
         }
 
         // parent is a bind_no_name(bind_object())
         template <typename... subBinderTypes>
-        constexpr binderOwner_t<binderList_t<subBinderTypes...>> parent(subBinderTypes&&... subBinders) {
-            return bind_no_name(Private::bind_object(std::move(subBinders)...));
+        constexpr binderOwner_t<binderList_t<subBinderTypes...>>
+        parent(const char *description, subBinderTypes&&... subBinders) {
+            return bind_no_name(Private::bind_object(std::move(subBinders)...), description);
         }
 
 //        template <typename T, typename... Ts>
@@ -763,8 +808,9 @@ namespace Motate {
 
         // Binders that allow you to specify the type of the writer explicitly
         template <typename P, typename Token_t, typename T, typename... Ts>
-        constexpr bind_type_<T, P> bind_typed(Token_t token, T& t, Ts... ts) {
-            return {token, t, ts...};
+        constexpr bind_type_<T, P>
+        bind_typed(Token_t token, T& t, const char *description, Ts... ts) {
+            return {token, t, description, ts...};
         }
 
 
