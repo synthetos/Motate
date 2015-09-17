@@ -144,9 +144,9 @@ struct Thermistor {
     };
     ResistanceProperty_t resistance_property {*this};
 
-    auto json_bindings(const char *object_name, const char *object_description) {
-        return JSON::bind_object(object_name, object_description,
-                                 JSON::bind("temp", *this, "temperature (ºC)", /*print precision:*/2),
+    auto json_bindings(const char *token_name, const char *object_description) {
+        return JSON::bind_object(token_name, object_description,
+                                 JSON::bind_typed<float>("temp", *this, "temperature (ºC)", /*print precision:*/2),
                                  JSON::bind_typed<float>("res", resistance_property, "resistance measured", /*print precision:*/2)
                                  );
     }
@@ -167,16 +167,18 @@ namespace Motate {
     namespace JSON {
         bool relaxed_json = false;
 
-        template <pin_number adc_pin_num, uint16_t min_temp, uint16_t max_temp, uint32_t table_size>
-        struct binderWriter_t<Thermistor<adc_pin_num, min_temp, max_temp, table_size>> {
-            const int precision_ = 4;
 
-            constexpr binderWriter_t(int precision) : precision_{precision} {};
-
-            bool write_(str_buf &buf, Thermistor<adc_pin_num, min_temp, max_temp, table_size> &value_, bool verbose = 0) const {
-                return buf.copy(value_.temperature_exact(), precision_);
-            };
-        };
+//        template <pin_number adc_pin_num, uint16_t min_temp, uint16_t max_temp, uint32_t table_size>
+//        struct binderWriter_t<Thermistor<adc_pin_num, min_temp, max_temp, table_size>> {
+//            const int precision_ = 4;
+//
+//            constexpr binderWriter_t(int precision) : precision_{precision} {};
+//
+//            bool write_(str_buf &buf, Thermistor<adc_pin_num, min_temp, max_temp, table_size> &value_, bool verbose = 0) const {
+//                return buf.copy(value_.temperature_exact(), precision_);
+//            };
+//        };
+        
     }
 }
 
@@ -275,8 +277,9 @@ struct PID {
         return std::min(output_max, p + i - derivative_);
     };
 
-    auto json_bindings(const char *object_name, const char *object_description) {
-        return JSON::bind_object(object_name, object_description,
+    template <uint16_t token_len, uint16_t description_len, class... subTypes>
+    auto json_bindings(const char (&token_name)[token_len], const char (&object_description)[description_len]) {
+        return JSON::bind_object(token_name, object_description,
                                  JSON::bind("set", setPoint_,     "set temperature",            /*print precision:*/2),
                                  JSON::bind("p",   proportional_, "proportional scale setting", /*print precision:*/2),
                                  JSON::bind("i",   integral_,     "integral scale setting",     /*print precision:*/5),
@@ -287,7 +290,9 @@ struct PID {
 
 PID pid1 { 22.2/255.0, 1.08/255.0, 114.0/255.0};
 
-const auto json_base = JSON::parent(
+float test = 0.1;
+
+const auto json_base = JSON::bind_object("",
                                     "Temperature demo",
                                     thermistor1.json_bindings("t1", "Thermistor 1"),
                                     thermistor2.json_bindings("t2", "Thermistor 2"),

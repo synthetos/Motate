@@ -47,7 +47,7 @@ namespace Motate {
 
         //---- COMPILE-TIME and RUN-TIME HASHING ----//
 
-        namespace Private
+        namespace internal
         {
             // Credit to https://gist.github.com/filsinger/1255697 for inspiration
             template <typename S> struct fnv_internal;
@@ -65,17 +65,17 @@ namespace Motate {
                 {
                     return (aString[0] == '\0') ? val : hash( &aString[1], ( val ^ uint32_t(aString[0]) ) * prime);
                 }
-                
-                constexpr static inline uint32_t hash(char const*const aString, const size_t aStrlen, const uint32_t val = default_offset_basis)
-                {
-                    return (aStrlen == 0) ? val : hash( aString + 1, aStrlen - 1, ( val ^ uint32_t(aString[0]) ) * prime);
-                }
+// Unused
+//                constexpr static inline uint32_t hash(char const*const aString, const size_t aStrlen, const uint32_t val = default_offset_basis)
+//                {
+//                    return (aStrlen == 0) ? val : hash( aString + 1, aStrlen - 1, ( val ^ uint32_t(aString[0]) ) * prime);
+//                }
             };
-        } // namespace Private
+        } // namespace internal
 
         typedef uint32_t hash_t;
         constexpr hash_t hash(const char * const aString) {
-            return Private::fnv1a<uint32_t>::hash(aString);
+            return internal::fnv1a<uint32_t>::hash(aString);
         }
 
 
@@ -96,56 +96,87 @@ namespace Motate {
         }
 
         struct binderBase_t  {
-            union token_t {
-                const char *c_;
-                const uint32_t i_;
+            // Normal contructor
+            constexpr binderBase_t() = default;
 
-                constexpr token_t(const char *c) : c_{c} {};
-                constexpr token_t(const uint32_t i) : i_{i} {};
-            };
-
-            const token_t token_;
-            const hash_t hash_;
-            bool token_is_string_ = true;
-            int token_string_len_ = 0;
-            const char *description_;
-            int description_len_ = 0;
-
-            constexpr binderBase_t(const char *token, const char *description)
-                : token_{token},
-                  hash_{hash(token)},
-                  token_is_string_{true},
-                  token_string_len_{internal::strlen(token)},
-                  description_{description},
-                  description_len_{internal::strlen(description)}
-            {};
-
-            // Note: When precomputing the token_string_len_ of the string in chars, we INCLUDE the '[' and ']' to simplify the prefix writing routine.
-            constexpr binderBase_t(const uint32_t index, const char *description)
-                : token_{index},
-                  hash_{index},
-                  token_is_string_{false},
-                  token_string_len_{c_itoa_len(index)+2},
-                  description_{description},
-                  description_len_{internal::strlen(description)}
-            {};
-
+            // Copy constructor -- prevent copying
             constexpr binderBase_t(const binderBase_t&) = delete;
 
-            binderBase_t(binderBase_t&& other)
-                : token_{std::move(other.token_)},
-                  hash_{other.hash_},
-                  token_is_string_{other.token_is_string_},
-                  token_string_len_{other.token_string_len_},
-                  description_{other.description_},
-                  description_len_{other.description_len_}
+            // Move constructor -- we want this
+            constexpr binderBase_t(binderBase_t&& other) = default;
+
+            // Return a string verison
+            virtual const char* get_str() const { return ""; };
+
+            // Writing out to a buffer
+            // We force this one to be defined
+            virtual bool write(str_buf &buf, bool verbose = 0) const = 0;
+
+            virtual bool write_json_prefix(str_buf &buf, bool verbose = 0) const { return true; };
+            virtual bool write_json_suffix(str_buf &buf, bool verbose = 0) const { return true; };
+
+            virtual bool write_json_in_between(str_buf &buf, bool verbose = 0) const {
+                return buf.copy(",");
+            };
+
+            virtual bool write_json(str_buf &buf, bool verbose = 0) const {
+                bool success_ =
+                this->write_json_prefix(buf, verbose)
+                && this->write(buf, verbose)
+                && this->write_json_suffix(buf, verbose);
+
+                return success_;
+            };
+
+            virtual void set(float) const {};
+            virtual void set(bool) const {};
+
+
+            virtual const binderBase_t *find(const char* s) const { return find(hash(s)); };
+            virtual const binderBase_t *find(const hash_t h) const { return nullptr; };
+            virtual const binderBase_t *find(int) const { return nullptr; };
+        };
+
+
+
+        // binderType_t is a proper *binder* that links a token to another variable.
+        template <typename valueType>
+        struct binderType_t : binderBase_t {
+            const char *_token;
+            const int _token_len;
+
+            const char *_description;
+            const int _description_len;
+
+            const hash_t _hash;
+
+            typedef valueType _type;
+            _type &_value;
+
+            constexpr binderType_t(const char *token, valueType& value, const char *description) :
+                _token{token}, _token_len{internal::strlen(token)},
+                _description{description}, _description_len{internal::strlen(description)},
+                _hash{hash(token)},
+                _value{value}
             {};
 
-            virtual const char* get_str() const = 0;
+            constexpr binderType_t(const binderType_t&) = delete;
+            constexpr binderType_t(binderType_t&&) = default;
 
-            virtual bool write(str_buf &buf, bool verbose = 0) const = 0;
+            const char* get_str() const override { return ""; };
+
+            // We're seeing a -Wfloat-equal failure here, even theough we assign, not compare.
+            // So, we'll disable that check real quick.
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wfloat-equal"
+            // Best attempt at setting the value from a float...
+            void set(float f) const override { _value = f; };
+#pragma GCC diagnostic pop
+
+            void set(bool f) const override { _value = (bool)f; };
+
             virtual bool write_json_prefix(str_buf &buf, bool verbose = 0) const {
-                // pre-check if we'll fail:
+                // pre-check if we'll fail: (TEMPORARILY DISABLED)
                 // if (verbose) {
                 //     if (!buf.has_available(token_string_len_+3)) {
                 //         // we don't have enough room for '"TOKEN":' and a \0
@@ -158,134 +189,89 @@ namespace Motate {
                 //     }
                 // }
 
-                if (token_is_string_ && token_.c_ != nullptr) {
-                    if (verbose) {
-                        return buf.copy_multi("\"", token_.c_, "\":");
-                    } else {
-                        return buf.copy_multi(token_.c_, ":");
-                    }
-                } else if (!token_is_string_) {
-                    if (verbose) {
-                        return buf.copy_multi("[", token_.i_, "]\":");
-                    } else {
-                        return buf.copy_multi("[", token_.i_, "]:");
-                    }
+                if (verbose) {
+                    return buf.copy_multi("\"", _token, "\":");
                 } else {
-                    return true;
+                    return buf.copy_multi(_token, ":");
+                }
+
+                return true;
+            };
+        };
+
+
+        // binderOwner_t (as opposed to a binderType_t) is a binder that links a token to value it *owns*.
+        // binderOwner_t is used for non-leaf nodes in the tree, and is mainly used to own binderList_t<> objects.
+        template <typename valueType>
+        struct binderOwner_t : binderBase_t {
+            const char *_token;
+            const int _token_len;
+
+            const char *_description;
+            const int _description_len;
+
+            const hash_t _hash;
+
+            typedef valueType _type;
+            valueType _value;
+
+            constexpr binderOwner_t(const char *token, valueType&& value, const char *description) :
+                _token{token}, _token_len{internal::strlen(token)},
+                _description{description}, _description_len{internal::strlen(description)},
+                _hash{hash(token)},
+                _value{std::move(value)}
+            {};
+
+            constexpr binderOwner_t(const binderOwner_t&) = delete;
+            constexpr binderOwner_t(binderOwner_t&&) = default;
+
+//            constexpr binderOwner_t(binderOwner_t&& other)
+//                : binderBase_t{std::move(other)},
+//                  _token_c{other._token_c},
+//                  _hash{other._hash},
+//                  _description{other._description},
+//                  _value{std::move(other._value)}
+//            {};
+
+            bool write(str_buf &buf, bool verbose) const override {
+                return _value.write(buf, verbose);
+            };
+
+            virtual bool write_json_prefix(str_buf &buf, bool verbose = 0) const {
+                // pre-check if we'll fail: (TEMPORARILY DISABLED)
+                // if (verbose) {
+                //     if (!buf.has_available(token_string_len_+3)) {
+                //         // we don't have enough room for '"TOKEN":' and a \0
+                //         return false;
+                //     }
+                // } else {
+                //     if (!buf.has_available(token_string_len_+1)) {
+                //         // we don't have enough room for 'TOKEN:' and a \0
+                //         return false;
+                //     }
+                // }
+
+                if (verbose) {
+                    return buf.copy_multi("\"", _token, "\":");
+                } else {
+                    return buf.copy_multi(_token, ":");
                 }
 
                 return true;
             };
 
-            virtual bool write_json_suffix(str_buf &buf, bool verbose = 0) const {
-                return true;
-            };
 
-            virtual bool write_json_in_between(str_buf &buf, bool verbose = 0) const {
-                return buf.copy(",");
-            };
-
-            virtual bool write_json(str_buf &buf, bool verbose = 0) const {
-                // str_buf::rollback_pos_t p_ = buf.get_pos();
-                bool success_ =
-                    this->write_json_prefix(buf, verbose)
-                    && this->write(buf, verbose)
-                    && this->write_json_suffix(buf, verbose);
-
-                // if (!success_) {
-                //     buf.set_pos(p_);
-                // }
-                return success_;
-            };
-
-            virtual void set(float) const {};
-            virtual void set(bool) const {};
-            virtual void set_a(int i, float v) const {};
-            virtual const binderBase_t *find(const char* s) const { return find(hash(s)); };
-            virtual const binderBase_t *find(const hash_t h) const { return nullptr; };
-            virtual const binderBase_t *find(int) const { return nullptr; };
-        };
-
-        template <typename T, class... printSubTs>
-        struct binderWriter_t {}; // stub
-
-
-        template <typename valueType, class print_t/* = binderWriter_t<T>*/>
-        struct binderType_t : binderBase_t, print_t {
-            valueType &value_;
-
-            // Necessary?
-//            template<class T2>
-//            constexpr binderType_t(T2 token, valueType& value) : binderBase_t{token}, print_t{}, value_{value} {} ;
-
-            template<class T2, class... printSubTs>
-            constexpr binderType_t(T2 token, valueType& value, const char *description, printSubTs... f)
-                : binderBase_t{token, description},
-                  print_t{f...},
-                  value_{value}
-            {};
-
-            constexpr binderType_t(const binderType_t&) = delete;
-
-            constexpr binderType_t(binderType_t&& other)
-                : binderBase_t{std::move(other)},
-                  print_t{std::move(other)},
-                  value_{other.value_}
-            {
-            };
-
-            const char* get_str() const override { return ""; };
-
-            // We're seeing a -Wfloat-equal failure here, even theough we assign, not compare.
-            // So, we'll disable that check real quick.
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wfloat-equal"
-            // Best attempt at setting the value from a float...
-            void set(float f) const override { value_ = f; };
-#pragma GCC diagnostic pop
-
-            void set(bool f) const override { value_ = (bool)f; };
-
-            bool write(str_buf &buf, bool verbose) const override {
-                return print_t::write_(buf, value_, verbose);
-            };
-        };
-
-        template <typename valueType>
-        struct binderOwner_t : binderBase_t {
-            valueType value_;
-
-            template<class T2, class... printSubTs>
-            constexpr binderOwner_t(T2 token, valueType&& value, const char *description, printSubTs... f)
-                : binderBase_t{token, description},
-                  value_{std::move(value), f...}
-            {};
-
-            constexpr binderOwner_t(const binderOwner_t&) = delete;
-
-            constexpr binderOwner_t(binderOwner_t&& other)
-                : binderBase_t{std::move(other)},
-                  value_{std::move(other.value_)}
-            {};
-
-            const char* get_str() const override { return ""; };
-
-            // We can't set a subobject to float, but we have to define these....
-            void set(float f) const override {  };
-            void set(bool f) const override {  };
-
-            bool write(str_buf &buf, bool verbose) const override {
-                return value_.write(buf, verbose);
-            };
-
+            // Pass find calls into the value...
+            // Note this will trigger SFINAE -- valueType MUST be able to find(hash_t) and find(int)
             const binderBase_t *find(const hash_t h) const override
             {
-                return value_.find(h);
+                return _value.find(h);
             };
 
+            // REPEAT: Note this will trigger SFINAE -- valueType MUST be able to find(hash_t) and find(int)
             const binderBase_t *find(int i) const override
             {
-                return value_.find(i);
+                return _value.find(i);
             };
         };
 
@@ -335,25 +321,62 @@ namespace Motate {
         // };
 
 
-        template <>
-        struct binderWriter_t<int> {
-            constexpr binderWriter_t() {};
+//        template <typename valueType, typename parentType>
+//        struct binderWriter_t : parentType {}; // stub
+//
 
-            bool write_(str_buf &buf, int value_, bool verbose = 0) const {
-                return buf.copy(value_);
+        template <typename valueType, typename parentType>
+        struct binderWriter_t : parentType {
+            // Say exclusively that we want to use _value, token_len, description_len from the parent
+            using parentType::_value;
+
+//            constexpr binderWriter_t(const char *token, valueType& value, const char *description)
+//            : parentType{token, value, description}
+//            {};
+
+            constexpr binderWriter_t(const char *token, typename parentType::_type& value, const char *description) :
+                parentType{token, value, description}
+            {};
+
+            constexpr binderWriter_t(const binderWriter_t&) = delete;
+            constexpr binderWriter_t(binderWriter_t&&) = default;
+
+            bool write(str_buf &buf, bool verbose) const override {
+                return buf.copy(static_cast<valueType>(_value));
             };
         };
 
-        template <>
-        struct binderWriter_t<float> {
-            const int precision_ = 4;
+        template <typename parentType>
+        struct binderWriter_t<float, parentType> : parentType {
+            // Say exclusively that we want to use _value, token_len, description_len from the parent
+            using parentType::_value;
 
-            constexpr binderWriter_t(int precision) : precision_{precision} {};
+            const int _precision = 4;
 
-            bool write_(str_buf &buf, float value_, bool verbose = 0) const {
-                return buf.copy(value_, precision_);
+            constexpr binderWriter_t(const char *token, typename parentType::_type& value, const char *description, int precision) :
+                parentType{token, value, description},
+                _precision{precision}
+            {};
+
+
+            constexpr binderWriter_t(const binderWriter_t&) = delete;
+            constexpr binderWriter_t(binderWriter_t&&) = default;
+
+            bool write(str_buf &buf, bool verbose) const override {
+                return buf.copy(static_cast<float>(_value), _precision);
             };
         };
+
+//        template <>
+//        struct binderWriter_t<float> {
+//            const int precision_ = 4;
+//
+//            constexpr binderWriter_t(int precision) : precision_{precision} {};
+//
+//            bool write_(str_buf &buf, float value_, bool verbose = 0) const {
+//                return buf.copy(value_, precision_);
+//            };
+//        };
 
         // template <class print_t>
         // struct binderType_t<float&, print_t> : binderBase_t, print_t {
@@ -369,6 +392,8 @@ namespace Motate {
         // };
 
 
+#if 0
+        // We don't need const char * objects right now...
         template <>
         struct binderWriter_t<const char *> {
             constexpr binderWriter_t() {};
@@ -383,12 +408,12 @@ namespace Motate {
             };
         };
 
-        template <class print_t>
-        struct binderType_t<const char *, print_t> : binderBase_t, print_t {
+        template <class print_t, uint16_t token_len, uint16_t description_len>
+        struct binderType_t<const char *, print_t, token_len, description_len> : binderBase_t, print_t {
             const char* &value_;
 
-            template<class T, class... printSubTs>
-            constexpr binderType_t(T token, const char* &value, const char *description, printSubTs... f)
+            template<class... printSubTs>
+            constexpr binderType_t(const char token[token_len] token, const char* &value, const char description[description_len], printSubTs... f)
                 : binderBase_t{token, description},
                   value_{value},
                   print_t{f...}
@@ -398,7 +423,8 @@ namespace Motate {
 
             bool write(str_buf &buf, bool verbose) const override { return print_t::write_(buf, value_, verbose); };
         };
-
+#endif
+#if 0
         template <>
         struct binderWriter_t<bool> {
             constexpr binderWriter_t() {};
@@ -411,12 +437,12 @@ namespace Motate {
             };
         };
 
-        template <class print_t>
-        struct binderType_t<bool&, print_t> : binderBase_t, print_t {
+        template <class print_t, uint16_t token_len, uint16_t description_len>
+        struct binderType_t<bool&, print_t, token_len, description_len> : binderBase_t, print_t {
             bool &value_;
 
-            template<class T, class... printSubTs>
-            constexpr binderType_t(T token, bool& value, const char *description, printSubTs... f)
+            template<class... printSubTs>
+            constexpr binderType_t(const char token[token_len], bool& value, const char description[description_len], printSubTs... f)
                 : binderBase_t{token, description},
                   value_{value},
                   print_t{f...}
@@ -427,17 +453,18 @@ namespace Motate {
 
             bool write(str_buf &buf, bool verbose) const override { return print_t::write_(buf, value_, verbose); };
         };
-
+#endif
 
         //----
+        // binderList_t is the **value** type of a container of sub elements.
+        // It **has** to be wrapped in a binderOwner_t<> to be used in a list.
 
         template <class... extraTypes>
         struct binderList_t {
             constexpr binderList_t(extraTypes&&... extras, bool is_array = false) {};
 
             constexpr binderList_t(const binderList_t&) = delete;
-
-            constexpr binderList_t(binderList_t&& other) {};
+            constexpr binderList_t(binderList_t&& other)  = default;
 
             static const int rest_size_ = sizeof...(extraTypes);
             constexpr binderBase_t *find(const hash_t) const { return nullptr; }
@@ -450,16 +477,17 @@ namespace Motate {
 
             constexpr binderList_t(valueType&& value, extraTypes&&... extras, bool is_array) :
                 binderList_t<extraTypes...>{std::move(extras)..., is_array},
-                value_{std::move(value)},
-                array_{is_array}
+                _value{std::move(value)},
+                _array{is_array}
             {};
 
             constexpr binderList_t(const binderList_t&) = delete;
+//            constexpr binderList_t(binderList_t&&) = default;
 
             constexpr binderList_t(binderList_t&& other) :
                 binderList_t<extraTypes...>{std::move(other)},
-                value_{std::move(other.value_)},
-                array_{other.array_}
+                _value{std::move(other._value)},
+                _array{other._array}
             {};
 
             static const int rest_size_ = sizeof...(extraTypes);
@@ -467,8 +495,8 @@ namespace Motate {
             typedef binderList_t<valueType, extraTypes...> this_t;
             typedef binderList_t<extraTypes...> parent_t;
             typedef valueType type;
-            valueType value_;
-            bool array_ = false;
+            valueType _value;
+            bool _array = false;
 
             // Workaround some odd bug in gcc where it won't inline this unless it's close...
 //            constexpr int internal_strlen(const char *p, const int count_ = 0) const
@@ -489,7 +517,7 @@ namespace Motate {
 
             constexpr bool matches(const hash_t h) const
             {
-                return (value_.hash_ == h);
+                return (_value._hash == h);
             }
 
             constexpr const binderBase_t *find(const char* s) const
@@ -499,68 +527,81 @@ namespace Motate {
 
             constexpr const binderBase_t *find(const hash_t h) const
             {
-                return (matches(h) ? &value_ : parent_t::find(h));
+                return (matches(h) ? &_value : parent_t::find(h));
             };
 
             constexpr const binderBase_t *find(const int i) const
             {
-                return (i == 0 ? &value_ : parent_t::find(i-1));
+                return (i == 0 ? &_value : parent_t::find(i-1));
             };
 
             bool write(str_buf &buf, bool verbose = 0) const {
                 bool success_ = true;
                 // auto p_ = buf.get_pos();
-                if (!array_) {
-                    success_ = value_.write_json_prefix(buf, verbose);
+                if (!_array) {
+                    success_ = _value.write_json_prefix(buf, verbose);
                 }
-                success_ = success_ && value_.write(buf, verbose);
+                success_ = success_ && _value.write(buf, verbose);
                 if (success_ && rest_size_ > 0) {
                     // auto p2_ = buf.get_pos();
-                    bool success2_ = value_.write_json_in_between(buf, verbose);
+                    bool success2_ = _value.write_json_in_between(buf, verbose);
                     success2_ = success2_ && parent_t::write(buf, verbose);
                     // if (!success2_) {
                     //     buf.set_pos(p2_);
                     // }
                 }
-                success_ && value_.write_json_suffix(buf, verbose);
+                success_ && _value.write_json_suffix(buf, verbose);
                 return success_;
             };
 
             constexpr bool isArray() const {
-                return array_;
+                return _array;
             };
         };
 
-        template <class... Ts>
-        struct binderOwner_t<binderList_t<Ts...>> : binderBase_t {
-            binderList_t<Ts...> value_;
-            bool array_ = false;
 
-            template <class T>
-            constexpr binderOwner_t(T token, binderList_t<Ts...>&& value, const char *description)
-                : binderBase_t{token, description},
-                  value_{std::move(value)},
-                  array_{value_.isArray()}
+        template <class... subTypes>
+        struct binderOwner_t<binderList_t<subTypes...>> : binderBase_t {
+            const char *_token;
+            const int _token_len;
+
+            const char *_description;
+            const int _description_len;
+
+            const hash_t _hash;
+
+            typedef binderList_t<subTypes...> _type;
+            binderList_t<subTypes...> _value;
+            bool _array = false;
+
+            constexpr binderOwner_t(const char *token, _type&& value, const char *description) :
+                _token{token}, _token_len{internal::strlen(token)},
+                _description{description}, _description_len{internal::strlen(description)},
+                _hash{hash(token)},
+                _value{std::move(value)},
+                _array{value.isArray()}
             {};
 
             constexpr binderOwner_t(const binderOwner_t&) = delete;
+            constexpr binderOwner_t(binderOwner_t&&) = default;
 
-            constexpr binderOwner_t(binderOwner_t&& other)
-            : binderBase_t{std::move(other)},
-              value_{std::move(other.value_)},
-              array_{other.array_}
-            {};
-
-            const char* get_str() const { return ""; };
+//            constexpr binderOwner_t(binderOwner_t&& other)
+//                : binderBase_t{std::move(other)},
+//                  _token_c{other._token_c},
+//                  _hash{other._hash},
+//                  _description{other._description},
+//                  _value{std::move(other._value)},
+//                  _array{other._array}
+//            {};
 
             const binderBase_t *find(const char* s) const override
             {
-                return value_.find(s);
+                return _value.find(s);
             };
 
             const binderBase_t *find(int i) const override
             {
-                return value_.find(i);
+                return _value.find(i);
             };
 
             // So this gets tricky: If we are printing a part of an array, we want the results to look like:
@@ -568,27 +609,17 @@ namespace Motate {
 
             bool write_json_prefix(str_buf &buf, bool verbose = 0) const override
             {
-                if (array_) {
-                    if (token_is_string_ && token_.c_ != nullptr) {
-                        if (verbose) {
-                            return buf.copy_multi("\"", token_.c_);
-                        } else {
-                            return buf.copy(token_.c_);
-                        }
+                if (_array) {
+                    if (verbose) {
+                        return buf.copy_multi("\"", _token);
+                    } else {
+                        return buf.copy(_token);
                     }
                 } else {
-                    if (token_is_string_ && token_.c_ != nullptr) {
-                        if (verbose) {
-                            return buf.copy_multi("\"", token_.c_, "\":{");
-                        } else {
-                            return buf.copy_multi(token_.c_, ":{");
-                        }
-                    } else if (!token_is_string_) {
-                        if (verbose) {
-                            return buf.copy_multi("[", token_.i_, "]\":{");
-                        } else {
-                            return buf.copy_multi("[", token_.i_, "]:{");
-                        }
+                    if (verbose) {
+                        return buf.copy_multi("\"", _token, "\":{");
+                    } else {
+                        return buf.copy_multi(_token, ":{");
                     }
                 }
 
@@ -599,25 +630,13 @@ namespace Motate {
             bool write(str_buf &buf, bool verbose) const override
             {
                 bool success_ = true;
-//                if (array_) {
-//                    success_ = success_ && buf.copy("\":[");
-//                } else {
-//                    success_ = success_ && buf.copy("<");
-//                }
-
-                success_ = success_ && value_.write(buf, verbose);
-
-//                if (!array_) {
-//                    success_ = success_ && buf.copy(">");
-//                } else {
-//                    success_ = success_ && buf.copy("]");
-//                }
+                success_ = success_ && _value.write(buf, verbose);
                 return success_;
             };
 
             bool write_json_suffix(str_buf &buf, bool verbose = 0) const override
             {
-                if (!array_ && token_is_string_ && token_.c_ != nullptr) {
+                if (!_array && _token != nullptr) {
                     return buf.copy("}");
                 }
                 return true;
@@ -709,16 +728,16 @@ namespace Motate {
 
         // bindt_ is a shorthand used by the bind factories
         template <typename valueType>
-        using bindt_ = binderType_t<valueType, binderWriter_t<valueType> >;
+        using bindt_ = binderWriter_t<valueType, binderType_t<valueType> >;
 
 
-        // bind... factories - used to simplify creation of binderType_t and related objects
 
         template <typename valueType, typename... extraParamTypes>
         constexpr bindt_<valueType>
         bind(const char *token, valueType& valueRef, const char *description, extraParamTypes... extraParams) {
             return {token, valueRef, description, extraParams...};
         }
+
 
         template <typename subBinderType, typename... extraParamTypes>
         constexpr binderOwner_t<subBinderType>
@@ -735,7 +754,7 @@ namespace Motate {
 
         // bind a JSON object, with the contents being other binders...
         // First, we make a private helper for the list
-        namespace Private {
+        namespace internal {
             template <class... subBinderTypes>
             constexpr binderList_t<subBinderTypes...>
             bind_object(subBinderTypes&&... subBinders)  {
@@ -751,16 +770,16 @@ namespace Motate {
 
         template <class... subBinderTypes>
         constexpr binderOwner_t<binderList_t<subBinderTypes...>>
-        bind_object(const char * token, const char *description, subBinderTypes&&... subBinders)  {
-            return bind(token, Private::bind_object(std::move(subBinders)...), description);
+        bind_object(const char *token, const char *description, subBinderTypes&&... subBinders)  {
+            return bind(token, internal::bind_object(std::move(subBinders)...), description);
         };
 
-        // bind a JSON array, with the contents being other binders (with no names)...
-        template <class... subBinderTypes>
-        constexpr binderOwner_t<binderList_t<subBinderTypes...>>
-        bind_array(const char * token, const char *description, subBinderTypes&&... subBinders)  {
-            return bind(token, Private::bind_array(std::move(subBinders)...), description);
-        };
+//        // bind a JSON array, with the contents being other binders (with no names)...
+//        template <uint16_t token_len, uint16_t description_len, class... subBinderTypes>
+//        constexpr binderOwner_t<binderList_t<subBinderTypes...>, token_len, description_len>
+//        bind_array(const char (&token)[token_len], const char (&description)[description_len], subBinderTypes&&... subBinders)  {
+//            return bind(static_cast<const char (&)[token_len]>(token), Private::bind_array(std::move(subBinders)...), static_cast<const char (&)[description_len]>(description));
+//        };
 
 
         // bind_no_name is to bind an object with an empty name, such as in an array
@@ -773,14 +792,14 @@ namespace Motate {
         template <typename subBinderType, typename... extraParamTypes>
         constexpr binderOwner_t<subBinderType>
         bind_no_name(subBinderType&& subBinder, const char *description, extraParamTypes... extraParams) {
-            return {nullptr, std::move(subBinder), description, extraParams...};
+            return {"", std::move(subBinder), description, extraParams...};
         }
 
         // parent is a bind_no_name(bind_object())
         template <typename... subBinderTypes>
         constexpr binderOwner_t<binderList_t<subBinderTypes...>>
         parent(const char *description, subBinderTypes&&... subBinders) {
-            return bind_no_name(Private::bind_object(std::move(subBinders)...), description);
+            return bind_no_name(internal::bind_object(std::move(subBinders)...), description);
         }
 
 //        template <typename T, typename... Ts>
@@ -794,11 +813,8 @@ namespace Motate {
         //     return {nullptr, t, ts...};
         // }
 
-        template <typename T, typename P>
-        using bind_printer_ = binderType_t<T, P>;
-
-        template <typename T, typename P>
-        using bind_type_ = binderType_t<T, binderWriter_t<P>>;
+        template <typename writerType, typename valueType>
+        using bind_type_ = binderWriter_t<writerType, binderType_t<valueType>>;
 
         // Experiment: Array-type binder factory
         // template <typename Token_t, typename T, int N, typename P, typename... Ts>
@@ -807,10 +823,10 @@ namespace Motate {
         // }
 
         // Binders that allow you to specify the type of the writer explicitly
-        template <typename P, typename Token_t, typename T, typename... Ts>
-        constexpr bind_type_<T, P>
-        bind_typed(Token_t token, T& t, const char *description, Ts... ts) {
-            return {token, t, description, ts...};
+        template <typename writerType, typename valueType, typename... extraTypes>
+        constexpr bind_type_<writerType, valueType>
+        bind_typed(const char *token, valueType& t, const char *description, extraTypes... extras) {
+            return {token, t, description, extras...};
         }
 
 
