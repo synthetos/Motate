@@ -59,24 +59,29 @@ namespace Motate {
                 constexpr static uint32_t prime                = 0x01000193;
             };
 
-            template <> struct fnv1a<uint32_t> : public fnv_internal<uint32_t>
-            {
-                constexpr static inline uint32_t hash(char const*const aString, const uint32_t val = default_offset_basis)
-                {
-                    return (aString[0] == '\0') ? val : hash( &aString[1], ( val ^ uint32_t(aString[0]) ) * prime);
-                }
-// Unused
-//                constexpr static inline uint32_t hash(char const*const aString, const size_t aStrlen, const uint32_t val = default_offset_basis)
+//            template <> struct fnv1a<uint32_t> : public fnv_internal<uint32_t>
+//            {
+//                constexpr static inline uint32_t hash(char const*const aString, const uint32_t val = default_offset_basis)
 //                {
-//                    return (aStrlen == 0) ? val : hash( aString + 1, aStrlen - 1, ( val ^ uint32_t(aString[0]) ) * prime);
+//                    return (aString[0] == '\0') ? val : hash( &aString[1], ( val ^ uint32_t(aString[0]) ) * prime);
 //                }
-            };
+//// Unused
+////                constexpr static inline uint32_t hash(char const*const aString, const size_t aStrlen, const uint32_t val = default_offset_basis)
+////                {
+////                    return (aStrlen == 0) ? val : hash( aString + 1, aStrlen - 1, ( val ^ uint32_t(aString[0]) ) * prime);
+////                }
+//            };
+
+
+            constexpr static inline uint32_t hash(char const*const aString, const uint32_t val) __attribute__((always_inline));
+            constexpr static inline uint32_t hash(char const*const aString, const uint32_t val = fnv_internal<uint32_t>::default_offset_basis)
+            {
+                return (aString[0] == '\0') ? val : hash( &aString[1], ( val ^ uint32_t(aString[0]) ) * fnv_internal<uint32_t>::prime);
+            }
+
         } // namespace internal
 
         typedef uint32_t hash_t;
-        constexpr hash_t hash(const char * const aString) {
-            return internal::fnv1a<uint32_t>::hash(aString);
-        }
 
 
         //---- CONFIGURATION ITEMS ----//
@@ -132,7 +137,7 @@ namespace Motate {
             virtual void set(bool) const {};
 
 
-            virtual const binderBase_t *find(const char* s) const { return find(hash(s)); };
+            virtual const binderBase_t *find(const char* s) const { return find(internal::hash(s)); };
             virtual const binderBase_t *find(const hash_t h) const { return nullptr; };
             virtual const binderBase_t *find(int) const { return nullptr; };
         };
@@ -143,25 +148,27 @@ namespace Motate {
         template <typename valueType>
         struct binderType_t : binderBase_t {
             const char *_token;
-            const int _token_len;
+            const int _token_len; // does NOT include the final null character
 
             const char *_description;
-            const int _description_len;
+            const int _description_len; // does NOT include the final null character
 
             const hash_t _hash;
 
             typedef valueType _type;
             _type &_value;
 
-            constexpr binderType_t(const char *token, valueType& value, const char *description) :
-                _token{token}, _token_len{internal::strlen(token)},
-                _description{description}, _description_len{internal::strlen(description)},
-                _hash{hash(token)},
+            template <uint16_t token_len, uint16_t description_len>
+            constexpr binderType_t(const char (&token)[token_len], valueType& value, const char (&description)[description_len]) :
+                _token{token}, _token_len{token_len-1},
+                _description{description}, _description_len{description_len-1},
+                _hash{internal::hash(token)},
                 _value{value}
             {};
 
             constexpr binderType_t(const binderType_t&) = delete;
-            constexpr binderType_t(binderType_t&&) = default;
+
+            constexpr binderType_t(binderType_t&&) __attribute__((always_inline)) = default;
 
             const char* get_str() const override { return ""; };
 
@@ -189,10 +196,12 @@ namespace Motate {
                 //     }
                 // }
 
-                if (verbose) {
-                    return buf.copy_multi("\"", _token, "\":");
-                } else {
-                    return buf.copy_multi(_token, ":");
+                if (_token_len != 0) {
+                    if (verbose) {
+                        return buf.copy_multi("\"", _token, "\":");
+                    } else {
+                        return buf.copy_multi(_token, ":");
+                    }
                 }
 
                 return true;
@@ -205,19 +214,20 @@ namespace Motate {
         template <typename valueType>
         struct binderOwner_t : binderBase_t {
             const char *_token;
-            const int _token_len;
+            const int _token_len; // does NOT include the final null character
 
             const char *_description;
-            const int _description_len;
+            const int _description_len; // does NOT include the final null character
 
             const hash_t _hash;
 
             typedef valueType _type;
             valueType _value;
 
-            constexpr binderOwner_t(const char *token, valueType&& value, const char *description) :
-                _token{token}, _token_len{internal::strlen(token)},
-                _description{description}, _description_len{internal::strlen(description)},
+            template <uint16_t token_len, uint16_t description_len>
+            constexpr binderOwner_t(const char (&token)[token_len], valueType&& value, const char (&description)[description_len]) :
+                _token{token}, _token_len{token_len-1},
+                _description{description}, _description_len{description_len-1},
                 _hash{hash(token)},
                 _value{std::move(value)}
             {};
@@ -251,10 +261,12 @@ namespace Motate {
                 //     }
                 // }
 
-                if (verbose) {
-                    return buf.copy_multi("\"", _token, "\":");
-                } else {
-                    return buf.copy_multi(_token, ":");
+                if (_token_len != 0) {
+                    if (verbose) {
+                        return buf.copy_multi("\"", _token, "\":");
+                    } else {
+                        return buf.copy_multi(_token, ":");
+                    }
                 }
 
                 return true;
@@ -321,20 +333,14 @@ namespace Motate {
         // };
 
 
-//        template <typename valueType, typename parentType>
-//        struct binderWriter_t : parentType {}; // stub
-//
 
         template <typename valueType, typename parentType>
         struct binderWriter_t : parentType {
             // Say exclusively that we want to use _value, token_len, description_len from the parent
             using parentType::_value;
 
-//            constexpr binderWriter_t(const char *token, valueType& value, const char *description)
-//            : parentType{token, value, description}
-//            {};
-
-            constexpr binderWriter_t(const char *token, typename parentType::_type& value, const char *description) :
+            template <uint16_t token_len, uint16_t description_len>
+            constexpr binderWriter_t(const char (&token)[token_len], typename parentType::_type& value, const char (&description)[description_len]) :
                 parentType{token, value, description}
             {};
 
@@ -353,107 +359,43 @@ namespace Motate {
 
             const int _precision = 4;
 
-            constexpr binderWriter_t(const char *token, typename parentType::_type& value, const char *description, int precision) :
+            template <uint16_t token_len, uint16_t description_len>
+            constexpr binderWriter_t(const char (&token)[token_len], typename parentType::_type& value, const char (&description)[description_len], int precision) :
                 parentType{token, value, description},
                 _precision{precision}
             {};
 
 
             constexpr binderWriter_t(const binderWriter_t&) = delete;
-            constexpr binderWriter_t(binderWriter_t&&) = default;
+            constexpr binderWriter_t(binderWriter_t&&) __attribute__((always_inline)) = default;
 
             bool write(str_buf &buf, bool verbose) const override {
                 return buf.copy(static_cast<float>(_value), _precision);
             };
         };
 
-//        template <>
-//        struct binderWriter_t<float> {
-//            const int precision_ = 4;
-//
-//            constexpr binderWriter_t(int precision) : precision_{precision} {};
-//
-//            bool write_(str_buf &buf, float value_, bool verbose = 0) const {
-//                return buf.copy(value_, precision_);
-//            };
-//        };
+        template <typename parentType>
+        struct binderWriter_t<bool, parentType> : parentType {
+            // Say exclusively that we want to use _value, token_len, description_len from the parent
+            using parentType::_value;
 
-        // template <class print_t>
-        // struct binderType_t<float&, print_t> : binderBase_t, print_t {
-        //     float &value_;
-        //
-        //     template<class T, class... printSubTs>
-        //     constexpr binderType_t(T& token, float& value, printSubTs&... f) : binderBase_t{token}, value_{value}, print_t{f...} {};
-        //
-        //     const char* get_str() const override { return ""; };
-        //     void set(float f) const override { value_ = f; };
-        //
-        //     bool write(str_buf &buf, bool verbose) const override { return print_t::write_(buf, value_, verbose); };
-        // };
+            template <uint16_t token_len, uint16_t description_len>
+            constexpr binderWriter_t(const char (&token)[token_len], typename parentType::_type& value, const char (&description)[description_len]) :
+            parentType{token, value, description}
+            {};
 
 
-#if 0
-        // We don't need const char * objects right now...
-        template <>
-        struct binderWriter_t<const char *> {
-            constexpr binderWriter_t() {};
+            constexpr binderWriter_t(const binderWriter_t&) = delete;
+            constexpr binderWriter_t(binderWriter_t&&) __attribute__((always_inline)) = default;
 
-            // const char* get_str() const { return value_; };
-            bool write_(str_buf &buf, const char * value_, bool verbose = 0) const {
+            bool write(str_buf &buf, bool verbose) const override {
                 if (verbose) {
-                    return buf.copy_multi("\"", value_,  "\"");
-                } else {
-                    return buf.copy(value_);
+                    return buf.copy_multi((static_cast<bool>(_value) ? "true" : "false"));
                 }
+                return buf.copy_multi((static_cast<bool>(_value) ? "t" : "f"));
             };
         };
 
-        template <class print_t, uint16_t token_len, uint16_t description_len>
-        struct binderType_t<const char *, print_t, token_len, description_len> : binderBase_t, print_t {
-            const char* &value_;
-
-            template<class... printSubTs>
-            constexpr binderType_t(const char token[token_len] token, const char* &value, const char description[description_len], printSubTs... f)
-                : binderBase_t{token, description},
-                  value_{value},
-                  print_t{f...}
-            {};
-
-            const char* get_str() const override { return value_; };
-
-            bool write(str_buf &buf, bool verbose) const override { return print_t::write_(buf, value_, verbose); };
-        };
-#endif
-#if 0
-        template <>
-        struct binderWriter_t<bool> {
-            constexpr binderWriter_t() {};
-
-            bool write_(str_buf &buf, bool value_, bool verbose = 0) const {
-                if (verbose) {
-                    return buf.copy_multi((value_ ? "true" : "false"));
-                }
-                return buf.copy_multi((value_ ? "t" : "f"));
-            };
-        };
-
-        template <class print_t, uint16_t token_len, uint16_t description_len>
-        struct binderType_t<bool&, print_t, token_len, description_len> : binderBase_t, print_t {
-            bool &value_;
-
-            template<class... printSubTs>
-            constexpr binderType_t(const char token[token_len], bool& value, const char description[description_len], printSubTs... f)
-                : binderBase_t{token, description},
-                  value_{value},
-                  print_t{f...}
-            {};
-
-            const char* get_str() const override { return value_ ? "true" : "false"; };
-            void set(float f) const override { value_ = (bool)f; };
-
-            bool write(str_buf &buf, bool verbose) const override { return print_t::write_(buf, value_, verbose); };
-        };
-#endif
 
         //----
         // binderList_t is the **value** type of a container of sub elements.
@@ -482,7 +424,6 @@ namespace Motate {
             {};
 
             constexpr binderList_t(const binderList_t&) = delete;
-//            constexpr binderList_t(binderList_t&&) = default;
 
             constexpr binderList_t(binderList_t&& other) :
                 binderList_t<extraTypes...>{std::move(other)},
@@ -498,23 +439,6 @@ namespace Motate {
             valueType _value;
             bool _array = false;
 
-            // Workaround some odd bug in gcc where it won't inline this unless it's close...
-//            constexpr int internal_strlen(const char *p, const int count_ = 0) const
-//            {
-//                return !p
-//                ? 0
-//                : (
-//                   (*p == 0)
-//                   ? count_
-//                   : internal_strlen(p+1, count_+1)
-//                );
-//            }
-//
-//            constexpr bool matches(const char* s) const
-//            {
-//                return streq(value_.token_.c_, s, internal_strlen(s));
-//            }
-
             constexpr bool matches(const hash_t h) const
             {
                 return (_value._hash == h);
@@ -522,7 +446,7 @@ namespace Motate {
 
             constexpr const binderBase_t *find(const char* s) const
             {
-                return find(hash(s));
+                return find(internal::hash(s));
             };
 
             constexpr const binderBase_t *find(const hash_t h) const
@@ -537,18 +461,13 @@ namespace Motate {
 
             bool write(str_buf &buf, bool verbose = 0) const {
                 bool success_ = true;
-                // auto p_ = buf.get_pos();
                 if (!_array) {
                     success_ = _value.write_json_prefix(buf, verbose);
                 }
                 success_ = success_ && _value.write(buf, verbose);
                 if (success_ && rest_size_ > 0) {
-                    // auto p2_ = buf.get_pos();
                     bool success2_ = _value.write_json_in_between(buf, verbose);
                     success2_ = success2_ && parent_t::write(buf, verbose);
-                    // if (!success2_) {
-                    //     buf.set_pos(p2_);
-                    // }
                 }
                 success_ && _value.write_json_suffix(buf, verbose);
                 return success_;
@@ -563,36 +482,26 @@ namespace Motate {
         template <class... subTypes>
         struct binderOwner_t<binderList_t<subTypes...>> : binderBase_t {
             const char *_token;
-            const int _token_len;
+            const int _token_len; // does NOT include the final null character
 
             const char *_description;
-            const int _description_len;
+            const int _description_len; // does NOT include the final null character
 
             const hash_t _hash;
 
             typedef binderList_t<subTypes...> _type;
             binderList_t<subTypes...> _value;
-            bool _array = false;
 
-            constexpr binderOwner_t(const char *token, _type&& value, const char *description) :
-                _token{token}, _token_len{internal::strlen(token)},
-                _description{description}, _description_len{internal::strlen(description)},
-                _hash{hash(token)},
-                _value{std::move(value)},
-                _array{value.isArray()}
+            template <uint16_t token_len, uint16_t description_len>
+            constexpr binderOwner_t(const char (&token)[token_len], _type&& value, const char (&description)[description_len]) :
+                _token{token}, _token_len{token_len-1},
+                _description{description}, _description_len{description_len-1},
+                _hash{internal::hash(token)},
+                _value{std::move(value)}
             {};
 
             constexpr binderOwner_t(const binderOwner_t&) = delete;
             constexpr binderOwner_t(binderOwner_t&&) = default;
-
-//            constexpr binderOwner_t(binderOwner_t&& other)
-//                : binderBase_t{std::move(other)},
-//                  _token_c{other._token_c},
-//                  _hash{other._hash},
-//                  _description{other._description},
-//                  _value{std::move(other._value)},
-//                  _array{other._array}
-//            {};
 
             const binderBase_t *find(const char* s) const override
             {
@@ -609,13 +518,14 @@ namespace Motate {
 
             bool write_json_prefix(str_buf &buf, bool verbose = 0) const override
             {
-                if (_array) {
+                
+                if (_value.isArray()) {
                     if (verbose) {
                         return buf.copy_multi("\"", _token);
                     } else {
                         return buf.copy(_token);
                     }
-                } else {
+                } else if (_token_len != 0) {
                     if (verbose) {
                         return buf.copy_multi("\"", _token, "\":{");
                     } else {
@@ -636,7 +546,7 @@ namespace Motate {
 
             bool write_json_suffix(str_buf &buf, bool verbose = 0) const override
             {
-                if (!_array && _token != nullptr) {
+                if (!_value.isArray() && _token_len != 0) {
                     return buf.copy("}");
                 }
                 return true;
@@ -732,16 +642,16 @@ namespace Motate {
 
 
 
-        template <typename valueType, typename... extraParamTypes>
+        template <typename valueType, uint16_t token_len, uint16_t description_len, typename... extraParamTypes>
         constexpr bindt_<valueType>
-        bind(const char *token, valueType& valueRef, const char *description, extraParamTypes... extraParams) {
+        bind(const char (&token)[token_len], valueType& valueRef, const char (&description)[description_len], extraParamTypes... extraParams) {
             return {token, valueRef, description, extraParams...};
         }
 
 
-        template <typename subBinderType, typename... extraParamTypes>
+        template <typename subBinderType, uint16_t token_len, uint16_t description_len, typename... extraParamTypes>
         constexpr binderOwner_t<subBinderType>
-        bind(const char *token, subBinderType&& subBinder, const char *description, extraParamTypes... extraParams) {
+        bind(const char (&token)[token_len], subBinderType&& subBinder, const char (&description)[description_len], extraParamTypes... extraParams) {
             return {token, std::move(subBinder), description, extraParams...};
         }
 
@@ -761,16 +671,16 @@ namespace Motate {
                 return {std::move(subBinders)..., /*isArray:*/false};
             };
 
-            template <class... subBinderTypes>
-            constexpr binderList_t<subBinderTypes...>
-            bind_array(subBinderTypes&&... subBinders)  {
-                return {std::move(subBinders)..., /*isArray:*/true};
-            };
+//            template <class... subBinderTypes>
+//            constexpr binderList_t<subBinderTypes...>
+//            bind_array(subBinderTypes&&... subBinders)  {
+//                return {std::move(subBinders)..., /*isArray:*/true};
+//            };
         }
 
-        template <class... subBinderTypes>
+        template <uint16_t token_len, uint16_t description_len, class... subBinderTypes>
         constexpr binderOwner_t<binderList_t<subBinderTypes...>>
-        bind_object(const char *token, const char *description, subBinderTypes&&... subBinders)  {
+        bind_object(const char (&token)[token_len], const char (&description)[description_len], subBinderTypes&&... subBinders)  {
             return bind(token, internal::bind_object(std::move(subBinders)...), description);
         };
 
@@ -783,23 +693,23 @@ namespace Motate {
 
 
         // bind_no_name is to bind an object with an empty name, such as in an array
-        template <typename valueType, typename... extraParamTypes>
+        template <typename valueType, uint16_t description_len, typename... extraParamTypes>
         constexpr bindt_<valueType>
-        bind_no_name(valueType& valueRef, const char *description, extraParamTypes... extraParams) {
-            return {nullptr, valueRef, description, extraParams...};
+        bind_no_name(valueType& valueRef, const char (&description)[description_len], extraParamTypes... extraParams) {
+            return {"", valueRef, description, extraParams...};
         }
 
-        template <typename subBinderType, typename... extraParamTypes>
+        template <typename subBinderType, uint16_t description_len, typename... extraParamTypes>
         constexpr binderOwner_t<subBinderType>
-        bind_no_name(subBinderType&& subBinder, const char *description, extraParamTypes... extraParams) {
+        bind_no_name(subBinderType&& subBinder, const char (&description)[description_len], extraParamTypes... extraParams) {
             return {"", std::move(subBinder), description, extraParams...};
         }
 
         // parent is a bind_no_name(bind_object())
-        template <typename... subBinderTypes>
+        template <uint16_t description_len, typename... subBinderTypes>
         constexpr binderOwner_t<binderList_t<subBinderTypes...>>
-        parent(const char *description, subBinderTypes&&... subBinders) {
-            return bind_no_name(internal::bind_object(std::move(subBinders)...), description);
+        parent(const char (&description)[description_len], subBinderTypes&&... subBinders) {
+            return bind("", internal::bind_object(std::move(subBinders)...), description);
         }
 
 //        template <typename T, typename... Ts>
@@ -823,9 +733,9 @@ namespace Motate {
         // }
 
         // Binders that allow you to specify the type of the writer explicitly
-        template <typename writerType, typename valueType, typename... extraTypes>
+        template <typename writerType, typename valueType, uint16_t token_len, uint16_t description_len, typename... extraTypes>
         constexpr bind_type_<writerType, valueType>
-        bind_typed(const char *token, valueType& t, const char *description, extraTypes... extras) {
+        bind_typed(const char (&token)[token_len], valueType& t, const char (&description)[description_len], extraTypes... extras) {
             return {token, t, description, extras...};
         }
 
@@ -989,10 +899,13 @@ namespace Motate {
 
         extern bool relaxed_json;
 
+
+        enum class PushFlags : bool {notArray = false, isArray = true};
+
         template<int max_stack_depth = 25>
         struct instruction_stack_t {
             int stack_ptr = -1;
-            int in_array = false;
+            bool in_array = false;
             bool is_written_ = false;
 
             struct ins_stackitem_t {
@@ -1002,14 +915,14 @@ namespace Motate {
                 bool is_written_ = false;
             } op_stack[max_stack_depth];
 
-            void push(const binderBase_t *t, bool isArray) {
+            void push(const binderBase_t *t, PushFlags isArray) {
                 stack_ptr++;
                 op_stack[stack_ptr].t_ = t;
-                op_stack[stack_ptr].is_array_ = isArray;
+                op_stack[stack_ptr].is_array_ = (isArray == PushFlags::isArray);
                 op_stack[stack_ptr].index_ = -1;
                 op_stack[stack_ptr].is_written_ = false;
 
-                in_array = isArray;
+                in_array = (isArray == PushFlags::isArray);
             };
 
 
@@ -1021,13 +934,20 @@ namespace Motate {
                 setDepth_(op.getDepth() + depth_offset);
 
                 const binderBase_t *tok = op.findIn(op_stack[stack_ptr].t_);
+
+                if (tok == nullptr) {
+                    // We didn't find that key
+                    op.setIsNull();
+                    return true; // true meaning we need to print that we didn't find it
+                }
+
                 if (op.getIsParent()) {
-                    push(tok, /*isArray*/ false);
+                    push(tok, PushFlags::notArray);
                     return false;
                 }
 
                 if (op.getIsArray()) {
-                    push(tok, /*isArray*/ true);
+                    push(tok, PushFlags::isArray);
                     return false;
                 }
 
@@ -1113,16 +1033,16 @@ namespace Motate {
 
                 if (tok == nullptr) {
                     // tok is missing!
-
+                    return false;
                 }
 
                 if (op.getIsParent()) {
-                    push(tok, /*isArray*/ false);
+                    push(tok, PushFlags::notArray);
                     return true;
                 }
 
                 if (op.getIsArray()) {
-                    push(tok, /*isArray*/ true);
+                    push(tok, PushFlags::isArray);
                     return true;
                 }
 
@@ -1217,7 +1137,7 @@ namespace Motate {
             bool exec(const binderBase_t *b_) {
                 instruction_stack_t<> op_stack;
 
-                op_stack.push(b_, /*isArray*/ false);
+                op_stack.push(b_, PushFlags::notArray);
                 bool would_print_ = false;
 
                 for (int i = 0; i<size_ /*&& !o[i].getIsEmpty()*/; ++i) {
@@ -1234,10 +1154,10 @@ namespace Motate {
                 instruction_stack_t<> op_stack;
                 int depth_offset = 0;
                 if (r_) {
-                    op_stack.push(r_, /*isArray*/ false);
+                    op_stack.push(r_, PushFlags::notArray);
                     depth_offset = 1;
                 }
-                op_stack.push(b_, /*isArray*/ false);
+                op_stack.push(b_, PushFlags::notArray);
 
                 str_buf buf{buffer, buf_len-1};
 
@@ -1249,7 +1169,7 @@ namespace Motate {
                 if (f_ && tail_ && success_) {
                     success_ = op_stack.finish_writing(buf, -1, /*close=*/false);
 
-                    op_stack.push(f_, /*isArray*/ false);
+                    op_stack.push(f_, PushFlags::notArray);
                     for (int i = 0; (i<tail_->kSize_) && success_; ++i) {
                         success_ = op_stack.write(tail_->ins_[i], buf, 1);
                     }

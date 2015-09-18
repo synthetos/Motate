@@ -144,8 +144,9 @@ struct Thermistor {
     };
     ResistanceProperty_t resistance_property {*this};
 
-    auto json_bindings(const char *token_name, const char *object_description) {
-        return JSON::bind_object(token_name, object_description,
+    template <uint16_t token_len, uint16_t description_len>
+    auto json_bindings(const char (&token)[token_len], const char (&description)[description_len]) {
+        return JSON::bind_object(token, description,
                                  JSON::bind_typed<float>("temp", *this, "temperature (ºC)", /*print precision:*/2),
                                  JSON::bind_typed<float>("res", resistance_property, "resistance measured", /*print precision:*/2)
                                  );
@@ -292,8 +293,7 @@ PID pid1 { 22.2/255.0, 1.08/255.0, 114.0/255.0};
 
 float test = 0.1;
 
-const auto json_base = JSON::bind_object("",
-                                    "Temperature demo",
+const auto json_base = JSON::parent("Temperature demo",
                                     thermistor1.json_bindings("t1", "Thermistor 1"),
                                     thermistor2.json_bindings("t2", "Thermistor 2"),
                                     thermistor3.json_bindings("thb", "Thermistor HeatBed"),
