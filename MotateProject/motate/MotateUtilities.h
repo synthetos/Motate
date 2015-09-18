@@ -27,6 +27,9 @@
 	OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#ifndef MOTATEUTILITIES_H_ONCE
+#define MOTATEUTILITIES_H_ONCE
+
 #include <type_traits>
 #include <utility>
 #include <stdio.h>
@@ -310,4 +313,6 @@ namespace Motate {
     float atof(char *&buffer);
 
 #pragma GCC diagnostic pop
-} // namespace
+} // namespace Motate
+
+#endif //MOTATEUTILITIES_H_ONCE
