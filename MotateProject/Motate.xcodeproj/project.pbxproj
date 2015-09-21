@@ -1347,6 +1347,8 @@
 		D40A24041ACE2CCC00406A3A /* atmel_sam.cfg */ = {isa = PBXFileReference; lastKnownFileType = text; path = atmel_sam.cfg; sourceTree = "<group>"; };
 		D40A24221AD5F7AB00406A3A /* SamUniqueID.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SamUniqueID.cpp; sourceTree = "<group>"; };
 		D40A24231AD5F7AB00406A3A /* SamUniqueID.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SamUniqueID.h; sourceTree = "<group>"; };
+		D410A87D1BABB63C007E4B12 /* pin_assignments.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pin_assignments.h; sourceTree = "<group>"; };
+		D410A87F1BABB63C007E4B12 /* pin_assignments.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pin_assignments.h; sourceTree = "<group>"; };
 		D43C7AEA1B15689A007440D6 /* MotatePower.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotatePower.h; sourceTree = "<group>"; };
 		D43C7AEC1B156937007440D6 /* SamPower.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SamPower.h; sourceTree = "<group>"; };
 		D43C7AED1B1569FF007440D6 /* SamPower.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SamPower.cpp; sourceTree = "<group>"; };
@@ -4534,6 +4536,31 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		D410A87B1BABB63C007E4B12 /* board */ = {
+			isa = PBXGroup;
+			children = (
+				D410A87C1BABB63C007E4B12 /* ArduinoDue */,
+				D410A87E1BABB63C007E4B12 /* g2Ref */,
+			);
+			path = board;
+			sourceTree = "<group>";
+		};
+		D410A87C1BABB63C007E4B12 /* ArduinoDue */ = {
+			isa = PBXGroup;
+			children = (
+				D410A87D1BABB63C007E4B12 /* pin_assignments.h */,
+			);
+			path = ArduinoDue;
+			sourceTree = "<group>";
+		};
+		D410A87E1BABB63C007E4B12 /* g2Ref */ = {
+			isa = PBXGroup;
+			children = (
+				D410A87F1BABB63C007E4B12 /* pin_assignments.h */,
+			);
+			path = g2Ref;
+			sourceTree = "<group>";
+		};
 		D4433919196BB69B004A48F9 /* buffered_uart */ = {
 			isa = PBXGroup;
 			children = (
@@ -10029,6 +10056,7 @@
 			children = (
 				D4C79F23196216A300A1BE28 /* blink_demo.cpp */,
 				D4C79F25196216A300A1BE28 /* Makefile */,
+				D410A87B1BABB63C007E4B12 /* board */,
 			);
 			path = blink;
 			sourceTree = "<group>";
