@@ -243,33 +243,55 @@ namespace Motate {
     //                ) ? skip_whitespace(p_+1) : p_;
     //    }
     //
-        // Point to the first character AFTER '"', and it will search until it find an
-        // un-esacped '"', and will remove the escapes as it goes (using offset_, which
-        // will be 0 or negative).
-        /*constexpr*/ char *find_end_of_str_(char *p_, int offset_/* = 0*/) {
-            return
-            (p_[0] == '\\' && p_[1] == '"')
-            ? ((p_[offset_-1] = p_[1]), find_end_of_str_(p_+2, offset_-1))
-            : p_[0] != '"'
-            ? ((p_[offset_] = p_[0]), find_end_of_str_(p_+1, offset_))
-            : ((p_[offset_]=0),p_+offset_);
+        // Point buf to the first character AFTER '"', and it will search until
+        // it finds an un-esacped '"', and will remove the escapes as it goes.
+
+        // Since this doesn't make sense as a constexpr, it's rewritten without recrusion
+        char *find_end_of_str_(char *buf) {
+            char *current = buf;
+            char *write_pos = buf;
+            do {
+                if (current[0] == 0) {
+                    // NOTE: This is actually an error, but we have no way to report it...
+                    return current;
+                }
+
+                if (current[0] == '\\') {
+                    if (current[1] == '\\') {
+                        // write the backslash
+                        current+=2;
+                        *write_pos = '\\';
+                        continue;
+                    } else if (current[1] == '"') {
+                        // write the quote
+                        current+=2;
+                        *write_pos = '"';
+                        continue;
+                    } else if (current[1] == 't') {
+                        // write the tab
+                        current+=2;
+                        *write_pos = '\t';
+                        continue;
+                    } else if (current[1] == 'n') {
+                        // write the newline
+                        current+=2;
+                        *write_pos = '\n';
+                        continue;
+                    } else if (current[1] == 'r') {
+                        // write the carriage return
+                        current+=2;
+                        *write_pos = '\r';
+                        continue;
+                    }
+                }
+
+                if (current[0] != '"') {
+                    return current+1;
+                }
+            } while(1);
         }
-    //
-    //    constexpr char *find_end_of_name_bare_(char *p_) {
-    //        return
-    //        (
-    //         ((p_[0] >= ('a')) && (p_[0] <= ('z'))) // lowercase letters
-    //         || ((p_[0] >= ('0')) && (p_[0] <= ('9'))) // numbers
-    //         || (p_[0] == '_') // underscore
-    //         )
-    //        ? find_end_of_name_bare_(p_+1) // continue the search
-    //        : (p_[0] >= ('A')) && (p_[0] <= ('Z')) // uppercase letters
-    //        ? p_[0] = 'a' + ('A' - p_[0]), // make it lowercase, and then
-    //        find_end_of_name_bare_(p_+1) // continue the search
-    //        : p_;
-    //    }
-    //
-       /*constexpr*/ char *find_end_of_name(char *p_) {
+
+        char *find_end_of_name(char *p_) {
             return (p_[0] == '"') ? find_end_of_str_(p_+1) : find_end_of_name_bare_(p_);
         }
     //

@@ -1198,19 +1198,21 @@ namespace Motate {
         // Point to the first character AFTER '"', and it will search until it find an
         // un-esacped '"', and will remove the escapes as it goes (using offset_, which
         // will be 0 or negative).
-        /*constexpr*/ char *find_end_of_str_(char *p_, int offset_ = 0);
-        constexpr char *find_end_of_name_bare_(char *p_) {
+        /*constexpr*/ char *find_end_of_str_(char *p_);
+
+        constexpr bool _is_namey_character(char c) {
+            return (
+                       ((c >= ('a')) && (c <= ('z'))) // lowercase letters
+                    || ((c >= ('0')) && (c <= ('9'))) // numbers
+                    || (c == '_') // underscore
+                    ) ? 1 : 0;
+        }
+
+        constexpr char *find_end_of_name_bare_(char *buf) {
             return
-                (
-                 ((p_[0] >= ('a')) && (p_[0] <= ('z'))) // lowercase letters
-                 || ((p_[0] >= ('0')) && (p_[0] <= ('9'))) // numbers
-                 || (p_[0] == '_') // underscore
-                 )
-                ? find_end_of_name_bare_(p_+1) // continue the search
-                : (p_[0] >= ('A')) && (p_[0] <= ('Z')) // uppercase letters
-                    ? p_[0] = 'a' + ('A' - p_[0]), // make it lowercase, and then
-                      find_end_of_name_bare_(p_+1) // continue the search
-                    : p_;
+                _is_namey_character(buf[0])
+                ? find_end_of_name_bare_(buf+1) // continue the search
+                : buf;
         }
 
         /*constexpr*/ char *find_end_of_name(char *p_);
