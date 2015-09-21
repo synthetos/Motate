@@ -294,24 +294,26 @@ PID pid1 { 22.2/255.0, 1.08/255.0, 114.0/255.0};
 float test = 0.1;
 
 const auto json_base = JSON::parent("Temperature demo",
-                                    thermistor1.json_bindings("t1", "Thermistor 1"),
-                                    thermistor2.json_bindings("t2", "Thermistor 2"),
-                                    thermistor3.json_bindings("thb", "Thermistor HeatBed"),
+//                                    thermistor1.json_bindings("t1", "Thermistor 1"),
+//                                    thermistor2.json_bindings("t2", "Thermistor 2"),
+//                                    thermistor3.json_bindings("thb", "Thermistor HeatBed"),
 //                                    JSON::bind_object("t1",
-//                                                      "thermistor 1",
-//                                                      JSON::bind("temp", thermistor1, "temperature (ºC)", /*print precision:*/2),
-//                                                      JSON::bind_typed<float>("res", thermistor1.resistance_property, "resistance", /*print precision:*/2)
-//                                                      )
+//                                                      "Thermistor 1",
+//                                                      JSON::bind_typed<float>("temp", thermistor1,                     "temperature (ºC)", /*print precision:*/2),
+//                                                      JSON::bind_typed<float>("res",  thermistor1.resistance_property, "resistance",       /*print precision:*/2)
+//                                                      ),
 //                                    JSON::bind_object("t2",
-//                                                      JSON::bind("temp", thermistor2, /*print precision:*/2),
-//                                                      JSON::bind_typed<float>("res", thermistor2.resistance_property, /*print precision:*/2)
+//                                                      "Thermistor 2",
+//                                                      JSON::bind_typed<float>("temp", thermistor2,                     "temperature (ºC)", /*print precision:*/2),
+//                                                      JSON::bind_typed<float>("res",  thermistor2.resistance_property, "resistance",       /*print precision:*/2)
 //                                                      ),
 //                                    JSON::bind_object("thb",
-//                                                      JSON::bind("temp", thermistor3, /*print precision:*/2),
-//                                                      JSON::bind_typed<float>("res", thermistor3.resistance_property, /*print precision:*/2)
+//                                                      "Thermistor HeatBed",
+//                                                      JSON::bind_typed<float>("temp", thermistor3,                     "temperature (ºC)", /*print precision:*/2),
+//                                                      JSON::bind_typed<float>("res",  thermistor3.resistance_property, "resistance",       /*print precision:*/2)
 //                                                      ),
-                                    JSON::bind_typed<float>  ("h1", fet_pin1, "heater 1", /*precision:*/ 3),
-                                    JSON::bind_typed<float>  ("h2", fet_pin2, "heater 2", /*precision:*/ 3),
+                                    JSON::bind_typed<float>  ("h1",  fet_pin1, "heater 1", /*precision:*/ 3),
+                                    JSON::bind_typed<float>  ("h2",  fet_pin2, "heater 2", /*precision:*/ 3),
                                     JSON::bind_typed<bool>   ("hhb", fet_pin3, "heater for the heat bed"),
                                     pid1.json_bindings("pid1", "Heater 1 PID")
                                     );
