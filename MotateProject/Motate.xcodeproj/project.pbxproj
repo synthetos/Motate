@@ -1349,6 +1349,7 @@
 		D40A24231AD5F7AB00406A3A /* SamUniqueID.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SamUniqueID.h; sourceTree = "<group>"; };
 		D410A87D1BABB63C007E4B12 /* pin_assignments.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pin_assignments.h; sourceTree = "<group>"; };
 		D410A87F1BABB63C007E4B12 /* pin_assignments.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pin_assignments.h; sourceTree = "<group>"; };
+		D43970391C0CB79A005CE6A2 /* arm.gdb */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = arm.gdb; sourceTree = "<group>"; };
 		D43C7AEA1B15689A007440D6 /* MotatePower.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotatePower.h; sourceTree = "<group>"; };
 		D43C7AEC1B156937007440D6 /* SamPower.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SamPower.h; sourceTree = "<group>"; };
 		D43C7AED1B1569FF007440D6 /* SamPower.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SamPower.cpp; sourceTree = "<group>"; };
@@ -10033,6 +10034,7 @@
 			children = (
 				D4C79F1219588A8600A1BE28 /* arm.mk */,
 				D4E910B41ABB615D0042A16C /* avr.mk */,
+				D43970391C0CB79A005CE6A2 /* arm.gdb */,
 			);
 			path = arch;
 			sourceTree = "<group>";

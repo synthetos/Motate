@@ -262,6 +262,7 @@ endif #cygdrive
 endif #WINDOWS
 
 export PATH
+export MOTATE_PATH
 
 ifneq ($(NOT_IN_GIT),1)
 	GIT_LOCATED := $(GIT)
@@ -468,11 +469,11 @@ $(DEPDIR) $(BIN):
 
 # Rule for debugging
 debug: $(OUTPUT_BIN).elf
-	$(GDB) -x "${BOARD_PATH}.gdb" -ex "monitor reset halt" -readnow -se "$(OUTPUT_BIN).elf"
+	$(GDB) -ex "dir '${MOTATE_PATH}/arch/'" -x "${BOARD_PATH}.gdb" -ex "monitor reset halt" -readnow -se "$(OUTPUT_BIN).elf"
 
 # Rule for debugging (using python-enabled debugger)
 debuggy: $(OUTPUT_BIN).elf
-	$(GDB_PY) -x "${BOARD_PATH}.gdb" -ex "monitor reset halt" -readnow -se "$(OUTPUT_BIN).elf"
+	$(GDB_PY) -ex "dir '${MOTATE_PATH}/arch/'" -x "${BOARD_PATH}.gdb" -ex "monitor reset halt" -readnow -se "$(OUTPUT_BIN).elf"
 
 flash: $(FLASH_REQUIRES)
 	$(DEVICE_FLASH_CMD)
