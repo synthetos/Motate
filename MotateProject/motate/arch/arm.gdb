@@ -34,4 +34,4 @@ define dwt_reset
     set *(uint32_t *)$DWT_CYCCNT = 0
 end
 
-echo "**DWT commands enabled**\n"
+echo **DWT commands enabled**\n
