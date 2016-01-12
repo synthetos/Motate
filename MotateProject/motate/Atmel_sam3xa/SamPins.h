@@ -171,6 +171,7 @@ namespace Motate {
         uintPort_t get() { return 0; };
         uintPort_t getInputValue() { return 0; };
         uintPort_t getOutputValue() { return 0; };
+        void setInterrupts(const uint32_t interrupts) {};
         static uintPort_t maskForPort(const uint8_t otherPortLetter) { return 0; };
         bool isNull() { return true; };
     };
