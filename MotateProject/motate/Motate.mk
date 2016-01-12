@@ -33,10 +33,6 @@
 
 BOARD  ?= NONE
 
-ifeq ('$(BOARD)','NONE')
-$(error BOARD not defined - please provide a project name)
-endif
-
 MOTATE_PATH ?= $(dir "$(CURDIR)"/$(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST)))
 export MOTATE_PATH
 
@@ -187,6 +183,12 @@ STAR:=*
 include $(wildcard ./board/$(STAR).mk ${MOTATE_PATH}/board/$(STAR).mk)
 
 ifneq ("$(_BOARD_FOUND)", "1")
+
+ifeq ('$(BOARD)','NONE')
+# errors cannot be indented
+$(error BOARD not defined - please provide a project name)
+endif
+
 # errors cannot be indented
 $(error Unknown board "$(BOARD)")
 endif
