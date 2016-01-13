@@ -362,6 +362,7 @@ NEEDS_HEX = $(OUTPUT_BIN).hex
 endif
 
 all: $(OUTPUT_BIN).elf $(NEEDS_HEX)
+	@echo $(START_BOLD)Build ${GIT_EXACT_VERSION} "${GIT_VERSION}"$(END_BOLD)
 
 $(eval $(DEVICE_RULES))
 
