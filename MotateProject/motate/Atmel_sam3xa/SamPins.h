@@ -595,7 +595,8 @@ namespace Motate {
         PWMOutputPin(const PinOptions options, const uint32_t freq = kDefaultPWMFrequency) : Pin<pinNum>(kOutput, options) {};
         PWMOutputPin(const uint32_t freq) : Pin<pinNum>(kOutput, kNormal) {};
         void setFrequency(const uint32_t freq) {};
-        operator float() { return 0.0; };
+        operator float() { return !!Pin<pinNum>::getOutputValue(); };
+        operator uint32_t() { return (100 * (!!Pin<pinNum>::getOutputValue())); };
         void operator=(const float value) { write(value); };
         void write(const float value) { Pin<pinNum>::write(value >= 0.5); };
         void writeRaw(const uint16_t duty) { Pin<pinNum>::write(duty >= 50); };
