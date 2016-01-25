@@ -1118,13 +1118,25 @@ namespace Motate {
         uint32_t start_, delay_;
         Timeout() : start_ {0}, delay_ {0} {};
 
+        bool isSet() {
+            return (start_ > 0);
+        }
+
         bool isPast() {
+            if (!isSet()) {
+                return false;
+            }
             return ((SysTickTimer.getValue() - start_) > delay_);
         };
 
         void set(uint32_t delay) {
             start_ = SysTickTimer.getValue();
             delay_ = delay;
+        };
+
+        void clear() {
+            start_ = 0;
+            delay_ = 0;
         }
     };
 
