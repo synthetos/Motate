@@ -156,9 +156,14 @@ endif
 # Output directories (must be before BOARDs section)
 #
 
-BIN = bin/$(BOARD)
-OBJ = build/$(BOARD)
-DEPDIR = $(OBJ)/dep
+ifeq ($(strip $(CONFIG)),)
+	BIN=bin/$(BOARD)
+	OBJ=build/$(BOARD)
+else
+	BIN=bin/$(CONFIG)-$(BOARD)
+	OBJ=build/$(CONFIG)-$(BOARD)
+endif
+DEPDIR=$(OBJ)/dep
 
 #
 # End of Output directories
