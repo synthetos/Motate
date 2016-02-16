@@ -32,38 +32,6 @@
 
 namespace Motate {
 
-#if 0 // OLD
-    void banzai(int samba) {
-        // Disable all interrupts
-        __disable_irq();
-
-        if(samba) {
-            // Set bootflag to run SAM-BA bootloader at restart
-            while ((EFC0->EEFC_FSR & EEFC_FSR_FRDY) == 0);       // ASH: added parentheses to make compiler happy
-            EFC0->EEFC_FCR =
-                EEFC_FCR_FCMD_CGPB |
-                EEFC_FCR_FARG(1) |
-                EEFC_FCR_FKEY_PASSWD;
-            while ((EFC0->EEFC_FSR & EEFC_FSR_FRDY) == 0);       // ASH: added parentheses to make compiler happy
-
-            // From here flash memory is no more available.
-
-            // Memory swap needs some time to stabilize
-            for (uint32_t i=0; i<1000000; i++)
-                // force compiler to not optimize this
-                __asm__ __volatile__("");
-        }
-
-        // BANZAIIIIIII!!!
-        RSTC->RSTC_CR =
-            RSTC_CR_KEY_PASSWD |
-            RSTC_CR_PROCRST |
-            RSTC_CR_PERRST;
-        
-        while (true);
-    }
-#endif
-
     // This is dangerous, let's add another level of namespace in case "use Motate" is in effect.
     namespace System {
 
@@ -76,7 +44,7 @@ namespace Motate {
                 // Set bootflag to run SAM-BA bootloader at restart
                 while ((EFC0->EEFC_FSR & EEFC_FSR_FRDY) == 0);
 
-                // 
+                //
                 EFC0->EEFC_FCR = EEFC_FCR_FCMD_CGPB | EEFC_FCR_FARG(1) | EEFC_FCR_FKEY_PASSWD;
 
                 while ((EFC0->EEFC_FSR & EEFC_FSR_FRDY) == 0);
@@ -91,10 +59,7 @@ namespace Motate {
             }
 
             // BANZAIIIIIII!!!
-            RSTC->RSTC_CR = EEFC_FCR_FKEY_PASSWD |
-                RSTC_CR_PROCRST |
-                RSTC_CR_PERRST;
-
+            RSTC->RSTC_CR = RSTC_CR_KEY_PASSWD | RSTC_CR_PROCRST | RSTC_CR_PERRST;
             while (true);
         }
     }
