@@ -114,6 +114,7 @@ namespace Motate {
         const uint8_t (*getEndpointCount)(uint8_t &firstEnpointNum);
         uint16_t (*getEndpointSize)(const uint8_t &endpointNum, const bool otherSpeed);
         const EndpointBufferSettings_t (*getEndpointConfig)(const uint8_t endpoint, const bool otherSpeed);
+        bool (*handleDataAvailable)(const uint8_t &endpointNum);
     };
     extern USBProxy_t USBProxy;
 
@@ -322,6 +323,7 @@ const uint16_t *Motate::getUSBSerialNumberString(int16_t &length) { \
             USBProxy.getEndpointConfig        = parent::getEndpointConfig;
             USBProxy.getEndpointCount         = parent::getEndpointCount;
             USBProxy.getEndpointSize          = parent::getEndpointSize;
+            USBProxy.handleDataAvailable      = parent::handleDataAvailable;
 
             USBDeviceHardware::_init();
             _inited = 1UL;

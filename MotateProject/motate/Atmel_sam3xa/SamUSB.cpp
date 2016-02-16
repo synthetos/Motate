@@ -805,7 +805,15 @@ namespace Motate {
         // FIXME! Needs to handle *any* control endpoint.
         else if ( _inAnEndpointInterruptNotControl() )
         {
-            if ( _inAnOverflowInterrupt(_firstEndpointOfInterrupt()) )
+            // test for interrupts in endpoints
+            // Datasheet says: This bit is cleared when the interrupt source is serviced.
+            uint8_t endpoint = _firstEndpointOfInterrupt();
+            // check for read available
+            if (_isReceiveOUTAvailable(endpoint)) {
+                USBProxy.handleDataAvailable(endpoint);
+            }
+            // check for overflow
+            if ( _inAnOverflowInterrupt(endpoint) )
             {
                 while (1) {
                     ;// TRAP it!

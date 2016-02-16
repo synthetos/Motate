@@ -170,6 +170,10 @@ namespace Motate {
             return _mixins_type::handleNonstandardRequestInMixin(setup);
         };
 
+        static bool handleDataAvailable(const uint8_t &endpointNum) {
+            ;
+        };
+
         static const EndpointBufferSettings_t getEndpointConfig(const uint8_t endpoint, const bool otherSpeed) {
             EndpointBufferSettings_t ebs = _hardware_type::getEndpointConfigFromHardware(endpoint);
 

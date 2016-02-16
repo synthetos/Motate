@@ -253,7 +253,8 @@ namespace Motate {
         const uint8_t write_endpoint;
         const uint8_t interface_number;
         std::function<void(bool)> connection_state_changed_callback;
- 
+        std::function<void(void)> data_available_callback;
+
         struct _line_info_t
         {
             uint32_t    dwDTERate;
@@ -410,7 +411,20 @@ namespace Motate {
             if(connection_state_changed_callback && (_line_state & kCDCControlState_DTR))
                 connection_state_changed_callback(_line_state & kCDCControlState_DTR);
         }
- 
+
+        void setDataAvailableCallback(std::function<void(void)> &&callback) {
+            data_available_callback = std::move(callback);
+        }
+
+        // this is to be called from
+        bool handleDataAvailable(const uint8_t &endpointNum) {
+            if (data_available_callback && (endpointNum == read_endpoint)) {
+                data_available_callback();
+                return true;
+            }
+            return false;
+        }
+
         bool handleNonstandardRequest(Setup_t &setup) {
             if (setup.index() != interface_number)
                 return false;
