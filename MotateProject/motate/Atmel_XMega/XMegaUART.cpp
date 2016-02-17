@@ -2,7 +2,7 @@
  XMegaUART.h - Library for the Motate system
  http://github.com/synthetos/motate/
 
- Copyright (c) 2015 Robert Giseburt
+ Copyright (c) 2015 - 2016 Robert Giseburt
 
  This file is part of the Motate Library.
 
