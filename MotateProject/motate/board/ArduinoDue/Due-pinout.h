@@ -1,8 +1,8 @@
 /*
  * http://github.com/synthetos/motate/
  *
- * Copyright (c) 2014 Robert Giseburt
- * Copyright (c) 2014 Alden S. Hart Jr.
+ * Copyright (c) 2014 - 2016 Robert Giseburt
+ * Copyright (c) 2014 - 2016 Alden S. Hart Jr.
  *
  * This file is part of the Motate Library.
  *
