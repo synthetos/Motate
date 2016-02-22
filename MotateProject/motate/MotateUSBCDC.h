@@ -257,10 +257,10 @@ namespace Motate {
 
         struct _line_info_t
         {
-            uint32_t    dwDTERate;
-            uint8_t bCharFormat;
-            uint8_t     bParityType;
-            uint8_t     bDataBits;
+            uint32_t dwDTERate;
+            uint8_t  bCharFormat;
+            uint8_t  bParityType;
+            uint8_t  bDataBits;
  
             _line_info_t() :
             dwDTERate(57600),
@@ -416,7 +416,8 @@ namespace Motate {
             data_available_callback = std::move(callback);
         }
 
-        // this is to be called from
+        // This is to be called from USBDeviceHardware when new data is available.
+        // It returns if the request was handled or not.
         bool handleDataAvailable(const uint8_t &endpointNum) {
             if (data_available_callback && (endpointNum == read_endpoint)) {
                 data_available_callback();

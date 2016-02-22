@@ -31,6 +31,8 @@
 #ifndef SAMUSB_ONCE
 #define SAMUSB_ONCE
 
+#include <functional> // for std::function<>
+
 #include "MotateUSBHelpers.h"
 #include "MotateUniqueID.h"
 
@@ -109,14 +111,15 @@ namespace Motate {
     /*** PROXY ***/
 
     struct USBProxy_t {
-        bool (*sendDescriptorOrConfig)(Setup_t &setup);
-        bool (*handleNonstandardRequest)(Setup_t &setup);
-        const uint8_t (*getEndpointCount)(uint8_t &firstEnpointNum);
-        uint16_t (*getEndpointSize)(const uint8_t &endpointNum, const bool otherSpeed);
-        const EndpointBufferSettings_t (*getEndpointConfig)(const uint8_t endpoint, const bool otherSpeed);
-        bool (*handleDataAvailable)(const uint8_t &endpointNum);
+        std::function<const bool (Setup_t &setup)> sendDescriptorOrConfig;
+        std::function<const bool (Setup_t &setup)> handleNonstandardRequest;
+        std::function<const uint8_t (uint8_t &firstEnpointNum)> getEndpointCount;
+        std::function<const uint16_t (const uint8_t &endpointNum, const bool otherSpeed)> getEndpointSize;
+        std::function<const EndpointBufferSettings_t (const uint8_t endpoint, const bool otherSpeed)> getEndpointConfig;
+        std::function<const bool (const uint8_t &endpointNum)> handleDataAvailable;
     };
     extern USBProxy_t USBProxy;
+
 
 
     /*** STRINGS ***/

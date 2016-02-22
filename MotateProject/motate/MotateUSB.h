@@ -171,7 +171,7 @@ namespace Motate {
         };
 
         static bool handleDataAvailable(const uint8_t &endpointNum) {
-            ;
+            return false;
         };
 
         static const EndpointBufferSettings_t getEndpointConfig(const uint8_t endpoint, const bool otherSpeed) {
