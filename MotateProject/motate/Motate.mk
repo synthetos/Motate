@@ -224,13 +224,14 @@ RM      = rm
 CP      = cp
 # NOTE: Atmel Studio 6.1 will default to the wrong mkdir that doesn't understand -p.
 #       So, in AS6.1, we have to pass MKDIR=gmkdir in the command line.
-MKDIR   ?= mkdir
-GIT     ?= git
+MKDIR   = mkdir
+GIT     = git
 
 SHELL = bash
 
+SPECIAL_ATMEL_STUDIO_DEFAULT_TARGETS =
+
 # Here we use some heuristics to find the OS.
-# We only use this now for fiding if we're on windows.
 ifneq (,$(findstring /cygdrive/,$(PATH)))
 OS := WIN32
 TOOLS_SUBPATH := win32/gcc-$(CROSS_COMPILE)
@@ -245,6 +246,8 @@ ifneq (,$(findstring Atmel Studio,$(PATH)))
 OS := WIN32
 TOOLS_SUBPATH := win32/gcc-$(CROSS_COMPILE)
 PATH := $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin;$(PATH);c:\Program Files\Git\bin;c:\Program Files\Git\cmd;c:\Program Files\Git\mingw32\bin;c:\Program Files\Git\mingw64\bin
+MKDIR   = gmkdir
+SPECIAL_ATMEL_STUDIO_DEFAULT_TARGETS = TinyG2.elf TinyG2.map
 else
 
 # Unix/Linux section:
@@ -366,7 +369,7 @@ ifneq ("$(DEVICE_NEEDS_HEX)","")
 NEEDS_HEX = $(OUTPUT_BIN).hex
 endif
 
-all: $(OUTPUT_BIN).elf $(NEEDS_HEX)
+all: $(OUTPUT_BIN).elf $(NEEDS_HEX) $(SPECIAL_ATMEL_STUDIO_DEFAULT_TARGETS)
 	@echo $(START_BOLD)Build ${GIT_EXACT_VERSION} "${GIT_VERSION}"$(END_BOLD)
 
 $(eval $(DEVICE_RULES))
