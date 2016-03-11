@@ -2,7 +2,8 @@
  MotateBuffer.hpp - Buffer templates for the Motate system
  http://github.com/synthetos/motate/
 
- Copyright (c) 2013 Robert Giseburt
+ Copyright (c) 2013 - 2016 Robert Giseburt
+ Copyright (c)        2016 Alden S. Hart, Jr.
 
  This file is part of the Motate Library.
 
@@ -37,101 +38,237 @@ namespace Motate {
     // Implement a simple circular buffer, with a compile-time size
     template <uint16_t _size, typename base_type = char>
     struct Buffer {
-	// Internal properties!
-	base_type _data[_size];
-	const base_type* const _end_pos = _data+_size; // NOTE: _end_pos is one *past* the end of the buffer.
-	volatile base_type* _read_pos = _data;
-	volatile base_type* _write_pos = _data;
-	volatile int16_t _available = _size;
-	volatile bool _write_locked = true;
+        // Internal properties!
+        base_type _data[_size];
 
-	struct _mutex {
-	    volatile bool &_mutex_lock;
-	    _mutex(volatile bool& _lockVar) : _mutex_lock {_lockVar} {
-		_mutex_lock = true;
-	    };
+        const base_type* const _end_pos = _data+_size; // NOTE: _end_pos is one *past* the end of the buffer.
+        volatile base_type* _read_pos = _data;
+        volatile base_type* _write_pos = _data;
+        volatile int16_t _available = _size;
+        volatile bool _write_locked = true;
 
-	    ~_mutex() {
-		_mutex_lock = false;
-	    }
-	};
+        struct _mutex {
+            volatile bool &_mutex_lock;
+            _mutex(volatile bool& _lockVar) : _mutex_lock {_lockVar} {
+                _mutex_lock = true;
+            };
 
-	constexpr int16_t size() { return _size; };
+            ~_mutex() {
+                _mutex_lock = false;
+            }
+        };
 
-	// Default constructors will work fine.
+        constexpr int16_t size() { return _size; };
 
-	volatile base_type *nextReadPos() {
-	    volatile base_type *ret = _read_pos+1;
-	    if (ret == _end_pos) {
-		ret = _data;
-	    }
-	    return ret;
-	};
+        // Default constructors will work fine.
 
-	volatile base_type *nextWritePos() {
-	    volatile base_type *ret = _write_pos+1;
-	    if (ret == _end_pos) {
-		ret = _data;
-	    }
-	    return ret;
-	};
+        volatile base_type *nextReadPos() {
+            volatile base_type *ret = _read_pos+1;
+            if (ret == _end_pos) {
+                ret = _data;
+            }
+            return ret;
+        };
 
-	bool isEmpty() { return _available == _size; }
-	bool isFull() { return _available == 0; }
-	bool isLocked() { return _write_locked; }
-//	bool isEmpty() { return _read_pos == _write_pos; }
-//	bool isFull() { return nextReadPos() == _write_pos; }
+        volatile base_type *nextWritePos() {
+            volatile base_type *ret = _write_pos+1;
+            if (ret == _end_pos) {
+                ret = _data;
+            }
+            return ret;
+        };
 
-	int16_t peek() {
-	    if (isEmpty())
-		return -1;
-	    int16_t ret = *_read_pos;
-	    return ret;
-	};
+        bool isEmpty() { return _available == _size; }
+        bool isFull() { return _available == 0; }
+        bool isLocked() { return _write_locked; }
+        //	bool isEmpty() { return _read_pos == _write_pos; }
+        //	bool isFull() { return nextReadPos() == _write_pos; }
 
-	void pop() {
-	    if (isEmpty())
-		return; // Ignore pop on an empty buffer
+        int16_t peek() {
+            if (isEmpty())
+                return -1;
+            int16_t ret = *_read_pos;
+            return ret;
+        };
 
-	    _read_pos = nextReadPos();
-	    _available++;
-	    return;
-	};
+        void pop() {
+            if (isEmpty())
+                return; // Ignore pop on an empty buffer
 
-	int16_t read() {
-	    if (isEmpty() || isLocked())
-		return -1;
+            _read_pos = nextReadPos();
+            _available++;
+            return;
+        };
 
-	    int16_t ret = *_read_pos;
-	    _read_pos = nextReadPos();
+        int16_t read() {
+            if (isEmpty() || isLocked())
+                return -1;
 
-	    _available++;
-	    return ret;
-	};
+            int16_t ret = *_read_pos;
+            _read_pos = nextReadPos();
 
-	int16_t write(const base_type newValue) {
-	    if (isFull())
-		return -1;
+            _available++;
+            return ret;
+        };
+        
+        int16_t write(const base_type newValue) {
+            if (isFull())
+                return -1;
+            
+            _mutex write_lock(_write_locked);
+            
+            // as quickly as possible we'll change the availability
+            _available--;
+            
+            *_write_pos = newValue;
+            _write_pos = nextWritePos();
+            
+            return 1;
+        };
+        
+        int16_t available() {
+            return _available;
+            //	    if (_read_pos <= _write_pos) {
+            //		return _write_pos - _read_pos;
+            //	    } else {
+            //		return (_write_pos - _data) + (_end_pos - _read_pos);
+            //	    }
+        };
+    };
 
-	    _mutex write_lock(_write_locked);
+    // Implement a simple circular buffer, with a compile-time size, and can only be written to by DMA
+    // owner_type is a *pointer* type thet implements const base_type* getRXTransferPosition()
+    template <uint16_t _size, typename owner_type, typename base_type = char, int16_t low_water_mark = 32>
+    struct RXBuffer {
+        owner_type _owner;
 
-	    // as quickly as possible we'll change the availability
-	    _available--;
+        // Internal properties!
+        base_type _data[_size];
 
-	    *_write_pos = newValue;
-	    _write_pos = nextWritePos();
+        const base_type* const _end_pos = _data+_size; // NOTE: _end_pos is one *past* the end of the buffer.
+        base_type* _read_pos = _data;
 
-	    return 1;
-	};
+        uint16_t _transfer_requested = 0; // keep track of how much we have requested. Non-zero means a request is active.
 
-	int16_t available() {
-	    return _available;
-//	    if (_read_pos <= _write_pos) {
-//		return _write_pos - _read_pos;
-//	    } else {
-//		return (_write_pos - _data) + (_end_pos - _read_pos);
-//	    }
-	};
+        constexpr int16_t size() { return _size; };
+
+        RXBuffer(owner_type owner) : _owner(owner) {
+            _owner->setRXTransferDoneCallback([&]() { // use a closure
+                _transfer_requested = 0;
+                _restartTransfer();
+            });
+        };
+
+        base_type *nextReadPos() {
+            base_type *ret = _read_pos+1;
+            if (ret == _end_pos) {
+                ret = _data;
+            }
+            return ret;
+        };
+
+        base_type* _get_write_pos() {
+            base_type* pos = _owner->getRXTransferPosition();
+            if (pos == nullptr) {
+                return _read_pos; // we haven't initialized yet, return "empty"
+            }
+            return pos;
+        }
+
+        bool isLocked() { return false; } // cannot be locked
+        bool isEmpty() { return _read_pos == _get_write_pos(); }
+        bool isFull() { return nextReadPos() == _get_write_pos(); }
+        void flush() {
+            // We can't stop the machinery, but we can "trow away" what we have read so far.
+            _read_pos = _get_write_pos();
+        }
+
+        int16_t peek() {
+            if (isEmpty())
+                return -1;
+
+            int16_t ret = *_read_pos;
+            return ret;
+        };
+
+        void pop() {
+            if (isEmpty())
+                return; // Ignore pop on an empty buffer
+
+            _read_pos = nextReadPos();
+            return;
+        };
+
+        void _restartTransfer() {
+            if (_transfer_requested == 0) {
+                // We can only request contiguous chunks. Let's see what the next one is.
+                base_type *_write_pos = _get_write_pos();
+                int16_t transfer_size = 0;
+
+                // If we're not below low water mark, don't request more
+                if (_available_given(_write_pos) < low_water_mark) {
+                    return;
+                }
+
+                // Possible cases:
+                // [1] _read_pos <= _write_pos && _write_pos < _end_pos
+                //     IOW: We read to some position in the middle, and read is between start and write.
+                //          So, we can transfer from write to the end of the buffer.
+                // [2] _read_pos <= _write_pos && _write_pos == _end_pos
+                //     IOW: We read to the end of the buffer.
+                //          So, we transfer from the start of the buffer up to the read position.
+                // [3] _read_pos > _write_pos
+                //     IOW: We read to some position in the middle, and write is before it (so the data is between read->end, then start->write).
+                //          So, we transfer from write to the read position.
+
+                // Case [3] (tested first, since tests [1] and [2] simplify.)
+                if (_read_pos > _write_pos) {
+                    transfer_size = _read_pos - _write_pos;
+
+                // Case [2]
+                } else if (_write_pos == _end_pos) {
+                    _write_pos = _data;
+                    transfer_size = _read_pos - _write_pos;
+
+                // Case [1]
+                } else {
+                    transfer_size = _end_pos - _write_pos;
+                }
+
+                _transfer_requested = transfer_size;
+                if (!_owner->startRXTransfer(_write_pos, transfer_size)) {
+                    _transfer_requested = 0;
+                }
+            }
+        };
+
+        int16_t read() {
+            if (isEmpty()) {
+                _restartTransfer();
+                return -1;
+            }
+
+            int16_t ret = *_read_pos;
+            _read_pos = nextReadPos();
+
+            return ret;
+        };
+
+        int16_t _available_given(const base_type *_write_pos) {
+            if (_read_pos == _write_pos) {
+                return _size;
+            } else if (_read_pos < _write_pos) {
+                return _size  - (_write_pos - _read_pos);
+            } else {
+                return (_write_pos - _data) + (_end_pos - _read_pos);
+            }
+        };
+
+
+        int16_t available() {
+            const base_type *_write_pos = _get_write_pos();
+            return _available_given(_write_pos);
+        };
     };
 } // namespace Motate
 

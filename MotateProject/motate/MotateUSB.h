@@ -170,8 +170,12 @@ namespace Motate {
             return _mixins_type::handleNonstandardRequestInMixin(setup);
         };
 
-        static bool handleDataAvailable(const uint8_t &endpointNum) {
-            return false;
+        static bool handleDataAvailable(const uint8_t &endpointNum, const size_t &length) {
+            return _mixins_type::handleDataAvailableInMixin(endpointNum, length);
+        };
+
+        static bool handleTransferDone(const uint8_t &endpointNum) {
+            return _mixins_type::handleTransferDoneInMixin(endpointNum);
         };
 
         static const EndpointBufferSettings_t getEndpointConfig(const uint8_t endpoint, const bool otherSpeed) {
@@ -293,6 +297,12 @@ namespace Motate {
         static bool handleNonstandardRequestInMixin(Setup_t &setup) {
             return first_mixin::handleNonstandardRequestInMixin(setup) || other_mixins::handleNonstandardRequestInMixin(setup);
         };
+        static bool handleTransferDoneInMixin(const uint8_t &endpointNum) {
+            return first_mixin::handleTransferDoneInMixin(endpointNum);
+        }
+        static bool handleDataAvailableInMixin(const uint8_t &endpointNum, const size_t &length) {
+            return first_mixin::handleDataAvailableInMixin(endpointNum, length);
+        }
         static bool sendSpecialDescriptorOrConfig(Setup_t &setup) {
             return first_mixin::sendSpecialDescriptorOrConfig(setup) || other_mixins::sendSpecialDescriptorOrConfig(setup);
         };
@@ -340,6 +350,12 @@ namespace Motate {
         static bool handleNonstandardRequestInMixin(Setup_t &setup) {
             return first_mixin::handleNonstandardRequestInMixin(setup);
         };
+        static bool handleTransferDoneInMixin(const uint8_t &endpointNum) {
+            return first_mixin::handleTransferDoneInMixin(endpointNum);
+        }
+        static bool handleDataAvailableInMixin(const uint8_t &endpointNum, const size_t &length) {
+            return first_mixin::handleDataAvailableInMixin(endpointNum, length);
+        }
         static bool sendSpecialDescriptorOrConfig(Setup_t &setup) {
             return first_mixin::sendSpecialDescriptorOrConfig(setup);
         };
@@ -371,6 +387,12 @@ namespace Motate {
         static bool handleNonstandardRequestInMixin(Setup_t &setup) {
             return other_mixins::handleNonstandardRequestInMixin(setup);
         };
+        static bool handleTransferDoneInMixin(const uint8_t &endpointNum) {
+            return other_mixins::handleTransferDoneInMixin(endpointNum);
+        }
+        static bool handleDataAvailableInMixin(const uint8_t &endpointNum, const size_t &length) {
+            return other_mixins::handleDataAvailableInMixin(endpointNum, length);
+        }
         static bool sendSpecialDescriptorOrConfig(Setup_t &setup) {
             return other_mixins::sendSpecialDescriptorOrConfig(setup);
         };

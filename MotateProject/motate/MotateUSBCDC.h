@@ -253,7 +253,9 @@ namespace Motate {
         const uint8_t write_endpoint;
         const uint8_t interface_number;
         std::function<void(bool)> connection_state_changed_callback;
-        std::function<void(void)> data_available_callback;
+        std::function<void(const size_t &length)> data_available_callback;
+        std::function<void(void)> transfer_rx_done_callback;
+        std::function<void(void)> transfer_tx_done_callback;
 
         struct _line_info_t
         {
@@ -335,7 +337,36 @@ namespace Motate {
  
             return total_read;
         };
- 
+
+        USB_DMA_Descriptor _rx_dma_descriptor;
+        bool startRXTransfer(char *buffer, const uint16_t length) {
+            _rx_dma_descriptor.setBuffer(buffer, length);
+            return usb.transfer(read_endpoint, _rx_dma_descriptor);
+        };
+
+        char* getRXTransferPosition() {
+            return usb.getTransferPositon(read_endpoint);
+        };
+
+        void setRXTransferDoneCallback(std::function<void()> &&callback) {
+            transfer_rx_done_callback = std::move(callback);
+        }
+
+
+        USB_DMA_Descriptor _tx_dma_descriptor;
+        bool startTXTransfer(char *buffer, const uint16_t length) {
+            _rx_dma_descriptor.setBuffer(buffer, length);
+            return usb.transfer(write_endpoint, buffer, length);
+        };
+
+        char* getTXTransferPosition() {
+            return usb.getTransferPositon(write_endpoint);
+        };
+
+        void setTXTransferDoneCallback(std::function<void()> &&callback) {
+            transfer_tx_done_callback = std::move(callback);
+        }
+
         // This write blocks (loops until it can write all of the data) and auto-flushes.
         int32_t write(const char *data, const uint16_t length) {
             int16_t total_written = 0;
@@ -412,15 +443,30 @@ namespace Motate {
                 connection_state_changed_callback(_line_state & kCDCControlState_DTR);
         }
 
-        void setDataAvailableCallback(std::function<void(void)> &&callback) {
+        void setDataAvailableCallback(std::function<void(const size_t &length)> &&callback) {
+            usb.enableRXInterrupt(read_endpoint);
             data_available_callback = std::move(callback);
         }
 
         // This is to be called from USBDeviceHardware when new data is available.
         // It returns if the request was handled or not.
-        bool handleDataAvailable(const uint8_t &endpointNum) {
+        bool handleDataAvailable(const uint8_t &endpointNum, const size_t &length) {
             if (data_available_callback && (endpointNum == read_endpoint)) {
-                data_available_callback();
+                data_available_callback(length);
+                return true;
+            }
+            return false;
+        }
+
+        // This is to be called from USBDeviceHardware when a transfer is done.
+        // It returns if the request was handled or not.
+        bool handleTransferDone(const uint8_t &endpointNum) {
+            if (transfer_rx_done_callback && (endpointNum == read_endpoint)) {
+                transfer_rx_done_callback();
+                return true;
+            }
+            if (transfer_rx_done_callback && (endpointNum == write_endpoint)) {
+                transfer_tx_done_callback();
                 return true;
             }
             return false;
@@ -543,6 +589,12 @@ namespace Motate {
         static bool handleNonstandardRequestInMixin(Setup_t &setup) {
             return usb_parent_type::_singleton->this_type::Serial.handleNonstandardRequest(setup);
         };
+        static bool handleTransferDoneInMixin(const uint8_t &endpointNum) {
+            return usb_parent_type::_singleton->this_type::Serial.handleTransferDone(endpointNum);
+        }
+        static bool handleDataAvailableInMixin(const uint8_t &endpointNum, const size_t &length) {
+            return usb_parent_type::_singleton->this_type::Serial.handleDataAvailable(endpointNum, length);
+        }
         static uint16_t getEndpointSizeFromMixin(const uint8_t endpoint, const USBDeviceSpeed_t deviceSpeed, const bool otherSpeed) {
             return usb_parent_type::_singleton->this_type::Serial.getEndpointSize(endpoint, deviceSpeed, otherSpeed, /*limitedSize*/ false);
         };

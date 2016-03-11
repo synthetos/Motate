@@ -37,6 +37,7 @@
 #include "MotateUniqueID.h"
 
 #include "sam.h"
+#include <string.h> // for memset
 
 namespace Motate {
 
@@ -111,12 +112,14 @@ namespace Motate {
     /*** PROXY ***/
 
     struct USBProxy_t {
-        std::function<const bool (Setup_t &setup)> sendDescriptorOrConfig;
-        std::function<const bool (Setup_t &setup)> handleNonstandardRequest;
-        std::function<const uint8_t (uint8_t &firstEnpointNum)> getEndpointCount;
-        std::function<const uint16_t (const uint8_t &endpointNum, const bool otherSpeed)> getEndpointSize;
-        std::function<const EndpointBufferSettings_t (const uint8_t endpoint, const bool otherSpeed)> getEndpointConfig;
-        std::function<const bool (const uint8_t &endpointNum)> handleDataAvailable;
+        bool (*sendDescriptorOrConfig)(Setup_t &setup);
+        bool (*handleNonstandardRequest)(Setup_t &setup);
+        const uint8_t (*getEndpointCount)(uint8_t &firstEnpointNum);
+        uint16_t (*getEndpointSize)(const uint8_t &endpointNum, const bool otherSpeed);
+        const EndpointBufferSettings_t (*getEndpointConfig)(const uint8_t endpoint, const bool otherSpeed);
+        //std::function<const EndpointBufferSettings_t (const uint8_t endpoint, const bool otherSpeed)> getEndpointConfig;
+        bool (*handleDataAvailable)(const uint8_t &endpointNum, const size_t &length);
+        bool (*handleTransferDone)(const uint8_t &endpointNum);
     };
     extern USBProxy_t USBProxy;
 
@@ -171,9 +174,52 @@ const uint16_t *Motate::getUSBSerialNumberString(int16_t &length) { \
 
     /*** USBDeviceHardware ***/
 
+    struct alignas(8) USB_DMA_Descriptor {
+        enum _commands {  // This enum declaration takes up no space, but is in here for name scoping.
+            stop_now        = 0,  // These match those of the SAM3X8n datasheet, but downcased.
+            run_and_stop    = 1,
+            load_next_desc  = 2,
+            run_and_link    = 3
+        };
+
+        USB_DMA_Descriptor *nextDescriptor;    // The address of the next Descriptor
+        char *bufferAddress;                    // The address of the buffer to read/write
+        struct {                                // controlData is a bit field with the settings of the descriptor
+            // See SAM3X8n datasheet for defintions.
+            // Names used there are in the comment.
+            _commands command : 2;              // Unnamed but described in "DMA Channel Control Command Summary" chart
+
+            bool end_transfer_enable : 1;                   // END_TR_EN
+            bool end_buffer_enable : 1;                     // END_B_EN
+            bool end_transfer_interrupt_enable : 1;         // END_TR_IT
+            bool end_buffer_interrupt_enable : 1;           // END_BUFFIT
+            bool descriptor_loaded_interrupt_enable : 1;    // DESC_LD_IT
+            bool bust_lock_enable : 1;                      // BURST_LCK
+
+            uint8_t _unused_1 : 8;
+
+            uint16_t buffer_length : 16;                    // BUFF_LENGTH
+        } controlData;
+
+
+        // FUNCTIONS -- these take no space, and don't have a vtabe since there's nothing 'virtual'.
+
+
+        void setBuffer(char* data, uint16_t len) {
+            bufferAddress = data;
+            controlData.buffer_length = len;
+        }
+
+        void setNextDescriptor(USB_DMA_Descriptor *next) {
+            nextDescriptor = next;
+        }
+    };
+
     extern int32_t _getEndpointBufferCount(const uint8_t endpoint);
     extern int16_t _readFromControlEndpoint(const uint8_t endpoint, char* data, int16_t len, bool continuation);
     extern int16_t _readFromEndpoint(const uint8_t endpoint, char* data, int16_t len);
+    extern char *_getTransferPositon(const uint8_t endpoint);
+    extern void _transferEndpointData(const uint8_t endpoint, USB_DMA_Descriptor& desc);
     extern int16_t _readByteFromEndpoint(const uint8_t endpoint);
     extern int16_t _sendToEndpoint(const uint8_t endpoint, const char* data, int16_t length);
     extern int16_t _sendToControlEndpoint(const uint8_t endpoint, const char* data, int16_t length, bool continuation);
@@ -184,6 +230,8 @@ const uint16_t *Motate::getUSBSerialNumberString(int16_t &length) { \
     extern void _freezeUSBClock();
     extern void _flushEndpoint(uint8_t endpoint);
     extern void _flushReadEndpoint(uint8_t endpoint);
+    extern void _enableReceiveInterrupt(const uint8_t endpoint);
+    extern void _disableReceiveInterrupt(const uint8_t endpoint);
 
     extern uint32_t _inited;
     extern uint32_t _configuration;
@@ -208,6 +256,10 @@ const uint16_t *Motate::getUSBSerialNumberString(int16_t &length) { \
             {
                 _resetEndpointBuffer(endpoint);
             }
+
+            // Zero out the USB DMA registers
+            memset(UOTGHS->UOTGHS_DEVDMA, 0, (sizeof(decltype(UOTGHS->UOTGHS_DEVDMA[0])) * 6));
+
 
             // Enables the USB Clock
             //			if (ID_UOTGHS < 32) {
@@ -327,6 +379,7 @@ const uint16_t *Motate::getUSBSerialNumberString(int16_t &length) { \
             USBProxy.getEndpointCount         = parent::getEndpointCount;
             USBProxy.getEndpointSize          = parent::getEndpointSize;
             USBProxy.handleDataAvailable      = parent::handleDataAvailable;
+            USBProxy.handleTransferDone       = parent::handleTransferDone;
 
             USBDeviceHardware::_init();
             _inited = 1UL;
@@ -358,7 +411,6 @@ const uint16_t *Motate::getUSBSerialNumberString(int16_t &length) { \
             return _readByteFromEndpoint(endpoint);
         };
 
-        /* Data is const. The pointer to data is not. */
         static int16_t read(const uint8_t endpoint, char* buffer, int16_t length) {
             if (!_configuration || length < 0)
                 return -1;
@@ -366,6 +418,18 @@ const uint16_t *Motate::getUSBSerialNumberString(int16_t &length) { \
             //			LockEP lock(ep);
             return _readFromEndpoint(endpoint, buffer, length);
         };
+
+        static bool transfer(const uint8_t endpoint, USB_DMA_Descriptor& desc) {
+            if (!_configuration)
+                return false;
+
+            _transferEndpointData(endpoint, desc);
+            return true;
+        };
+
+        static char * getTransferPositon(const uint8_t endpoint) {
+            return _getTransferPositon(endpoint);
+        }
 
         /* Data is const. The pointer to data is not. */
         static int16_t write(const uint8_t endpoint, const char* buffer, int16_t length) {
@@ -458,7 +522,15 @@ const uint16_t *Motate::getUSBSerialNumberString(int16_t &length) { \
                 continuation = true;
             }
         };
-        
+
+        void enableRXInterrupt(const uint8_t endpoint) {
+            _enableReceiveInterrupt(endpoint);
+        };
+
+        void disableRXInterrupt(const uint8_t endpoint) {
+            _disableReceiveInterrupt(endpoint);
+        };
+
         // Request the speed that the device is communicating at. It is unclear at what point this becomes valid,
         // but it's assumed that this would be decided *before* he configuration and descriptors are sent, and
         // the endpoints (other than 0) are configured.
