@@ -16,9 +16,6 @@
 		D457117C17053EFA00EA19A8 /* Makefile in Sources */ = {isa = PBXBuildFile; fileRef = D457117B17053EFA00EA19A8 /* Makefile */; };
 		D46B988D1B6AFE810088801D /* adc_demo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D46B985C1B6AFE810088801D /* adc_demo.cpp */; };
 		D46B98AB1B6AFE810088801D /* Makefile in Sources */ = {isa = PBXBuildFile; fileRef = D46B988B1B6AFE810088801D /* Makefile */; };
-		D46B98B21B6D42CC0088801D /* MotateJSON.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D46B98B01B6D42CC0088801D /* MotateJSON.cpp */; };
-		D46B98B31B6D42CC0088801D /* MotateJSON.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D46B98B01B6D42CC0088801D /* MotateJSON.cpp */; };
-		D46B98B41B6D42CC0088801D /* MotateJSON.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D46B98B01B6D42CC0088801D /* MotateJSON.cpp */; };
 		D47E9A951ACC532300476AF2 /* XMegaPins.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D47E9A941ACC532300476AF2 /* XMegaPins.cpp */; };
 		D48992C61965B460004F73A6 /* Makefile in Sources */ = {isa = PBXBuildFile; fileRef = D48992C41965B460004F73A6 /* Makefile */; };
 		D48992C71965B460004F73A6 /* Makefile in Sources */ = {isa = PBXBuildFile; fileRef = D48992C41965B460004F73A6 /* Makefile */; };
@@ -1362,8 +1359,6 @@
 		D46B98571B6AFE3F0088801D /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
 		D46B985C1B6AFE810088801D /* adc_demo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = adc_demo.cpp; sourceTree = "<group>"; };
 		D46B988B1B6AFE810088801D /* Makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
-		D46B98B01B6D42CC0088801D /* MotateJSON.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = MotateJSON.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
-		D46B98B11B6D42CC0088801D /* MotateJSON.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = MotateJSON.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		D47E9A921ACB2CFE00476AF2 /* xmega_stdcpp_stubs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = xmega_stdcpp_stubs.h; sourceTree = "<group>"; };
 		D47E9A941ACC532300476AF2 /* XMegaPins.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = XMegaPins.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		D48992C01965B118004F73A6 /* MotateBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MotateBuffer.h; path = motate/MotateBuffer.h; sourceTree = SOURCE_ROOT; };
@@ -4633,8 +4628,6 @@
 				D4E90E271ABB54D40042A16C /* Atmel_XMega */,
 				D48992C01965B118004F73A6 /* MotateBuffer.h */,
 				D4C78F63195201A900A1BE28 /* MotatePins.h */,
-				D46B98B01B6D42CC0088801D /* MotateJSON.cpp */,
-				D46B98B11B6D42CC0088801D /* MotateJSON.h */,
 				D449BC59197AC3E3000C0C3C /* MotateSerial.h */,
 				D49367D31B8638F0000BB759 /* MotateServiceCall.h */,
 				D4C78F64195201A900A1BE28 /* MotateSPI.h */,
@@ -10616,7 +10609,6 @@
 				D4C79E3D1957C0AE00A1BE28 /* stm32f4xx_hal_flash.c in Sources */,
 				D4C79D7E1957C0AE00A1BE28 /* stm32f4xx_hal_eth.c in Sources */,
 				D4C79E361957C0AE00A1BE28 /* stm32f4xx_hal_dac.c in Sources */,
-				D46B98B21B6D42CC0088801D /* MotateJSON.cpp in Sources */,
 				D4C79ED91957C0AE00A1BE28 /* startup_STM32F30x.s in Sources */,
 				D4C79CF21957C0AE00A1BE28 /* cmsis_nvic.c in Sources */,
 				D4C79DA81957C0AE00A1BE28 /* cmsis_nvic.c in Sources */,
@@ -11256,7 +11248,6 @@
 				D4C79FE519630FA000A1BE28 /* stm32f4xx_hal_flash.c in Sources */,
 				D4C79FE619630FA000A1BE28 /* stm32f4xx_hal_eth.c in Sources */,
 				D4C79FE719630FA000A1BE28 /* stm32f4xx_hal_dac.c in Sources */,
-				D46B98B31B6D42CC0088801D /* MotateJSON.cpp in Sources */,
 				D4C79FE819630FA000A1BE28 /* startup_STM32F30x.s in Sources */,
 				D4C79FE919630FA000A1BE28 /* cmsis_nvic.c in Sources */,
 				D4C79FEA19630FA000A1BE28 /* cmsis_nvic.c in Sources */,
@@ -11723,7 +11714,6 @@
 				D4E913421ABC5D1D0042A16C /* XMegaTimers.h in Sources */,
 				D4E913431ABC5D1D0042A16C /* XMegaUART.cpp in Sources */,
 				D4E913441ABC5D1D0042A16C /* XMegaUART.h in Sources */,
-				D46B98B41B6D42CC0088801D /* MotateJSON.cpp in Sources */,
 				D4E913451ABC5D1D0042A16C /* MotateBuffer.h in Sources */,
 				D4E913461ABC5D1D0042A16C /* MotatePins.h in Sources */,
 				D4E913471ABC5D1D0042A16C /* MotateSerial.h in Sources */,
