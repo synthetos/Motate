@@ -298,10 +298,10 @@ namespace Motate {
             return first_mixin::handleNonstandardRequestInMixin(setup) || other_mixins::handleNonstandardRequestInMixin(setup);
         };
         static bool handleTransferDoneInMixin(const uint8_t &endpointNum) {
-            return first_mixin::handleTransferDoneInMixin(endpointNum);
+            return first_mixin::handleTransferDoneInMixin(endpointNum) || other_mixins::handleTransferDoneInMixin(endpointNum);
         }
         static bool handleDataAvailableInMixin(const uint8_t &endpointNum, const size_t &length) {
-            return first_mixin::handleDataAvailableInMixin(endpointNum, length);
+            return first_mixin::handleDataAvailableInMixin(endpointNum, length) || other_mixins::handleDataAvailableInMixin(endpointNum, length);
         }
         static bool sendSpecialDescriptorOrConfig(Setup_t &setup) {
             return first_mixin::sendSpecialDescriptorOrConfig(setup) || other_mixins::sendSpecialDescriptorOrConfig(setup);

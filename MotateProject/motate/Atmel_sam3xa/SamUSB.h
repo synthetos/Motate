@@ -174,7 +174,7 @@ const uint16_t *Motate::getUSBSerialNumberString(int16_t &length) { \
 
     /*** USBDeviceHardware ***/
 
-    struct alignas(8) USB_DMA_Descriptor {
+    struct alignas(16) USB_DMA_Descriptor {
         enum _commands {  // This enum declaration takes up no space, but is in here for name scoping.
             stop_now        = 0,  // These match those of the SAM3X8n datasheet, but downcased.
             run_and_stop    = 1,

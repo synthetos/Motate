@@ -465,7 +465,7 @@ namespace Motate {
                 transfer_rx_done_callback();
                 return true;
             }
-            if (transfer_rx_done_callback && (endpointNum == write_endpoint)) {
+            if (transfer_tx_done_callback && (endpointNum == write_endpoint)) {
                 transfer_tx_done_callback();
                 return true;
             }

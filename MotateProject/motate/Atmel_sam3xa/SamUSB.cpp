@@ -227,6 +227,12 @@ namespace Motate {
         return ((UOTGHS->UOTGHS_DEVDMA[endpoint-1].UOTGHS_DEVDMASTATUS & UOTGHS_DEVDMASTATUS_BUFF_COUNT_Msk) >> UOTGHS_DEVDMASTATUS_BUFF_COUNT_Pos);
     }
 
+    // Retturn if the DMA b uffer is marked as loaded -- if not, none of the other values are valid
+    inline int32_t _getDMABufferLoaded(const uint8_t endpoint) {
+        // IMPORTANT: UOTGHS_DEVDMA[0] is endpoint 1!!
+        return (UOTGHS->UOTGHS_DEVDMA[endpoint-1].UOTGHS_DEVDMASTATUS & UOTGHS_DEVDMASTATUS_DESC_LDST);
+    }
+
 
 
     // A few inline helpers, mainly for readability
@@ -952,7 +958,8 @@ namespace Motate {
                 if (_getDMABufferCount(endpoint) == 0) {
                     _DMA_Used_By_Endpoint &= ~(1<<endpoint);
                     USBProxy.handleTransferDone(endpoint);
-                } else if (_getEndpointBufferCount(endpoint) == 0) {
+                }
+                if (!_isReadWriteAllowed(endpoint)) { // If not RWALL, then the buffer is full (TX IN) or empty (RX OUT)
                     _clearShortpacket(endpoint);
                     _clearReceiveOUT(endpoint);
                     _clearFIFOControl(endpoint);
