@@ -138,14 +138,15 @@ namespace Motate {
 
     // Implement a simple circular buffer, with a compile-time size, and can only be written to by DMA
     // owner_type is a *pointer* type thet implements const base_type* getRXTransferPosition()
-    template <uint16_t _size, typename owner_type, typename base_type = char, int16_t low_water_mark = 32>
+    template <uint16_t _size, typename owner_type, uint16_t _reserve_size_set = 0, typename base_type = char>
     struct RXBuffer {
         static_assert(((_size-1)&_size)==0, "RXBuffer size must be 2^N");
 
         owner_type _owner;
 
         // Internal properties!
-        base_type _data[_size];
+        base_type _data[_size + _reserve_size_set];
+        static const uint16_t _reserve_size = _reserve_size_set; // store _reserve_size where subclasses can get to it
 
 //        const base_type* const _end_pos = _data+_size; // NOTE: _end_pos is one *past* the end of the buffer.
 //        base_type* _read_pos = _data;
@@ -166,6 +167,17 @@ namespace Motate {
 
         uint16_t _nextReadOffset() {
             return (_read_offset + 1)&(_size-1);
+        };
+
+        bool _canBeRead(uint16_t pos) {
+            if (pos == (_last_known_write_offset & (_size-1))) {
+                _getWriteOffset();
+                if (pos == (_last_known_write_offset & (_size-1))) {
+                    _restartTransfer();
+                    return false;
+                }
+            }
+            return true;
         };
 
         uint16_t _getWriteOffset() {
@@ -230,17 +242,11 @@ namespace Motate {
         };
 
         void _restartTransfer() {
-            if (_transfer_requested == 0) {
+            if ((_transfer_requested == 0) && !isFull()) {
                 // We can only request contiguous chunks. Let's see what the next one is.
                 _getWriteOffset(); // cache the write position
 
                 int16_t transfer_size = 0;
-
-                // If we're not below low water mark, don't request more
-                if (_getAvailableCached() < low_water_mark) {
-                    return;
-                }
-
                 char *_write_pos = _data + _last_known_write_offset;
 
                 // Possible cases:
