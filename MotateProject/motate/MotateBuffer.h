@@ -138,15 +138,14 @@ namespace Motate {
 
     // Implement a simple circular buffer, with a compile-time size, and can only be written to by DMA
     // owner_type is a *pointer* type thet implements const base_type* getRXTransferPosition()
-    template <uint16_t _size, typename owner_type, uint16_t _reserve_size_set = 0, typename base_type = char>
+    template <uint16_t _size, typename owner_type, typename base_type = char>
     struct RXBuffer {
         static_assert(((_size-1)&_size)==0, "RXBuffer size must be 2^N");
 
         owner_type _owner;
 
         // Internal properties!
-        base_type _data[_size + _reserve_size_set];
-        static const uint16_t _reserve_size = _reserve_size_set; // store _reserve_size where subclasses can get to it
+        base_type _data[_size];
 
 //        const base_type* const _end_pos = _data+_size; // NOTE: _end_pos is one *past* the end of the buffer.
 //        base_type* _read_pos = _data;
@@ -170,9 +169,9 @@ namespace Motate {
         };
 
         bool _canBeRead(uint16_t pos) {
-            if (pos == (_last_known_write_offset & (_size-1))) {
+            if (pos == _last_known_write_offset) {
                 _getWriteOffset();
-                if (pos == (_last_known_write_offset & (_size-1))) {
+                if (pos == _last_known_write_offset) {
                     _restartTransfer();
                     return false;
                 }
@@ -185,7 +184,7 @@ namespace Motate {
             if (pos==nullptr) {
                 _last_known_write_offset = 0;
             } else {
-                _last_known_write_offset = (pos - _data);
+                _last_known_write_offset = (pos - _data) & (_size-1); // if it's one past the end, we want it to become zero
             }
             return _last_known_write_offset;
         }
@@ -250,27 +249,19 @@ namespace Motate {
                 char *_write_pos = _data + _last_known_write_offset;
 
                 // Possible cases:
-                // [1] _read_pos <= _write_pos && _write_pos < _end_pos
-                //     IOW: We read to some position in the middle, and read is between start and write.
-                //          So, we can transfer from write to the end of the buffer.
-                // [2] _read_pos <= _write_pos && _write_pos == _end_pos
-                //     IOW: We read to the end of the buffer.
-                //          So, we transfer from the start of the buffer up to the read position.
-                // [3] _read_pos > _write_pos
-                //     IOW: We read to some position in the middle, and write is before it (so the data is between read->end, then start->write).
-                //          So, we transfer from write to the read position.
+                // [1] _read_pos > _write_pos
+                //     IOW: We read to some position in the middle, and _write_pos is before it
+                //          The unread data is between read->end, then 0->write.
+                //          So, we transfer from _write_pos to the _read_pos position.
+                // [2] _read_pos <= _write_pos
+                //     IOW: We read to some position in the middle, and _read_pos is in the range 0 through _write_pos.
+                //          So, we can transfer from _write_pos to the end of the buffer.
 
-                // Case [3] (tested first, since tests [1] and [2] simplify.)
+                // Case [1]
                 if (_read_offset > _last_known_write_offset) {
                     transfer_size = _read_offset - _last_known_write_offset;
 
                 // Case [2]
-                } else if (_last_known_write_offset == _size) {
-                    _last_known_write_offset = 0;
-                    _write_pos = _data;
-                    transfer_size = _read_offset;
-
-                // Case [1]
                 } else {
                     transfer_size = _size - _last_known_write_offset;
                 }
