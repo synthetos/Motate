@@ -341,6 +341,9 @@ namespace Motate {
         USB_DMA_Descriptor _rx_dma_descriptor;
         bool startRXTransfer(char *buffer, const uint16_t length) {
             _rx_dma_descriptor.setBuffer(buffer, length);
+            // DON'T allow the DMA transfer to be stopped if the buffer runs out
+            // IOW, don't stop reading when a packet doesn't fill the buffer.
+            _rx_dma_descriptor.controlData.end_buffer_enable = false;
             return usb.transfer(read_endpoint, _rx_dma_descriptor);
         };
 
@@ -355,8 +358,11 @@ namespace Motate {
 
         USB_DMA_Descriptor _tx_dma_descriptor;
         bool startTXTransfer(char *buffer, const uint16_t length) {
-            _rx_dma_descriptor.setBuffer(buffer, length);
-            return usb.transfer(write_endpoint, buffer, length);
+            _tx_dma_descriptor.setBuffer(buffer, length);
+            // Allow the DMA transfer to be stopped if the buffer runs out.
+            // IOW, send a partially filled packet.
+            _tx_dma_descriptor.controlData.end_buffer_enable = true;
+            return usb.transfer(write_endpoint, _tx_dma_descriptor);
         };
 
         char* getTXTransferPosition() {

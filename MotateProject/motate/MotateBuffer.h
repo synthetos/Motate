@@ -147,9 +147,6 @@ namespace Motate {
         // Internal properties!
         base_type _data[_size];
 
-//        const base_type* const _end_pos = _data+_size; // NOTE: _end_pos is one *past* the end of the buffer.
-//        base_type* _read_pos = _data;
-
         uint16_t _read_offset;              // The offset into the buffer we of our next read
         uint16_t _last_known_write_offset;  // The offset into the buffer we of the last known write (cached)
 
@@ -192,7 +189,7 @@ namespace Motate {
 
         bool isLocked() { return false; } // this kind of buffer cannot be locked
 
-        // isEmpth and isFull are expensive, and should be avoided when not strictly necessary!
+        // We are receiving. It will only get *more full* as a transfer continues.
 
         bool isEmpty() {
             // If we weren't empty last time we checked, we aren't empty now.
@@ -211,13 +208,16 @@ namespace Motate {
                 return true;
             }
 
+            // Update the cache and check again
+            _getWriteOffset();
             return _isFullCached();
         }
 
+        // It's empty if the write position would be the same as the read.
+        bool _isEmptyCached() { return _last_known_write_offset == _read_offset; }
 
-        // _isEmptyCached and _isFullCached aren't as expensive, since they only use the cached _last_known_write_offset
-        bool _isEmptyCached() { return _read_offset == _last_known_write_offset; }
-        bool _isFullCached() { return _nextReadOffset() == _last_known_write_offset; }
+        // It's full if the next write position would be the same as the read.
+        bool _isFullCached() { return ((_last_known_write_offset+1)&(_size-1)) == _read_offset; }
 
         void flush() {
             // We can't stop the machinery, but we can "trow away" what we have read so far.
@@ -303,7 +303,201 @@ namespace Motate {
             _getWriteOffset(); // cache the write position
             return _getAvailableCached();
         };
-    };
+    }; // RXBuffer
+
+
+
+    // Implement a simple circular buffer, with a compile-time size, and can only be read from by DMA
+    // owner_type is a *pointer* type thet implements const base_type* getTXTransferPosition()
+    template <uint16_t _size, typename owner_type, typename base_type = char>
+    struct TXBuffer {
+        static_assert(((_size-1)&_size)==0, "TXBuffer size must be 2^N");
+
+        owner_type _owner;
+
+        // Internal properties!
+        base_type _data[_size];
+
+        uint16_t _write_offset;             // The offset into the buffer we of our next write
+        uint16_t _last_known_read_offset;   // The offset into the buffer we of the last known read (cached)
+
+        uint16_t _transfer_requested = 0;   // keep track of how much we have requested. Non-zero means a request is active.
+
+        constexpr int16_t size() { return _size; };
+
+        TXBuffer(owner_type owner) : _owner(owner) {
+            _owner->setTXTransferDoneCallback([&]() { // use a closure
+                _transfer_requested = 0;
+                _restartTransfer();
+            });
+        };
+
+        uint16_t _nextWriteOffset() {
+            return (_write_offset + 1)&(_size-1);
+        };
+
+        bool _canBeWritten(uint16_t pos) {
+            if (pos == _last_known_read_offset) {
+                _getReadOffset();
+                if (pos == _last_known_read_offset) {
+                    _restartTransfer();
+                    return false;
+                }
+            }
+            return true;
+        };
+
+        uint16_t _getReadOffset() {
+            base_type* pos = _owner->getTXTransferPosition();
+            if (pos==nullptr) {
+                _last_known_read_offset = 0;
+            } else {
+                _last_known_read_offset = (pos - _data) & (_size-1); // if it's one past the end, we want it to become zero
+            }
+            return _last_known_read_offset;
+        }
+
+
+        bool isLocked() { return false; } // this kind of buffer cannot be locked
+
+        // We are transmitting. It will only get *more empty* as a transfer continues.
+
+        bool isEmpty() {
+            // If we were empty last time we checked, we are still empty.
+            if (_isEmptyCached()) {
+                return true;
+            }
+
+            // Update the cache and check again
+            _getReadOffset();
+            return _isEmptyCached();
+        }
+
+        bool isFull() {
+            // If we were not full last time we checked, we are still not full.
+            if (!_isFullCached()) {
+                return false;
+            }
+
+            // Update the cache and check again
+            _getReadOffset();
+            return _isFullCached();
+        }
+
+        // It's empty if the write position would be the same as the read.
+        bool _isEmptyCached() { return _write_offset == _last_known_read_offset; }
+
+        // It's full if the next write position would be the same as the read.
+        bool _isFullCached() { return _nextWriteOffset() == _last_known_read_offset; }
+
+        void flush() {
+            _restartTransfer();
+        }
+
+        void _restartTransfer() {
+            if ((_transfer_requested == 0) && !isEmpty()) {
+                // We can only request contiguous chunks. Let's see what the next one is.
+                _getReadOffset(); // cache the read position
+
+                int16_t transfer_size = 0;
+                char *_read_pos = _data + _last_known_read_offset;
+
+                // Possible cases:
+                // [0] _read_pos == _write_pos
+                //     The buffer is empty. We already eliminated that case.
+                // [1] _read_pos > _write_pos
+                //     IOW: We read to some position in the middle, and _write_pos is before it
+                //          The unread data is between read->end, then 0->write.
+                //          So, we transfer from _read_pos to the end of the buffer.
+                // [2] _read_pos < _write_pos
+                //     IOW: We read to some position in the middle, and _read_pos is in the range 0 through _write_pos.
+                //          So, we can transfer from _read_pos to _write_pos.
+
+                // Case [1]
+                if (_last_known_read_offset > _write_offset) {
+                    transfer_size = _size - _last_known_read_offset;
+
+                // Case [2]
+                } else {
+                    transfer_size = _write_offset - _last_known_read_offset;
+                }
+
+                // We set _transfer_requested BEFORE startRXTransfer, in case an interrupt fires before we exit startRXTransfer
+                //   (which should only happen if it started succesfully).
+                // startRXTransfer will return false if it couldn't start the transfer.
+                _transfer_requested = transfer_size;
+                if (!_owner->startTXTransfer(_read_pos, transfer_size)) {
+                    _transfer_requested = 0;
+                }
+            }
+        };
+
+        // BLOCKING write
+        int16_t write(const char *buffer, size_t write_size) {
+            uint16_t to_write = write_size;
+            const char *src = buffer;
+            while (to_write--) {
+                if (isFull()) {
+                    _restartTransfer();
+
+                    // Wait until something has been read out
+                    while (isFull()) {
+                        ;
+                    }
+                }
+                _data[_write_offset] = *src;
+
+                src++;
+                _write_offset = _nextWriteOffset();
+            }
+
+            _restartTransfer();
+
+            return write_size;
+        };
+
+        // non-blocking write
+        int16_t write_nb(const char *buffer, size_t write_size) {
+            if (isFull()) {
+                _restartTransfer();
+                return -1;
+            }
+
+            uint16_t written = 0;
+            uint16_t to_write = write_size;
+            const char *src = buffer;
+            while (to_write-- && !isFull()) {
+                _data[_write_offset] = *src;
+
+                src++;
+                written++;
+                _write_offset = _nextWriteOffset();
+            }
+
+            if (isFull()) {
+                _restartTransfer();
+            }
+
+            return written;
+        };
+
+
+        int16_t _getAvailableCached() {
+            if (_write_offset == _last_known_read_offset) {
+                return _size;
+            } else if (_write_offset < _last_known_read_offset) {
+                return _size  - (_last_known_read_offset - _write_offset);
+            } else {
+                return (_last_known_read_offset) + (_size - _write_offset);
+            }
+        };
+        
+        
+        int16_t available() {
+            _getReadOffset(); // cache the write position
+            return _getAvailableCached();
+        };
+    }; // TXBuffer
 } // namespace Motate
 
 #endif /* end of include guard: MOTATEBUFFER_H_ONCE */
