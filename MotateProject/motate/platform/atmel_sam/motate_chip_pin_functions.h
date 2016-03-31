@@ -100,6 +100,29 @@ namespace Motate {
     _MAKE_MOTATE_SPI_MOSI_PIN('A', 26, /* Peripheral */ A);
     _MAKE_MOTATE_SPI_SCK_PIN('A', 27, /* Peripheral */ A);
 
+    // UART Pin Assignments
+    _MAKE_MOTATE_UART_RX_PIN( 'A', 10, /* UART number: */ 0, /* Peripheral */ A);
+    _MAKE_MOTATE_UART_TX_PIN( 'A', 11, /* UART number: */ 0, /* Peripheral */ A);
+    _MAKE_MOTATE_UART_RTS_PIN('B', 25, /* UART number: */ 0, /* Peripheral */ A);
+    _MAKE_MOTATE_UART_CTS_PIN('B', 26, /* UART number: */ 0, /* Peripheral */ A);
+
+    _MAKE_MOTATE_UART_RX_PIN( 'A', 12, /* UART number: */ 1, /* Peripheral */ A);
+    _MAKE_MOTATE_UART_TX_PIN( 'A', 13, /* UART number: */ 1, /* Peripheral */ A);
+    _MAKE_MOTATE_UART_RTS_PIN('A', 14, /* UART number: */ 1, /* Peripheral */ A);
+    _MAKE_MOTATE_UART_CTS_PIN('A', 15, /* UART number: */ 1, /* Peripheral */ A);
+
+    _MAKE_MOTATE_UART_RX_PIN( 'B', 21, /* UART number: */ 2, /* Peripheral */ A);
+    _MAKE_MOTATE_UART_TX_PIN( 'B', 20, /* UART number: */ 2, /* Peripheral */ A);
+    _MAKE_MOTATE_UART_RTS_PIN('B', 22, /* UART number: */ 2, /* Peripheral */ A);
+    _MAKE_MOTATE_UART_CTS_PIN('B', 23, /* UART number: */ 2, /* Peripheral */ A);
+
+#if defined(PIOD) && defined(PIOF)
+    _MAKE_MOTATE_UART_RX_PIN( 'D',  5, /* UART number: */ 3, /* Peripheral */ B);
+    _MAKE_MOTATE_UART_TX_PIN( 'D',  4, /* UART number: */ 3, /* Peripheral */ B);
+    _MAKE_MOTATE_UART_RTS_PIN('F',  5, /* UART number: */ 3, /* Peripheral */ A);
+    _MAKE_MOTATE_UART_CTS_PIN('F',  4, /* UART number: */ 3, /* Peripheral */ A);
+#endif
+
     // ADC Pin assignments
     _MAKE_MOTATE_ADC_PIN('A',  2, /* ADC number:*/  0);
     _MAKE_MOTATE_ADC_PIN('A',  3, /* ADC number:*/  1);

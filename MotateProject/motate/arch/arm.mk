@@ -57,7 +57,7 @@ DEVICE_CFLAGS := -D__$(CHIP)__ -D__$(CHIP_SERIES)__ -D__ARM__  -mcpu=$(CPU_DEV) 
 # ---------------------------------------------------------------------------------------
 # CPP Flags
 
-DEVICE_CPPFLAGS := -D__$(CHIP)__ -D__$(CHIP_SERIES)__ -D__ARM__ -mcpu=$(CPU_DEV) -mthumb -ffunction-sections -fdata-sections -std=gnu++14 -fno-rtti -fno-exceptions -fdiagnostics-show-option
+DEVICE_CPPFLAGS := -D__$(CHIP)__ -D__$(CHIP_SERIES)__ -D__ARM__ -mcpu=$(CPU_DEV) -mthumb -ffunction-sections -fdata-sections -std=gnu++14 -fno-rtti -fno-exceptions -fstrict-volatile-bitfields -fdiagnostics-show-option
 # --param max-inline-insns-single=500 -mlong-calls
 
 # ---------------------------------------------------------------------------------------

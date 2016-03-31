@@ -741,6 +741,80 @@ namespace Motate {
         static const bool is_real = std::true_type::value;\
     };
 
+        
+    
+    template<int8_t pinNum>
+    struct UARTTxPin {
+        static const bool is_real = false;
+        static const uint8_t uartNum = -1; // use, we assigned -1 to a uint8_t
+    };
+
+    template <int8_t pinNum>
+    constexpr const bool IsUARTTxPin() { return UARTTxPin<pinNum>::is_real; };
+
+    #define _MAKE_MOTATE_UART_TX_PIN(registerChar, registerPin, uartNumVal, peripheralAorB)\
+        template<>\
+        struct UARTTxPin< ReversePinLookup<registerChar, registerPin>::number > : ReversePinLookup<registerChar, registerPin> {\
+            UARTTxPin() : ReversePinLookup<registerChar, registerPin>(kPeripheral ## peripheralAorB, kPullUp) {};\
+            static const uint8_t uartNum = uartNumVal;\
+            static const bool is_real = true;\
+        };
+
+    
+    template<int8_t pinNum>
+    struct UARTRxPin {
+        static const bool is_real = false;
+        static const uint8_t uartNum = -1; // use, we assigned -1 to a uint8_t
+    };
+
+    template <int8_t pinNum>
+    constexpr const bool IsUARTRxPin() { return UARTRxPin<pinNum>::is_real; };
+
+    #define _MAKE_MOTATE_UART_RX_PIN(registerChar, registerPin, uartNumVal, peripheralAorB)\
+        template<>\
+        struct UARTRxPin< ReversePinLookup<registerChar, registerPin>::number > : ReversePinLookup<registerChar, registerPin> {\
+            UARTRxPin() : ReversePinLookup<registerChar, registerPin>(kPeripheral ## peripheralAorB) {};\
+            static const uint8_t uartNum = uartNumVal;\
+            static const bool is_real = true;\
+        };
+
+        
+    
+    template<int8_t pinNum>
+    struct UARTRTSPin {
+        static const bool is_real = false;
+        static const uint8_t uartNum = -1; // use, we assigned -1 to a uint8_t
+    };
+
+    template <int8_t pinNum>
+    constexpr const bool IsUARTRTSPin() { return UARTRTSPin<pinNum>::is_real; };
+
+    #define _MAKE_MOTATE_UART_RTS_PIN(registerChar, registerPin, uartNumVal, peripheralAorB)\
+        template<>\
+        struct UARTRTSPin< ReversePinLookup<registerChar, registerPin>::number > : ReversePinLookup<registerChar, registerPin> {\
+            UARTRTSPin() : ReversePinLookup<registerChar, registerPin>(kPeripheral ## peripheralAorB) {};\
+            static const uint8_t uartNum = uartNumVal;\
+            static const bool is_real = true;\
+        };
+
+    
+    template<int8_t pinNum>
+    struct UARTCTSPin {
+        static const bool is_real = false;
+        static const uint8_t uartNum = -1; // use, we assigned -1 to a uint8_t
+    };
+
+    template <int8_t pinNum>
+    constexpr const bool IsUARTCTSPin() { return UARTCTSPin<pinNum>::is_real; };
+
+    #define _MAKE_MOTATE_UART_CTS_PIN(registerChar, registerPin, uartNumVal, peripheralAorB)\
+        template<>\
+        struct UARTCTSPin< ReversePinLookup<registerChar, registerPin>::number > : ReversePinLookup<registerChar, registerPin> {\
+            UARTCTSPin() : ReversePinLookup<registerChar, registerPin>(kPeripheral ## peripheralAorB) {};\
+            static const uint8_t uartNum = uartNumVal;\
+            static const bool is_real = true;\
+        };
+
 
 
 #define _MAKE_MOTATE_PORT32(registerLetter, registerChar)\

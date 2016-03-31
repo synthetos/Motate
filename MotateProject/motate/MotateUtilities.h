@@ -301,6 +301,91 @@ namespace Motate {
             : (c_atof_int_(p_, 0));
         }
 
+
+        // "BitField" type to clarify bit manipulation, since C++ bitfields are untrustworthy
+        // Inspiration: http://blog.codef00.com/2014/12/06/portable-bitfields-using-c11/
+        //
+        // This is to be used by being passed the orginal value (a reference will be used):
+        //   enum class SomeEnum { A = 0x00, B = 0x01, C= 0x02 };
+        //   struct register_t {
+        //     volatile uint32_t raw; // the raw storage value
+        //
+        //     // parameters are:
+        //     //  external type, bit position, bit count, union type
+        //     BitField<bool    ,            0,         1, uint32_t> flag_a {raw};      // bit 0
+        //     BitField<SomeEnum,            1,         3, uint32_t> enum_a {raw};  // bits 1-3
+        //     BitField<bool    ,            4,         1, uint32_t> flag_b {raw};      // bit 4
+        //   };
+        //
+        // Usage of that type:
+        //   register_t some_reg;
+        //   some_reg.flag_a = true;
+        //   some_reg.flag_b = false;
+        //   some_reg.enum_a = SomeEnum::A;
+        //   // or manipulate it directly:
+        //   some_reg.raw |= 0x00000010; // same as some_reg.flag_b = true;
+        //
+        // They can even be statically initialized:
+        //   register_t another_reg = { false, SomeEnum::B, true };
+
+
+        template<typename _base_type, uint8_t _offset, uint8_t _size, typename _underlying_base_type>
+        struct BitField {
+            _underlying_base_type &_value;
+
+            constexpr BitField(_underlying_base_type &value) : _value{value} {;};
+
+            static constexpr _underlying_base_type _mask = ((1 << _size) - 1);
+            static constexpr _underlying_base_type _offset_inv_mask = ~(((1 << _size) - 1) << _offset);
+
+            BitField& operator=(const _base_type new_value) {
+                _underlying_base_type _new_value = static_cast<_underlying_base_type>(new_value);
+                _value = (_value & _offset_inv_mask) | ((_new_value & _mask)<<_offset);
+                return *this;
+            };
+
+            constexpr operator _base_type() const  { return (_value >> _offset) & _mask; };
+        };
+
+        // "BitField8" -- same as BitType but the union type is preselected to be uint8_t
+        template<typename _base_type, uint8_t _offset, uint8_t _size=1, typename _underlying_base_type>
+        BitField<_base_type, _offset, _size, _underlying_base_type>
+        MakeBitField (_underlying_base_type &value) { return {value}; };
+
+
+//        // enum specialization
+//        template<typename _base_type, uint8_t _offset, uint8_t _size>
+//        struct BitField <_base_type, _offset, _size, typename std::enable_if<std::is_enum<_base_type>::value>::type> {
+//            typedef typename std::underlying_type<_base_type>::type _underlying_base_type;
+//            _underlying_base_type _value;
+//
+//            static constexpr _underlying_base_type _mask = ((1 << _size) - 1);
+//            static constexpr _underlying_base_type _offset_inv_mask = ~(((1 << _size) - 1) << _offset);
+//
+//            BitField& operator=(const _base_type new_value) {
+//                _underlying_base_type _new_value = static_cast<_underlying_base_type>(new_value);
+//                _value = (_value & _offset_inv_mask) | ((_new_value & _mask)<<_offset);
+//                return *this;
+//            };
+//
+//            constexpr operator _base_type() const  { return (_value >> _offset) & _mask; };
+//        };
+//
+//        // bool specialization
+//        template<uint8_t _offset>
+//        struct BitField<bool, _offset, 1> {
+//            _underlying_base_type _value;
+//
+//            static const bool _offset_inv_mask = ~(1 << _offset);
+//
+//            BitField& operator=(const bool new_value) {
+//                _value = (_value & _offset_inv_mask) | ((new_value & 1)<<_offset);
+//                return *this;
+//            };
+//
+//            constexpr operator bool() const  { return (_value >> _offset) & 1; };
+//        };
+
     } // Namespace Private
 
     // Non-constexpr version of strlen

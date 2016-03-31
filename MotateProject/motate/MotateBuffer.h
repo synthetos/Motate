@@ -31,7 +31,7 @@
 #ifndef MOTATEBUFFER_H_ONCE
 #define MOTATEBUFFER_H_ONCE
 
-#include <inttypes.h>
+#include <cstring> // for size_t
 //#include <utility> // for std::move
 
 namespace Motate {

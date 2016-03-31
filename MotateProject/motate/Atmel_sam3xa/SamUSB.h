@@ -39,8 +39,8 @@
 #include "sam.h"
 #include <string.h> // for memset
 
-namespace Motate {
 
+namespace Motate {
     /*** ENDPOINT CONFIGURATION ***/
 
     typedef uint32_t EndpointBufferSettings_t;
