@@ -112,594 +112,53 @@ namespace Motate {
     static const char kUARTXOn  = 0x11;
     static const char kUARTXOff = 0x13;
 
-    // This is an internal representation of the peripheral.
-    // This is *not* to be used externally.
-
-    using Motate::Private::BitField;
-
-    // This is a mirror of the Atmel Usart struct, with bitfields for simpler access
-    typedef struct {
-
-        struct US_CR_t {                     /**< \brief (Usart Offset: 0x0000) Control Register */
-            __O  uint32_t raw;
-
-            BitField<bool,  2, 1, decltype(raw)> RSTRX;      // bit  2 - Reset Receiver
-            BitField<bool,  3, 1, decltype(raw)> RSTTX;      // bit  3 - Reset Transmitter
-
-            BitField<bool,  4, 1, decltype(raw)> RXEN;       // bit  4 - Receiver Enable
-            BitField<bool,  5, 1, decltype(raw)> RXDIS;      // bit  5 - Receiver Disable
-            BitField<bool,  6, 1, decltype(raw)> TXEN;       // bit  6 - Transmitter Enable
-            BitField<bool,  7, 1, decltype(raw)> TXDIS;      // bit  7 - Transmitter Disable
-
-            BitField<bool,  8, 1, decltype(raw)> RSTSTA;     // bit  8 - Reset Status Bits
-            BitField<bool,  9, 1, decltype(raw)> STTBRK;     // bit  9 - Start Break
-            BitField<bool, 10, 1, decltype(raw)> STPBRK;    // bit 10 - Stop Break
-            BitField<bool, 11, 1, decltype(raw)> STTTO;     // bit 11 - Start Time-out
-
-            BitField<bool, 12, 1, decltype(raw)> SENDA;     // bit 12 - Send Address
-            BitField<bool, 13, 1, decltype(raw)> RSTIT;     // bit 13 - Reset Iterations
-            BitField<bool, 14, 1, decltype(raw)> RSTNACK;   // bit 14 - Reset Non Acknowledge
-            BitField<bool, 15, 1, decltype(raw)> RETTO;     // bit 15 - Rearm Time-out
-
-            BitField<bool, 18, 1, decltype(raw)> RTSEN;     // bit 18 - Request to Send Enable
-            BitField<bool, 19, 1, decltype(raw)> RTSDIS;    // bit 19 - Request to Send Disable
-            BitField<bool, 20, 1, decltype(raw)> LINABT;    // bit 20 - Abort LIN Transmission
-            BitField<bool, 21, 1, decltype(raw)> LINWKUP;   // bit 21 - Send LIN Wakeup Signal
-
-            US_CR_t() :
-                RSTRX{raw},
-                RSTTX{raw},
-
-                RXEN{raw},
-                RXDIS{raw},
-                TXEN{raw},
-                TXDIS{raw},
-
-                RSTSTA{raw},
-                STTBRK{raw},
-                STPBRK{raw},
-                STTTO{raw},
-
-                SENDA{raw},
-                RSTIT{raw},
-                RSTNACK{raw},
-                RETTO{raw},
-
-                RTSEN{raw},
-                RTSDIS{raw},
-                LINABT{raw},
-                LINWKUP{raw}
-            {};
-        } US_CR;
-
-
-        enum class USART_MODE_t : uint32_t {
-            USART_NORMAL    = 0x0,
-            RS485           = 0x1,
-            HW_HANDSHAKING  = 0x2,
-            IS07816_T_0     = 0x4,
-            IS07816_T_1     = 0x5,
-            IRDA            = 0x8,
-            LIN_MASTER      = 0xA,
-            LIN_SLAVE       = 0xB,
-            SPI_MASTER      = 0xE,
-            SPI_SLAVE       = 0xF
-        };
-
-        enum USCLKS_t : uint32_t {
-            MCK = 0x0,
-            DIV = 0x1,
-            SCK = 0x3
-        };
-
-        enum CHRL_t : uint32_t  {
-            CH_5_BIT = 0x0,
-            CH_6_BIT = 0x1,
-            CH_7_BIT = 0x2,
-            CH_8_BIT = 0x3
-        };
-
-        enum SYNC_t : uint32_t {
-            ASYNC = 0x0,
-            SYNC  = 0x1
-        };
-
-        enum PAR_t : uint32_t {
-            EVEN        = 0x0,
-            ODD         = 0x1,
-            SPACE       = 0x2,
-            MARK        = 0x3,
-            NO          = 0x4,
-            MULTIDROP   = 0x6
-        };
-
-        enum NBSTOP_t : uint32_t {
-            STOP_1_BIT      = 0x0,
-            STOP_1_5_BIT    = 0x1,
-            STOP_2_BIT      = 0x2
-        };
-
-        enum CHMODE_t : uint32_t {
-            CHMODE_NORMAL       = 0x0,
-            AUTOMATIC           = 0x1,
-            LOCAL_LOOPBACK      = 0x2,
-            REMOTE_LOOPBACK     = 0x3
-        };
-
-        enum MSBF_t : uint32_t {
-            LSB_FIRST = 0x0,
-            MSB_FIRST = 0x1
-        };
-
-        enum OVER_t : uint32_t {
-            x16 = 0x0,
-            x8  = 0x1
-        };
-
-        struct US_MR_t {                 /**< \brief (Usart Offset: 0x0004) Mode Register */
-            __IO uint32_t raw;
-
-            BitField<USART_MODE_t ,  0, 4, decltype(raw)> USART_MODE;     // bits 0-3 - mode
-            BitField<USCLKS_t     ,  4, 2, decltype(raw)> USCLKS;         // bits 4-5 - Clock Selection
-            BitField<CHRL_t       ,  6, 2, decltype(raw)> CHRL;           // bits 6-7 - Character Length
-            BitField<SYNC_t       ,  8, 1, decltype(raw)> SYNC;           // bit 8 - Synchronous Mode Select
-            BitField<PAR_t        ,  9, 3, decltype(raw)> PAR;            // bits 9-11 - Parity Type
-            BitField<NBSTOP_t     , 12, 2, decltype(raw)> NBSTOP;         // bits 12-13 - Number of Stop Bits
-            BitField<CHMODE_t     , 14, 2, decltype(raw)> CHMODE;         // bits 14-15 - Channel Mode
-            BitField<MSBF_t       , 16, 1, decltype(raw)> MSBF;           // bit 16 - Bit Order
-            BitField<bool         , 17, 1, decltype(raw)> MODE9;          // bit 17 - 9-bit Character Length (CHRL ignored if true)
-            BitField<bool         , 18, 1, decltype(raw)> CLKO;           // bit 18 - Clock Output Select
-            BitField<OVER_t       , 19, 1, decltype(raw)> OVER;           // bit 19 - Oversampling Mode
-            BitField<bool         , 20, 1, decltype(raw)> INACK;          // bit 20 - Inhibit Non Acknowledge
-            BitField<bool         , 21, 1, decltype(raw)> DSNACK;         // bit 21 - Disable Successive NACK
-            BitField<bool         , 22, 1, decltype(raw)> INVDATA;        // bit 22 - INverted Data
-            BitField<bool         , 23, 1, decltype(raw)> VAR_SYNC;       // bit 23 - Variable Synchronization of Command/Data Sync Start Frame Delimiter
-            BitField<uint8_t      , 24, 3, decltype(raw)> MAX_ITERATION;  // bits 24-26 - maximum number of iterations in mode ISO7816, protocol T= 0
-            // skip bit 27
-            BitField<bool         , 28, 1, decltype(raw)> FILTER;         // bit 28 - Infrared Receive Line Filter
-            BitField<bool         , 29, 1, decltype(raw)> MAN;            // bit 29 - Manchester Encoder/Decoder Enable
-            BitField<bool         , 30, 1, decltype(raw)> MODSYNC;        // bit 30 - Manchester Synchronization Mode
-            BitField<bool         , 31, 1, decltype(raw)> ONEBIT;         // bit 31 - Start Frame Delimiter Selector
-
-            US_MR_t() :
-                USART_MODE{raw},
-                USCLKS{raw},
-                CHRL{raw},
-                SYNC{raw},
-                PAR{raw},
-                NBSTOP{raw},
-                CHMODE{raw},
-                MSBF{raw},
-                MODE9{raw},
-                CLKO{raw},
-                OVER{raw},
-                INACK{raw},
-                DSNACK{raw},
-                INVDATA{raw},
-                VAR_SYNC{raw},
-                MAX_ITERATION{raw},
-
-                FILTER{raw},
-                MAN{raw},
-                MODSYNC{raw},
-                ONEBIT{raw}
-            {};
-        } US_MR;
-
-        struct US_IER_t {                  /**< \brief (Usart Offset: 0x0008) Interrupt Enable Register */
-            __O  uint32_t raw;
-
-            BitField<bool ,  0, 1, decltype(raw)> RXRDY;       //  0 - RXRDY Interrupt Enable
-            BitField<bool ,  1, 1, decltype(raw)> TXRDY;       //  1 - TXRDY Interrupt Enable
-            BitField<bool ,  2, 1, decltype(raw)> RXBRK;       //  2 - Receiver Break Interrupt Enable
-            BitField<bool ,  3, 1, decltype(raw)> ENDRX;       //  3 - End of Receive Transfer Interrupt Enable
-
-            BitField<bool ,  4, 1, decltype(raw)> ENDTX;       //  4 - End of Transmit Interrupt Enable
-            BitField<bool ,  5, 1, decltype(raw)> OVRE;        //  5 - Overrun Error Interrupt Enable
-            BitField<bool ,  6, 1, decltype(raw)> FRAME;       //  6 - Framing Error Interrupt Enable
-            BitField<bool ,  7, 1, decltype(raw)> PARE;        //  7 - Parity Error Interrupt Enable
-
-            BitField<bool ,  8, 1, decltype(raw)> TIMEOUT;     //  8 - Time-out Interrupt Enable
-            BitField<bool ,  9, 1, decltype(raw)> TXEMPTY;     //  9 - TXEMPTY Interrupt Enable
-            BitField<bool , 10, 1, decltype(raw)> ITER_UNRE;   // 10 - Max number of Repetitions Reached / SPI Underrun Error
-            BitField<bool , 11, 1, decltype(raw)> TXBUFE;      // 11 - Buffer Empty Interrupt Enable
-
-            BitField<bool , 12, 1, decltype(raw)> RXBUFF;      // 12 - Buffer Full Interrupt Enable
-            BitField<bool , 13, 1, decltype(raw)> NACK_LINBK;  // 13 - Non Acknowledge Interrupt Enable
-                                                       //       / LIN Break Sent or LIN Break Received Interrupt Enable
-            BitField<bool , 14, 1, decltype(raw)> LINID;       // 14 - LIN Identifier Sent or LIN Identifier Received Interrupt Enable
-            BitField<bool , 15, 1, decltype(raw)> LINTC;       // 15 - LIN Transfer Completed Interrupt Enable
-
-            // skip bits 16-18
-
-            BitField<bool , 19, 1, decltype(raw)> CTSIC;       // 19 - Clear to Send Input Change Interrupt Enable
-
-            // skip bits 20-23
-
-            BitField<bool , 24, 1, decltype(raw)> MANE;        // 24 - Manchester Error Interrupt Enable
-            BitField<bool , 25, 1, decltype(raw)> LINBE;       // 25 - LIN Bus Error Interrupt Enable
-            BitField<bool , 26, 1, decltype(raw)> LINISFE;     // 26 - LIN Inconsistent Synch Field Error Interrupt Enable
-            BitField<bool , 27, 1, decltype(raw)> LINIPE;      // 27 - LIN Identifier Parity Interrupt Enable
-
-            BitField<bool , 28, 1, decltype(raw)> LINCE;       // 28 - LIN Checksum Error Interrupt Enable
-            BitField<bool , 29, 1, decltype(raw)> LINSNRE;     // 29 - LIN Slave Not Responding Error Interrupt Enable
-
-            US_IER_t() :
-                RXRDY{raw},
-                TXRDY{raw},
-                RXBRK{raw},
-                ENDRX{raw},
-
-                ENDTX{raw},
-                OVRE{raw},
-                FRAME{raw},
-                PARE{raw},
-
-                TIMEOUT{raw},
-                TXEMPTY{raw},
-                ITER_UNRE{raw},
-                TXBUFE{raw},
-
-                RXBUFF{raw},
-                NACK_LINBK{raw},
-                LINID{raw},
-                LINTC{raw},
-
-                CTSIC{raw},
-
-                MANE{raw},
-                LINBE{raw},
-                LINISFE{raw},
-                LINIPE{raw},
-
-                LINCE{raw},
-                LINSNRE{raw}
-            {};
-        } US_IER;
-
-        struct US_IDR_t {                  /**< \brief (Usart Offset: 0x000C) Interrupt Disable Register */
-            __O  uint32_t raw;
-
-            BitField<bool ,  0, 1, decltype(raw)> RXRDY;       //  0 - RXRDY Interrupt Disable
-            BitField<bool ,  1, 1, decltype(raw)> TXRDY;       //  1 - TXRDY Interrupt Disable
-            BitField<bool ,  2, 1, decltype(raw)> RXBRK;       //  2 - Receiver Break Interrupt Disable
-            BitField<bool ,  3, 1, decltype(raw)> ENDRX;       //  3 - End of Receive Transfer Interrupt Disable
-
-            BitField<bool ,  4, 1, decltype(raw)> ENDTX;       //  4 - End of Transmit Interrupt Disable
-            BitField<bool ,  5, 1, decltype(raw)> OVRE;        //  5 - Overrun Error Interrupt Disable
-            BitField<bool ,  6, 1, decltype(raw)> FRAME;       //  6 - Framing Error Interrupt Disable
-            BitField<bool ,  7, 1, decltype(raw)> PARE;        //  7 - Parity Error Interrupt Disable
-
-            BitField<bool ,  8, 1, decltype(raw)> TIMEOUT;     //  8 - Time-out Interrupt Disable
-            BitField<bool ,  9, 1, decltype(raw)> TXEMPTY;     //  9 - TXEMPTY Interrupt Disable
-            BitField<bool , 10, 1, decltype(raw)> ITER_UNRE;   // 10 - Max number of Repetitions Reached / SPI Underrun Error
-            BitField<bool , 11, 1, decltype(raw)> TXBUFE;      // 11 - Buffer Empty Interrupt Disable
-
-            BitField<bool , 12, 1, decltype(raw)> RXBUFF;      // 12 - Buffer Full Interrupt Disable
-            BitField<bool , 13, 1, decltype(raw)> NACK_LINBK;  // 13 - Non Acknowledge Interrupt Disable
-                                                       //       / LIN Break Sent or LIN Break Received Interrupt Disable
-            BitField<bool , 14, 1, decltype(raw)> LINID;       // 14 - LIN Identifier Sent or LIN Identifier Received Interrupt Disable
-            BitField<bool , 15, 1, decltype(raw)> LINTC;       // 15 - LIN Transfer Completed Interrupt Disable
-
-             // skip bits 16-18
-
-            BitField<bool , 19, 1, decltype(raw)> CTSIC;       // 19 - Clear to Send Input Change Interrupt Disable
-
-            // skip bits 20-23
-
-            BitField<bool , 24, 1, decltype(raw)> MANE;        // 24 - Manchester Error Interrupt Disable
-            BitField<bool , 25, 1, decltype(raw)> LINBE;       // 25 - LIN Bus Error Interrupt Disable
-            BitField<bool , 26, 1, decltype(raw)> LINISFE;     // 26 - LIN Inconsistent Synch Field Error Interrupt Disable
-            BitField<bool , 27, 1, decltype(raw)> LINIPE;      // 27 - LIN Identifier Parity Interrupt Disable
-
-            BitField<bool , 28, 1, decltype(raw)> LINCE;       // 28 - LIN Checksum Error Interrupt Disable
-            BitField<bool , 29, 1, decltype(raw)> LINSNRE;     // 29 - LIN Slave Not Responding Error Interrupt Disable
-
-            US_IDR_t() :
-                RXRDY{raw},
-                TXRDY{raw},
-                RXBRK{raw},
-                ENDRX{raw},
-
-                ENDTX{raw},
-                OVRE{raw},
-                FRAME{raw},
-                PARE{raw},
-
-                TIMEOUT{raw},
-                TXEMPTY{raw},
-                ITER_UNRE{raw},
-                TXBUFE{raw},
-
-                RXBUFF{raw},
-                NACK_LINBK{raw},
-                LINID{raw},
-                LINTC{raw},
-
-                CTSIC{raw},
-
-                MANE{raw},
-                LINBE{raw},
-                LINISFE{raw},
-                LINIPE{raw},
-
-                LINCE{raw},
-                LINSNRE{raw}
-            {};
-        } US_IDR;
-
-        struct US_IMR_t {                  /**< \brief (Usart Offset: 0x0010) Interrupt Mask Register */
-            __I  uint32_t raw;
-
-            BitField<bool ,  0, 1, decltype(raw)> RXRDY;       //  0 - RXRDY Interrupt Mask
-            BitField<bool ,  1, 1, decltype(raw)> TXRDY;       //  1 - TXRDY Interrupt Mask
-            BitField<bool ,  2, 1, decltype(raw)> RXBRK;       //  2 - Receiver Break Interrupt Mask
-            BitField<bool ,  3, 1, decltype(raw)> ENDRX;       //  3 - End of Receive Transfer Interrupt Mask
-
-            BitField<bool ,  4, 1, decltype(raw)> ENDTX;       //  4 - End of Transmit Interrupt Mask
-            BitField<bool ,  5, 1, decltype(raw)> OVRE;        //  5 - Overrun Error Interrupt Mask
-            BitField<bool ,  6, 1, decltype(raw)> FRAME;       //  6 - Framing Error Interrupt Mask
-            BitField<bool ,  7, 1, decltype(raw)> PARE;        //  7 - Parity Error Interrupt Mask
-
-            BitField<bool ,  8, 1, decltype(raw)> TIMEOUT;     //  8 - Time-out Interrupt Mask
-            BitField<bool ,  9, 1, decltype(raw)> TXEMPTY;     //  9 - TXEMPTY Interrupt Mask
-            BitField<bool , 10, 1, decltype(raw)> ITER_UNRE;   // 10 - Max number of Repetitions Reached / SPI Underrun Error
-            BitField<bool , 11, 1, decltype(raw)> TXBUFE;      // 11 - Buffer Empty Interrupt Mask
-
-            BitField<bool , 12, 1, decltype(raw)> RXBUFF;      // 12 - Buffer Full Interrupt Mask
-            BitField<bool , 13, 1, decltype(raw)> NACK_LINBK;  // 13 - Non Acknowledge Interrupt Mask
-                                                       //       / LIN Break Sent or LIN Break Received Interrupt Mask
-            BitField<bool , 14, 1, decltype(raw)> LINID;       // 14 - LIN Identifier Sent or LIN Identifier Received Interrupt Mask
-            BitField<bool , 15, 1, decltype(raw)> LINTC;       // 15 - LIN Transfer Completed Interrupt Mask
-
-            // skip bits 16-18
-
-            BitField<bool , 19, 1, decltype(raw)> CTSIC;       // 19 - Clear to Send Input Change Interrupt Mask
-
-            // skip bits 20-23
-
-            BitField<bool , 24, 1, decltype(raw)> MANE;        // 24 - Manchester Error Interrupt Mask
-            BitField<bool , 25, 1, decltype(raw)> LINBE;       // 25 - LIN Bus Error Interrupt Mask
-            BitField<bool , 26, 1, decltype(raw)> LINISFE;     // 26 - LIN Inconsistent Synch Field Error Interrupt Mask
-            BitField<bool , 27, 1, decltype(raw)> LINIPE;      // 27 - LIN Identifier Parity Interrupt Mask
-
-            BitField<bool , 28, 1, decltype(raw)> LINCE;       // 28 - LIN Checksum Error Interrupt Mask
-            BitField<bool , 29, 1, decltype(raw)> LINSNRE;     // 29 - LIN Slave Not Responding Error Interrupt Mask
-
-            US_IMR_t() :
-                RXRDY{raw},
-                TXRDY{raw},
-                RXBRK{raw},
-                ENDRX{raw},
-
-                ENDTX{raw},
-                OVRE{raw},
-                FRAME{raw},
-                PARE{raw},
-
-                TIMEOUT{raw},
-                TXEMPTY{raw},
-                ITER_UNRE{raw},
-                TXBUFE{raw},
-
-                RXBUFF{raw},
-                NACK_LINBK{raw},
-                LINID{raw},
-                LINTC{raw},
-
-                CTSIC{raw},
-
-                MANE{raw},
-                LINBE{raw},
-                LINISFE{raw},
-                LINIPE{raw},
-
-                LINCE{raw},
-                LINSNRE{raw}
-            {};
-        } US_IMR;
-
-        struct US_CSR_t {                      /**< \brief (Usart Offset: 0x0014) Channel Status Register */
-            __I  uint32_t raw;
-
-            BitField<volatile bool ,  0, 1, decltype(raw)> RXRDY;       //  0 - RXRDY Status
-            BitField<volatile bool ,  1, 1, decltype(raw)> TXRDY;       //  1 - TXRDY Status
-            BitField<volatile bool ,  2, 1, decltype(raw)> RXBRK;       //  2 - Receiver Break Status
-            BitField<volatile bool ,  3, 1, decltype(raw)> ENDRX;       //  3 - End of Receive Transfer Status
-
-            BitField<volatile bool ,  4, 1, decltype(raw)> ENDTX;       //  4 - End of Transmit Status
-            BitField<volatile bool ,  5, 1, decltype(raw)> OVRE;        //  5 - Overrun Error Status
-            BitField<volatile bool ,  6, 1, decltype(raw)> FRAME;       //  6 - Framing Error Status
-            BitField<volatile bool ,  7, 1, decltype(raw)> PARE;        //  7 - Parity Error Status
-
-            BitField<volatile bool ,  8, 1, decltype(raw)> TIMEOUT;     //  8 - Time-out Status
-            BitField<volatile bool ,  9, 1, decltype(raw)> TXEMPTY;     //  9 - TXEMPTY Status
-            BitField<volatile bool , 10, 1, decltype(raw)> ITER_UNRE;   // 10 - Max number of Repetitions Reached / SPI Underrun Error
-            BitField<volatile bool , 11, 1, decltype(raw)> TXBUFE;      // 11 - Buffer Empty Status
-
-            BitField<volatile bool , 12, 1, decltype(raw)> RXBUFF;      // 12 - Buffer Full Status
-            BitField<volatile bool , 13, 1, decltype(raw)> NACK_LINBK;  // 13 - Non Acknowledge Status
-                                                                //       / LIN Break Sent or LIN Break Received Status
-            BitField<volatile bool , 14, 1, decltype(raw)> LINID;       // 14 - LIN Identifier Sent or LIN Identifier Received Status
-            BitField<volatile bool , 15, 1, decltype(raw)> LINTC;       // 15 - LIN Transfer Completed Status
-            // skip bits 16-18
-            BitField<volatile bool , 19, 1, decltype(raw)> CTSIC;       // 19 - Clear to Send Input Change Status
-            // skip bits 20-23
-            BitField<volatile bool , 24, 1, decltype(raw)> CTS;         // 24 - Image of CTS Input
-
-            BitField<volatile bool , 24, 1, decltype(raw)> MANE;        // 24 - Manchester Error Status
-            BitField<volatile bool , 25, 1, decltype(raw)> LINBE;       // 25 - LIN Bus Error Status
-            BitField<volatile bool , 26, 1, decltype(raw)> LINISFE;     // 26 - LIN Inconsistent Synch Field Error Status
-            BitField<volatile bool , 27, 1, decltype(raw)> LINIPE;      // 27 - LIN Identifier Parity Status
-
-            BitField<volatile bool , 28, 1, decltype(raw)> LINCE;       // 28 - LIN Checksum Error Status
-            BitField<volatile bool , 29, 1, decltype(raw)> LINSNRE;     // 29 - LIN Slave Not Responding Error Status
-            // skip bits 30-31
-
-
-            US_CSR_t() :
-                RXRDY{raw},
-                TXRDY{raw},
-                RXBRK{raw},
-                ENDRX{raw},
-
-                ENDTX{raw},
-                OVRE{raw},
-                FRAME{raw},
-                PARE{raw},
-
-                TIMEOUT{raw},
-                TXEMPTY{raw},
-                ITER_UNRE{raw},
-                TXBUFE{raw},
-
-                RXBUFF{raw},
-                NACK_LINBK{raw},
-                LINID{raw},
-                LINTC{raw},
-                CTSIC{raw},
-                CTS{raw},
-
-                MANE{raw},
-                LINBE{raw},
-                LINISFE{raw},
-                LINIPE{raw},
-
-                LINCE{raw},
-                LINSNRE{raw}
-            {};
-        } US_CSR;
-
-        struct US_RHR_t {                      /**< \brief (Usart Offset: 0x0018) Receive Holding Register */
-            __I  uint32_t raw;
-
-            BitField<uint16_t ,  0, 9, decltype(raw)> RXCHR;    // 0-8 - Received Character
-            // skip bits 9-14
-            BitField<bool     , 15, 1, decltype(raw)> RXSYNH;  // 15 - Received Sync
-
-            US_RHR_t() :
-                RXCHR{raw},
-                RXSYNH{raw}
-            {};
-        } US_RHR;
-
-        struct US_THR_t {                     /**< \brief (Usart Offset: 0x001C) Transmit Holding Register */
-            __O  uint32_t raw;
-
-            BitField<uint16_t ,  0, 9, decltype(raw)> TXCHR  ; // 0-8 - Character to be Transmitted
-            // skip bits 9-14
-            BitField<bool     , 15, 1, decltype(raw)> TXSYNH ; // 15 - Sync Field to be transmitted
-            // skip bits 16-31
-
-            US_THR_t() :
-                TXCHR{raw},
-                TXSYNH{raw}
-            {};
-
-        } US_THR;
-
-        struct US_BRGR_t {                      /**< \brief (Usart Offset: 0x0020) Baud Rate Generator Register */
-            __IO uint32_t raw;
-
-            BitField<uint32_t ,  0, 16, decltype(raw)> CD     ; // 0-15 - Clock Divider
-            BitField<uint32_t , 16,  3, decltype(raw)> FP     ; // 16-18 - Fractional Part. Baudrate resolution, defined by FP x 1/8.
-            // skip bits 19-31
-
-            US_BRGR_t() :
-                CD{raw},
-                FP{raw}
-            {};
-        }   US_BRGR;
-        __IO uint32_t US_RTOR;       /**< \brief (Usart Offset: 0x0024) Receiver Time-out Register */
-        __IO uint32_t US_TTGR;       /**< \brief (Usart Offset: 0x0028) Transmitter Timeguard Register */
-        __I  uint32_t Reserved1[5];
-        __IO uint32_t US_FIDI;       /**< \brief (Usart Offset: 0x0040) FI DI Ratio Register */
-        __I  uint32_t US_NER;        /**< \brief (Usart Offset: 0x0044) Number of Errors Register */
-        __I  uint32_t Reserved2[1];
-        __IO uint32_t US_IF;         /**< \brief (Usart Offset: 0x004C) IrDA Filter Register */
-        struct US_MAN_t {                     /**< \brief (Usart Offset: 0x0050) Manchester Configuration Register */
-            __IO uint32_t raw;
-
-            // Only bits that pertain to plain RS232 USART are represented.
-            // skip bit 0 - 29
-            BitField<bool , 30, 1, decltype(raw)> DRIFT      ; // 30 - Drift compensation
-            // skip bit 31
-
-            US_MAN_t() :
-                DRIFT{raw}
-            {};
-        } US_MAN;
-        __IO uint32_t US_LINMR;      /**< \brief (Usart Offset: 0x0054) LIN Mode Register */
-        __IO uint32_t US_LINIR;      /**< \brief (Usart Offset: 0x0058) LIN Identifier Register */
-        __I  uint32_t US_LINBRR;     /**< \brief (Usart Offset: 0x005C) LIN Baud Rate Register */
-        __I  uint32_t Reserved3[33];
-        __IO uint32_t US_WPMR;       /**< \brief (Usart Offset: 0x00E4) Write Protection Mode Register */
-        __I  uint32_t US_WPSR;       /**< \brief (Usart Offset: 0x00E8) Write Protection Status Register */
-        __I  uint32_t Reserved4[5];
-        union {                     /**< \brief (Usart Offset: 0x100) Receive Pointer Register */
-            __IO uint32_t _US_RPR;
-            char * volatile US_RPR;
-        };
-        union { /**< \brief (Usart Offset: 0x104) Receive Counter Register */
-            __IO uint32_t     _US_RCR;
-            volatile uint16_t  US_RCR;
-        };
-        union {                      /**< \brief (Usart Offset: 0x108) Transmit Pointer Register */
-            __IO uint32_t _US_TPR;
-            char * volatile US_TPR;
-        };
-        union { /**< \brief (Usart Offset: 0x10C) Transmit Counter Register */
-            __IO uint32_t     _US_TCR;
-            volatile uint16_t  US_TCR;
-        };
-
-        union {                      /**< \brief (Usart Offset: 0x110) Receive Next Pointer Register */
-            __IO uint32_t _US_RNPR;
-            char * volatile US_RNPR;
-        };
-        union {                      /**< \brief (Usart Offset: 0x114) Receive Next Counter Register */
-            __IO uint32_t     _US_RNCR;
-            volatile uint16_t  US_RNCR;
-        };
-        union {                     /**< \brief (Usart Offset: 0x118) Transmit Next Pointer Register */
-            __IO uint32_t   _US_TNPR;
-            char * volatile  US_TNPR;
-        };
-        union {                     /**< \brief (Usart Offset: 0x11C) Transmit Next Counter Register */
-            __IO uint32_t     _US_TNCR;
-            volatile uint16_t  US_TNCR;
-        };
-        struct US_PTCR_t {                     /**< \brief (Usart Offset: 0x120) Transfer Control Register */
-            __O  uint32_t raw;
-
-            BitField<bool ,  0, 1, decltype(raw)> RXTEN  ; //  0 - Receiver Transfer Enable
-            BitField<bool ,  1, 1, decltype(raw)> RXTDIS ; //  1 - Receiver Transfer Disable
-            // skip bits 2-7
-            BitField<bool ,  8, 1, decltype(raw)> TXTEN  ; //  8 - Transmitter Transfer Enable
-            BitField<bool ,  9, 1, decltype(raw)> TXTDIS ; //  9 - Transmitter Transfer Disable
-            // skip bits 10-31
-
-            US_PTCR_t() :
-                RXTEN{raw},
-                RXTDIS{raw},
-                TXTEN{raw},
-                TXTDIS{raw}
-            {};
-        } US_PTCR;
-        struct US_PTSR_t {                     /**< \brief (Usart Offset: 0x124) Transfer Status Register */
-            __I  uint32_t raw;
-
-            BitField<volatile bool ,  0, 1, decltype(raw)> RXTEN ; //  0 - Receiver Transfer Enable
-            // skip bits 1-7
-            BitField<volatile bool ,  8, 1, decltype(raw)> TXTEN ; //  8 - Transmitter Transfer Enable
-            // skip bits 9-31
-
-            US_PTSR_t() :
-                RXTEN{raw},
-                TXTEN{raw}
-            {};
-        } US_PTSR;
-    } Usart;
+    enum class USART_MODE_t : uint32_t {
+        USART_NORMAL    = 0x0 << US_MR_USART_MODE_Pos,
+        RS485           = 0x1 << US_MR_USART_MODE_Pos,
+        HW_HANDSHAKING  = 0x2 << US_MR_USART_MODE_Pos,
+        IS07816_T_0     = 0x4 << US_MR_USART_MODE_Pos,
+        IS07816_T_1     = 0x5 << US_MR_USART_MODE_Pos,
+        IRDA            = 0x8 << US_MR_USART_MODE_Pos,
+        LIN_MASTER      = 0xA << US_MR_USART_MODE_Pos,
+        LIN_SLAVE       = 0xB << US_MR_USART_MODE_Pos,
+        SPI_MASTER      = 0xE << US_MR_USART_MODE_Pos,
+        SPI_SLAVE       = 0xF << US_MR_USART_MODE_Pos
+    };
+
+    enum class USCLKS_t : uint32_t {
+        MCK = 0x0 << US_MR_USCLKS_Pos,
+        DIV = 0x1 << US_MR_USCLKS_Pos,
+        SCK = 0x3 << US_MR_USCLKS_Pos
+    };
+
+    enum class CHRL_t : uint32_t  {
+        CH_5_BIT = 0x0 << US_MR_CHRL_Pos,
+        CH_6_BIT = 0x1 << US_MR_CHRL_Pos,
+        CH_7_BIT = 0x2 << US_MR_CHRL_Pos,
+        CH_8_BIT = 0x3 << US_MR_CHRL_Pos
+    };
+
+    enum class PAR_t : uint32_t {
+        EVEN        = 0x0 << US_MR_PAR_Pos,
+        ODD         = 0x1 << US_MR_PAR_Pos,
+        SPACE       = 0x2 << US_MR_PAR_Pos,
+        MARK        = 0x3 << US_MR_PAR_Pos,
+        NO          = 0x4 << US_MR_PAR_Pos,
+        MULTIDROP   = 0x6 << US_MR_PAR_Pos
+    };
+
+    enum class NBSTOP_t : uint32_t {
+        STOP_1_BIT      = 0x0 << US_MR_NBSTOP_Pos,
+        STOP_1_5_BIT    = 0x1 << US_MR_NBSTOP_Pos,
+        STOP_2_BIT      = 0x2 << US_MR_NBSTOP_Pos
+    };
+
+    enum class CHMODE_t : uint32_t {
+        CHMODE_NORMAL       = 0x0 << US_MR_CHMODE_Pos,
+        AUTOMATIC           = 0x1 << US_MR_CHMODE_Pos,
+        LOCAL_LOOPBACK      = 0x2 << US_MR_CHMODE_Pos,
+        REMOTE_LOOPBACK     = 0x3 << US_MR_CHMODE_Pos
+    };
 
 
     template<uint8_t uartPeripheralNumber>
@@ -721,7 +180,7 @@ namespace Motate {
             common::enablePeripheralClock();
 
             // Reset and disable TX and RX
-            usart->US_CR.raw = US_CR_RSTRX | US_CR_RSTTX | US_CR_RXDIS | US_CR_TXDIS;
+            usart->US_CR = US_CR_RSTRX | US_CR_RSTTX | US_CR_RXDIS | US_CR_TXDIS;
         };
 
         _UARTHardware() {
@@ -729,8 +188,8 @@ namespace Motate {
             // Instead, we call init from UART<>::init(), so that the optimizer will keep it.
         };
 
-        void enable() { usart->US_CR.TXEN = true; usart->US_CR.RXEN = true; };
-        void disable () { usart->US_CR.TXDIS = true; usart->US_CR.RXDIS = true; };
+        void enable() { usart->US_CR |= US_CR_TXEN | US_CR_RXEN; };
+        void disable () { usart->US_CR |= US_CR_TXDIS | US_CR_RXDIS; };
 
         void setOptions(const uint32_t baud, const uint16_t options, const bool fromConstructor=false) {
             disable();
@@ -740,35 +199,33 @@ namespace Motate {
 
             // For all of the speeds up to and including 230400, 16x multiplier worked fine in testing.
             // All yielded a <1% error in final baud.
-            usart->US_BRGR.CD = (((SystemCoreClock * 10) / (16 * baud)) + 5)/10;
-            usart->US_BRGR.FP = 0;
-            usart->US_MR.OVER = Usart::x16;
+            usart->US_BRGR = US_BRGR_CD((((SystemCoreClock * 10) / (16 * baud)) + 5)/10) | US_BRGR_FP(0);
+            usart->US_MR &= ~US_MR_OVER;
 
 
             if (options & UARTMode::RTSCTSFlowControl) {
-                usart->US_MR.USART_MODE = Usart::USART_MODE_t::HW_HANDSHAKING;
+                usart->US_MR = (usart->US_MR & ~US_MR_USART_MODE_Msk) | US_MR_USART_MODE_HW_HANDSHAKING;
             } else {
-                usart->US_MR.USART_MODE = Usart::USART_MODE_t::USART_NORMAL;
+                usart->US_MR = (usart->US_MR & ~US_MR_USART_MODE_Msk) | US_MR_USART_MODE_NORMAL;
             }
 
             if (options & UARTMode::TwoStopBits) {
-                usart->US_MR.NBSTOP = Usart::STOP_2_BIT;
+                usart->US_MR = (usart->US_MR & ~(US_MR_NBSTOP_Msk)) | US_MR_NBSTOP_2_BIT;
             } else {
-                usart->US_MR.NBSTOP = Usart::STOP_1_BIT; // set explicitly
+                usart->US_MR = (usart->US_MR & ~(US_MR_NBSTOP_Msk)) | US_MR_NBSTOP_1_BIT;
             }
 
             if (options & UARTMode::As9Bit) {
-                usart->US_MR.MODE9 = true;
+                usart->US_MR |= US_MR_MODE9;
             } else {
-                usart->US_MR.MODE9 = false;
-                usart->US_MR.CHRL  = Usart::CH_8_BIT;
+                usart->US_MR = (usart->US_MR & ~(US_MR_MODE9|US_MR_CHRL_Msk)) | static_cast<uint32_t>(CHRL_t::CH_8_BIT);
             }
             if (options & UARTMode::EvenParity) {
-                usart->US_MR.PAR = Usart::EVEN;
+                usart->US_MR = (usart->US_MR & ~(US_MR_PAR_Msk)) | US_MR_PAR_EVEN;
             } else if (options & UARTMode::OddParity) {
-                usart->US_MR.PAR = Usart::ODD;
+                usart->US_MR = (usart->US_MR & ~(US_MR_PAR_Msk)) | US_MR_PAR_ODD;
             } else {
-                usart->US_MR.PAR = Usart::NO;
+                usart->US_MR = (usart->US_MR & ~(US_MR_PAR_Msk)) | US_MR_PAR_NO;
             }
 
             /* Enable receiver and transmitter */
@@ -780,25 +237,25 @@ namespace Motate {
             if (interrupts != UARTInterrupt::Off) {
 
                 if (interrupts & UARTInterrupt::OnRxDone) {
-                    usart->US_IER.RXRDY = true;
+                    usart->US_IER |= US_IER_RXRDY;
                 } else {
-                    usart->US_IDR.RXRDY = true;
+                    usart->US_IDR |= US_IDR_RXRDY;
                 }
                 if (interrupts & UARTInterrupt::OnTxDone) {
-                    usart->US_IER.TXRDY = true;
+                    usart->US_IER |= US_IER_TXRDY;
                 } else {
-                    usart->US_IDR.TXRDY = true;
+                    usart->US_IDR |= US_IDR_TXRDY;
                 }
 
                 if (interrupts & UARTInterrupt::OnRxTransferDone) {
-                    usart->US_IER.ENDRX = true;
+                    usart->US_IER |= US_IER_ENDRX;
                 } else {
-                    usart->US_IDR.ENDRX = true;
+                    usart->US_IDR |= US_IDR_ENDRX;
                 }
                 if (interrupts & UARTInterrupt::OnTxTransferDone) {
-                    usart->US_IER.ENDTX = true;
+                    usart->US_IER |= US_IER_ENDTX;
                 } else {
-                    usart->US_IDR.ENDTX = true;
+                    usart->US_IDR |= US_IDR_ENDTX;
                 }
 
 
@@ -828,74 +285,74 @@ namespace Motate {
 
         void _setInterruptTxReady(bool value) {
             if (value) {
-                usart->US_IER.TXRDY = true;
+                usart->US_IER |= US_IER_TXRDY;
             } else {
-                usart->US_IDR.TXRDY = true;
+                usart->US_IDR |= US_IDR_TXRDY;
             }
         };
 
         void _setInterruptCTSChange(bool value) {
             if (value) {
-                usart->US_IER.CTSIC = true;
+                usart->US_IER |= US_IER_CTSIC;
             } else {
-                usart->US_IDR.CTSIC = true;
+                usart->US_IDR |= US_IDR_CTSIC;
             }
         };
 
         void _setInterruptTxTransferDone(bool value) {
             if (value) {
-                usart->US_IER.ENDTX = true;
+                usart->US_IER |= US_IER_ENDTX;
             } else {
-                usart->US_IDR.ENDTX = true;
+                usart->US_IDR |= US_IDR_ENDTX;
             }
         };
 
         void _setInterruptRxTransferDone(bool value) {
             if (value) {
-                usart->US_IER.ENDRX = true;
+                usart->US_IER |= US_IER_ENDRX;
             } else {
-                usart->US_IDR.ENDRX = true;
+                usart->US_IDR |= US_IDR_ENDRX;
             }
         };
 
-        static uint16_t getInterruptCause() __attribute__ (( noinline )) {
+        static uint16_t getInterruptCause() { // __attribute__ (( noinline ))
             uint16_t status = UARTInterrupt::Unknown;
-            if (usart->US_CSR.TXRDY) {
+            if (usart->US_CSR & US_CSR_TXRDY) {
                 status |= UARTInterrupt::OnTxReady;
             }
-            if (usart->US_CSR.ENDTX) {
+            if (usart->US_CSR & US_CSR_ENDTX) {
                 status |= UARTInterrupt::OnTxTransferDone;
             }
-            if (usart->US_CSR.RXRDY) {
+            if (usart->US_CSR & US_CSR_RXRDY) {
                 status |= UARTInterrupt::OnRxReady;
             }
-            if (usart->US_CSR.ENDRX) {
+            if (usart->US_CSR & US_CSR_ENDRX) {
                 status |= UARTInterrupt::OnRxTransferDone;
             }
-            if (usart->US_CSR.CTSIC) {
+            if (usart->US_CSR & US_CSR_CTSIC) {
                 status |= UARTInterrupt::OnCTSChanged;
             }
             return status;
         }
 
         int16_t readByte() {
-            if (usart->US_CSR.RXRDY) {
-                return usart->US_RHR.RXCHR;
+            if (usart->US_CSR & US_CSR_RXRDY) {
+                return (usart->US_RHR & US_RHR_RXCHR_Msk);
             }
 
             return -1;
         };
 
         int16_t writeByte(const char value) {
-            if (usart->US_CSR.TXRDY) {
-                usart->US_THR.TXCHR = value;
+            if (usart->US_CSR & US_CSR_TXRDY) {
+                usart->US_THR = US_THR_TXCHR(value);
             }
             return -1;
         };
 
         void flush() {
             // Wait for the buffer to be empty
-            while (!usart->US_CSR.TXEMPTY) {
+            while (!usart->US_CSR & US_CSR_TXEMPTY) {
                 ;
             }
         };
@@ -913,19 +370,19 @@ namespace Motate {
             // which gives us a reasonable guess, at least.
 
             // The USART gives us access to that pin.
-            return usart->US_CSR.CTS;
+            return usart->US_CSR & US_CSR_CTS;
         };
 
 
         // ***** Handle Tranfers
         bool startRXTransfer(char *buffer, const uint16_t length) {
             if (usart->US_RCR == 0) {
-                usart->US_RPR = buffer;
+                usart->US_RPR = (uint32_t)buffer;
                 usart->US_RCR = length;
-                usart->US_PTCR.RXTEN = true;
+                usart->US_PTCR |= US_PTCR_RXTEN;
                 return true;
             } else if (usart->US_RNCR == 0) {
-                usart->US_RNPR = buffer;
+                usart->US_RNPR = (uint32_t)buffer;
                 usart->US_RNCR = length;
                 return true;
             }
@@ -933,17 +390,17 @@ namespace Motate {
         };
 
         char* getRXTransferPosition() {
-            return usart->US_RPR;
+            return (char*)usart->US_RPR;
         };
 
         bool startTXTransfer(char *buffer, const uint16_t length) {
             if (usart->US_TCR == 0) {
-                usart->US_TPR = buffer;
+                usart->US_TPR = (uint32_t)buffer;
                 usart->US_TCR = length;
-                usart->US_PTCR.TXTEN = true;
+                usart->US_PTCR |= US_PTCR_TXTEN;
                 return true;
             } else if (usart->US_TNCR == 0) {
-                usart->US_TNPR = buffer;
+                usart->US_TNPR = (uint32_t)buffer;
                 usart->US_TNCR = length;
                 return true;
             }
@@ -951,7 +408,7 @@ namespace Motate {
         };
 
         char* getTXTransferPosition() {
-            return usart->US_TPR;
+            return (char*)usart->US_TPR;
         };
 
     };
@@ -989,10 +446,10 @@ namespace Motate {
         static_assert(UARTRxPin<rxPinNumber>::uartNum == UARTTxPin<txPinNumber>::uartNum,
                       "USART RX Pin and TX Pin are not on the same hardware USART.");
 
-        static_assert((rtsPinNumber == -1) || (UARTRTSPin<rtsPinNumber>::uartNum == UARTTxPin<rxPinNumber>::uartNum),
+        static_assert((UARTRTSPin<rtsPinNumber>::uartNum == UARTRxPin<rxPinNumber>::uartNum), // (rtsPinNumber == -1) || 
                       "USART RX Pin and RTS Pin are not on the same hardware USART.");
 
-        static_assert((ctsPinNumber == -1) || (UARTRTSPin<ctsPinNumber>::uartNum == UARTTxPin<rxPinNumber>::uartNum),
+        static_assert((UARTCTSPin<ctsPinNumber>::uartNum == UARTRxPin<rxPinNumber>::uartNum), // (ctsPinNumber == -1) ||
                       "USART RX Pin and CTS Pin are not on the same hardware USART.");
 
         UARTRxPin<rxPinNumber> rxPin;
