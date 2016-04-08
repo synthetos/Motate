@@ -185,7 +185,8 @@ CMSIS_ROOT = ${MOTATE_PATH}/cmsis
 # STAR is a stupid hack to make XCode stopthinking the REST OF THE FILE
 # is a comment.
 STAR:=*
-include $(wildcard ./board/$(STAR).mk ${MOTATE_PATH}/board/$(STAR).mk)
+-include ./boards.mk
+include $(wildcard ${MOTATE_PATH}/board/$(STAR).mk)
 
 ifneq ("$(_BOARD_FOUND)", "1")
 
