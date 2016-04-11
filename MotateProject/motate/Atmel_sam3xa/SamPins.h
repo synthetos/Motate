@@ -617,6 +617,39 @@ namespace Motate {
         operator bool();
     };
 
+    // PWMLikeOutputPin is the PWMOutputPin interface on a normal output pin.
+    // This is for cases where you want it to act like a non-PWM capable
+    // PWMOutputPin, but there actually IS a PWMOutputPin that you explictly
+    // don't want to use.
+    template<int16_t pinNum>
+    struct PWMLikeOutputPin : Pin<pinNum> {
+        PWMLikeOutputPin() : Pin<pinNum>(kOutput) {};
+        PWMLikeOutputPin(const PinOptions options, const uint32_t freq = kDefaultPWMFrequency) : Pin<pinNum>(kOutput, options) {};
+        PWMLikeOutputPin(const uint32_t freq) : Pin<pinNum>(kOutput, kNormal) {};
+        void setFrequency(const uint32_t freq) {};
+        operator float() { return !!Pin<pinNum>::getOutputValue(); };
+        operator uint32_t() { return (100 * (!!Pin<pinNum>::getOutputValue())); };
+        void operator=(const float value) { write(value); };
+        void write(const float value) { Pin<pinNum>::write(value >= 0.5); };
+        void writeRaw(const uint16_t duty) { Pin<pinNum>::write(duty >= 50); };
+        uint16_t getTopValue() { return 100; };
+        bool canPWM() { return false; };
+        void setInterrupts(const uint32_t interrupts) {
+            // This is for timer interrupts, not pin interrupts.
+        };
+
+        /*Override these to pick up new methods */
+
+    private: /* Make these private to catch them early. */
+        /* These are intentially not defined. */
+        void init(const PinMode type, const PinOptions options = kNormal);
+
+        /* WARNING: Covariant return types! */
+        bool get();
+        operator bool();
+    };
+
+
 #define _MAKE_MOTATE_PWM_PIN(registerChar, registerPin, timerOrPWM, peripheralAorB, invertedByDefault)\
     template<>\
     struct PWMOutputPin< ReversePinLookup<registerChar, registerPin>::number > : Pin< ReversePinLookup<registerChar, registerPin>::number >, timerOrPWM {\
