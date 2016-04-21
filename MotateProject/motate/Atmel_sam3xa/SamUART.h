@@ -188,8 +188,8 @@ namespace Motate {
             // Instead, we call init from UART<>::init(), so that the optimizer will keep it.
         };
 
-        void enable() { usart->US_CR |= US_CR_TXEN | US_CR_RXEN; };
-        void disable () { usart->US_CR |= US_CR_TXDIS | US_CR_RXDIS; };
+        void enable() { usart->US_CR = US_CR_TXEN | US_CR_RXEN; };
+        void disable () { usart->US_CR = US_CR_TXDIS | US_CR_RXDIS; };
 
         void setOptions(const uint32_t baud, const uint16_t options, const bool fromConstructor=false) {
             disable();
@@ -237,25 +237,25 @@ namespace Motate {
             if (interrupts != UARTInterrupt::Off) {
 
                 if (interrupts & UARTInterrupt::OnRxDone) {
-                    usart->US_IER |= US_IER_RXRDY;
+                    usart->US_IER = US_IER_RXRDY;
                 } else {
-                    usart->US_IDR |= US_IDR_RXRDY;
+                    usart->US_IDR = US_IDR_RXRDY;
                 }
                 if (interrupts & UARTInterrupt::OnTxDone) {
-                    usart->US_IER |= US_IER_TXRDY;
+                    usart->US_IER = US_IER_TXRDY;
                 } else {
-                    usart->US_IDR |= US_IDR_TXRDY;
+                    usart->US_IDR = US_IDR_TXRDY;
                 }
 
                 if (interrupts & UARTInterrupt::OnRxTransferDone) {
-                    usart->US_IER |= US_IER_ENDRX;
+                    usart->US_IER = US_IER_ENDRX;
                 } else {
-                    usart->US_IDR |= US_IDR_ENDRX;
+                    usart->US_IDR = US_IDR_ENDRX;
                 }
                 if (interrupts & UARTInterrupt::OnTxTransferDone) {
-                    usart->US_IER |= US_IER_ENDTX;
+                    usart->US_IER = US_IER_ENDTX;
                 } else {
-                    usart->US_IDR |= US_IDR_ENDTX;
+                    usart->US_IDR = US_IDR_ENDTX;
                 }
 
 
@@ -285,33 +285,33 @@ namespace Motate {
 
         void _setInterruptTxReady(bool value) {
             if (value) {
-                usart->US_IER |= US_IER_TXRDY;
+                usart->US_IER = US_IER_TXRDY;
             } else {
-                usart->US_IDR |= US_IDR_TXRDY;
+                usart->US_IDR = US_IDR_TXRDY;
             }
         };
 
         void _setInterruptCTSChange(bool value) {
             if (value) {
-                usart->US_IER |= US_IER_CTSIC;
+                usart->US_IER = US_IER_CTSIC;
             } else {
-                usart->US_IDR |= US_IDR_CTSIC;
+                usart->US_IDR = US_IDR_CTSIC;
             }
         };
 
         void _setInterruptTxTransferDone(bool value) {
             if (value) {
-                usart->US_IER |= US_IER_ENDTX;
+                usart->US_IER = US_IER_TXBUFE;
             } else {
-                usart->US_IDR |= US_IDR_ENDTX;
+                usart->US_IDR = US_IDR_TXBUFE;
             }
         };
 
         void _setInterruptRxTransferDone(bool value) {
             if (value) {
-                usart->US_IER |= US_IER_ENDRX;
+                usart->US_IER = US_IER_RXBUFF;
             } else {
-                usart->US_IDR |= US_IDR_ENDRX;
+                usart->US_IDR = US_IDR_RXBUFF;
             }
         };
 
@@ -370,7 +370,7 @@ namespace Motate {
             // which gives us a reasonable guess, at least.
 
             // The USART gives us access to that pin.
-            return usart->US_CSR & US_CSR_CTS;
+            return (usart->US_CSR & US_CSR_CTS) == 0; // active LOW
         };
 
 
@@ -379,11 +379,14 @@ namespace Motate {
             if (usart->US_RCR == 0) {
                 usart->US_RPR = (uint32_t)buffer;
                 usart->US_RCR = length;
-                usart->US_PTCR |= US_PTCR_RXTEN;
+                usart->US_PTCR = US_PTCR_RXTEN;
+                _setInterruptRxTransferDone(true);
                 return true;
-            } else if (usart->US_RNCR == 0) {
+            }
+            else if (usart->US_RNCR == 0) {
                 usart->US_RNPR = (uint32_t)buffer;
                 usart->US_RNCR = length;
+                _setInterruptRxTransferDone(true);
                 return true;
             }
             return false;
@@ -397,11 +400,14 @@ namespace Motate {
             if (usart->US_TCR == 0) {
                 usart->US_TPR = (uint32_t)buffer;
                 usart->US_TCR = length;
-                usart->US_PTCR |= US_PTCR_TXTEN;
+                usart->US_PTCR = US_PTCR_TXTEN;
+                _setInterruptTxTransferDone(true);
                 return true;
-            } else if (usart->US_TNCR == 0) {
+            }
+            else if (usart->US_TNCR == 0) {
                 usart->US_TNPR = (uint32_t)buffer;
                 usart->US_TNCR = length;
+                _setInterruptTxTransferDone(true);
                 return true;
             }
             return false;
@@ -486,7 +492,7 @@ namespace Motate {
             // which gives us a reasonable guess, at least.
 
             // The USART gives us access to that pin.
-            return hardware.isConnceted();
+            return hardware.isConnected();
         };
 
         int16_t readByte() {
@@ -645,12 +651,14 @@ namespace Motate {
 
             if (interruptCause & UARTInterrupt::OnTxTransferDone) {
                 if (transfer_tx_done_callback) {
+                    hardware._setInterruptTxTransferDone(false);
                     transfer_tx_done_callback();
                 }
             }
 
             if (interruptCause & UARTInterrupt::OnRxTransferDone) {
                 if (transfer_rx_done_callback) {
+                    hardware._setInterruptRxTransferDone(false);
                     transfer_rx_done_callback();
                 }
             }
