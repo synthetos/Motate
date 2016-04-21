@@ -14,6 +14,7 @@ ifeq ("$(BASE_BOARD)","frdm-kl05z")
 	FIRST_LINK_SOURCES += $(wildcard ${MOTATE_PATH}/Freescale_klxx/*.cpp)
 
 	CHIP = MKL05Z32VFM4
+    export CHIP
 	CHIP_LOWERCASE = mkl05z32vfm4
 
 	BOARD_PATH = ${MOTATE_PATH}/board/FRDM-KLxx
