@@ -101,7 +101,8 @@ CPPFLAGS += -Wuninitialized -Wno-unknown-pragmas -Wfloat-equal -Wundef
 CPPFLAGS += -Wshadow -Wpointer-arith -Wwrite-strings
 #CPPFLAGS += -Wsign-compare -Waggregate-return -Wmissing-declarations
 CPPFLAGS += -Wformat -Wmissing-format-attribute -Wno-deprecated-declarations
-CPPFLAGS += -Wredundant-decls -Winline -Wlong-long
+CPPFLAGS += -Wredundant-decls -Wlong-long
+#CPPFLAGS += -Winline
 #CPPFLAGS += -Wmissing-noreturn -Wpacked
 #CPPFLAGS += -Wconversion
 
