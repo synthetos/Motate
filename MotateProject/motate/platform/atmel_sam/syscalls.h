@@ -38,21 +38,25 @@
 extern "C" {
 #endif
 
-extern caddr_t _sbrk( int incr ) ;
+#define IS_USED  __attribute__ ((used));
 
-extern int link( char *cOld, char *cNew ) ;
+extern caddr_t _sbrk( int incr ) IS_USED;
 
-extern int _close( int file ) ;
+extern int link( char *cOld, char *cNew ) IS_USED;
 
-extern int _fstat( int file, struct stat *st ) ;
+extern int _close( int file ) IS_USED;
 
-extern int _isatty( int file ) ;
+extern int _fstat( int file, struct stat *st ) IS_USED;
 
-extern int _lseek( int file, int ptr, int dir ) ;
+extern int _isatty( int file ) IS_USED;
 
-extern int _read(int file, char *ptr, int len) ;
+extern int _lseek( int file, int ptr, int dir ) IS_USED;
 
-extern int _write( int file, char *ptr, int len ) ;
+extern int _read(int file, char *ptr, int len) IS_USED;
+
+extern int _write( int file, char *ptr, int len ) IS_USED;
+
+#undef IS_USED
 
 #ifdef __cplusplus
 }
