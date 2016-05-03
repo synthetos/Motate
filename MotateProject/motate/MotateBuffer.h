@@ -33,6 +33,7 @@
 
 #include <cstring> // for size_t
 //#include <utility> // for std::move
+#include <functional> // for std::function
 
 namespace Motate {
     // Implement a simple circular buffer, with a compile-time size
@@ -154,7 +155,9 @@ namespace Motate {
 
         constexpr int16_t size() { return _size; };
 
-        RXBuffer(owner_type owner) : _owner(owner) {
+        RXBuffer(owner_type owner) : _owner(owner) { };
+
+        void init() {
             _owner->setRXTransferDoneCallback([&]() { // use a closure
                 _transfer_requested = 0;
                 _restartTransfer();
@@ -325,12 +328,14 @@ namespace Motate {
 
         constexpr int16_t size() { return _size; };
 
-        TXBuffer(owner_type owner) : _owner(owner) {
+        TXBuffer(owner_type owner) : _owner(owner) {};
+
+        void init() {
             _owner->setTXTransferDoneCallback([&]() { // use a closure
                 _transfer_requested = 0;
                 _restartTransfer();
             });
-        };
+        }
 
         uint16_t _nextWriteOffset() {
             return (_write_offset + 1)&(_size-1);

@@ -61,7 +61,8 @@ extern "C" void USART0_Handler(void)  {
         Motate::_UARTHardware<0>::_uartInterruptHandler(Motate::_UARTHardware<0u>::getInterruptCause());
         return;
     }
-    while (1) ;
+    __asm__("BKPT");
+    //while (1) ;
 }
 
 extern "C" void USART1_Handler(void)  {
@@ -69,7 +70,8 @@ extern "C" void USART1_Handler(void)  {
         Motate::_UARTHardware<1>::_uartInterruptHandler(Motate::_UARTHardware<1u>::getInterruptCause());
         return;
     }
-    while (1) ;
+    __asm__("BKPT");
+    //while (1) ;
 }
 
 extern "C" void USART2_Handler(void)  {
@@ -77,7 +79,8 @@ extern "C" void USART2_Handler(void)  {
         Motate::_UARTHardware<2>::_uartInterruptHandler(Motate::_UARTHardware<2u>::getInterruptCause());
         return;
     }
-    while (1) ;
+    __asm__("BKPT");
+    //while (1) ;
 }
 
 

@@ -181,6 +181,16 @@ namespace Motate {
 
             // Reset and disable TX and RX
             usart->US_CR = US_CR_RSTRX | US_CR_RSTTX | US_CR_RXDIS | US_CR_TXDIS;
+
+            // reset PCR to zero
+            usart->US_RPR = 0;
+            usart->US_RNPR = 0;
+            usart->US_RCR = 0;
+            usart->US_RNCR = 0;
+            usart->US_TPR = 0;
+            usart->US_TNPR = 0;
+            usart->US_TCR = 0;
+            usart->US_TNCR = 0;
         };
 
         _UARTHardware() {
@@ -248,14 +258,14 @@ namespace Motate {
                 }
 
                 if (interrupts & UARTInterrupt::OnRxTransferDone) {
-                    usart->US_IER = US_IER_ENDRX;
+                    usart->US_IER = US_IER_RXBUFF;
                 } else {
-                    usart->US_IDR = US_IDR_ENDRX;
+                    usart->US_IDR = US_IDR_RXBUFF;
                 }
                 if (interrupts & UARTInterrupt::OnTxTransferDone) {
-                    usart->US_IER = US_IER_ENDTX;
+                    usart->US_IER = US_IER_TXBUFE;
                 } else {
-                    usart->US_IDR = US_IDR_ENDTX;
+                    usart->US_IDR = US_IDR_TXBUFE;
                 }
 
 
@@ -283,11 +293,23 @@ namespace Motate {
             }
         };
 
+        void setInterruptHandler(std::function<void(uint16_t)> &&handler) {
+            _uartInterruptHandler = std::move(handler);
+        }
+
         void _setInterruptTxReady(bool value) {
             if (value) {
                 usart->US_IER = US_IER_TXRDY;
             } else {
                 usart->US_IDR = US_IDR_TXRDY;
+            }
+        };
+
+        void _setInterruptRxReady(bool value) {
+            if (value) {
+                usart->US_IER = US_IER_RXRDY;
+            } else {
+                usart->US_IDR = US_IDR_RXRDY;
             }
         };
 
@@ -317,19 +339,20 @@ namespace Motate {
 
         static uint16_t getInterruptCause() { // __attribute__ (( noinline ))
             uint16_t status = UARTInterrupt::Unknown;
-            if (usart->US_CSR & US_CSR_TXRDY) {
+            auto US_CSR_hold = usart->US_CSR;
+            if (US_CSR_hold & US_CSR_TXRDY) {
                 status |= UARTInterrupt::OnTxReady;
             }
-            if (usart->US_CSR & US_CSR_ENDTX) {
+            if (US_CSR_hold & US_IER_TXBUFE) {
                 status |= UARTInterrupt::OnTxTransferDone;
             }
-            if (usart->US_CSR & US_CSR_RXRDY) {
+            if (US_CSR_hold & US_CSR_RXRDY) {
                 status |= UARTInterrupt::OnRxReady;
             }
-            if (usart->US_CSR & US_CSR_ENDRX) {
+            if (US_CSR_hold & US_IER_RXBUFF) {
                 status |= UARTInterrupt::OnRxTransferDone;
             }
-            if (usart->US_CSR & US_CSR_CTSIC) {
+            if (US_CSR_hold & US_CSR_CTSIC) {
                 status |= UARTInterrupt::OnCTSChanged;
             }
             return status;
@@ -437,8 +460,13 @@ namespace Motate {
 
     // Declare that these are specilized
     template<> const uint32_t  _UARTHardware<0>::peripheralId();
+    template<> std::function<void(uint16_t)> _UARTHardware<0>::_uartInterruptHandler;
+
     template<> const uint32_t  _UARTHardware<1>::peripheralId();
+    template<> std::function<void(uint16_t)> _UARTHardware<1>::_uartInterruptHandler;
+
     template<> const uint32_t  _UARTHardware<2>::peripheralId();
+    template<> std::function<void(uint16_t)> _UARTHardware<2>::_uartInterruptHandler;
 
     template<pin_number rxPinNumber, pin_number txPinNumber, pin_number rtsPinNumber = -1, pin_number ctsPinNumber = -1>
     struct UART {
@@ -470,17 +498,21 @@ namespace Motate {
         std::function<void(void)> transfer_rx_done_callback;
         std::function<void(void)> transfer_tx_done_callback;
 
+        Buffer<16> overflowBuffer;
+
         UART(const uint32_t baud = 115200, const uint16_t options = UARTMode::As8N1) {
             hardware.init();
             // Auto-enable RTS/CTS if the pins are provided.
-            init(baud, options | (rtsPin.is_real ? UARTMode::RTSCTSFlowControl : 0), /*fromConstructor =*/ true);
+            setOptions(baud, options | (rtsPin.is_real ? UARTMode::RTSCTSFlowControl : 0), /*fromConstructor =*/ true);
         };
 
-        void init(const uint32_t baud, const uint16_t options, const bool fromConstructor=false) {
-            setOptions(baud, options, fromConstructor);
-            hardware._uartInterruptHandler = [&](uint16_t interruptCause) { // use a closure
+        // WARNING!!
+        // This must be called later, outside of the contructors, to ensure that all dependencies are contructed.
+        void init() {
+            hardware.setInterruptHandler([&](uint16_t interruptCause) { // use a closure
                 this->uartInterruptHandler(interruptCause);
-            };
+            });
+            hardware.setInterrupts(kInterruptPriorityLowest); // enable interrupts and set the priority
         };
 
         void setOptions(const uint32_t baud, const uint16_t options, const bool fromConstructor=false) {
@@ -599,16 +631,30 @@ namespace Motate {
 
         void setConnectionCallback(std::function<void(bool)> &&callback) {
             connection_state_changed_callback = std::move(callback);
-            hardware._setInterruptCTSChange((bool)connection_state_changed_callback);
+            //hardware._setInterruptCTSChange((bool)connection_state_changed_callback);
 
             // Call it immediately if it's connected
-            if(connection_state_changed_callback && hardware.isConnected()) {
-                connection_state_changed_callback(true);
-            }
+//            if(connection_state_changed_callback && hardware.isConnected()) {
+//                connection_state_changed_callback(true);
+//            }
+
+            // pretend we're ALWAYS connected:
+            connection_state_changed_callback(true);
         }
 
 
-        bool startRXTransfer(char *buffer, const uint16_t length) {
+        bool startRXTransfer(char *buffer, uint16_t length) {
+            hardware._setInterruptRxReady(false);
+
+            int16_t overflow;
+            while (((overflow = overflowBuffer.read()) > 0) && (length > 0)) {
+                *buffer = (char)overflow;
+                buffer++;
+                length--;
+            }
+
+            // what happens if length == 0?
+
             return hardware.startRXTransfer(buffer, length);
             return false;
         };
@@ -647,6 +693,7 @@ namespace Motate {
 
             if (interruptCause & UARTInterrupt::OnRxReady) {
                 // new data is ready to read. If we're between transfers we need to squirrel away the value
+                overflowBuffer.write(hardware.readByte());
             }
 
             if (interruptCause & UARTInterrupt::OnTxTransferDone) {
@@ -659,6 +706,7 @@ namespace Motate {
             if (interruptCause & UARTInterrupt::OnRxTransferDone) {
                 if (transfer_rx_done_callback) {
                     hardware._setInterruptRxTransferDone(false);
+                    hardware._setInterruptRxReady(true);
                     transfer_rx_done_callback();
                 }
             }
@@ -666,7 +714,7 @@ namespace Motate {
             if (interruptCause & UARTInterrupt::OnCTSChanged) {
                 if (connection_state_changed_callback) {
                     // We need to throttle this for MCU<->MCU connections.
-                    connection_state_changed_callback(hardware.isConnected());
+                    //connection_state_changed_callback(hardware.isConnected());
                 }
             }
         };
