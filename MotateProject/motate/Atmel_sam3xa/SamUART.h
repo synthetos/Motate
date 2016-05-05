@@ -42,7 +42,11 @@
 
 // Damn C defines. UART is a DEFINE, so we can't use it as an object type.
 // We will undefine it here.
+// Damn defines anyway
+#define UART_DONT_CONFLICT UART
 #undef UART
+
+//extern typename decltype(UART_DONT_CONFLICT) UART;
 
 namespace Motate {
 
@@ -160,9 +164,9 @@ namespace Motate {
         REMOTE_LOOPBACK     = 0x3 << US_MR_CHMODE_Pos
     };
 
-
+    // USART peripherals
     template<uint8_t uartPeripheralNumber>
-    struct _UARTHardware : SamCommon< _UARTHardware<uartPeripheralNumber> > {
+    struct _USARTHardware : SamCommon< _USARTHardware<uartPeripheralNumber> > {
 
         static Usart * const usart;
         static const uint32_t peripheralId();
@@ -170,7 +174,7 @@ namespace Motate {
 
         static constexpr const uint8_t uartPeripheralNum=uartPeripheralNumber;
 
-        typedef _UARTHardware<uartPeripheralNumber> this_type_t;
+        typedef _USARTHardware<uartPeripheralNumber> this_type_t;
         typedef SamCommon< this_type_t > common;
 
         static std::function<void(uint16_t)> _uartInterruptHandler;
@@ -193,7 +197,7 @@ namespace Motate {
             usart->US_TNCR = 0;
         };
 
-        _UARTHardware() {
+        _USARTHardware() {
             // We DON'T init here, because the optimizer is fickle, and will remove this whole area.
             // Instead, we call init from UART<>::init(), so that the optimizer will keep it.
         };
@@ -443,13 +447,289 @@ namespace Motate {
     };
 
 
+    // UART peripheral
+    template<uint8_t uartPeripheralNumber>
+    struct _UARTHardware : SamCommon< _UARTHardware<uartPeripheralNumber> > {
+
+        static Uart * const uart;
+        static const uint32_t peripheralId();
+        static const IRQn_Type uartIRQ;
+
+        static constexpr const uint8_t uartPeripheralNum=uartPeripheralNumber;
+
+        typedef _UARTHardware<uartPeripheralNumber> this_type_t;
+        typedef SamCommon< this_type_t > common;
+
+        static std::function<void(uint16_t)> _uartInterruptHandler;
+
+        void init() {
+            // init is called once after reset, so clean up after a reset
+            common::enablePeripheralClock();
+
+            // Reset and disable TX and RX
+            uart->UART_CR = UART_CR_RSTRX | UART_CR_RSTTX | UART_CR_RXDIS | UART_CR_TXDIS;
+
+            // reset PCR to zero
+            uart->UART_RPR = 0;
+            uart->UART_RNPR = 0;
+            uart->UART_RCR = 0;
+            uart->UART_RNCR = 0;
+            uart->UART_TPR = 0;
+            uart->UART_TNPR = 0;
+            uart->UART_TCR = 0;
+            uart->UART_TNCR = 0;
+        };
+
+        _UARTHardware() {
+            // We DON'T init here, because the optimizer is fickle, and will remove this whole area.
+            // Instead, we call init from UART<>::init(), so that the optimizer will keep it.
+        };
+
+        void enable() { uart->UART_CR = UART_CR_TXEN | UART_CR_RXEN; };
+        void disable () { uart->UART_CR = UART_CR_TXDIS | UART_CR_RXDIS; };
+
+        void setOptions(const uint32_t baud, const uint16_t options, const bool fromConstructor=false) {
+            disable();
+
+            // Oversampling is either 8 or 16. Depending on the baud, we may need to select 8x in
+            // order to get the error low.
+
+            // For all of the speeds up to and including 230400, 16x multiplier worked fine in testing.
+            // All yielded a <1% error in final baud.
+            uart->UART_BRGR = UART_BRGR_CD((((SystemCoreClock * 10) / (16 * baud)) + 5)/10);
+
+            // No hardware flow control
+            // if (options & UARTMode::RTSCTSFlowControl) {
+            // } else {
+            // }
+
+            // Only 1 stop bit
+            // if (options & UARTMode::TwoStopBits) {
+            // } else {
+            // }
+
+            // Only 8-bit mode
+            // if (options & UARTMode::As9Bit) {
+            // } else {
+            // }
+
+            if (options & UARTMode::EvenParity) {
+                uart->UART_MR = (uart->UART_MR & ~(UART_MR_PAR_Msk)) | UART_MR_PAR_EVEN;
+            } else if (options & UARTMode::OddParity) {
+                uart->UART_MR = (uart->UART_MR & ~(UART_MR_PAR_Msk)) | UART_MR_PAR_ODD;
+            } else {
+                uart->UART_MR = (uart->UART_MR & ~(UART_MR_PAR_Msk)) | UART_MR_PAR_NO;
+            }
+
+            /* Enable receiver and transmitter */
+            enable();
+
+        };
+
+        void setInterrupts(const uint16_t interrupts) {
+            if (interrupts != UARTInterrupt::Off) {
+
+                if (interrupts & UARTInterrupt::OnRxDone) {
+                    uart->UART_IER = UART_IER_RXRDY;
+                } else {
+                    uart->UART_IDR = UART_IDR_RXRDY;
+                }
+                if (interrupts & UARTInterrupt::OnTxDone) {
+                    uart->UART_IER = UART_IER_TXRDY;
+                } else {
+                    uart->UART_IDR = UART_IDR_TXRDY;
+                }
+
+                if (interrupts & UARTInterrupt::OnRxTransferDone) {
+                    uart->UART_IER = UART_IER_RXBUFF;
+                } else {
+                    uart->UART_IDR = UART_IDR_RXBUFF;
+                }
+                if (interrupts & UARTInterrupt::OnTxTransferDone) {
+                    uart->UART_IER = UART_IER_TXBUFE;
+                } else {
+                    uart->UART_IDR = UART_IDR_TXBUFE;
+                }
+
+
+                /* Set interrupt priority */
+                if (interrupts & UARTInterrupt::PriorityHighest) {
+                    NVIC_SetPriority(uartIRQ, 0);
+                }
+                else if (interrupts & UARTInterrupt::PriorityHigh) {
+                    NVIC_SetPriority(uartIRQ, 3);
+                }
+                else if (interrupts & UARTInterrupt::PriorityMedium) {
+                    NVIC_SetPriority(uartIRQ, 7);
+                }
+                else if (interrupts & UARTInterrupt::PriorityLow) {
+                    NVIC_SetPriority(uartIRQ, 11);
+                }
+                else if (interrupts & kInterruptPriorityLowest) {
+                    NVIC_SetPriority(uartIRQ, 15);
+                }
+
+                NVIC_EnableIRQ(uartIRQ);
+            } else {
+
+                NVIC_DisableIRQ(uartIRQ);
+            }
+        };
+
+        void setInterruptHandler(std::function<void(uint16_t)> &&handler) {
+            _uartInterruptHandler = std::move(handler);
+        }
+
+        void _setInterruptTxReady(bool value) {
+            if (value) {
+                uart->UART_IER = UART_IER_TXRDY;
+            } else {
+                uart->UART_IDR = UART_IDR_TXRDY;
+            }
+        };
+
+        void _setInterruptRxReady(bool value) {
+            if (value) {
+                uart->UART_IER = UART_IER_RXRDY;
+            } else {
+                uart->UART_IDR = UART_IDR_RXRDY;
+            }
+        };
+
+        void _setInterruptCTSChange(bool value) {
+            if (value) {
+            } else {
+            }
+        };
+
+        void _setInterruptTxTransferDone(bool value) {
+            if (value) {
+                uart->UART_IER = UART_IER_TXBUFE;
+            } else {
+                uart->UART_IDR = UART_IDR_TXBUFE;
+            }
+        };
+
+        void _setInterruptRxTransferDone(bool value) {
+            if (value) {
+                uart->UART_IER = UART_IER_RXBUFF;
+            } else {
+                uart->UART_IDR = UART_IDR_RXBUFF;
+            }
+        };
+
+        static uint16_t getInterruptCause() { // __attribute__ (( noinline ))
+            uint16_t status = UARTInterrupt::Unknown;
+            auto UART_SR_hold = uart->UART_SR;
+            if (UART_SR_hold & UART_SR_TXRDY) {
+                status |= UARTInterrupt::OnTxReady;
+            }
+            if (UART_SR_hold & UART_IER_TXBUFE) {
+                status |= UARTInterrupt::OnTxTransferDone;
+            }
+            if (UART_SR_hold & UART_SR_RXRDY) {
+                status |= UARTInterrupt::OnRxReady;
+            }
+            if (UART_SR_hold & UART_IER_RXBUFF) {
+                status |= UARTInterrupt::OnRxTransferDone;
+            }
+            return status;
+        }
+
+        int16_t readByte() {
+            if (uart->UART_SR & UART_SR_RXRDY) {
+                return (uart->UART_RHR & UART_RHR_RXCHR_Msk);
+            }
+
+            return -1;
+        };
+
+        int16_t writeByte(const char value) {
+            if (uart->UART_SR & UART_SR_TXRDY) {
+                uart->UART_THR = UART_THR_TXCHR(value);
+            }
+            return -1;
+        };
+
+        void flush() {
+            // Wait for the buffer to be empty
+            while (!uart->UART_SR & UART_SR_TXEMPTY) {
+                ;
+            }
+        };
+
+        void flushRead() {
+            // kill any incoming transfers
+            uart->UART_RNCR = 0;
+            uart->UART_RCR = 0;
+        };
+
+
+        // ***** Connection status check (simple)
+        bool isConnected() {
+            // The cts pin allows to know if we're allowed to send,
+            // which gives us a reasonable guess, at least.
+
+            // read the CTS pin
+            return true; // assume always for now
+        };
+
+
+        // ***** Handle Tranfers
+        bool startRXTransfer(char *buffer, const uint16_t length) {
+            if (uart->UART_RCR == 0) {
+                uart->UART_RPR = (uint32_t)buffer;
+                uart->UART_RCR = length;
+                uart->UART_PTCR = UART_PTCR_RXTEN;
+                _setInterruptRxTransferDone(true);
+                return true;
+            }
+            else if (uart->UART_RNCR == 0) {
+                uart->UART_RNPR = (uint32_t)buffer;
+                uart->UART_RNCR = length;
+                _setInterruptRxTransferDone(true);
+                return true;
+            }
+            return false;
+        };
+
+        char* getRXTransferPosition() {
+            return (char*)uart->UART_RPR;
+        };
+
+        bool startTXTransfer(char *buffer, const uint16_t length) {
+            if (uart->UART_TCR == 0) {
+                uart->UART_TPR = (uint32_t)buffer;
+                uart->UART_TCR = length;
+                uart->UART_PTCR = UART_PTCR_TXTEN;
+                _setInterruptTxTransferDone(true);
+                return true;
+            }
+            else if (uart->UART_TNCR == 0) {
+                uart->UART_TNPR = (uint32_t)buffer;
+                uart->UART_TNCR = length;
+                _setInterruptTxTransferDone(true);
+                return true;
+            }
+            return false;
+        };
+        
+        char* getTXTransferPosition() {
+            return (char*)uart->UART_TPR;
+        };
+        
+    };
+
+    template<uint8_t uartPeripheralNumber>
+    using _USART_Or_UART = typename std::conditional<uartPeripheralNumber < 4, _USARTHardware<uartPeripheralNumber>, _UARTHardware<uartPeripheralNumber-4>>::type;
+
     template<pin_number rxPinNumber, pin_number txPinNumber>
     using UARTGetHardware = typename std::conditional<
         IsUARTRxPin<rxPinNumber>() &&
         IsUARTTxPin<txPinNumber>() &&
         rxPinNumber != txPinNumber &&
         UARTTxPin<txPinNumber>::uartNum == UARTRxPin<rxPinNumber>::uartNum,
-        /* True:  */ _UARTHardware<UARTTxPin<txPinNumber>::uartNum>,
+        /* True:  */ _USART_Or_UART<UARTTxPin<txPinNumber>::uartNum>,
         /* False: */ _UARTHardware<0xff> // static_assert below should prevent this
     >::type;
 
@@ -459,14 +739,14 @@ namespace Motate {
     };
 
     // Declare that these are specilized
-    template<> const uint32_t  _UARTHardware<0>::peripheralId();
-    template<> std::function<void(uint16_t)> _UARTHardware<0>::_uartInterruptHandler;
-
-    template<> const uint32_t  _UARTHardware<1>::peripheralId();
-    template<> std::function<void(uint16_t)> _UARTHardware<1>::_uartInterruptHandler;
-
-    template<> const uint32_t  _UARTHardware<2>::peripheralId();
-    template<> std::function<void(uint16_t)> _UARTHardware<2>::_uartInterruptHandler;
+//    template<> const uint32_t  _UARTHardware<0>::peripheralId();
+//    template<> std::function<void(uint16_t)> _UARTHardware<0>::_uartInterruptHandler;
+//
+//    template<> const uint32_t  _UARTHardware<1>::peripheralId();
+//    template<> std::function<void(uint16_t)> _UARTHardware<1>::_uartInterruptHandler;
+//
+//    template<> const uint32_t  _UARTHardware<2>::peripheralId();
+//    template<> std::function<void(uint16_t)> _UARTHardware<2>::_uartInterruptHandler;
 
     template<pin_number rxPinNumber, pin_number txPinNumber, pin_number rtsPinNumber = -1, pin_number ctsPinNumber = -1>
     struct UART {
