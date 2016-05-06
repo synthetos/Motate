@@ -911,15 +911,15 @@ namespace Motate {
 
         void setConnectionCallback(std::function<void(bool)> &&callback) {
             connection_state_changed_callback = std::move(callback);
-            //hardware._setInterruptCTSChange((bool)connection_state_changed_callback);
+            hardware._setInterruptCTSChange((bool)connection_state_changed_callback);
 
             // Call it immediately if it's connected
-//            if(connection_state_changed_callback && hardware.isConnected()) {
-//                connection_state_changed_callback(true);
-//            }
+            if(connection_state_changed_callback && hardware.isConnected()) {
+                connection_state_changed_callback(true);
+            }
 
             // pretend we're ALWAYS connected:
-            connection_state_changed_callback(true);
+//            connection_state_changed_callback(true);
         }
 
 
@@ -992,9 +992,9 @@ namespace Motate {
             }
 
             if (interruptCause & UARTInterrupt::OnCTSChanged) {
-                if (connection_state_changed_callback) {
-                    // We need to throttle this for MCU<->MCU connections.
-                    //connection_state_changed_callback(hardware.isConnected());
+                if (connection_state_changed_callback && hardware.isConnected()) {
+                    // We only report when it's connected, NOT disconnected
+                    connection_state_changed_callback(hardware.isConnected());
                 }
             }
         };
