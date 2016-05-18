@@ -67,6 +67,10 @@ namespace Motate {
         kDebounce       = 1<<5,
 #endif // !MOTATE_AVR_COMPATIBILITY && !MOTATE_SAM_COMPATIBILITY
 
+        // Set the intialized value of the pin
+        kStartHigh      = 1<<1,
+        kStartLow       = 1<<1,
+
         // For use on PWM pins only!
         kPWMPinInverted    = 1<<7,
     };
@@ -503,6 +507,13 @@ namespace Motate {
             return ((*PIO ## registerLetter).PIO_OSR & mask) ? kOutput : kInput;\
         };\
         void setOptions(const uint16_t options, const bool fromConstructor=false) {\
+            if (kStartLow & options)\
+            {\
+                (*PIO ## registerLetter).PIO_SODR = mask ;\
+            } else if (kStartHigh & options)\
+            {\
+                (*PIO ## registerLetter).PIO_CODR = mask ;\
+            }\
             if (kPullUp & options)\
             {\
                 (*PIO ## registerLetter).PIO_PUER = mask ;\
@@ -526,15 +537,15 @@ namespace Motate {
             }\
             else\
             {\
-            if (kDebounce & options)\
-            {\
-                (*PIO ## registerLetter).PIO_IFER = mask ;\
-                (*PIO ## registerLetter).PIO_DIFSR = mask ;\
-            }\
-            else\
-            {\
-                (*PIO ## registerLetter).PIO_IFDR = mask ;\
-            }\
+                if (kDebounce & options)\
+                {\
+                    (*PIO ## registerLetter).PIO_IFER = mask ;\
+                    (*PIO ## registerLetter).PIO_DIFSR = mask ;\
+                }\
+                else\
+                {\
+                    (*PIO ## registerLetter).PIO_IFDR = mask ;\
+                }\
             }\
         };\
         uint16_t getOptions() {\
