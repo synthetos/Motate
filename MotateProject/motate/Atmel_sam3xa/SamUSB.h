@@ -383,13 +383,14 @@ const uint16_t *Motate::getUSBSerialNumberString(int16_t &length) { \
 
             USBDeviceHardware::_init();
             _inited = 1UL;
+            _attach();
             _configuration = 0UL;
         };
 
         static bool attach() {
             if (_inited) {
-                _attach();
-                _configuration = 0;
+//                _attach();
+//                _configuration = 0;
                 return true;
             }
             return false;
