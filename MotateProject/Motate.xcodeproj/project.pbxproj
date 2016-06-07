@@ -23,7 +23,6 @@
 		D48992C81965B460004F73A6 /* uart_demo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D48992C51965B460004F73A6 /* uart_demo.cpp */; };
 		D48992C91965B460004F73A6 /* uart_demo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D48992C51965B460004F73A6 /* uart_demo.cpp */; };
 		D49367D61B86399E000BB759 /* SamServiceCall.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D49367D41B86399E000BB759 /* SamServiceCall.cpp */; };
-		D4C78F69195201A900A1BE28 /* AvrUSB.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C78F56195201A900A1BE28 /* AvrUSB.cpp */; };
 		D4C78F6A195201A900A1BE28 /* SamPins.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C78F5B195201A900A1BE28 /* SamPins.cpp */; };
 		D4C78F6B195201A900A1BE28 /* SamSPI.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C78F5D195201A900A1BE28 /* SamSPI.cpp */; };
 		D4C78F6C195201A900A1BE28 /* SamTimers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C78F5F195201A900A1BE28 /* SamTimers.cpp */; };
@@ -1157,7 +1156,6 @@
 		D4C7A13119630FA000A1BE28 /* stm32l1xx_dma.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79C061957C0AD00A1BE28 /* stm32l1xx_dma.c */; };
 		D4C7A13219630FA000A1BE28 /* stm32f4xx_hal_spi.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799C71957C0AD00A1BE28 /* stm32f4xx_hal_spi.c */; };
 		D4C7A13319630FA000A1BE28 /* startup_sam4s.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C7954E1957C0AC00A1BE28 /* startup_sam4s.c */; };
-		D4C7A13419630FA000A1BE28 /* AvrUSB.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C78F56195201A900A1BE28 /* AvrUSB.cpp */; };
 		D4C7A13519630FA000A1BE28 /* stm32f0xx_cec.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C799EB1957C0AD00A1BE28 /* stm32f0xx_cec.c */; };
 		D4C7A13619630FA000A1BE28 /* stm32f4xx_hal_spi.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79B621957C0AD00A1BE28 /* stm32f4xx_hal_spi.c */; };
 		D4C7A13719630FA000A1BE28 /* startup_LPC11xx.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C797F51957C0AC00A1BE28 /* startup_LPC11xx.cpp */; };
@@ -1373,10 +1371,6 @@
 		D49367D51B86399E000BB759 /* SamServiceCall.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SamServiceCall.h; sourceTree = "<group>"; };
 		D4A74B2119C15DB00019633A /* frdm-kl05z.cfg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "frdm-kl05z.cfg"; sourceTree = "<group>"; };
 		D4C77F6D1950912300A1BE28 /* Tools.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Tools.xcodeproj; path = ../Tools/Tools.xcodeproj; sourceTree = "<group>"; };
-		D4C78F54195201A900A1BE28 /* AvrPins.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = AvrPins.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
-		D4C78F55195201A900A1BE28 /* AvrTimers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = AvrTimers.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
-		D4C78F56195201A900A1BE28 /* AvrUSB.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AvrUSB.cpp; sourceTree = "<group>"; };
-		D4C78F57195201A900A1BE28 /* AvrUSB.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AvrUSB.h; sourceTree = "<group>"; };
 		D4C78F5A195201A900A1BE28 /* SamCommon.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = SamCommon.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		D4C78F5B195201A900A1BE28 /* SamPins.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = SamPins.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		D4C78F5C195201A900A1BE28 /* SamPins.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = SamPins.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
@@ -4625,7 +4619,6 @@
 				D4C79F20195BCC9A00A1BE28 /* main.cpp */,
 				D4C78F821957BF8400A1BE28 /* Motate.mk */,
 				D4C79F0F1957C9E700A1BE28 /* MotateUtilities.mk */,
-				D4C78F53195201A900A1BE28 /* Atmel_avr */,
 				D4C78F59195201A900A1BE28 /* Atmel_sam3xa */,
 				D4C78F6E19538E6B00A1BE28 /* Freescale_klxx */,
 				D4E90E271ABB54D40042A16C /* Atmel_XMega */,
@@ -4649,17 +4642,6 @@
 				D4C79EDF1957C0B700A1BE28 /* platform */,
 			);
 			path = motate;
-			sourceTree = "<group>";
-		};
-		D4C78F53195201A900A1BE28 /* Atmel_avr */ = {
-			isa = PBXGroup;
-			children = (
-				D4C78F54195201A900A1BE28 /* AvrPins.h */,
-				D4C78F55195201A900A1BE28 /* AvrTimers.h */,
-				D4C78F56195201A900A1BE28 /* AvrUSB.cpp */,
-				D4C78F57195201A900A1BE28 /* AvrUSB.h */,
-			);
-			path = Atmel_avr;
 			sourceTree = "<group>";
 		};
 		D4C78F59195201A900A1BE28 /* Atmel_sam3xa */ = {
@@ -10952,7 +10934,6 @@
 				D4C79EA41957C0AE00A1BE28 /* stm32l1xx_dma.c in Sources */,
 				D4C79D9B1957C0AE00A1BE28 /* stm32f4xx_hal_spi.c in Sources */,
 				D4C79C9E1957C0AE00A1BE28 /* startup_sam4s.c in Sources */,
-				D4C78F69195201A900A1BE28 /* AvrUSB.cpp in Sources */,
 				D4C79DAB1957C0AE00A1BE28 /* stm32f0xx_cec.c in Sources */,
 				D4C79E591957C0AE00A1BE28 /* stm32f4xx_hal_spi.c in Sources */,
 				D4C79CD71957C0AE00A1BE28 /* startup_LPC11xx.cpp in Sources */,
@@ -11588,7 +11569,6 @@
 				D4C7A13119630FA000A1BE28 /* stm32l1xx_dma.c in Sources */,
 				D4C7A13219630FA000A1BE28 /* stm32f4xx_hal_spi.c in Sources */,
 				D4C7A13319630FA000A1BE28 /* startup_sam4s.c in Sources */,
-				D4C7A13419630FA000A1BE28 /* AvrUSB.cpp in Sources */,
 				D4C7A13519630FA000A1BE28 /* stm32f0xx_cec.c in Sources */,
 				D4C7A13619630FA000A1BE28 /* stm32f4xx_hal_spi.c in Sources */,
 				D4C7A13719630FA000A1BE28 /* startup_LPC11xx.cpp in Sources */,
