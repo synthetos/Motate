@@ -1,0 +1,30 @@
+{
+  "DVTSourceControlWorkspaceBlueprintPrimaryRemoteRepositoryKey" : "793C4B1018600DD6BB1DB8BCFBF9A69876860611",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyRepositoryLocationsKey" : {
+
+  },
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyStatesKey" : {
+    "1132FBE650066E911544A6869EC135147E233283" : 0,
+    "793C4B1018600DD6BB1DB8BCFBF9A69876860611" : 0
+  },
+  "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "0F9308B5-EF20-4F94-8582-59468297305B",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
+    "1132FBE650066E911544A6869EC135147E233283" : "",
+    "793C4B1018600DD6BB1DB8BCFBF9A69876860611" : "Motate\/"
+  },
+  "DVTSourceControlWorkspaceBlueprintNameKey" : "Motate",
+  "DVTSourceControlWorkspaceBlueprintVersion" : 204,
+  "DVTSourceControlWorkspaceBlueprintRelativePathToProjectKey" : "MotateProject\/Motate.xcodeproj",
+  "DVTSourceControlWorkspaceBlueprintRemoteRepositoriesKey" : [
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/synthetos\/g2_private.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "1132FBE650066E911544A6869EC135147E233283"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/synthetos\/Motate.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "793C4B1018600DD6BB1DB8BCFBF9A69876860611"
+    }
+  ]
+}

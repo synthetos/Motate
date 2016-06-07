@@ -112,21 +112,42 @@ extern "C" {
 namespace Motate {
     bool ADC_Module::inited_ = false;
 
-    void ADCPin< LookupADCPinByADC< 0>::number >::interrupt() __attribute__ ((weak, alias("_null_adc_pin_interrupt")));
-    void ADCPin< LookupADCPinByADC< 1>::number >::interrupt() __attribute__ ((weak, alias("_null_adc_pin_interrupt")));
-    void ADCPin< LookupADCPinByADC< 2>::number >::interrupt() __attribute__ ((weak, alias("_null_adc_pin_interrupt")));
-    void ADCPin< LookupADCPinByADC< 3>::number >::interrupt() __attribute__ ((weak, alias("_null_adc_pin_interrupt")));
-    void ADCPin< LookupADCPinByADC< 4>::number >::interrupt() __attribute__ ((weak, alias("_null_adc_pin_interrupt")));
-    void ADCPin< LookupADCPinByADC< 5>::number >::interrupt() __attribute__ ((weak, alias("_null_adc_pin_interrupt")));
-    void ADCPin< LookupADCPinByADC< 6>::number >::interrupt() __attribute__ ((weak, alias("_null_adc_pin_interrupt")));
-    void ADCPin< LookupADCPinByADC< 7>::number >::interrupt() __attribute__ ((weak, alias("_null_adc_pin_interrupt")));
-    void ADCPin< LookupADCPinByADC< 8>::number >::interrupt() __attribute__ ((weak, alias("_null_adc_pin_interrupt")));
-    void ADCPin< LookupADCPinByADC< 9>::number >::interrupt() __attribute__ ((weak, alias("_null_adc_pin_interrupt")));
-    void ADCPin< LookupADCPinByADC<10>::number >::interrupt() __attribute__ ((weak, alias("_null_adc_pin_interrupt")));
-    void ADCPin< LookupADCPinByADC<11>::number >::interrupt() __attribute__ ((weak, alias("_null_adc_pin_interrupt")));
-    void ADCPin< LookupADCPinByADC<12>::number >::interrupt() __attribute__ ((weak, alias("_null_adc_pin_interrupt")));
-    void ADCPin< LookupADCPinByADC<13>::number >::interrupt() __attribute__ ((weak, alias("_null_adc_pin_interrupt")));
-    void ADCPin< LookupADCPinByADC<14>::number >::interrupt() __attribute__ ((weak, alias("_null_adc_pin_interrupt")));
+    template<> Pio* Port32<'A'>::rawPort = PIOA;
+    template<> const uint32_t Port32<'A'>::peripheralId() { return ID_PIOA; };
+    template<> const IRQn_Type Port32<'A'>::_IRQn = PIOA_IRQn;
+
+    template<> Pio* Port32<'B'>::rawPort = PIOB;
+    template<> const uint32_t Port32<'B'>::peripheralId() { return ID_PIOB; };
+    template<> const IRQn_Type Port32<'B'>::_IRQn = PIOA_IRQn;
+
+#ifdef PIOC
+    template<> Pio* Port32<'C'>::rawPort = PIOC;
+    template<> const uint32_t Port32<'C'>::peripheralId() { return ID_PIOC; };
+    template<> const IRQn_Type Port32<'C'>::_IRQn = PIOA_IRQn;
+#endif
+
+#ifdef PIOD
+    template<> Pio* Port32<'D'>::rawPort = PIOD;
+    template<> const uint32_t Port32<'D'>::peripheralId() { return ID_PIOD; };
+    template<> const IRQn_Type Port32<'D'>::_IRQn = PIOA_IRQn;
+#endif
+
+
+    template<> void ADCPin< LookupADCPinByADC< 0>::number >::interrupt() __attribute__ ((weak, alias("_null_adc_pin_interrupt")));
+    template<> void ADCPin< LookupADCPinByADC< 1>::number >::interrupt() __attribute__ ((weak, alias("_null_adc_pin_interrupt")));
+    template<> void ADCPin< LookupADCPinByADC< 2>::number >::interrupt() __attribute__ ((weak, alias("_null_adc_pin_interrupt")));
+    template<> void ADCPin< LookupADCPinByADC< 3>::number >::interrupt() __attribute__ ((weak, alias("_null_adc_pin_interrupt")));
+    template<> void ADCPin< LookupADCPinByADC< 4>::number >::interrupt() __attribute__ ((weak, alias("_null_adc_pin_interrupt")));
+    template<> void ADCPin< LookupADCPinByADC< 5>::number >::interrupt() __attribute__ ((weak, alias("_null_adc_pin_interrupt")));
+    template<> void ADCPin< LookupADCPinByADC< 6>::number >::interrupt() __attribute__ ((weak, alias("_null_adc_pin_interrupt")));
+    template<> void ADCPin< LookupADCPinByADC< 7>::number >::interrupt() __attribute__ ((weak, alias("_null_adc_pin_interrupt")));
+    template<> void ADCPin< LookupADCPinByADC< 8>::number >::interrupt() __attribute__ ((weak, alias("_null_adc_pin_interrupt")));
+    template<> void ADCPin< LookupADCPinByADC< 9>::number >::interrupt() __attribute__ ((weak, alias("_null_adc_pin_interrupt")));
+    template<> void ADCPin< LookupADCPinByADC<10>::number >::interrupt() __attribute__ ((weak, alias("_null_adc_pin_interrupt")));
+    template<> void ADCPin< LookupADCPinByADC<11>::number >::interrupt() __attribute__ ((weak, alias("_null_adc_pin_interrupt")));
+    template<> void ADCPin< LookupADCPinByADC<12>::number >::interrupt() __attribute__ ((weak, alias("_null_adc_pin_interrupt")));
+    template<> void ADCPin< LookupADCPinByADC<13>::number >::interrupt() __attribute__ ((weak, alias("_null_adc_pin_interrupt")));
+    template<> void ADCPin< LookupADCPinByADC<14>::number >::interrupt() __attribute__ ((weak, alias("_null_adc_pin_interrupt")));
 }
 
 extern "C" void ADC_Handler(void) {
