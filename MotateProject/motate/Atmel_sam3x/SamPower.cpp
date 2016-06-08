@@ -25,7 +25,7 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#if defined(__SAM3X8E__) || defined(__SAM3X8C__)
+#if defined(SAM3X8) && SAM3X8
 
 #include <sam.h>
 #include "Atmel_sam3x/SamPower.h"

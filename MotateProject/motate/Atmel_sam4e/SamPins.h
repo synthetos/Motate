@@ -35,6 +35,7 @@
 #include "sam.h"
 #include "SamCommon.h"
 #include "MotateTimers.h"
+#include "functional"
 
 #include <type_traits>
 
@@ -50,6 +51,8 @@ namespace Motate {
         // end-user (sketch) code.
         kPeripheralA    = 3,
         kPeripheralB    = 4,
+        kPeripheralC    = 5,
+        kPeripheralD    = 6,
     };
 
     // Numbering is arbitrary, but bit unique for bitwise operations (unlike other architectures):
@@ -109,6 +112,27 @@ namespace Motate {
 
     typedef const int16_t pin_number;
 
+    struct _pinChangeInterrupt {
+        const uint32_t mask;
+        const std::function<void(void)> interrupt;
+        _pinChangeInterrupt *next;
+
+        _pinChangeInterrupt(const uint32_t _mask, const std::function<void(void)> _interrupt, _pinChangeInterrupt *&_first) : mask{_mask}, interrupt{_interrupt}, next{nullptr} {
+
+            if (_first == nullptr) {
+                _first = this;
+                return;
+            }
+
+            _pinChangeInterrupt *i = _first;
+            while (i->next != nullptr) {
+                i = i->next;
+            }
+            i->next = this;
+
+        }
+    };
+
     template <unsigned char portLetter>
     struct Port32 : SamCommon<Port32<portLetter>> {
         static const uint8_t letter = portLetter;
@@ -117,6 +141,8 @@ namespace Motate {
         constexpr const IRQn_Type _IRQn() const;
 
         typedef SamCommon<Port32<portLetter>> common;
+
+        static _pinChangeInterrupt *_firstInterrupt;
 
         void setModes(const PinMode type, const uintPort_t mask) {
             switch (type) {
@@ -129,12 +155,46 @@ namespace Motate {
                     rawPort()->PIO_ODR = mask ;
                     rawPort()->PIO_PER = mask ;
                     break;
+
+                /* From the datasheet (corrected typo based on the register info):
+                 * The corresponding bit at level zero in PIO_ABCDSR1 and
+                   the corresponding bit at level zero in PIO_ABCDSR2 means peripheral A is selected.
+
+                 * The corresponding bit at level one in PIO_ABCDSR1 and
+                   the corresponding bit at level zero in PIO_ABCDSR2 means peripheral B is selected.
+
+                 * The corresponding bit at level zero in PIO_ABCDSR1 and
+                   the corresponding bit at level one in PIO_ABCDSR2 means peripheral C is selected.
+
+                 * The corresponding bit at level one in PIO_ABCDSR1 and
+                   the corresponding bit at level one in PIO_ABCDSR2 means peripheral D is selected.
+
+
+                 *   Truth Table:
+                 *  Sel | SR2 | SR1
+                 *    A |  0  |  0
+                 *    B |  0  |  1
+                 *    C |  1  |  0
+                 *    D |  1  |  1
+                 */
                 case kPeripheralA:
-                    rawPort()->PIO_ABSR &= ~mask ;
+                    rawPort()->PIO_ABCDSR2 &= ~mask ;
+                    rawPort()->PIO_ABCDSR1 &= ~mask ;
                     rawPort()->PIO_PDR = mask ;
                     break;
                 case kPeripheralB:
-                    rawPort()->PIO_ABSR |= mask ;
+                    rawPort()->PIO_ABCDSR2 &= ~mask ;
+                    rawPort()->PIO_ABCDSR1 |=  mask ;
+                    rawPort()->PIO_PDR = mask ;
+                    break;
+                case kPeripheralC:
+                    rawPort()->PIO_ABCDSR2 |=  mask ;
+                    rawPort()->PIO_ABCDSR1 &= ~mask ;
+                    rawPort()->PIO_PDR = mask ;
+                    break;
+                case kPeripheralD:
+                    rawPort()->PIO_ABCDSR2 |=  mask ;
+                    rawPort()->PIO_ABCDSR1 |=  mask ;
                     rawPort()->PIO_PDR = mask ;
                     break;
                 default:
@@ -290,6 +350,18 @@ namespace Motate {
                     NVIC_DisableIRQ(_IRQn());
             }
         };
+
+        void addInterrupt(_pinChangeInterrupt *newInt) {
+            _pinChangeInterrupt *i = _firstInterrupt;
+            if (i == nullptr) {
+                _firstInterrupt = newInt;
+                return;
+            }
+            while (i->next != nullptr) {
+                i = i->next;
+            }
+            i->next = newInt;
+        }
     };
 
     // The constexpr functions we can define here, and get really great optimization.
@@ -417,7 +489,7 @@ namespace Motate {
     };
 
 
-#define _MAKE_MOTATE_PIN(pinNum, registerLetter, registerChar, registerPin) \
+#define _MAKE_MOTATE_PIN(pinNum, registerChar, registerPin) \
 template<> \
 struct Pin<pinNum> : RealPin<registerChar, registerPin> { \
 static const int16_t number = pinNum; \
@@ -484,13 +556,6 @@ template<> void Motate::IRQPin<pinNum>::interrupt();
     template<uint8_t portChar, uint8_t portPin>
     using LookupIRQPin = IRQPin< ReversePinLookup<portChar, portPin>::number >;
 
-
-    struct _pinChangeInterrupt {
-        const uint8_t portLetter;
-        const uint32_t mask;
-        void (&interrupt)();
-    };
-
     // YAY! We get to have fun with macro concatenation!
     // See: https://gcc.gnu.org/onlinedocs/cpp/Stringification.html#Stringification
     // Short form: We need to take two passes to get the concatenation to work
@@ -501,12 +566,7 @@ MOTATE_PIN_INTERRUPT_NAME_( x, y )
     // Also we use the GCC-specific __COUNTER__
     // See https://gcc.gnu.org/onlinedocs/cpp/Common-Predefined-Macros.html
 #define MOTATE_PIN_INTERRUPT(number) \
-Motate::_pinChangeInterrupt MOTATE_PIN_INTERRUPT_NAME( _Motate_PinChange_Interrupt_Trampoline, __COUNTER__ )\
-__attribute__(( used,section(".motate.pin_change_interrupts") )) {\
-Motate::IRQPin<number>::portLetter,\
-Motate::IRQPin<number>::mask,\
-Motate::IRQPin<number>::interrupt\
-};\
+_pinChangeInterrupt MOTATE_PIN_INTERRUPT_NAME(_MOTATE_Pin_interrupt_, __COUNTER__) {Motate::IRQPin<number>::mask, Motate::IRQPin<number>::interrupt, Port32<Motate::IRQPin<number>::portLetter>::_firstInterrupt}; \
 template<> void Motate::IRQPin<number>::interrupt()
 
     constexpr uint32_t startup_table[] = { 0, 8, 16, 24, 64, 80, 96, 112, 512, 576, 640, 704, 768, 832, 896, 960 };

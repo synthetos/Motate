@@ -28,7 +28,7 @@
  */
 
 
-#if defined(__SAM3X8E__) || defined(__SAM3X8C__)
+#if defined(SAM3X8) && SAM3X8
 
 #include "Atmel_sam3x/SamPins.h"
 
