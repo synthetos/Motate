@@ -244,7 +244,7 @@ OS := WIN32
 TOOLS_SUBPATH := win32/gcc-$(CROSS_COMPILE)
 PATH := $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin;$(PATH);c:\Program Files\Git\bin;c:\Program Files\Git\cmd;c:\Program Files\Git\mingw32\bin;c:\Program Files\Git\mingw64\bin
 else
-ifneq (,$(findstring Atmel Studio,$(PATH)))
+ifneq (,$(findstring Atmel,$(PATH)))
 OS := WIN32
 TOOLS_SUBPATH := win32/gcc-$(CROSS_COMPILE)
 PATH := $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin;$(PATH);c:\Program Files\Git\bin;c:\Program Files\Git\cmd;c:\Program Files\Git\mingw32\bin;c:\Program Files\Git\mingw64\bin
