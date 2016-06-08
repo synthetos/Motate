@@ -47,7 +47,7 @@
 #endif
 
 #if defined(__SAM3X8E__) || defined(__SAM3X8C__)
-#include <Atmel_sam3xa/SamUSB.h>
+#include <Atmel_sam3x/SamUSB.h>
 #endif
 
 namespace Motate {

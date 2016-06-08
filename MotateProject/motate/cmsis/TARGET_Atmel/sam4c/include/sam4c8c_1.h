@@ -1,32 +1,46 @@
-/* ---------------------------------------------------------------------------- */
-/*                  Atmel Microcontroller Software Support                      */
-/*                       SAM Software Package License                           */
-/* ---------------------------------------------------------------------------- */
-/* Copyright (c) 2015, Atmel Corporation                                        */
-/*                                                                              */
-/* All rights reserved.                                                         */
-/*                                                                              */
-/* Redistribution and use in source and binary forms, with or without           */
-/* modification, are permitted provided that the following condition is met:    */
-/*                                                                              */
-/* - Redistributions of source code must retain the above copyright notice,     */
-/* this list of conditions and the disclaimer below.                            */
-/*                                                                              */
-/* Atmel's name may not be used to endorse or promote products derived from     */
-/* this software without specific prior written permission.                     */
-/*                                                                              */
-/* DISCLAIMER:  THIS SOFTWARE IS PROVIDED BY ATMEL "AS IS" AND ANY EXPRESS OR   */
-/* IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF */
-/* MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT ARE   */
-/* DISCLAIMED. IN NO EVENT SHALL ATMEL BE LIABLE FOR ANY DIRECT, INDIRECT,      */
-/* INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT */
-/* LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,  */
-/* OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF    */
-/* LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING         */
-/* NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, */
-/* EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.                           */
-/* ---------------------------------------------------------------------------- */
-
+/**
+ * \file
+ *
+ * Copyright (c) 2014-2015 Atmel Corporation. All rights reserved.
+ *
+ * \asf_license_start
+ *
+ * \page License
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ *
+ * 3. The name of Atmel may not be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * 4. This software may only be redistributed and used in connection with an
+ *    Atmel microcontroller product.
+ *
+ * THIS SOFTWARE IS PROVIDED BY ATMEL "AS IS" AND ANY EXPRESS OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT ARE
+ * EXPRESSLY AND SPECIFICALLY DISCLAIMED. IN NO EVENT SHALL ATMEL BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * \asf_license_stop
+ *
+ */
+/*
+ * Support and FAQ: visit <a href="http://www.atmel.com/design-support/">Atmel Support</a>
+ */
 #ifndef _SAM4C8C_1_
 #define _SAM4C8C_1_
 
@@ -67,43 +81,43 @@ typedef enum IRQn
   SysTick_IRQn          = -1,  /**< 15 Cortex-M4 System Tick Interrupt       */
 /******  SAM4C8C specific Interrupt Numbers *********************************/
 
-  SUPC_IRQn            =  0, /**<  0 SAM4C Supply Controller (SUPC) */
-  RSTC_IRQn            =  1, /**<  1 SAM4C Reset Controller (RSTC) */
-  RTC_IRQn             =  2, /**<  2 SAM4C Real Time Clock (RTC) */
-  RTT_IRQn             =  3, /**<  3 SAM4C Real Time Timer (RTT) */
-  WDT_IRQn             =  4, /**<  4 SAM4C Watchdog Timer (WDT) */
-  PMC_IRQn             =  5, /**<  5 SAM4C Power Management Controller (PMC) */
-  EFC_IRQn             =  6, /**<  6 SAM4C Enhanced Embedded Flash Controller (EFC) */
-  UART0_IRQn           =  8, /**<  8 SAM4C UART 0 (UART0) */
-  PIOA_IRQn            = 11, /**< 11 SAM4C Parallel I/O Controller A (PIOA) */
-  PIOB_IRQn            = 12, /**< 12 SAM4C Parallel I/O Controller B (PIOB) */
-  USART0_IRQn          = 14, /**< 14 SAM4C USART 0 (USART0) */
-  USART1_IRQn          = 15, /**< 15 SAM4C USART 1 (USART1) */
-  USART2_IRQn          = 16, /**< 16 SAM4C USART 2 (USART2) */
-  USART3_IRQn          = 17, /**< 17 SAM4C USART 3 (USART3) */
-  USART4_IRQn          = 18, /**< 18 SAM4C USART 4 (USART4) */
-  TWI0_IRQn            = 19, /**< 19 SAM4C Two Wire Interface 0 (TWI0) */
-  TWI1_IRQn            = 20, /**< 20 SAM4C Two Wire Interface 1 (TWI1) */
-  SPI0_IRQn            = 21, /**< 21 SAM4C Serial Peripheral Interface 0 (SPI0) */
-  TC0_IRQn             = 23, /**< 23 SAM4C Timer/Counter 0 (TC0) */
-  TC1_IRQn             = 24, /**< 24 SAM4C Timer/Counter 1 (TC1) */
-  TC2_IRQn             = 25, /**< 25 SAM4C Timer/Counter 2 (TC2) */
-  TC3_IRQn             = 26, /**< 26 SAM4C Timer/Counter 3 (TC3) */
-  TC4_IRQn             = 27, /**< 27 SAM4C Timer/Counter 4 (TC4) */
-  TC5_IRQn             = 28, /**< 28 SAM4C Timer/Counter 5 (TC5) */
-  ADC_IRQn             = 29, /**< 29 SAM4C Analog To Digital Converter (ADC) */
-  ARM1_IRQn            = 30, /**< 30 SAM4C FPU signals : FPIXC, FPOFC, FPUFC, FPIOC, FPDZC, FPIDC, FPIXC (ARM1) */
-  IPC0_IRQn            = 31, /**< 31 SAM4C Interprocessor communication 0 (IPC0) */
-  SLCDC_IRQn           = 32, /**< 32 SAM4C Segment LCD Controller (SLCDC) */
-  TRNG_IRQn            = 33, /**< 33 SAM4C True Random Generator (TRNG) */
-  ICM_IRQn             = 34, /**< 34 SAM4C Integrity Check Module (ICM) */
-  CPKCC_IRQn           = 35, /**< 35 SAM4C Public Key Cryptography Controller (CPKCC) */
-  AES_IRQn             = 36, /**< 36 SAM4C Advanced Enhanced Standard (AES) */
-  PIOC_IRQn            = 37, /**< 37 SAM4C Parallel I/O Controller C (PIOC) */
-  UART1_IRQn           = 38, /**< 38 SAM4C UART 1 (UART1) */
-  IPC1_IRQn            = 39, /**< 39 SAM4C Interprocessor communication 1 (IPC1) */
-  SPI1_IRQn            = 40, /**< 40 SAM4C Serial Peripheral Interface 1 (SPI1) */
-  PWM_IRQn             = 41, /**< 41 SAM4C Pulse Width Modulation (PWM) */
+  SUPC_IRQn            =  0, /**<  0 SAM4C8C Supply Controller (SUPC) */
+  RSTC_IRQn            =  1, /**<  1 SAM4C8C Reset Controller (RSTC) */
+  RTC_IRQn             =  2, /**<  2 SAM4C8C Real Time Clock (RTC) */
+  RTT_IRQn             =  3, /**<  3 SAM4C8C Real Time Timer (RTT) */
+  WDT_IRQn             =  4, /**<  4 SAM4C8C Watchdog Timer (WDT) */
+  PMC_IRQn             =  5, /**<  5 SAM4C8C Power Management Controller (PMC) */
+  EFC_IRQn             =  6, /**<  6 SAM4C8C Enhanced Embedded Flash Controller (EFC) */
+  UART0_IRQn           =  8, /**<  8 SAM4C8C UART 0 (UART0) */
+  PIOA_IRQn            = 11, /**< 11 SAM4C8C Parallel I/O Controller A (PIOA) */
+  PIOB_IRQn            = 12, /**< 12 SAM4C8C Parallel I/O Controller B (PIOB) */
+  USART0_IRQn          = 14, /**< 14 SAM4C8C USART 0 (USART0) */
+  USART1_IRQn          = 15, /**< 15 SAM4C8C USART 1 (USART1) */
+  USART2_IRQn          = 16, /**< 16 SAM4C8C USART 2 (USART2) */
+  USART3_IRQn          = 17, /**< 17 SAM4C8C USART 3 (USART3) */
+  USART4_IRQn          = 18, /**< 18 SAM4C8C USART 4 (USART4) */
+  TWI0_IRQn            = 19, /**< 19 SAM4C8C Two Wire Interface 0 (TWI0) */
+  TWI1_IRQn            = 20, /**< 20 SAM4C8C Two Wire Interface 1 (TWI1) */
+  SPI0_IRQn            = 21, /**< 21 SAM4C8C Serial Peripheral Interface 0 (SPI0) */
+  TC0_IRQn             = 23, /**< 23 SAM4C8C Timer/Counter 0 (TC0) */
+  TC1_IRQn             = 24, /**< 24 SAM4C8C Timer/Counter 1 (TC1) */
+  TC2_IRQn             = 25, /**< 25 SAM4C8C Timer/Counter 2 (TC2) */
+  TC3_IRQn             = 26, /**< 26 SAM4C8C Timer/Counter 3 (TC3) */
+  TC4_IRQn             = 27, /**< 27 SAM4C8C Timer/Counter 4 (TC4) */
+  TC5_IRQn             = 28, /**< 28 SAM4C8C Timer/Counter 5 (TC5) */
+  ADC_IRQn             = 29, /**< 29 SAM4C8C Analog To Digital Converter (ADC) */
+  ARM1_IRQn            = 30, /**< 30 SAM4C8C FPU signals : FPIXC, FPOFC, FPUFC, FPIOC, FPDZC, FPIDC, FPIXC (ARM1) */
+  IPC0_IRQn            = 31, /**< 31 SAM4C8C Interprocessor communication 0 (IPC0) */
+  SLCDC_IRQn           = 32, /**< 32 SAM4C8C Segment LCD Controller (SLCDC) */
+  TRNG_IRQn            = 33, /**< 33 SAM4C8C True Random Generator (TRNG) */
+  ICM_IRQn             = 34, /**< 34 SAM4C8C Integrity Check Module (ICM) */
+  CPKCC_IRQn           = 35, /**< 35 SAM4C8C Public Key Cryptography Controller (CPKCC) */
+  AES_IRQn             = 36, /**< 36 SAM4C8C Advanced Enhanced Standard (AES) */
+  PIOC_IRQn            = 37, /**< 37 SAM4C8C Parallel I/O Controller C (PIOC) */
+  UART1_IRQn           = 38, /**< 38 SAM4C8C UART 1 (UART1) */
+  IPC1_IRQn            = 39, /**< 39 SAM4C8C Interprocessor communication 1 (IPC1) */
+  SPI1_IRQn            = 40, /**< 40 SAM4C8C Serial Peripheral Interface 1 (SPI1) */
+  PWM_IRQn             = 41, /**< 41 SAM4C8C Pulse Width Modulation (PWM) */
 
   PERIPH_COUNT_IRQn    = 42  /**< Number of peripheral IDs */
 } IRQn_Type;
@@ -253,33 +267,33 @@ void WDT_Handler        ( void );
 /** \addtogroup SAM4C8C_api Peripheral Software API */
 /*@{*/
 
-#include "component/adc.h"
-#include "component/aes.h"
-#include "component/chipid.h"
-#include "component/cmcc.h"
-#include "component/efc.h"
-#include "component/gpbr.h"
-#include "component/icm.h"
-#include "component/ipc.h"
-#include "component/matrix.h"
-#include "component/pdc.h"
-#include "component/pio.h"
-#include "component/pmc.h"
-#include "component/pwm.h"
-#include "component/rstc.h"
-#include "component/rswdt.h"
-#include "component/rtc.h"
-#include "component/rtt.h"
-#include "component/slcdc.h"
-#include "component/smc.h"
-#include "component/spi.h"
-#include "component/supc.h"
-#include "component/tc.h"
-#include "component/trng.h"
-#include "component/twi.h"
-#include "component/uart.h"
-#include "component/usart.h"
-#include "component/wdt.h"
+#include "component/component_adc.h"
+#include "component/component_aes.h"
+#include "component/component_chipid.h"
+#include "component/component_cmcc.h"
+#include "component/component_efc.h"
+#include "component/component_gpbr.h"
+#include "component/component_icm.h"
+#include "component/component_ipc.h"
+#include "component/component_matrix.h"
+#include "component/component_pdc.h"
+#include "component/component_pio.h"
+#include "component/component_pmc.h"
+#include "component/component_pwm.h"
+#include "component/component_rstc.h"
+#include "component/component_rswdt.h"
+#include "component/component_rtc.h"
+#include "component/component_rtt.h"
+#include "component/component_slcdc.h"
+#include "component/component_smc.h"
+#include "component/component_spi.h"
+#include "component/component_supc.h"
+#include "component/component_tc.h"
+#include "component/component_trng.h"
+#include "component/component_twi.h"
+#include "component/component_uart.h"
+#include "component/component_usart.h"
+#include "component/component_wdt.h"
 /*@}*/
 
 /* ************************************************************************** */
@@ -288,46 +302,46 @@ void WDT_Handler        ( void );
 /** \addtogroup SAM4C8C_reg Registers Access Definitions */
 /*@{*/
 
-#include "instance/aes.h"
-#include "instance/spi0.h"
-#include "instance/tc0.h"
-#include "instance/tc1.h"
-#include "instance/twi0.h"
-#include "instance/twi1.h"
-#include "instance/usart0.h"
-#include "instance/usart1.h"
-#include "instance/usart2.h"
-#include "instance/usart3.h"
-#include "instance/usart4.h"
-#include "instance/adc.h"
-#include "instance/slcdc.h"
-#include "instance/icm.h"
-#include "instance/trng.h"
-#include "instance/ipc0.h"
-#include "instance/cmcc0.h"
-#include "instance/smc0.h"
-#include "instance/matrix0.h"
-#include "instance/pmc.h"
-#include "instance/uart0.h"
-#include "instance/chipid.h"
-#include "instance/efc.h"
-#include "instance/pioa.h"
-#include "instance/piob.h"
-#include "instance/rstc.h"
-#include "instance/supc.h"
-#include "instance/rtt.h"
-#include "instance/wdt.h"
-#include "instance/rtc.h"
-#include "instance/gpbr.h"
-#include "instance/rswdt.h"
-#include "instance/spi1.h"
-#include "instance/uart1.h"
-#include "instance/pwm.h"
-#include "instance/pioc.h"
-#include "instance/matrix1.h"
-#include "instance/ipc1.h"
-#include "instance/cmcc1.h"
-#include "instance/smc1.h"
+#include "instance/instance_aes.h"
+#include "instance/instance_spi0.h"
+#include "instance/instance_tc0.h"
+#include "instance/instance_tc1.h"
+#include "instance/instance_twi0.h"
+#include "instance/instance_twi1.h"
+#include "instance/instance_usart0.h"
+#include "instance/instance_usart1.h"
+#include "instance/instance_usart2.h"
+#include "instance/instance_usart3.h"
+#include "instance/instance_usart4.h"
+#include "instance/instance_adc.h"
+#include "instance/instance_slcdc.h"
+#include "instance/instance_icm.h"
+#include "instance/instance_trng.h"
+#include "instance/instance_ipc0.h"
+#include "instance/instance_cmcc0.h"
+#include "instance/instance_smc0.h"
+#include "instance/instance_matrix0.h"
+#include "instance/instance_pmc.h"
+#include "instance/instance_uart0.h"
+#include "instance/instance_chipid.h"
+#include "instance/instance_efc.h"
+#include "instance/instance_pioa.h"
+#include "instance/instance_piob.h"
+#include "instance/instance_rstc.h"
+#include "instance/instance_supc.h"
+#include "instance/instance_rtt.h"
+#include "instance/instance_wdt.h"
+#include "instance/instance_rtc.h"
+#include "instance/instance_gpbr.h"
+#include "instance/instance_rswdt.h"
+#include "instance/instance_spi1.h"
+#include "instance/instance_uart1.h"
+#include "instance/instance_pwm.h"
+#include "instance/instance_pioc.h"
+#include "instance/instance_matrix1.h"
+#include "instance/instance_ipc1.h"
+#include "instance/instance_cmcc1.h"
+#include "instance/instance_smc1.h"
 /*@}*/
 
 /* ************************************************************************** */
@@ -501,7 +515,7 @@ void WDT_Handler        ( void );
 /** \addtogroup SAM4C8C_pio Peripheral Pio Definitions */
 /*@{*/
 
-#include "pio/sam4c8c.h"
+#include "pio/pio_sam4c8c.h"
 /*@}*/
 
 /* ************************************************************************** */
@@ -555,7 +569,7 @@ void WDT_Handler        ( void );
 /* Embedded Flash Write Wait State */
 #define CHIP_FLASH_WRITE_WAIT_STATE     (6U)
 
-/* Embedded Flash Read Wait State (VDDCORE set at 1.20V / VDDIO set between 2.7V to 3.6V / @ 85�C) */
+/* Embedded Flash Read Wait State (VDDCORE set at 1.20V / VDDIO set between 2.7V to 3.6V / @ 85°C) */
 #define CHIP_FREQ_FWS_0                 (21000000UL)  /**< \brief Maximum operating frequency when FWS is 0 */
 #define CHIP_FREQ_FWS_1                 (42000000UL)  /**< \brief Maximum operating frequency when FWS is 1 */
 #define CHIP_FREQ_FWS_2                 (63000000UL)  /**< \brief Maximum operating frequency when FWS is 2 */

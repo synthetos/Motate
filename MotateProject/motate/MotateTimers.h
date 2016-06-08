@@ -74,7 +74,7 @@ namespace Motate {
 #endif
 
 #if defined(__SAM3X8E__) || defined(__SAM3X8C__)
-#include <Atmel_sam3xa/SamTimers.h>
+#include <Atmel_sam3x/SamTimers.h>
 #endif
 
 #if defined(__KL05Z__)

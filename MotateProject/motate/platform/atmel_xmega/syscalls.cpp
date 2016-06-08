@@ -17,7 +17,7 @@
 */
 
 /**
-  * \file syscalls_sam3.c
+  * \file syscalls.c
   *
   * Implementation of newlib syscall.
   *

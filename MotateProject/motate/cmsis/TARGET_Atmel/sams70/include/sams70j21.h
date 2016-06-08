@@ -1,31 +1,46 @@
-/* ---------------------------------------------------------------------------- */
-/*                  Atmel Microcontroller Software Support                      */
-/*                       SAM Software Package License                           */
-/* ---------------------------------------------------------------------------- */
-/* Copyright (c) 2015, Atmel Corporation                                        */
-/*                                                                              */
-/* All rights reserved.                                                         */
-/*                                                                              */
-/* Redistribution and use in source and binary forms, with or without           */
-/* modification, are permitted provided that the following condition is met:    */
-/*                                                                              */
-/* - Redistributions of source code must retain the above copyright notice,     */
-/* this list of conditions and the disclaimer below.                            */
-/*                                                                              */
-/* Atmel's name may not be used to endorse or promote products derived from     */
-/* this software without specific prior written permission.                     */
-/*                                                                              */
-/* DISCLAIMER:  THIS SOFTWARE IS PROVIDED BY ATMEL "AS IS" AND ANY EXPRESS OR   */
-/* IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF */
-/* MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT ARE   */
-/* DISCLAIMED. IN NO EVENT SHALL ATMEL BE LIABLE FOR ANY DIRECT, INDIRECT,      */
-/* INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT */
-/* LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,  */
-/* OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF    */
-/* LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING         */
-/* NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, */
-/* EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.                           */
-/* ---------------------------------------------------------------------------- */
+/**
+ * \file
+ *
+ * Copyright (c) 2015 Atmel Corporation. All rights reserved.
+ *
+ * \asf_license_start
+ *
+ * \page License
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ *
+ * 3. The name of Atmel may not be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * 4. This software may only be redistributed and used in connection with an
+ *    Atmel microcontroller product.
+ *
+ * THIS SOFTWARE IS PROVIDED BY ATMEL "AS IS" AND ANY EXPRESS OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT ARE
+ * EXPRESSLY AND SPECIFICALLY DISCLAIMED. IN NO EVENT SHALL ATMEL BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * \asf_license_stop
+ *
+ */
+/*
+ * Support and FAQ: visit <a href="http://www.atmel.com/design-support/">Atmel Support</a>
+ */
 
 #ifndef _SAMS70J21_
 #define _SAMS70J21_
@@ -553,18 +568,19 @@ void XDMAC_Handler      ( void );
 #define IFLASH_NB_OF_LOCK_BITS  (128u)
 #define IRAM_SIZE               (0x60000u)
 
-#define QSPIMEM_ADDR  (0x80000000u) /**< QSPI Memory base address */
-#define AXIMX_ADDR    (0xA0000000u) /**< AXI Bus Matrix base address */
-#define ITCM_ADDR     (0x00000000u) /**< Instruction Tightly Coupled Memory base address */
-#define IFLASH_ADDR   (0x00400000u) /**< Internal Flash base address */
-#define IROM_ADDR     (0x00800000u) /**< Internal ROM base address */
-#define DTCM_ADDR     (0x20000000u) /**< Data Tightly Coupled Memory base address */
-#define IRAM_ADDR     (0x20400000u) /**< Internal RAM base address */
-#define EBI_CS0_ADDR  (0x60000000u) /**< EBI Chip Select 0 base address */
-#define EBI_CS1_ADDR  (0x61000000u) /**< EBI Chip Select 1 base address */
-#define EBI_CS2_ADDR  (0x62000000u) /**< EBI Chip Select 2 base address */
-#define EBI_CS3_ADDR  (0x63000000u) /**< EBI Chip Select 3 base address */
-#define SDRAM_CS_ADDR (0x70000000u) /**< SDRAM Chip Select base address */
+#define QSPIMEM_ADDR   (0x80000000u) /**< QSPI Memory base address */
+#define AXIMX_ADDR     (0xA0000000u) /**< AXI Bus Matrix base address */
+#define ITCM_ADDR      (0x00000000u) /**< Instruction Tightly Coupled Memory base address */
+#define IFLASH_ADDR    (0x00400000u) /**< Internal Flash base address */
+#define IROM_ADDR      (0x00800000u) /**< Internal ROM base address */
+#define DTCM_ADDR      (0x20000000u) /**< Data Tightly Coupled Memory base address */
+#define IRAM_ADDR      (0x20400000u) /**< Internal RAM base address */
+#define EBI_CS0_ADDR   (0x60000000u) /**< EBI Chip Select 0 base address */
+#define EBI_CS1_ADDR   (0x61000000u) /**< EBI Chip Select 1 base address */
+#define EBI_CS2_ADDR   (0x62000000u) /**< EBI Chip Select 2 base address */
+#define EBI_CS3_ADDR   (0x63000000u) /**< EBI Chip Select 3 base address */
+#define SDRAM_CS_ADDR  (0x70000000u) /**< SDRAM Chip Select base address */
+#define USBHS_RAM_ADDR (0xA0100000u) /**< USBHS Chip Select base address */
 
 /* ************************************************************************** */
 /*   MISCELLANEOUS DEFINITIONS FOR SAMS70J21 */
@@ -587,7 +603,7 @@ void XDMAC_Handler      ( void );
 #define CHIP_FREQ_MAINCK_RC_4MHZ        (4000000UL)
 #define CHIP_FREQ_MAINCK_RC_8MHZ        (8000000UL)
 #define CHIP_FREQ_MAINCK_RC_12MHZ       (12000000UL)
-#define CHIP_FREQ_CPU_MAX               (120000000UL)
+#define CHIP_FREQ_CPU_MAX               (300000000UL)
 #define CHIP_FREQ_XTAL_32K              (32768UL)
 #define CHIP_FREQ_XTAL_12M              (12000000UL)
 

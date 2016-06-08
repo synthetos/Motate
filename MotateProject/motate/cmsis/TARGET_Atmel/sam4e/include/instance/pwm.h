@@ -1,31 +1,46 @@
-/* ---------------------------------------------------------------------------- */
-/*                  Atmel Microcontroller Software Support                      */
-/*                       SAM Software Package License                           */
-/* ---------------------------------------------------------------------------- */
-/* Copyright (c) 2015, Atmel Corporation                                        */
-/*                                                                              */
-/* All rights reserved.                                                         */
-/*                                                                              */
-/* Redistribution and use in source and binary forms, with or without           */
-/* modification, are permitted provided that the following condition is met:    */
-/*                                                                              */
-/* - Redistributions of source code must retain the above copyright notice,     */
-/* this list of conditions and the disclaimer below.                            */
-/*                                                                              */
-/* Atmel's name may not be used to endorse or promote products derived from     */
-/* this software without specific prior written permission.                     */
-/*                                                                              */
-/* DISCLAIMER:  THIS SOFTWARE IS PROVIDED BY ATMEL "AS IS" AND ANY EXPRESS OR   */
-/* IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF */
-/* MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT ARE   */
-/* DISCLAIMED. IN NO EVENT SHALL ATMEL BE LIABLE FOR ANY DIRECT, INDIRECT,      */
-/* INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT */
-/* LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,  */
-/* OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF    */
-/* LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING         */
-/* NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, */
-/* EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.                           */
-/* ---------------------------------------------------------------------------- */
+/**
+ * \file
+ *
+ * Copyright (c) 2014-2015 Atmel Corporation. All rights reserved.
+ *
+ * \asf_license_start
+ *
+ * \page License
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ *
+ * 3. The name of Atmel may not be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * 4. This software may only be redistributed and used in connection with an
+ *    Atmel microcontroller product.
+ *
+ * THIS SOFTWARE IS PROVIDED BY ATMEL "AS IS" AND ANY EXPRESS OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT ARE
+ * EXPRESSLY AND SPECIFICALLY DISCLAIMED. IN NO EVENT SHALL ATMEL BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * \asf_license_stop
+ *
+ */
+/*
+ * Support and FAQ: visit <a href="http://www.atmel.com/design-support/">Atmel Support</a>
+ */
 
 #ifndef _SAM4E_PWM_INSTANCE_
 #define _SAM4E_PWM_INSTANCE_
@@ -58,12 +73,13 @@
   #define REG_PWM_FMR                       (0x4000005CU) /**< \brief (PWM) PWM Fault Mode Register */
   #define REG_PWM_FSR                       (0x40000060U) /**< \brief (PWM) PWM Fault Status Register */
   #define REG_PWM_FCR                       (0x40000064U) /**< \brief (PWM) PWM Fault Clear Register */
-  #define REG_PWM_FPV                       (0x40000068U) /**< \brief (PWM) PWM Fault Protection Value Register */
+#define REG_PWM_FPV1              (0x40000068U) /**< \brief (PWM) PWM Fault Protection Value Register 1 */
   #define REG_PWM_FPE                       (0x4000006CU) /**< \brief (PWM) PWM Fault Protection Enable Register */
   #define REG_PWM_ELMR                      (0x4000007CU) /**< \brief (PWM) PWM Event Line 0 Mode Register */
   #define REG_PWM_SSPR                      (0x400000A0U) /**< \brief (PWM) PWM Spread Spectrum Register */
   #define REG_PWM_SSPUP                     (0x400000A4U) /**< \brief (PWM) PWM Spread Spectrum Update Register */
   #define REG_PWM_SMMR                      (0x400000B0U) /**< \brief (PWM) PWM Stepper Motor Mode Register */
+  #define REG_PWM_FPV2                      (0x400000C0U) /**< \brief (PWM) PWM Fault Protection Value 2 Register */
   #define REG_PWM_WPCR                      (0x400000E4U) /**< \brief (PWM) PWM Write Protection Control Register */
   #define REG_PWM_WPSR                      (0x400000E8U) /**< \brief (PWM) PWM Write Protection Status Register */
   #define REG_PWM_TPR                       (0x40000108U) /**< \brief (PWM) Transmit Pointer Register */
@@ -163,12 +179,13 @@
   #define REG_PWM_FMR      (*(__IO uint32_t*)0x4000005CU) /**< \brief (PWM) PWM Fault Mode Register */
   #define REG_PWM_FSR      (*(__I  uint32_t*)0x40000060U) /**< \brief (PWM) PWM Fault Status Register */
   #define REG_PWM_FCR      (*(__O  uint32_t*)0x40000064U) /**< \brief (PWM) PWM Fault Clear Register */
-  #define REG_PWM_FPV      (*(__IO uint32_t*)0x40000068U) /**< \brief (PWM) PWM Fault Protection Value Register */
+#define REG_PWM_FPV1     (*(RwReg*)0x40000068U) /**< \brief (PWM) PWM Fault Protection Value Register 1 */
   #define REG_PWM_FPE      (*(__IO uint32_t*)0x4000006CU) /**< \brief (PWM) PWM Fault Protection Enable Register */
   #define REG_PWM_ELMR     (*(__IO uint32_t*)0x4000007CU) /**< \brief (PWM) PWM Event Line 0 Mode Register */
   #define REG_PWM_SSPR     (*(__IO uint32_t*)0x400000A0U) /**< \brief (PWM) PWM Spread Spectrum Register */
   #define REG_PWM_SSPUP    (*(__O  uint32_t*)0x400000A4U) /**< \brief (PWM) PWM Spread Spectrum Update Register */
   #define REG_PWM_SMMR     (*(__IO uint32_t*)0x400000B0U) /**< \brief (PWM) PWM Stepper Motor Mode Register */
+  #define REG_PWM_FPV2     (*(__IO uint32_t*)0x400000C0U) /**< \brief (PWM) PWM Fault Protection Value 2 Register */
   #define REG_PWM_WPCR     (*(__O  uint32_t*)0x400000E4U) /**< \brief (PWM) PWM Write Protection Control Register */
   #define REG_PWM_WPSR     (*(__I  uint32_t*)0x400000E8U) /**< \brief (PWM) PWM Write Protection Status Register */
   #define REG_PWM_TPR      (*(__IO uint32_t*)0x40000108U) /**< \brief (PWM) Transmit Pointer Register */

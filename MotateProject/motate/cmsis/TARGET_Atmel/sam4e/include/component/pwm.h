@@ -1,31 +1,46 @@
-/* ---------------------------------------------------------------------------- */
-/*                  Atmel Microcontroller Software Support                      */
-/*                       SAM Software Package License                           */
-/* ---------------------------------------------------------------------------- */
-/* Copyright (c) 2015, Atmel Corporation                                        */
-/*                                                                              */
-/* All rights reserved.                                                         */
-/*                                                                              */
-/* Redistribution and use in source and binary forms, with or without           */
-/* modification, are permitted provided that the following condition is met:    */
-/*                                                                              */
-/* - Redistributions of source code must retain the above copyright notice,     */
-/* this list of conditions and the disclaimer below.                            */
-/*                                                                              */
-/* Atmel's name may not be used to endorse or promote products derived from     */
-/* this software without specific prior written permission.                     */
-/*                                                                              */
-/* DISCLAIMER:  THIS SOFTWARE IS PROVIDED BY ATMEL "AS IS" AND ANY EXPRESS OR   */
-/* IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF */
-/* MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT ARE   */
-/* DISCLAIMED. IN NO EVENT SHALL ATMEL BE LIABLE FOR ANY DIRECT, INDIRECT,      */
-/* INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT */
-/* LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,  */
-/* OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF    */
-/* LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING         */
-/* NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, */
-/* EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.                           */
-/* ---------------------------------------------------------------------------- */
+/**
+ * \file
+ *
+ * Copyright (c) 2014-2015 Atmel Corporation. All rights reserved.
+ *
+ * \asf_license_start
+ *
+ * \page License
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ *
+ * 3. The name of Atmel may not be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * 4. This software may only be redistributed and used in connection with an
+ *    Atmel microcontroller product.
+ *
+ * THIS SOFTWARE IS PROVIDED BY ATMEL "AS IS" AND ANY EXPRESS OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT ARE
+ * EXPRESSLY AND SPECIFICALLY DISCLAIMED. IN NO EVENT SHALL ATMEL BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * \asf_license_stop
+ *
+ */
+/*
+ * Support and FAQ: visit <a href="http://www.atmel.com/design-support/">Atmel Support</a>
+ */
 
 #ifndef _SAM4E_PWM_COMPONENT_
 #define _SAM4E_PWM_COMPONENT_
@@ -48,90 +63,79 @@ typedef struct {
   __IO uint32_t PWM_DT;      /**< \brief (PwmCh_num Offset: 0x18) PWM Channel Dead Time Register */
   __O  uint32_t PWM_DTUPD;   /**< \brief (PwmCh_num Offset: 0x1C) PWM Channel Dead Time Update Register */
 } PwmCh_num;
-/** \brief Pwm hardware registers */
-#define PWMCH_NUM_NUMBER 4
+/** \brief PwmCh_num_0x400 hardware registers */
 typedef struct {
-  __IO uint32_t  PWM_CLK;                      /**< \brief (Pwm Offset: 0x00) PWM Clock Register */
-  __O  uint32_t  PWM_ENA;                      /**< \brief (Pwm Offset: 0x04) PWM Enable Register */
-  __O  uint32_t  PWM_DIS;                      /**< \brief (Pwm Offset: 0x08) PWM Disable Register */
-  __I  uint32_t  PWM_SR;                       /**< \brief (Pwm Offset: 0x0C) PWM Status Register */
-  __O  uint32_t  PWM_IER1;                     /**< \brief (Pwm Offset: 0x10) PWM Interrupt Enable Register 1 */
-  __O  uint32_t  PWM_IDR1;                     /**< \brief (Pwm Offset: 0x14) PWM Interrupt Disable Register 1 */
-  __I  uint32_t  PWM_IMR1;                     /**< \brief (Pwm Offset: 0x18) PWM Interrupt Mask Register 1 */
-  __I  uint32_t  PWM_ISR1;                     /**< \brief (Pwm Offset: 0x1C) PWM Interrupt Status Register 1 */
-  __IO uint32_t  PWM_SCM;                      /**< \brief (Pwm Offset: 0x20) PWM Sync Channels Mode Register */
+  __IO uint32_t PWM_CMUPD;           /**< \brief (PwmCh_num_0x400 Offset: 0x0) PWM Channel Mode Update Register */
+  __IO uint32_t PWM_CAE;             /**< \brief (PwmCh_num_0x400 Offset: 0x4) PWM Channel Additional Edge Register */
+  __IO uint32_t PWM_CAEUPD;          /**< \brief (PwmCh_num_0x400 Offset: 0x8) PWM Channel Additional Edge Update Register */
+  __I  uint32_t Reserved1[5];
+} PwmCh_num_0x400;
+/** \brief PwmCmp hardware registers */
+typedef struct {
+  __IO uint32_t PWM_CMPV;            /**< \brief (PwmCmp Offset: 0x0) PWM Comparison 0 Value Register */
+  __IO uint32_t PWM_CMPVUPD;         /**< \brief (PwmCmp Offset: 0x4) PWM Comparison 0 Value Update Register */
+  __IO uint32_t PWM_CMPM;            /**< \brief (PwmCmp Offset: 0x8) PWM Comparison 0 Mode Register */
+  __IO uint32_t PWM_CMPMUPD;         /**< \brief (PwmCmp Offset: 0xC) PWM Comparison 0 Mode Update Register */
+} PwmCmp;
+/** \brief Pwm hardware registers */
+#define PWMCMP_NUMBER 8
+#define PWMCH_NUM_NUMBER 4
+#define PWMCH_NUM_0X400_NUMBER 4
+typedef struct {
+  __IO uint32_t  PWM_CLK;             /**< \brief (Pwm Offset: 0x00) PWM Clock Register */
+  __O  uint32_t  PWM_ENA;             /**< \brief (Pwm Offset: 0x04) PWM Enable Register */
+  __O  uint32_t  PWM_DIS;             /**< \brief (Pwm Offset: 0x08) PWM Disable Register */
+  __I  uint32_t  PWM_SR;              /**< \brief (Pwm Offset: 0x0C) PWM Status Register */
+  __O  uint32_t  PWM_IER1;            /**< \brief (Pwm Offset: 0x10) PWM Interrupt Enable Register 1 */
+  __O  uint32_t  PWM_IDR1;            /**< \brief (Pwm Offset: 0x14) PWM Interrupt Disable Register 1 */
+  __I  uint32_t  PWM_IMR1;            /**< \brief (Pwm Offset: 0x18) PWM Interrupt Mask Register 1 */
+  __I  uint32_t  PWM_ISR1;            /**< \brief (Pwm Offset: 0x1C) PWM Interrupt Status Register 1 */
+  __IO uint32_t  PWM_SCM;             /**< \brief (Pwm Offset: 0x20) PWM Sync Channels Mode Register */
   __O  uint32_t  PWM_DMAR;                     /**< \brief (Pwm Offset: 0x24) PWM DMA Register */
-  __IO uint32_t  PWM_SCUC;                     /**< \brief (Pwm Offset: 0x28) PWM Sync Channels Update Control Register */
-  __IO uint32_t  PWM_SCUP;                     /**< \brief (Pwm Offset: 0x2C) PWM Sync Channels Update Period Register */
-  __O  uint32_t  PWM_SCUPUPD;                  /**< \brief (Pwm Offset: 0x30) PWM Sync Channels Update Period Update Register */
-  __O  uint32_t  PWM_IER2;                     /**< \brief (Pwm Offset: 0x34) PWM Interrupt Enable Register 2 */
-  __O  uint32_t  PWM_IDR2;                     /**< \brief (Pwm Offset: 0x38) PWM Interrupt Disable Register 2 */
-  __I  uint32_t  PWM_IMR2;                     /**< \brief (Pwm Offset: 0x3C) PWM Interrupt Mask Register 2 */
-  __I  uint32_t  PWM_ISR2;                     /**< \brief (Pwm Offset: 0x40) PWM Interrupt Status Register 2 */
-  __IO uint32_t  PWM_OOV;                      /**< \brief (Pwm Offset: 0x44) PWM Output Override Value Register */
-  __IO uint32_t  PWM_OS;                       /**< \brief (Pwm Offset: 0x48) PWM Output Selection Register */
-  __O  uint32_t  PWM_OSS;                      /**< \brief (Pwm Offset: 0x4C) PWM Output Selection Set Register */
-  __O  uint32_t  PWM_OSC;                      /**< \brief (Pwm Offset: 0x50) PWM Output Selection Clear Register */
-  __O  uint32_t  PWM_OSSUPD;                   /**< \brief (Pwm Offset: 0x54) PWM Output Selection Set Update Register */
-  __O  uint32_t  PWM_OSCUPD;                   /**< \brief (Pwm Offset: 0x58) PWM Output Selection Clear Update Register */
-  __IO uint32_t  PWM_FMR;                      /**< \brief (Pwm Offset: 0x5C) PWM Fault Mode Register */
-  __I  uint32_t  PWM_FSR;                      /**< \brief (Pwm Offset: 0x60) PWM Fault Status Register */
-  __O  uint32_t  PWM_FCR;                      /**< \brief (Pwm Offset: 0x64) PWM Fault Clear Register */
-  __IO uint32_t  PWM_FPV;                      /**< \brief (Pwm Offset: 0x68) PWM Fault Protection Value Register */
-  __IO uint32_t  PWM_FPE;                      /**< \brief (Pwm Offset: 0x6C) PWM Fault Protection Enable Register */
-  __I  uint32_t  Reserved1[3];
-  __IO uint32_t  PWM_ELMR[2];                  /**< \brief (Pwm Offset: 0x7C) PWM Event Line 0 Mode Register */
-  __I  uint32_t  Reserved2[7];
-  __IO uint32_t  PWM_SSPR;                     /**< \brief (Pwm Offset: 0xA0) PWM Spread Spectrum Register */
-  __O  uint32_t  PWM_SSPUP;                    /**< \brief (Pwm Offset: 0xA4) PWM Spread Spectrum Update Register */
-  __I  uint32_t  Reserved3[2];
-  __IO uint32_t  PWM_SMMR;                     /**< \brief (Pwm Offset: 0xB0) PWM Stepper Motor Mode Register */
-  __I  uint32_t  Reserved4[12];
-  __O  uint32_t  PWM_WPCR;                     /**< \brief (Pwm Offset: 0xE4) PWM Write Protection Control Register */
-  __I  uint32_t  PWM_WPSR;                     /**< \brief (Pwm Offset: 0xE8) PWM Write Protection Status Register */
-  __I  uint32_t  Reserved5[7];
-  __IO uint32_t  PWM_TPR;                      /**< \brief (Pwm Offset: 0x108) Transmit Pointer Register */
-  __IO uint32_t  PWM_TCR;                      /**< \brief (Pwm Offset: 0x10C) Transmit Counter Register */
-  __I  uint32_t  Reserved6[2];
-  __IO uint32_t  PWM_TNPR;                     /**< \brief (Pwm Offset: 0x118) Transmit Next Pointer Register */
-  __IO uint32_t  PWM_TNCR;                     /**< \brief (Pwm Offset: 0x11C) Transmit Next Counter Register */
-  __O  uint32_t  PWM_PTCR;                     /**< \brief (Pwm Offset: 0x120) Transfer Control Register */
-  __I  uint32_t  PWM_PTSR;                     /**< \brief (Pwm Offset: 0x124) Transfer Status Register */
-  __I  uint32_t  Reserved7[2];
-  __IO uint32_t  PWM_CMPV0;                    /**< \brief (Pwm Offset: 0x130) PWM Comparison 0 Value Register */
-  __O  uint32_t  PWM_CMPVUPD0;                 /**< \brief (Pwm Offset: 0x134) PWM Comparison 0 Value Update Register */
-  __IO uint32_t  PWM_CMPM0;                    /**< \brief (Pwm Offset: 0x138) PWM Comparison 0 Mode Register */
-  __O  uint32_t  PWM_CMPMUPD0;                 /**< \brief (Pwm Offset: 0x13C) PWM Comparison 0 Mode Update Register */
-  __IO uint32_t  PWM_CMPV1;                    /**< \brief (Pwm Offset: 0x140) PWM Comparison 1 Value Register */
-  __O  uint32_t  PWM_CMPVUPD1;                 /**< \brief (Pwm Offset: 0x144) PWM Comparison 1 Value Update Register */
-  __IO uint32_t  PWM_CMPM1;                    /**< \brief (Pwm Offset: 0x148) PWM Comparison 1 Mode Register */
-  __O  uint32_t  PWM_CMPMUPD1;                 /**< \brief (Pwm Offset: 0x14C) PWM Comparison 1 Mode Update Register */
-  __IO uint32_t  PWM_CMPV2;                    /**< \brief (Pwm Offset: 0x150) PWM Comparison 2 Value Register */
-  __O  uint32_t  PWM_CMPVUPD2;                 /**< \brief (Pwm Offset: 0x154) PWM Comparison 2 Value Update Register */
-  __IO uint32_t  PWM_CMPM2;                    /**< \brief (Pwm Offset: 0x158) PWM Comparison 2 Mode Register */
-  __O  uint32_t  PWM_CMPMUPD2;                 /**< \brief (Pwm Offset: 0x15C) PWM Comparison 2 Mode Update Register */
-  __IO uint32_t  PWM_CMPV3;                    /**< \brief (Pwm Offset: 0x160) PWM Comparison 3 Value Register */
-  __O  uint32_t  PWM_CMPVUPD3;                 /**< \brief (Pwm Offset: 0x164) PWM Comparison 3 Value Update Register */
-  __IO uint32_t  PWM_CMPM3;                    /**< \brief (Pwm Offset: 0x168) PWM Comparison 3 Mode Register */
-  __O  uint32_t  PWM_CMPMUPD3;                 /**< \brief (Pwm Offset: 0x16C) PWM Comparison 3 Mode Update Register */
-  __IO uint32_t  PWM_CMPV4;                    /**< \brief (Pwm Offset: 0x170) PWM Comparison 4 Value Register */
-  __O  uint32_t  PWM_CMPVUPD4;                 /**< \brief (Pwm Offset: 0x174) PWM Comparison 4 Value Update Register */
-  __IO uint32_t  PWM_CMPM4;                    /**< \brief (Pwm Offset: 0x178) PWM Comparison 4 Mode Register */
-  __O  uint32_t  PWM_CMPMUPD4;                 /**< \brief (Pwm Offset: 0x17C) PWM Comparison 4 Mode Update Register */
-  __IO uint32_t  PWM_CMPV5;                    /**< \brief (Pwm Offset: 0x180) PWM Comparison 5 Value Register */
-  __O  uint32_t  PWM_CMPVUPD5;                 /**< \brief (Pwm Offset: 0x184) PWM Comparison 5 Value Update Register */
-  __IO uint32_t  PWM_CMPM5;                    /**< \brief (Pwm Offset: 0x188) PWM Comparison 5 Mode Register */
-  __O  uint32_t  PWM_CMPMUPD5;                 /**< \brief (Pwm Offset: 0x18C) PWM Comparison 5 Mode Update Register */
-  __IO uint32_t  PWM_CMPV6;                    /**< \brief (Pwm Offset: 0x190) PWM Comparison 6 Value Register */
-  __O  uint32_t  PWM_CMPVUPD6;                 /**< \brief (Pwm Offset: 0x194) PWM Comparison 6 Value Update Register */
-  __IO uint32_t  PWM_CMPM6;                    /**< \brief (Pwm Offset: 0x198) PWM Comparison 6 Mode Register */
-  __O  uint32_t  PWM_CMPMUPD6;                 /**< \brief (Pwm Offset: 0x19C) PWM Comparison 6 Mode Update Register */
-  __IO uint32_t  PWM_CMPV7;                    /**< \brief (Pwm Offset: 0x1A0) PWM Comparison 7 Value Register */
-  __O  uint32_t  PWM_CMPVUPD7;                 /**< \brief (Pwm Offset: 0x1A4) PWM Comparison 7 Value Update Register */
-  __IO uint32_t  PWM_CMPM7;                    /**< \brief (Pwm Offset: 0x1A8) PWM Comparison 7 Mode Register */
-  __O  uint32_t  PWM_CMPMUPD7;                 /**< \brief (Pwm Offset: 0x1AC) PWM Comparison 7 Mode Update Register */
-  __I  uint32_t  Reserved8[20];
-       PwmCh_num PWM_CH_NUM[PWMCH_NUM_NUMBER]; /**< \brief (Pwm Offset: 0x200) ch_num = 0 .. 3 */
+  __IO uint32_t  PWM_SCUC;            /**< \brief (Pwm Offset: 0x28) PWM Sync Channels Update Control Register */
+  __IO uint32_t  PWM_SCUP;            /**< \brief (Pwm Offset: 0x2C) PWM Sync Channels Update Period Register */
+  __O  uint32_t  PWM_SCUPUPD;         /**< \brief (Pwm Offset: 0x30) PWM Sync Channels Update Period Update Register */
+  __O  uint32_t  PWM_IER2;            /**< \brief (Pwm Offset: 0x34) PWM Interrupt Enable Register 2 */
+  __O  uint32_t  PWM_IDR2;            /**< \brief (Pwm Offset: 0x38) PWM Interrupt Disable Register 2 */
+  __I  uint32_t  PWM_IMR2;            /**< \brief (Pwm Offset: 0x3C) PWM Interrupt Mask Register 2 */
+  __I  uint32_t  PWM_ISR2;            /**< \brief (Pwm Offset: 0x40) PWM Interrupt Status Register 2 */
+  __IO uint32_t  PWM_OOV;             /**< \brief (Pwm Offset: 0x44) PWM Output Override Value Register */
+  __IO uint32_t  PWM_OS;              /**< \brief (Pwm Offset: 0x48) PWM Output Selection Register */
+  __O  uint32_t  PWM_OSS;             /**< \brief (Pwm Offset: 0x4C) PWM Output Selection Set Register */
+  __O  uint32_t  PWM_OSC;             /**< \brief (Pwm Offset: 0x50) PWM Output Selection Clear Register */
+  __O  uint32_t  PWM_OSSUPD;          /**< \brief (Pwm Offset: 0x54) PWM Output Selection Set Update Register */
+  __O  uint32_t  PWM_OSCUPD;          /**< \brief (Pwm Offset: 0x58) PWM Output Selection Clear Update Register */
+  __IO uint32_t  PWM_FMR;             /**< \brief (Pwm Offset: 0x5C) PWM Fault Mode Register */
+  __I  uint32_t  PWM_FSR;             /**< \brief (Pwm Offset: 0x60) PWM Fault Status Register */
+  __O  uint32_t  PWM_FCR;             /**< \brief (Pwm Offset: 0x64) PWM Fault Clear Register */
+  __IO uint32_t  PWM_FPV1;            /**< \brief (Pwm Offset: 0x68) PWM Fault Protection Value Register 1 */
+  __IO uint32_t  PWM_FPE;             /**< \brief (Pwm Offset: 0x6C) PWM Fault Protection Enable Register */
+  __I  uint32_t  Reserved2[3];
+  __IO uint32_t  PWM_ELMR[2];         /**< \brief (Pwm Offset: 0x7C) PWM Event Line 0 Mode Register */
+  __I  uint32_t  Reserved3[7];
+  __IO uint32_t  PWM_SSPR;            /**< \brief (Pwm Offset: 0xA0) PWM Spread Spectrum Register */
+  __O  uint32_t  PWM_SSPUP;           /**< \brief (Pwm Offset: 0xA4) PWM Spread Spectrum Update Register */
+  __I  uint32_t  Reserved4[2];
+  __IO uint32_t  PWM_SMMR;            /**< \brief (Pwm Offset: 0xB0) PWM Stepper Motor Mode Register */
+  __I  uint32_t  Reserved5[3];
+  __IO uint32_t  PWM_FPV2;            /**< \brief (Pwm Offset: 0xC0) PWM Fault Protection Value 2 Register */
+  __I  uint32_t  Reserved6[8];
+  __O  uint32_t  PWM_WPCR;            /**< \brief (Pwm Offset: 0xE4) PWM Write Protection Control Register */
+  __I  uint32_t  PWM_WPSR;            /**< \brief (Pwm Offset: 0xE8) PWM Write Protectiong Status Register */
+  __I  uint32_t  Reserved7[7];
+  __IO uint32_t  PWM_TPR;             /**< \brief (Pwm Offset: 0x108) Transmit Pointer Register */
+  __IO uint32_t  PWM_TCR;             /**< \brief (Pwm Offset: 0x10C) Transmit Counter Register */
+  __I  uint32_t  Reserved8[2];
+  __IO uint32_t  PWM_TNPR;            /**< \brief (Pwm Offset: 0x118) Transmit Next Pointer Register */
+  __IO uint32_t  PWM_TNCR;            /**< \brief (Pwm Offset: 0x11C) Transmit Next Counter Register */
+  __O  uint32_t  PWM_PTCR;            /**< \brief (Pwm Offset: 0x120) Transfer Control Register */
+  __I  uint32_t  PWM_PTSR;            /**< \brief (Pwm Offset: 0x124) Transfer Status Register */
+  __I  uint32_t  Reserved9[2];
+  PwmCmp           PWM_CMP[PWMCMP_NUMBER]; /**< \brief (Pwm Offset: 0x130) 0 .. 7 */
+  __I  uint32_t  Reserved10[20];
+  PwmCh_num        PWM_CH_NUM[PWMCH_NUM_NUMBER]; /**< \brief (Pwm Offset: 0x200) ch_num = 0 .. 3 */
+  __I  uint32_t  Reserved11[96];
+  PwmCh_num_0x400  PWM_CH_NUM_0X400[PWMCH_NUM_0X400_NUMBER]; /**< \brief (Pwm Offset: 0x400) ch_num = 0 .. 3 */
 } Pwm;
 #endif /* !(defined(__ASSEMBLY__) || defined(__IAR_SYSTEMS_ASM__)) */
 /* -------- PWM_CLK : (PWM Offset: 0x00) PWM Clock Register -------- */
@@ -386,15 +390,15 @@ typedef struct {
 #define PWM_FCR_FCLR_Pos 0
 #define PWM_FCR_FCLR_Msk (0xffu << PWM_FCR_FCLR_Pos) /**< \brief (PWM_FCR) Fault Clear */
 #define PWM_FCR_FCLR(value) ((PWM_FCR_FCLR_Msk & ((value) << PWM_FCR_FCLR_Pos)))
-/* -------- PWM_FPV : (PWM Offset: 0x68) PWM Fault Protection Value Register -------- */
-#define PWM_FPV_FPVH0 (0x1u << 0) /**< \brief (PWM_FPV) Fault Protection Value for PWMH output on channel 0 */
-#define PWM_FPV_FPVH1 (0x1u << 1) /**< \brief (PWM_FPV) Fault Protection Value for PWMH output on channel 1 */
-#define PWM_FPV_FPVH2 (0x1u << 2) /**< \brief (PWM_FPV) Fault Protection Value for PWMH output on channel 2 */
-#define PWM_FPV_FPVH3 (0x1u << 3) /**< \brief (PWM_FPV) Fault Protection Value for PWMH output on channel 3 */
-#define PWM_FPV_FPVL0 (0x1u << 16) /**< \brief (PWM_FPV) Fault Protection Value for PWML output on channel 0 */
-#define PWM_FPV_FPVL1 (0x1u << 17) /**< \brief (PWM_FPV) Fault Protection Value for PWML output on channel 1 */
-#define PWM_FPV_FPVL2 (0x1u << 18) /**< \brief (PWM_FPV) Fault Protection Value for PWML output on channel 2 */
-#define PWM_FPV_FPVL3 (0x1u << 19) /**< \brief (PWM_FPV) Fault Protection Value for PWML output on channel 3 */
+/* -------- PWM_FPV1 : (PWM Offset: 0x68) PWM Fault Protection Value Register 1 -------- */
+#define PWM_FPV1_FPVH0 (0x1u << 0) /**< \brief (PWM_FPV1) Fault Protection Value for PWMH output on channel 0 */
+#define PWM_FPV1_FPVH1 (0x1u << 1) /**< \brief (PWM_FPV1) Fault Protection Value for PWMH output on channel 1 */
+#define PWM_FPV1_FPVH2 (0x1u << 2) /**< \brief (PWM_FPV1) Fault Protection Value for PWMH output on channel 2 */
+#define PWM_FPV1_FPVH3 (0x1u << 3) /**< \brief (PWM_FPV1) Fault Protection Value for PWMH output on channel 3 */
+#define PWM_FPV1_FPVL0 (0x1u << 16) /**< \brief (PWM_FPV1) Fault Protection Value for PWML output on channel 0 */
+#define PWM_FPV1_FPVL1 (0x1u << 17) /**< \brief (PWM_FPV1) Fault Protection Value for PWML output on channel 1 */
+#define PWM_FPV1_FPVL2 (0x1u << 18) /**< \brief (PWM_FPV1) Fault Protection Value for PWML output on channel 2 */
+#define PWM_FPV1_FPVL3 (0x1u << 19) /**< \brief (PWM_FPV1) Fault Protection Value for PWML output on channel 3 */
 /* -------- PWM_FPE : (PWM Offset: 0x6C) PWM Fault Protection Enable Register -------- */
 #define PWM_FPE_FPE0_Pos 0
 #define PWM_FPE_FPE0_Msk (0xffu << PWM_FPE_FPE0_Pos) /**< \brief (PWM_FPE) Fault Protection Enable for channel 0 */
@@ -431,6 +435,15 @@ typedef struct {
 #define PWM_SMMR_GCEN1 (0x1u << 1) /**< \brief (PWM_SMMR) Gray Count ENable */
 #define PWM_SMMR_DOWN0 (0x1u << 16) /**< \brief (PWM_SMMR) DOWN Count */
 #define PWM_SMMR_DOWN1 (0x1u << 17) /**< \brief (PWM_SMMR) DOWN Count */
+/* -------- PWM_FPV2 : (PWM Offset: 0xC0) PWM Fault Protection Value 2 Register -------- */
+#define PWM_FPV2_FPZH0 (0x1u << 0) /**< \brief (PWM_FPV2) Fault Protection to Hi-Z for PWMH output on channel 0 */
+#define PWM_FPV2_FPZH1 (0x1u << 1) /**< \brief (PWM_FPV2) Fault Protection to Hi-Z for PWMH output on channel 1 */
+#define PWM_FPV2_FPZH2 (0x1u << 2) /**< \brief (PWM_FPV2) Fault Protection to Hi-Z for PWMH output on channel 2 */
+#define PWM_FPV2_FPZH3 (0x1u << 3) /**< \brief (PWM_FPV2) Fault Protection to Hi-Z for PWMH output on channel 3 */
+#define PWM_FPV2_FPZL0 (0x1u << 16) /**< \brief (PWM_FPV2) Fault Protection to Hi-Z for PWML output on channel 0 */
+#define PWM_FPV2_FPZL1 (0x1u << 17) /**< \brief (PWM_FPV2) Fault Protection to Hi-Z for PWML output on channel 1 */
+#define PWM_FPV2_FPZL2 (0x1u << 18) /**< \brief (PWM_FPV2) Fault Protection to Hi-Z for PWML output on channel 2 */
+#define PWM_FPV2_FPZL3 (0x1u << 19) /**< \brief (PWM_FPV2) Fault Protection to Hi-Z for PWML output on channel 3 */
 /* -------- PWM_WPCR : (PWM Offset: 0xE4) PWM Write Protection Control Register -------- */
 #define PWM_WPCR_WPCMD_Pos 0
 #define PWM_WPCR_WPCMD_Msk (0x3u << PWM_WPCR_WPCMD_Pos) /**< \brief (PWM_WPCR) Write Protection Command */
@@ -543,7 +556,7 @@ typedef struct {
 #define PWM_CMR_CALG (0x1u << 8) /**< \brief (PWM_CMR) Channel Alignment */
 #define PWM_CMR_CPOL (0x1u << 9) /**< \brief (PWM_CMR) Channel Polarity */
 #define PWM_CMR_CES (0x1u << 10) /**< \brief (PWM_CMR) Counter Event Selection */
-#define PWM_CMR_TCTS (0x1u << 13) /**< \brief (PWM_CMR) Timer Counter Trigger Selection */
+#define PWM_CMR_UPDS (0x1u << 11) /**< \brief (PWM_CMR) Update Selection */
 #define PWM_CMR_DTE (0x1u << 16) /**< \brief (PWM_CMR) Dead-Time Generator Enable */
 #define PWM_CMR_DTHI (0x1u << 17) /**< \brief (PWM_CMR) Dead-Time PWMHx Output Inverted */
 #define PWM_CMR_DTLI (0x1u << 18) /**< \brief (PWM_CMR) Dead-Time PWMLx Output Inverted */
@@ -580,6 +593,27 @@ typedef struct {
 #define PWM_DTUPD_DTLUPD_Pos 16
 #define PWM_DTUPD_DTLUPD_Msk (0xffffu << PWM_DTUPD_DTLUPD_Pos) /**< \brief (PWM_DTUPD) Dead-Time Value Update for PWMLx Output */
 #define PWM_DTUPD_DTLUPD(value) ((PWM_DTUPD_DTLUPD_Msk & ((value) << PWM_DTUPD_DTLUPD_Pos)))
+/* -------- PWM_CMUPD : (PWM Offset: N/A) PWM Channel Mode Update Register -------- */
+#define PWM_CMUPD_CPOLUP (0x1u << 9) /**< \brief (PWM_CMUPD) Channel Polarity Update */
+#define PWM_CMUPD_CPOLINVUP (0x1u << 13) /**< \brief (PWM_CMUPD) Channel Polarity Inversion Update */
+/* -------- PWM_CAE : (PWM Offset: N/A) PWM Channel Additional Edge Register -------- */
+#define PWM_CAE_ADEDGV_Pos 0
+#define PWM_CAE_ADEDGV_Msk (0xffffffu << PWM_CAE_ADEDGV_Pos) /**< \brief (PWM_CAE) Channel Additional Edge Value */
+#define PWM_CAE_ADEDGV(value) ((PWM_CAE_ADEDGV_Msk & ((value) << PWM_CAE_ADEDGV_Pos)))
+#define PWM_CAE_ADEDGM_Pos 24
+#define PWM_CAE_ADEDGM_Msk (0x3u << PWM_CAE_ADEDGM_Pos) /**< \brief (PWM_CAE) Channel Additional Edge Mode */
+#define   PWM_CAE_ADEDGM_INC (0x0u << 24) /**< \brief (PWM_CAE) The additional edge of the channel x output waveform occurs when CCNTx reaches ADEDGV and the counter of the channel x is incrementing. */
+#define   PWM_CAE_ADEDGM_DEC (0x1u << 24) /**< \brief (PWM_CAE) The additional edge of the channel x output waveform occurs when CCNTx reaches ADEDGV and the counter of the channel x is incrementing. */
+#define   PWM_CAE_ADEDGM_BOTH (0x2u << 24) /**< \brief (PWM_CAE) The additional edge of the channel x output waveform occurs when CCNTx reaches ADEDGV, whether the counter is incrementing or not. */
+/* -------- PWM_CAEUPD : (PWM Offset: N/A) PWM Channel Additional Edge Update Register -------- */
+#define PWM_CAEUPD_ADEDGVUP_Pos 0
+#define PWM_CAEUPD_ADEDGVUP_Msk (0xffffffu << PWM_CAEUPD_ADEDGVUP_Pos) /**< \brief (PWM_CAEUPD) Channel Additional Edge Value Update */
+#define PWM_CAEUPD_ADEDGVUP(value) ((PWM_CAEUPD_ADEDGVUP_Msk & ((value) << PWM_CAEUPD_ADEDGVUP_Pos)))
+#define PWM_CAEUPD_ADEDGMUP_Pos 24
+#define PWM_CAEUPD_ADEDGMUP_Msk (0x3u << PWM_CAEUPD_ADEDGMUP_Pos) /**< \brief (PWM_CAEUPD) Channel Additional Edge Mode Update */
+#define   PWM_CAEUPD_ADEDGMUP_INC (0x0u << 24) /**< \brief (PWM_CAEUPD) The additional edge of the channel x output waveform occurs when CCNTx reaches ADEDGVUP and the counter of the channel x is incrementing. */
+#define   PWM_CAEUPD_ADEDGMUP_DEC (0x1u << 24) /**< \brief (PWM_CAEUPD) The additional edge of the channel x output waveform occurs when CCNTx reaches ADEDGVUP and the counter of the channel x is incrementing. */
+#define   PWM_CAEUPD_ADEDGMUP_BOTH (0x2u << 24) /**< \brief (PWM_CAEUPD) The additional edge of the channel x output waveform occurs when CCNTx reaches ADEDGVUP, whether the counter is incrementing or not. */
 
 /*@}*/
 

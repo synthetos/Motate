@@ -1,31 +1,46 @@
-/* ---------------------------------------------------------------------------- */
-/*                  Atmel Microcontroller Software Support                      */
-/*                       SAM Software Package License                           */
-/* ---------------------------------------------------------------------------- */
-/* Copyright (c) 2015, Atmel Corporation                                        */
-/*                                                                              */
-/* All rights reserved.                                                         */
-/*                                                                              */
-/* Redistribution and use in source and binary forms, with or without           */
-/* modification, are permitted provided that the following condition is met:    */
-/*                                                                              */
-/* - Redistributions of source code must retain the above copyright notice,     */
-/* this list of conditions and the disclaimer below.                            */
-/*                                                                              */
-/* Atmel's name may not be used to endorse or promote products derived from     */
-/* this software without specific prior written permission.                     */
-/*                                                                              */
-/* DISCLAIMER:  THIS SOFTWARE IS PROVIDED BY ATMEL "AS IS" AND ANY EXPRESS OR   */
-/* IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF */
-/* MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT ARE   */
-/* DISCLAIMED. IN NO EVENT SHALL ATMEL BE LIABLE FOR ANY DIRECT, INDIRECT,      */
-/* INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT */
-/* LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,  */
-/* OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF    */
-/* LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING         */
-/* NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, */
-/* EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.                           */
-/* ---------------------------------------------------------------------------- */
+/**
+ * \file
+ *
+ * Copyright (c) 2014-2015 Atmel Corporation. All rights reserved.
+ *
+ * \asf_license_start
+ *
+ * \page License
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ *
+ * 3. The name of Atmel may not be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * 4. This software may only be redistributed and used in connection with an
+ *    Atmel microcontroller product.
+ *
+ * THIS SOFTWARE IS PROVIDED BY ATMEL "AS IS" AND ANY EXPRESS OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT ARE
+ * EXPRESSLY AND SPECIFICALLY DISCLAIMED. IN NO EVENT SHALL ATMEL BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * \asf_license_stop
+ *
+ */
+/*
+ * Support and FAQ: visit <a href="http://www.atmel.com/design-support/">Atmel Support</a>
+ */
 
 #ifndef _SAM3S1C_
 #define _SAM3S1C_
@@ -41,10 +56,17 @@
 
 #ifdef __cplusplus
  extern "C" {
-#endif 
+#endif
 
 #if !(defined(__ASSEMBLY__) || defined(__IAR_SYSTEMS_ASM__))
 #include <stdint.h>
+#ifndef __cplusplus
+typedef volatile const uint32_t RoReg; /**< Read only 32-bit register (volatile const unsigned int) */
+#else
+typedef volatile       uint32_t RoReg; /**< Read only 32-bit register (volatile const unsigned int) */
+#endif
+typedef volatile       uint32_t WoReg; /**< Write only 32-bit register (volatile unsigned int) */
+typedef volatile       uint32_t RwReg; /**< Read-Write 32-bit register (volatile unsigned int) */
 #endif
 
 /* ************************************************************************** */
@@ -58,7 +80,6 @@ typedef enum IRQn
 {
 /******  Cortex-M3 Processor Exceptions Numbers ******************************/
   NonMaskableInt_IRQn   = -14, /**<  2 Non Maskable Interrupt                */
-  HardFault_IRQn        = -13, /**<  3 HardFault Interrupt                   */
   MemoryManagement_IRQn = -12, /**<  4 Cortex-M3 Memory Management Interrupt */
   BusFault_IRQn         = -11, /**<  5 Cortex-M3 Bus Fault Interrupt         */
   UsageFault_IRQn       = -10, /**<  6 Cortex-M3 Usage Fault Interrupt       */
@@ -67,7 +88,7 @@ typedef enum IRQn
   PendSV_IRQn           = -2,  /**< 14 Cortex-M3 Pend SV Interrupt           */
   SysTick_IRQn          = -1,  /**< 15 Cortex-M3 System Tick Interrupt       */
 /******  SAM3S1C specific Interrupt Numbers *********************************/
-  
+
   SUPC_IRQn            =  0, /**<  0 SAM3S1C Supply Controller (SUPC) */
   RSTC_IRQn            =  1, /**<  1 SAM3S1C Reset Controller (RSTC) */
   RTC_IRQn             =  2, /**<  2 SAM3S1C Real Time Clock (RTC) */
@@ -77,6 +98,7 @@ typedef enum IRQn
   EFC_IRQn             =  6, /**<  6 SAM3S1C Enhanced Embedded Flash Controller (EFC) */
   UART0_IRQn           =  8, /**<  8 SAM3S1C UART 0 (UART0) */
   UART1_IRQn           =  9, /**<  9 SAM3S1C UART 1 (UART1) */
+  SMC_IRQn             = 10, /**< 10 SAM3S1C Static Memory Controller (SMC) */
   PIOA_IRQn            = 11, /**< 11 SAM3S1C Parallel I/O Controller A (PIOA) */
   PIOB_IRQn            = 12, /**< 12 SAM3S1C Parallel I/O Controller B (PIOB) */
   PIOC_IRQn            = 13, /**< 13 SAM3S1C Parallel I/O Controller C (PIOC) */
@@ -98,16 +120,14 @@ typedef enum IRQn
   PWM_IRQn             = 31, /**< 31 SAM3S1C Pulse Width Modulation (PWM) */
   CRCCU_IRQn           = 32, /**< 32 SAM3S1C CRC Calculation Unit (CRCCU) */
   ACC_IRQn             = 33, /**< 33 SAM3S1C Analog Comparator (ACC) */
-  UDP_IRQn             = 34, /**< 34 SAM3S1C USB Device Port (UDP) */
-
-  PERIPH_COUNT_IRQn    = 35  /**< Number of peripheral IDs */
+  UDP_IRQn             = 34  /**< 34 SAM3S1C USB Device Port (UDP) */
 } IRQn_Type;
 
 typedef struct _DeviceVectors
 {
   /* Stack pointer */
   void* pvStack;
-  
+
   /* Cortex-M handlers */
   void* pfnReset_Handler;
   void* pfnNMI_Handler;
@@ -136,7 +156,7 @@ typedef struct _DeviceVectors
   void* pvReserved7;
   void* pfnUART0_Handler;  /*  8 UART 0 */
   void* pfnUART1_Handler;  /*  9 UART 1 */
-  void* pvReserved10;
+  void* pfnSMC_Handler;    /* 10 Static Memory Controller */
   void* pfnPIOA_Handler;   /* 11 Parallel I/O Controller A */
   void* pfnPIOB_Handler;   /* 12 Parallel I/O Controller B */
   void* pfnPIOC_Handler;   /* 13 Parallel I/O Controller C */
@@ -190,6 +210,7 @@ void PWM_Handler        ( void );
 void RSTC_Handler       ( void );
 void RTC_Handler        ( void );
 void RTT_Handler        ( void );
+void SMC_Handler        ( void );
 void SPI_Handler        ( void );
 void SSC_Handler        ( void );
 void SUPC_Handler       ( void );
@@ -209,7 +230,7 @@ void USART1_Handler     ( void );
 void WDT_Handler        ( void );
 
 /**
- * \brief Configuration of the Cortex-M3 Processor and Core Peripherals 
+ * \brief Configuration of the Cortex-M3 Processor and Core Peripherals
  */
 
 #define __CM3_REV              0x0200 /**< SAM3S1C core revision number ([15:8] revision number, [7:0] patch number) */
@@ -234,32 +255,32 @@ void WDT_Handler        ( void );
 /** \addtogroup SAM3S1C_api Peripheral Software API */
 /*@{*/
 
-#include "component/acc.h"
-#include "component/adc.h"
-#include "component/chipid.h"
-#include "component/crccu.h"
-#include "component/dacc.h"
-#include "component/efc.h"
-#include "component/gpbr.h"
-#include "component/hsmci.h"
-#include "component/matrix.h"
-#include "component/pdc.h"
-#include "component/pio.h"
-#include "component/pmc.h"
-#include "component/pwm.h"
-#include "component/rstc.h"
-#include "component/rtc.h"
-#include "component/rtt.h"
-#include "component/smc.h"
-#include "component/spi.h"
-#include "component/ssc.h"
-#include "component/supc.h"
-#include "component/tc.h"
-#include "component/twi.h"
-#include "component/uart.h"
-#include "component/udp.h"
-#include "component/usart.h"
-#include "component/wdt.h"
+#include "component/component_acc.h"
+#include "component/component_adc.h"
+#include "component/component_chipid.h"
+#include "component/component_crccu.h"
+#include "component/component_dacc.h"
+#include "component/component_efc.h"
+#include "component/component_gpbr.h"
+#include "component/component_hsmci.h"
+#include "component/component_matrix.h"
+#include "component/component_pdc.h"
+#include "component/component_pio.h"
+#include "component/component_pmc.h"
+#include "component/component_pwm.h"
+#include "component/component_rstc.h"
+#include "component/component_rtc.h"
+#include "component/component_rtt.h"
+#include "component/component_smc.h"
+#include "component/component_spi.h"
+#include "component/component_ssc.h"
+#include "component/component_supc.h"
+#include "component/component_tc.h"
+#include "component/component_twi.h"
+#include "component/component_uart.h"
+#include "component/component_udp.h"
+#include "component/component_usart.h"
+#include "component/component_wdt.h"
 /*@}*/
 
 /* ************************************************************************** */
@@ -268,37 +289,37 @@ void WDT_Handler        ( void );
 /** \addtogroup SAM3S1C_reg Registers Access Definitions */
 /*@{*/
 
-#include "instance/hsmci.h"
-#include "instance/ssc.h"
-#include "instance/spi.h"
-#include "instance/tc0.h"
-#include "instance/tc1.h"
-#include "instance/twi0.h"
-#include "instance/twi1.h"
-#include "instance/pwm.h"
-#include "instance/usart0.h"
-#include "instance/usart1.h"
-#include "instance/udp.h"
-#include "instance/adc.h"
-#include "instance/dacc.h"
-#include "instance/acc.h"
-#include "instance/crccu.h"
-#include "instance/smc.h"
-#include "instance/matrix.h"
-#include "instance/pmc.h"
-#include "instance/uart0.h"
-#include "instance/chipid.h"
-#include "instance/uart1.h"
-#include "instance/efc.h"
-#include "instance/pioa.h"
-#include "instance/piob.h"
-#include "instance/pioc.h"
-#include "instance/rstc.h"
-#include "instance/supc.h"
-#include "instance/rtt.h"
-#include "instance/wdt.h"
-#include "instance/rtc.h"
-#include "instance/gpbr.h"
+#include "instance/instance_hsmci.h"
+#include "instance/instance_ssc.h"
+#include "instance/instance_spi.h"
+#include "instance/instance_tc0.h"
+#include "instance/instance_tc1.h"
+#include "instance/instance_twi0.h"
+#include "instance/instance_twi1.h"
+#include "instance/instance_pwm.h"
+#include "instance/instance_usart0.h"
+#include "instance/instance_usart1.h"
+#include "instance/instance_udp.h"
+#include "instance/instance_adc.h"
+#include "instance/instance_dacc.h"
+#include "instance/instance_acc.h"
+#include "instance/instance_crccu.h"
+#include "instance/instance_smc.h"
+#include "instance/instance_matrix.h"
+#include "instance/instance_pmc.h"
+#include "instance/instance_uart0.h"
+#include "instance/instance_chipid.h"
+#include "instance/instance_uart1.h"
+#include "instance/instance_efc.h"
+#include "instance/instance_pioa.h"
+#include "instance/instance_piob.h"
+#include "instance/instance_pioc.h"
+#include "instance/instance_rstc.h"
+#include "instance/instance_supc.h"
+#include "instance/instance_rtt.h"
+#include "instance/instance_wdt.h"
+#include "instance/instance_rtc.h"
+#include "instance/instance_gpbr.h"
 /*@}*/
 
 /* ************************************************************************** */
@@ -339,8 +360,6 @@ void WDT_Handler        ( void );
 #define ID_CRCCU  (32) /**< \brief CRC Calculation Unit (CRCCU) */
 #define ID_ACC    (33) /**< \brief Analog Comparator (ACC) */
 #define ID_UDP    (34) /**< \brief USB Device Port (UDP) */
-
-#define ID_PERIPH_COUNT (35) /**< \brief Number of peripheral IDs */
 /*@}*/
 
 /* ************************************************************************** */
@@ -385,7 +404,7 @@ void WDT_Handler        ( void );
 #define PDC_UART1  (0x400E0900U) /**< \brief (PDC_UART1 ) Base Address */
 #define EFC        (0x400E0A00U) /**< \brief (EFC       ) Base Address */
 #define PIOA       (0x400E0E00U) /**< \brief (PIOA      ) Base Address */
-#define PDC_PIOA   (0x400E0F00U) /**< \brief (PDC_PIOA  ) Base Address */
+#define PDC_PIOA   (0x400E0F68U) /**< \brief (PDC_PIOA  ) Base Address */
 #define PIOB       (0x400E1000U) /**< \brief (PIOB      ) Base Address */
 #define PIOC       (0x400E1200U) /**< \brief (PIOC      ) Base Address */
 #define RSTC       (0x400E1400U) /**< \brief (RSTC      ) Base Address */
@@ -430,7 +449,7 @@ void WDT_Handler        ( void );
 #define PDC_UART1  ((Pdc    *)0x400E0900U) /**< \brief (PDC_UART1 ) Base Address */
 #define EFC        ((Efc    *)0x400E0A00U) /**< \brief (EFC       ) Base Address */
 #define PIOA       ((Pio    *)0x400E0E00U) /**< \brief (PIOA      ) Base Address */
-#define PDC_PIOA   ((Pdc    *)0x400E0F00U) /**< \brief (PDC_PIOA  ) Base Address */
+#define PDC_PIOA   ((Pdc    *)0x400E0F68U) /**< \brief (PDC_PIOA  ) Base Address */
 #define PIOB       ((Pio    *)0x400E1000U) /**< \brief (PIOB      ) Base Address */
 #define PIOC       ((Pio    *)0x400E1200U) /**< \brief (PIOC      ) Base Address */
 #define RSTC       ((Rstc   *)0x400E1400U) /**< \brief (RSTC      ) Base Address */
@@ -448,7 +467,7 @@ void WDT_Handler        ( void );
 /** \addtogroup SAM3S1C_pio Peripheral Pio Definitions */
 /*@{*/
 
-#include "pio/sam3s1c.h"
+#include "pio/pio_sam3s1c.h"
 /*@}*/
 
 /* ************************************************************************** */
@@ -469,16 +488,6 @@ void WDT_Handler        ( void );
 #define EBI_CS1_ADDR (0x61000000u) /**< EBI Chip Select 1 base address */
 #define EBI_CS2_ADDR (0x62000000u) /**< EBI Chip Select 2 base address */
 #define EBI_CS3_ADDR (0x63000000u) /**< EBI Chip Select 3 base address */
-
-/* ************************************************************************** */
-/*   MISCELLANEOUS DEFINITIONS FOR SAM3S1C */
-/* ************************************************************************** */
-
-#define CHIP_JTAGID (0x05B2D03FUL)
-#define CHIP_CIDR   (0x28A90561UL)
-#define CHIP_EXID   (0x0UL)
-#define NB_CH_ADC   (16UL)
-#define NB_CH_DAC   (2UL)
 
 /* ************************************************************************** */
 /*   ELECTRICAL DEFINITIONS FOR SAM3S1C */
@@ -504,28 +513,6 @@ void WDT_Handler        ( void );
 #define CHIP_FREQ_FWS_2                 (54000000UL) /**< \brief Maximum operating frequency when FWS is 2 */
 #define CHIP_FREQ_FWS_3                 (64000000UL) /**< \brief Maximum operating frequency when FWS is 3 */
 
-/* HYSTeresis levels: please refer to Electrical Characteristics */
-#define ACC_ACR_HYST_50MV_MAX	          (0x01UL)
-#define ACC_ACR_HYST_90MV_MAX           (0x11UL)
-
-/* Device characteristics */
-#define CHIP_FREQ_SLCK_RC_MIN           (20000UL)
-#define CHIP_FREQ_SLCK_RC               (32000UL)
-#define CHIP_FREQ_SLCK_RC_MAX           (44000UL)
-#define CHIP_FREQ_MAINCK_RC_4MHZ        (4000000UL)
-#define CHIP_FREQ_MAINCK_RC_8MHZ        (8000000UL)
-#define CHIP_FREQ_MAINCK_RC_12MHZ       (12000000UL)
-#define CHIP_FREQ_CPU_MAX               (120000000UL)
-#define CHIP_FREQ_XTAL_32K              (32768UL)
-#define CHIP_FREQ_XTAL_12M              (12000000UL)
-
-/* Embedded Flash Read Wait State (VDDCORE set at 1.20V) */
-#define CHIP_FREQ_FWS_0                 (20000000UL)  /**< \brief Maximum operating frequency when FWS is 0 */
-#define CHIP_FREQ_FWS_1                 (40000000UL)  /**< \brief Maximum operating frequency when FWS is 1 */
-#define CHIP_FREQ_FWS_2                 (60000000UL)  /**< \brief Maximum operating frequency when FWS is 2 */
-#define CHIP_FREQ_FWS_3                 (80000000UL)  /**< \brief Maximum operating frequency when FWS is 3 */
-#define CHIP_FREQ_FWS_4                 (100000000UL) /**< \brief Maximum operating frequency when FWS is 4 */
-#define CHIP_FREQ_FWS_5                 (123000000UL) /**< \brief Maximum operating frequency when FWS is 5 */
 
 #ifdef __cplusplus
 }

@@ -3,7 +3,7 @@
  *
  * \brief Header file for SAM4LS4A
  *
- * Copyright (c) 2014 Atmel Corporation. All rights reserved.
+ * Copyright (c) 2014-2015 Atmel Corporation. All rights reserved.
  *
  * \asf_license_start
  *
@@ -40,18 +40,19 @@
  * \asf_license_stop
  *
  */
+/*
+ * Support and FAQ: visit <a href="http://www.atmel.com/design-support/">Atmel Support</a>
+ */
 
 #ifndef _SAM4LS4A_
 #define _SAM4LS4A_
 
-/**
- * \ingroup SAM4L_definitions
- * \addtogroup SAM4LS4A_definitions SAM4LS4A definitions
- * This file defines all structures and symbols for SAM4LS4A:
- *   - registers and bitfields
- *   - peripheral base address
- *   - peripheral ID
- *   - PIO definitions
+/** \addtogroup SAM4LS4A_definitions SAM4LS4A definitions
+  This file defines all structures and symbols for SAM4LS4A:
+    - registers and bitfields
+    - peripheral base address
+    - peripheral ID
+    - PIO definitions
 */
 /*@{*/
 
@@ -86,22 +87,22 @@ typedef volatile       uint8_t  RwReg8;  /**< Read-Write  8-bit register (volati
 /* ************************************************************************** */
 /**  CMSIS DEFINITIONS FOR SAM4LS4A */
 /* ************************************************************************** */
-/** \defgroup SAM4LS4A_cmsis CMSIS Definitions */
+/** \addtogroup SAM4LS4A_cmsis CMSIS Definitions */
 /*@{*/
 
-/** Interrupt Number Definition */
+/**< Interrupt Number Definition */
 typedef enum IRQn
 {
-  /******  Cortex-M4 Processor Exceptions Numbers ******************************/
-  NonMaskableInt_IRQn      = -14,/**<  2 Non Maskable Interrupt                */
-  HardFault_IRQn           = -13,/**<  3 Cortex-M4 Hard Fault Interrupt        */
-  MemoryManagement_IRQn    = -12,/**<  4 Cortex-M4 Memory Management Interrupt */
-  BusFault_IRQn            = -11,/**<  5 Cortex-M4 Bus Fault Interrupt         */
-  UsageFault_IRQn          = -10,/**<  6 Cortex-M4 Usage Fault Interrupt       */
-  SVCall_IRQn              = -5, /**< 11 Cortex-M4 SV Call Interrupt           */
-  DebugMonitor_IRQn        = -4, /**< 12 Cortex-M4 Debug Monitor Interrupt     */
-  PendSV_IRQn              = -2, /**< 14 Cortex-M4 Pend SV Interrupt           */
-  SysTick_IRQn             = -1, /**< 15 Cortex-M4 System Tick Interrupt       */
+  /******  Cortex-M4 Processor Exceptions Numbers *******************************/
+  NonMaskableInt_IRQn      = -14, /**<  2 Non Maskable Interrupt                */
+  HardFault_IRQn           = -13, /**<  3 Cortex-M4 Hard Fault Interrupt        */
+  MemoryManagement_IRQn    = -12, /**<  4 Cortex-M4 Memory Management Interrupt */
+  BusFault_IRQn            = -11, /**<  5 Cortex-M4 Bus Fault Interrupt         */
+  UsageFault_IRQn          = -10, /**<  6 Cortex-M4 Usage Fault Interrupt       */
+  SVCall_IRQn              = -5,  /**< 11 Cortex-M4 SV Call Interrupt           */
+  DebugMonitor_IRQn        = -4,  /**< 12 Cortex-M4 Debug Monitor Interrupt     */
+  PendSV_IRQn              = -2,  /**< 14 Cortex-M4 Pend SV Interrupt           */
+  SysTick_IRQn             = -1,  /**< 15 Cortex-M4 System Tick Interrupt       */
   /******  SAM4LS4A-specific Interrupt Numbers ***********************/
   HFLASHC_IRQn             =  0, /**<  0 SAM4LS4A Flash Controller (HFLASHC) */
   PDCA_0_IRQn              =  1, /**<  1 SAM4LS4A Peripheral DMA Controller (PDCA) */
@@ -178,11 +179,10 @@ typedef enum IRQn
   TRNG_IRQn                = 73, /**< 73 SAM4LS4A True Random Number Generator (TRNG) */
   PARC_IRQn                = 74, /**< 74 SAM4LS4A Parallel Capture (PARC) */
   CATB_IRQn                = 75, /**< 75 SAM4LS4A Capacitive Touch Module B (CATB) */
-  PTC_IRQn                 = 76, /**< 76 SAM4LS4A  (PTC) */
   TWIM2_IRQn               = 77, /**< 77 SAM4LS4A Two-wire Master Interface 2 (TWIM2) */
   TWIM3_IRQn               = 78, /**< 78 SAM4LS4A Two-wire Master Interface 3 (TWIM3) */
 
-  PERIPH_COUNT_IRQn        = 79  /**< Number of peripheral IDs */
+  PERIPH_COUNT_IRQn        = 80  /**< Number of peripheral IDs */
 } IRQn_Type;
 
 typedef struct _DeviceVectors
@@ -284,7 +284,7 @@ typedef struct _DeviceVectors
   void* pfnTRNG_Handler;                  /* 73 True Random Number Generator */
   void* pfnPARC_Handler;                  /* 74 Parallel Capture */
   void* pfnCATB_Handler;                  /* 75 Capacitive Touch Module B */
-  void* pfnPTC_Handler;                   /* 76  */
+  void* pfnReserved76;
   void* pfnTWIM2_Handler;                 /* 77 Two-wire Master Interface 2 */
   void* pfnTWIM3_Handler;                 /* 78 Two-wire Master Interface 3 */
   void* pfnReserved79;
@@ -378,7 +378,6 @@ void ABDACB_Handler              ( void );
 void TRNG_Handler                ( void );
 void PARC_Handler                ( void );
 void CATB_Handler                ( void );
-void PTC_Handler                 ( void );
 void TWIM2_Handler               ( void );
 void TWIM3_Handler               ( void );
 
@@ -413,112 +412,112 @@ void TWIM3_Handler               ( void );
 /* ************************************************************************** */
 /**  SOFTWARE PERIPHERAL API DEFINITION FOR SAM4LS4A */
 /* ************************************************************************** */
-/** \defgroup SAM4LS4A_api Peripheral Software API */
+/** \addtogroup SAM4LS4A_api Peripheral Software API */
 /*@{*/
 
-#include "component/abdacb.h"
-#include "component/acifc.h"
-#include "component/adcife.h"
-#include "component/ast.h"
-#include "component/bpm.h"
-#include "component/bscif.h"
-#include "component/catb.h"
-#include "component/chipid.h"
-#include "component/crccu.h"
-#include "component/dacc.h"
-#include "component/eic.h"
-#include "component/flashcalw.h"
-#include "component/freqm.h"
-#include "component/gloc.h"
-#include "component/gpio.h"
-#include "component/hcache.h"
-#include "component/hmatrixb.h"
-#include "component/iisc.h"
-#include "component/parc.h"
-#include "component/pdca.h"
-#include "component/pevc.h"
-#include "component/picouart.h"
-#include "component/pm.h"
-#include "component/scif.h"
-#include "component/smap.h"
-#include "component/spi.h"
-#include "component/tc.h"
-#include "component/trng.h"
-#include "component/twim.h"
-#include "component/twis.h"
-#include "component/usart.h"
-#include "component/usbc.h"
-#include "component/wdt.h"
+#include "component/component_abdacb.h"
+#include "component/component_acifc.h"
+#include "component/component_adcife.h"
+#include "component/component_ast.h"
+#include "component/component_bpm.h"
+#include "component/component_bscif.h"
+#include "component/component_catb.h"
+#include "component/component_chipid.h"
+#include "component/component_crccu.h"
+#include "component/component_dacc.h"
+#include "component/component_eic.h"
+#include "component/component_flashcalw.h"
+#include "component/component_freqm.h"
+#include "component/component_gloc.h"
+#include "component/component_gpio.h"
+#include "component/component_hcache.h"
+#include "component/component_hmatrixb.h"
+#include "component/component_iisc.h"
+#include "component/component_parc.h"
+#include "component/component_pdca.h"
+#include "component/component_pevc.h"
+#include "component/component_picouart.h"
+#include "component/component_pm.h"
+#include "component/component_scif.h"
+#include "component/component_smap.h"
+#include "component/component_spi.h"
+#include "component/component_tc.h"
+#include "component/component_trng.h"
+#include "component/component_twim.h"
+#include "component/component_twis.h"
+#include "component/component_usart.h"
+#include "component/component_usbc.h"
+#include "component/component_wdt.h"
 /*@}*/
 
 /* ************************************************************************** */
 /**  REGISTERS ACCESS DEFINITIONS FOR SAM4LS4A */
 /* ************************************************************************** */
-/** \defgroup SAM4LS4A_reg Registers Access Definitions */
+/** \addtogroup SAM4LS4A_reg Registers Access Definitions */
 /*@{*/
 
-#include "instance/abdacb.h"
-#include "instance/acifc.h"
-#include "instance/adcife.h"
-#include "instance/ast.h"
-#include "instance/bpm.h"
-#include "instance/bscif.h"
-#include "instance/catb.h"
-#include "instance/chipid.h"
-#include "instance/crccu.h"
-#include "instance/dacc.h"
-#include "instance/eic.h"
-#include "instance/hflashc.h"
-#include "instance/freqm.h"
-#include "instance/gloc.h"
-#include "instance/gpio.h"
-#include "instance/hcache.h"
-#include "instance/hmatrix.h"
-#include "instance/iisc.h"
-#include "instance/parc.h"
-#include "instance/pdca.h"
-#include "instance/pevc.h"
-#include "instance/picouart.h"
-#include "instance/pm.h"
-#include "instance/scif.h"
-#include "instance/smap.h"
-#include "instance/spi.h"
-#include "instance/tc0.h"
-#include "instance/tc1.h"
-#include "instance/trng.h"
-#include "instance/twim0.h"
-#include "instance/twim1.h"
-#include "instance/twim2.h"
-#include "instance/twim3.h"
-#include "instance/twis0.h"
-#include "instance/twis1.h"
-#include "instance/usart0.h"
-#include "instance/usart1.h"
-#include "instance/usart2.h"
-#include "instance/usart3.h"
-#include "instance/usbc.h"
-#include "instance/wdt.h"
+#include "instance/instance_abdacb.h"
+#include "instance/instance_acifc.h"
+#include "instance/instance_adcife.h"
+#include "instance/instance_ast.h"
+#include "instance/instance_bpm.h"
+#include "instance/instance_bscif.h"
+#include "instance/instance_catb.h"
+#include "instance/instance_chipid.h"
+#include "instance/instance_crccu.h"
+#include "instance/instance_dacc.h"
+#include "instance/instance_eic.h"
+#include "instance/instance_hflashc.h"
+#include "instance/instance_freqm.h"
+#include "instance/instance_gloc.h"
+#include "instance/instance_gpio.h"
+#include "instance/instance_hcache.h"
+#include "instance/instance_hmatrix.h"
+#include "instance/instance_iisc.h"
+#include "instance/instance_parc.h"
+#include "instance/instance_pdca.h"
+#include "instance/instance_pevc.h"
+#include "instance/instance_picouart.h"
+#include "instance/instance_pm.h"
+#include "instance/instance_scif.h"
+#include "instance/instance_smap.h"
+#include "instance/instance_spi.h"
+#include "instance/instance_tc0.h"
+#include "instance/instance_tc1.h"
+#include "instance/instance_trng.h"
+#include "instance/instance_twim0.h"
+#include "instance/instance_twim1.h"
+#include "instance/instance_twim2.h"
+#include "instance/instance_twim3.h"
+#include "instance/instance_twis0.h"
+#include "instance/instance_twis1.h"
+#include "instance/instance_usart0.h"
+#include "instance/instance_usart1.h"
+#include "instance/instance_usart2.h"
+#include "instance/instance_usart3.h"
+#include "instance/instance_usbc.h"
+#include "instance/instance_wdt.h"
 /*@}*/
 
 /* ************************************************************************** */
 /**  PERIPHERAL ID DEFINITIONS FOR SAM4LS4A */
 /* ************************************************************************** */
-/** \defgroup SAM4LS4A_id Peripheral Ids Definitions */
+/** \addtogroup SAM4LS4A_id Peripheral Ids Definitions */
 /*@{*/
 
 // Peripheral instances on HTOP0 bridge
 #define ID_IISC           0 /**< \brief Inter-IC Sound (I2S) Controller (IISC) */
 #define ID_SPI            1 /**< \brief Serial Peripheral Interface (SPI) */
-#define ID_TC0            2 /**< \brief Timer/Counter 0 (TC0) */
-#define ID_TC1            3 /**< \brief Timer/Counter 1 (TC1) */
-#define ID_TWIM0          4 /**< \brief Two-wire Master Interface 0 (TWIM0) */
-#define ID_TWIS0          5 /**< \brief Two-wire Slave Interface 0 (TWIS0) */
-#define ID_TWIM1          6 /**< \brief Two-wire Master Interface 1 (TWIM1) */
-#define ID_TWIS1          7 /**< \brief Two-wire Slave Interface 1 (TWIS1) */
-#define ID_USART0         8 /**< \brief Universal Synchronous Asynchronous Receiver Transmitter 0 (USART0) */
-#define ID_USART1         9 /**< \brief Universal Synchronous Asynchronous Receiver Transmitter 1 (USART1) */
-#define ID_USART2        10 /**< \brief Universal Synchronous Asynchronous Receiver Transmitter 2 (USART2) */
-#define ID_USART3        11 /**< \brief Universal Synchronous Asynchronous Receiver Transmitter 3 (USART3) */
+#define ID_TC0            2 /**< \brief Timer/Counter TC (TC0) */
+#define ID_TC1            3 /**< \brief Timer/Counter TC (TC1) */
+#define ID_TWIM0          4 /**< \brief Two-wire Master Interface TWIM (TWIM0) */
+#define ID_TWIS0          5 /**< \brief Two-wire Slave Interface TWIS (TWIS0) */
+#define ID_TWIM1          6 /**< \brief Two-wire Master Interface TWIM (TWIM1) */
+#define ID_TWIS1          7 /**< \brief Two-wire Slave Interface TWIS (TWIS1) */
+#define ID_USART0         8 /**< \brief Universal Synchronous Asynchronous Receiver Transmitter USART (USART0) */
+#define ID_USART1         9 /**< \brief Universal Synchronous Asynchronous Receiver Transmitter USART (USART1) */
+#define ID_USART2        10 /**< \brief Universal Synchronous Asynchronous Receiver Transmitter USART (USART2) */
+#define ID_USART3        11 /**< \brief Universal Synchronous Asynchronous Receiver Transmitter USART (USART3) */
 #define ID_ADCIFE        12 /**< \brief ADC controller interface (ADCIFE) */
 #define ID_DACC          13 /**< \brief DAC Controller (DACC) */
 #define ID_ACIFC         14 /**< \brief Analog Comparator Interface (ACIFC) */
@@ -527,8 +526,8 @@ void TWIM3_Handler               ( void );
 #define ID_TRNG          17 /**< \brief True Random Number Generator (TRNG) */
 #define ID_PARC          18 /**< \brief Parallel Capture (PARC) */
 #define ID_CATB          19 /**< \brief Capacitive Touch Module B (CATB) */
-#define ID_TWIM2         21 /**< \brief Two-wire Master Interface 2 (TWIM2) */
-#define ID_TWIM3         22 /**< \brief Two-wire Master Interface 3 (TWIM3) */
+#define ID_TWIM2         20 /**< \brief Two-wire Master Interface TWIM (TWIM2) */
+#define ID_TWIM3         21 /**< \brief Two-wire Master Interface TWIM (TWIM3) */
 
 // Peripheral instances on HTOP1 bridge
 #define ID_HFLASHC       32 /**< \brief Flash Controller (HFLASHC) */
@@ -561,7 +560,7 @@ void TWIM3_Handler               ( void );
 /* ************************************************************************** */
 /**  BASE ADDRESS DEFINITIONS FOR SAM4LS4A */
 /* ************************************************************************** */
-/** \defgroup SAM4LS4A_base Peripheral Base Address Definitions */
+/** \addtogroup SAM4LS4A_base Peripheral Base Address Definitions */
 /*@{*/
 
 #if defined(__ASSEMBLY__) || defined(__IAR_SYSTEMS_ASM__)
@@ -666,9 +665,9 @@ void TWIM3_Handler               ( void );
 
 #define HFLASHC           ((Flashcalw *)0x400A0000U) /**< \brief (HFLASHC) APB Base Address */
 #define HFLASHC_ADDR                  (0x400A0000U) /**< \brief (HFLASHC) APB Base Address */
-#define HFLASHC_FROW                  (0x00800200U) /**< \brief (HFLASHC) FROW Base Address */
+#define HFLASHC_FROW      ((Flashcalw *)0x00800200U) /**< \brief (HFLASHC) FROW Base Address */
 #define HFLASHC_FROW_ADDR             (0x00800200U) /**< \brief (HFLASHC) FROW Base Address */
-#define HFLASHC_USER                  (0x00800000U) /**< \brief (HFLASHC) USER Base Address */
+#define HFLASHC_USER      ((Flashcalw *)0x00800000U) /**< \brief (HFLASHC) USER Base Address */
 #define HFLASHC_USER_ADDR             (0x00800000U) /**< \brief (HFLASHC) USER Base Address */
 #define FLASHCALW_INST_NUM 1                         /**< \brief (FLASHCALW) Number of instances */
 #define FLASHCALW_INSTS   { HFLASHC }               /**< \brief (FLASHCALW) Instances List */
@@ -800,10 +799,10 @@ void TWIM3_Handler               ( void );
 /* ************************************************************************** */
 /**  GPIO DEFINITIONS FOR SAM4LS4A */
 /* ************************************************************************** */
-/** \defgroup SAM4LS4A_gpio GPIO Definitions */
+/** \addtogroup SAM4LS4A_gpio GPIO Definitions */
 /*@{*/
 
-#include "pio/sam4ls4a.h"
+#include "pio/pio_sam4ls4a.h"
 /*@}*/
 
 /* ************************************************************************** */
@@ -878,8 +877,6 @@ void TWIM3_Handler               ( void );
 #define FLASH_USER_PAGE_ADDR  (0x00800000U) /**< FLASH_USER_PAGE base address */
 #define HRAMC0_ADDR           (0x20000000U) /**< HRAMC0 base address */
 #define HRAMC1_ADDR           (0x21000000U) /**< HRAMC1 base address */
-
-#define DSU_DID_RESETVALUE    0xAB0A09E0
 
 /* ************************************************************************** */
 /**  ELECTRICAL DEFINITIONS FOR SAM4LS4A */
