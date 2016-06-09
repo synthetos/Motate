@@ -28,9 +28,9 @@
 */
 
 
-#if defined(__SAM3X8E__) || defined(__SAM3X8C__)
+#if defined(__SAM4E8E__) || defined(__SAM4E16E__) || defined(__SAM4E8C__) || defined(__SAM4E16C__)
 
-#include "Atmel_sam3x/SamTimers.h"
+#include "SamTimers.h"
 
 extern "C" {
     void _null_pwm_timer_interrupt() __attribute__ ((unused));
@@ -95,9 +95,11 @@ extern "C" void SysTick_Handler(void)
     _MAKE_TCx_Handler(0)
     _MAKE_TCx_Handler(1)
     _MAKE_TCx_Handler(2)
+#ifdef TC1
     _MAKE_TCx_Handler(3)
     _MAKE_TCx_Handler(4)
     _MAKE_TCx_Handler(5)
+#endif
 #ifdef TC2
     _MAKE_TCx_Handler(6)
     _MAKE_TCx_Handler(7)

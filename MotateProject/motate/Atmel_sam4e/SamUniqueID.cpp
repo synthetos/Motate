@@ -26,10 +26,10 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#if defined(__SAM3X8E__) || defined(__SAM3X8C__)
+#if defined(__SAM4E8E__) || defined(__SAM4E16E__) || defined(__SAM4E8C__) || defined(__SAM4E16C__)
 
 #include <sam.h>
-#include "Atmel_sam3x/SamUniqueID.h"
+#include "SamUniqueID.h"
 
 #define   EEFC_FCR_FCMD_STUI (0xEu << 0) /**< \brief (EEFC_FCR) Start read unique identifier */
 #define   EEFC_FCR_FCMD_SPUI (0xFu << 0) /**< \brief (EEFC_FCR) Stop read unique identifier */
@@ -51,18 +51,18 @@ namespace Motate {
         __disable_irq();
 
         // Run EEFC uuid sequence
-        while ((EFC0->EEFC_FSR & EEFC_FSR_FRDY) == 0);
+        while ((EFC->EEFC_FSR & EEFC_FSR_FRDY) == 0);
 
-        EFC0->EEFC_FCR = EEFC_FCR_FCMD_STUI | EEFC_FCR_FKEY(0x5A);
-        while ((EFC0->EEFC_FSR & EEFC_FSR_FRDY) == 1);
+        EFC->EEFC_FCR = EEFC_FCR_FCMD_STUI | EEFC_FCR_FKEY_PASSWD;
+        while ((EFC->EEFC_FSR & EEFC_FSR_FRDY) == 1);
         // Read unique id @ 0x00080000
         UUID._d[0] = _UUID_REGISTER[0];
         UUID._d[1] = _UUID_REGISTER[1];
         UUID._d[2] = _UUID_REGISTER[2];
         UUID._d[3] = _UUID_REGISTER[3];
 
-        EFC0->EEFC_FCR = EEFC_FCR_FCMD_SPUI | EEFC_FCR_FKEY(0x5A);
-        while ((EFC0->EEFC_FSR & EEFC_FSR_FRDY) == 0);
+        EFC->EEFC_FCR = EEFC_FCR_FCMD_SPUI | EEFC_FCR_FKEY_PASSWD;
+        while ((EFC->EEFC_FSR & EEFC_FSR_FRDY) == 0);
 
         // Memory swap needs some time to stabilize
         for (uint32_t i=0; i<1000000; i++) {

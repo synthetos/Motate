@@ -178,23 +178,23 @@ namespace Motate {
                  *    D |  1  |  1
                  */
                 case kPeripheralA:
-                    rawPort()->PIO_ABCDSR2 &= ~mask ;
-                    rawPort()->PIO_ABCDSR1 &= ~mask ;
+                    rawPort()->PIO_ABCDSR[1] &= ~mask ;
+                    rawPort()->PIO_ABCDSR[0] &= ~mask ;
                     rawPort()->PIO_PDR = mask ;
                     break;
                 case kPeripheralB:
-                    rawPort()->PIO_ABCDSR2 &= ~mask ;
-                    rawPort()->PIO_ABCDSR1 |=  mask ;
+                    rawPort()->PIO_ABCDSR[1] &= ~mask ;
+                    rawPort()->PIO_ABCDSR[0] |=  mask ;
                     rawPort()->PIO_PDR = mask ;
                     break;
                 case kPeripheralC:
-                    rawPort()->PIO_ABCDSR2 |=  mask ;
-                    rawPort()->PIO_ABCDSR1 &= ~mask ;
+                    rawPort()->PIO_ABCDSR[1] |=  mask ;
+                    rawPort()->PIO_ABCDSR[0] &= ~mask ;
                     rawPort()->PIO_PDR = mask ;
                     break;
                 case kPeripheralD:
-                    rawPort()->PIO_ABCDSR2 |=  mask ;
-                    rawPort()->PIO_ABCDSR1 |=  mask ;
+                    rawPort()->PIO_ABCDSR[1] |=  mask ;
+                    rawPort()->PIO_ABCDSR[0] |=  mask ;
                     rawPort()->PIO_PDR = mask ;
                     break;
                 default:
@@ -240,14 +240,14 @@ namespace Motate {
             if (kDeglitch & options)
             {
                 rawPort()->PIO_IFER = mask ;
-                rawPort()->PIO_SCIFSR = mask ;
+                rawPort()->PIO_IFSCDR = mask ;
             }
             else
             {
                 if (kDebounce & options)
                 {
                     rawPort()->PIO_IFER = mask ;
-                    rawPort()->PIO_DIFSR = mask ;
+                    rawPort()->PIO_IFSCER = mask ;
                 }
                 else
                 {
@@ -370,8 +370,10 @@ namespace Motate {
     template<> constexpr Pio* const Port32<'A'>::rawPort() const { return PIOA; };
     template<> constexpr const IRQn_Type Port32<'A'>::_IRQn() const { return PIOA_IRQn; };
 
+#ifdef PIOB
     template<> constexpr Pio* const Port32<'B'>::rawPort() const { return PIOB; };
     template<> constexpr const IRQn_Type Port32<'B'>::_IRQn() const { return PIOB_IRQn; };
+#endif
 
 #ifdef PIOC
     template<> constexpr Pio* const Port32<'C'>::rawPort() const { return PIOC; };
@@ -490,19 +492,19 @@ namespace Motate {
 
 
 #define _MAKE_MOTATE_PIN(pinNum, registerChar, registerPin) \
-template<> \
-struct Pin<pinNum> : RealPin<registerChar, registerPin> { \
-static const int16_t number = pinNum; \
-static const uint8_t portLetter = (uint8_t) registerChar; \
-Pin() : RealPin<registerChar, registerPin>() {}; \
-Pin(const PinMode type, const PinOptions_n options = kNormal) : RealPin<registerChar, registerPin>(type, options) {}; \
-}; \
-template<> \
-struct ReversePinLookup<registerChar, registerPin> : Pin<pinNum> { \
-ReversePinLookup() {}; \
-ReversePinLookup(const PinMode type, const PinOptions_n options = kNormal) : Pin<pinNum>(type, options) {}; \
-}; \
-template<> void Motate::IRQPin<pinNum>::interrupt();
+    template<> \
+    struct Pin<pinNum> : RealPin<registerChar, registerPin> { \
+        static const int16_t number = pinNum; \
+        static const uint8_t portLetter = (uint8_t) registerChar; \
+        Pin() : RealPin<registerChar, registerPin>() {}; \
+        Pin(const PinMode type, const PinOptions_n options = kNormal) : RealPin<registerChar, registerPin>(type, options) {}; \
+    }; \
+    template<> \
+    struct ReversePinLookup<registerChar, registerPin> : Pin<pinNum> { \
+        ReversePinLookup() {}; \
+        ReversePinLookup(const PinMode type, const PinOptions_n options = kNormal) : Pin<pinNum>(type, options) {}; \
+    }; \
+    template<> void Motate::IRQPin<pinNum>::interrupt();
 
     template<int16_t pinNum>
     struct InputPin : Pin<pinNum> {
@@ -574,70 +576,70 @@ template<> void Motate::IRQPin<number>::interrupt()
     // Internal ADC object, and a parent of the ADCPin objects.
     // Handles: Setting options for the ADC module as a whole,
     //          and initializing the ADC module once.
-    struct ADC_Module : SamCommon< ADC_Module > {
-        static const uint32_t default_adc_clock_frequency = 20000000;
-        static const uint32_t default_adc_startup_time = 12;
-        static const uint32_t peripheralId() { return ID_ADC; }
-
-        static bool inited_;
-
-        void init(const uint32_t adc_clock_frequency, const uint8_t adc_startuptime) {
-            if (inited_) {
-                return;
-            }
-            inited_ = true;
-
-            enablePeripheralClock();
-
-            uint32_t ul_prescal, ul_startup,  ul_mr_startup, ul_real_adc_clock;
-            ADC->ADC_CR = ADC_CR_SWRST;
-
-            /* Reset Mode Register. */
-            ADC->ADC_MR = 0;
-
-            /* Reset PDC transfer. */
-            ADC->ADC_PTCR = (ADC_PTCR_RXTDIS | ADC_PTCR_TXTDIS);
-            ADC->ADC_RCR = 0;
-            ADC->ADC_RNCR = 0;
-            if (SystemCoreClock % (2 * adc_clock_frequency)) {
-                // Division with reminder
-                ul_prescal = SystemCoreClock / (2 * adc_clock_frequency);
-            } else {
-                // Whole division
-                ul_prescal = SystemCoreClock / (2 * adc_clock_frequency) - 1;
-            }
-            ul_real_adc_clock = SystemCoreClock / (2 * (ul_prescal + 1));
-
-            // ADC clocks needed to get ul_startuptime uS
-            ul_startup = (ul_real_adc_clock / 1000000) * adc_startuptime;
-
-            // Find correct MR_STARTUP value from conversion table
-            for (ul_mr_startup=0; ul_mr_startup<16; ul_mr_startup++) {
-                if (startup_table[ul_mr_startup] >= ul_startup)
-                    break;
-            }
-            if (ul_mr_startup==16)
-                return /*-1*/;
-
-            ADC->ADC_MR |=
-            ADC_MR_PRESCAL(ul_prescal) |
-            ((ul_mr_startup << ADC_MR_STARTUP_Pos) & ADC_MR_STARTUP_Msk);
-
-            ADC->ADC_ISR &= ADC_ISR_DRDY;
-        };
-
-        ADC_Module() {
-            init(default_adc_clock_frequency, default_adc_startup_time);
-        };
-
-        static void startSampling() {
-            ADC->ADC_CR = ADC_CR_START; /* start the sample */;
-        };
-
-        static void startFreeRunning() {
-            ADC->ADC_MR |= ADC_MR_FREERUN_ON;
-        };
-    };
+//    struct ADC_Module : SamCommon< ADC_Module > {
+//        static const uint32_t default_adc_clock_frequency = 20000000;
+//        static const uint32_t default_adc_startup_time = 12;
+//        static const uint32_t peripheralId() { return ID_ADC; }
+//
+//        static bool inited_;
+//
+//        void init(const uint32_t adc_clock_frequency, const uint8_t adc_startuptime) {
+//            if (inited_) {
+//                return;
+//            }
+//            inited_ = true;
+//
+//            enablePeripheralClock();
+//
+//            uint32_t ul_prescal, ul_startup,  ul_mr_startup, ul_real_adc_clock;
+//            ADC->ADC_CR = ADC_CR_SWRST;
+//
+//            /* Reset Mode Register. */
+//            ADC->ADC_MR = 0;
+//
+//            /* Reset PDC transfer. */
+//            ADC->ADC_PTCR = (ADC_PTCR_RXTDIS | ADC_PTCR_TXTDIS);
+//            ADC->ADC_RCR = 0;
+//            ADC->ADC_RNCR = 0;
+//            if (SystemCoreClock % (2 * adc_clock_frequency)) {
+//                // Division with reminder
+//                ul_prescal = SystemCoreClock / (2 * adc_clock_frequency);
+//            } else {
+//                // Whole division
+//                ul_prescal = SystemCoreClock / (2 * adc_clock_frequency) - 1;
+//            }
+//            ul_real_adc_clock = SystemCoreClock / (2 * (ul_prescal + 1));
+//
+//            // ADC clocks needed to get ul_startuptime uS
+//            ul_startup = (ul_real_adc_clock / 1000000) * adc_startuptime;
+//
+//            // Find correct MR_STARTUP value from conversion table
+//            for (ul_mr_startup=0; ul_mr_startup<16; ul_mr_startup++) {
+//                if (startup_table[ul_mr_startup] >= ul_startup)
+//                    break;
+//            }
+//            if (ul_mr_startup==16)
+//                return /*-1*/;
+//
+//            ADC->ADC_MR |=
+//            ADC_MR_PRESCAL(ul_prescal) |
+//            ((ul_mr_startup << ADC_MR_STARTUP_Pos) & ADC_MR_STARTUP_Msk);
+//
+//            ADC->ADC_ISR &= ADC_ISR_DRDY;
+//        };
+//
+//        ADC_Module() {
+//            init(default_adc_clock_frequency, default_adc_startup_time);
+//        };
+//
+//        static void startSampling() {
+//            ADC->ADC_CR = ADC_CR_START; /* start the sample */;
+//        };
+//
+//        static void startFreeRunning() {
+//            ADC->ADC_MR |= ADC_MR_FREERUN_ON;
+//        };
+//    };
 
     template<pin_number pinNum>
     struct ADCPinParent {
@@ -647,101 +649,101 @@ template<> void Motate::IRQPin<number>::interrupt()
     };
 
     // Some pins are ADC pins.
-    // template<pin_number n>
-    // struct ADCPin : Pin<-1> {
-    //     ADCPin() : Pin<-1>() {};
-    //     ADCPin(const PinOptions_n options) : Pin<-1>() {};
-    //
-    //     uint32_t getRaw() {
-    //         return 0;
-    //     };
-    //     uint32_t getValue() {
-    //         return 0;
-    //     };
-    //     operator int16_t() {
-    //         return getValue();
-    //     };
-    //     operator float() {
-    //         return 0.0;
-    //     };
-    //     static const uint16_t getTop() { return 4095; };
-    //
-    //     static const bool is_real = false;
-    //     static void interrupt() __attribute__ (( weak )); // Allow setting an interrupt on a invalid ADC pin -- will never be called
-    // };
+     template<pin_number n>
+     struct ADCPin : Pin<-1> {
+         ADCPin() : Pin<-1>() {};
+         ADCPin(const PinOptions_n options) : Pin<-1>() {};
+    
+         uint32_t getRaw() {
+             return 0;
+         };
+         uint32_t getValue() {
+             return 0;
+         };
+         operator int16_t() {
+             return getValue();
+         };
+         operator float() {
+             return 0.0;
+         };
+         static const uint16_t getTop() { return 4095; };
+    
+         static const bool is_real = false;
+         static void interrupt() __attribute__ (( weak )); // Allow setting an interrupt on a invalid ADC pin -- will never be called
+     };
 
 
-    template<pin_number pinNum>
-    struct ADCPin : ADCPinParent<pinNum>, Pin<pinNum>, ADC_Module {
-        using ADCPinParent<pinNum>::adcMask;
-        using ADCPinParent<pinNum>::adcNumber;
-        using ADCPinParent<pinNum>::getTop;
-
-        ADCPin() : ADCPinParent<pinNum>(), Pin<pinNum>(kInput), ADC_Module() { init(); };
-        ADCPin(const PinOptions_n options) : ADCPinParent<pinNum>(), Pin<pinNum>(kInput), ADC_Module() { init(); };
-
-        void init() {
-            /* Enable the pin */
-            ADC->ADC_CHER = adcMask;
-            /* Enable the conversion TAG */
-            ADC->ADC_EMR = ADC_EMR_TAG ;
-        };
-        uint32_t getRaw() {
-            return ADC->ADC_CDR[adcNumber];
-        };
-        uint32_t getValue() {
-            if ((ADC->ADC_CHSR & adcMask) != adcMask) {
-                ADC->ADC_CR = ADC_CR_START; /* start the sample */
-                while ((ADC->ADC_ISR & ADC_ISR_DRDY) != ADC_ISR_DRDY) {;} /* Wait... */
-            }
-            return getRaw();
-        };
-        operator int16_t() {
-            return getValue();
-        };
-        operator float() {
-            return (float)getValue() / getTop();
-        };
-        static const bool is_real = true;
-        void setInterrupts(const uint32_t interrupts) {
-            if (interrupts != kPinInterruptsOff) {
-                /* Set interrupt priority */
-                if (interrupts & kPinInterruptPriorityMask) {
-                    if (interrupts & kPinInterruptPriorityHighest) {
-                        NVIC_SetPriority(ADC_IRQn, 0);
-                    }
-                    else if (interrupts & kPinInterruptPriorityHigh) {
-                        NVIC_SetPriority(ADC_IRQn, 3);
-                    }
-                    else if (interrupts & kPinInterruptPriorityMedium) {
-                        NVIC_SetPriority(ADC_IRQn, 7);
-                    }
-                    else if (interrupts & kPinInterruptPriorityLow) {
-                        NVIC_SetPriority(ADC_IRQn, 11);
-                    }
-                    else if (interrupts & kPinInterruptPriorityLowest) {
-                        NVIC_SetPriority(ADC_IRQn, 15);
-                    }
-                }
-                /* Enable the IRQ */
-                NVIC_EnableIRQ(ADC_IRQn);
-                /* Enable the interrupt */
-                ADC->ADC_IER = adcMask;
-                /* Enable the pin */
-                ADC->ADC_CHER = adcMask;
-            } else {
-                /* Disable the pin */
-                ADC->ADC_CHDR = adcMask;
-                /* Disable the interrupt */
-                ADC->ADC_IDR = adcMask;
-                /* Disable the interrupt - if all channels are disabled */
-                if (ADC->ADC_CHSR == 0) {
-                    NVIC_DisableIRQ(ADC_IRQn);
-                }
-            }
-        };
-        static void interrupt();
-    };
+//    template<pin_number pinNum>
+//    struct ADCPin : ADCPinParent<pinNum>, Pin<pinNum>, ADC_Module {
+//        using ADCPinParent<pinNum>::adcMask;
+//        using ADCPinParent<pinNum>::adcNumber;
+//        using ADCPinParent<pinNum>::getTop;
+//
+//        ADCPin() : ADCPinParent<pinNum>(), Pin<pinNum>(kInput), ADC_Module() { init(); };
+//        ADCPin(const PinOptions_n options) : ADCPinParent<pinNum>(), Pin<pinNum>(kInput), ADC_Module() { init(); };
+//
+//        void init() {
+//            /* Enable the pin */
+//            ADC->ADC_CHER = adcMask;
+//            /* Enable the conversion TAG */
+//            ADC->ADC_EMR = ADC_EMR_TAG ;
+//        };
+//        uint32_t getRaw() {
+//            return ADC->ADC_CDR[adcNumber];
+//        };
+//        uint32_t getValue() {
+//            if ((ADC->ADC_CHSR & adcMask) != adcMask) {
+//                ADC->ADC_CR = ADC_CR_START; /* start the sample */
+//                while ((ADC->ADC_ISR & ADC_ISR_DRDY) != ADC_ISR_DRDY) {;} /* Wait... */
+//            }
+//            return getRaw();
+//        };
+//        operator int16_t() {
+//            return getValue();
+//        };
+//        operator float() {
+//            return (float)getValue() / getTop();
+//        };
+//        static const bool is_real = true;
+//        void setInterrupts(const uint32_t interrupts) {
+//            if (interrupts != kPinInterruptsOff) {
+//                /* Set interrupt priority */
+//                if (interrupts & kPinInterruptPriorityMask) {
+//                    if (interrupts & kPinInterruptPriorityHighest) {
+//                        NVIC_SetPriority(ADC_IRQn, 0);
+//                    }
+//                    else if (interrupts & kPinInterruptPriorityHigh) {
+//                        NVIC_SetPriority(ADC_IRQn, 3);
+//                    }
+//                    else if (interrupts & kPinInterruptPriorityMedium) {
+//                        NVIC_SetPriority(ADC_IRQn, 7);
+//                    }
+//                    else if (interrupts & kPinInterruptPriorityLow) {
+//                        NVIC_SetPriority(ADC_IRQn, 11);
+//                    }
+//                    else if (interrupts & kPinInterruptPriorityLowest) {
+//                        NVIC_SetPriority(ADC_IRQn, 15);
+//                    }
+//                }
+//                /* Enable the IRQ */
+//                NVIC_EnableIRQ(ADC_IRQn);
+//                /* Enable the interrupt */
+//                ADC->ADC_IER = adcMask;
+//                /* Enable the pin */
+//                ADC->ADC_CHER = adcMask;
+//            } else {
+//                /* Disable the pin */
+//                ADC->ADC_CHDR = adcMask;
+//                /* Disable the interrupt */
+//                ADC->ADC_IDR = adcMask;
+//                /* Disable the interrupt - if all channels are disabled */
+//                if (ADC->ADC_CHSR == 0) {
+//                    NVIC_DisableIRQ(ADC_IRQn);
+//                }
+//            }
+//        };
+//        static void interrupt();
+//    };
 
     template<int16_t adcNum>
     struct ReverseADCPin : ADCPin<-1> {
@@ -974,9 +976,9 @@ static const bool is_real = std::true_type::value;\
 #define _MAKE_MOTATE_SPI_SCK_PIN(registerChar, registerPin, peripheralAorB)\
 template<>\
 struct SPISCKPin< ReversePinLookup<registerChar, registerPin>::number > : ReversePinLookup<registerChar, registerPin> {\
-SPISCKPin() : ReversePinLookup<registerChar, registerPin>(kPeripheral ## peripheralAorB) {};\
-static const uint8_t moduleId = 0; \
-static const bool is_real = std::true_type::value;\
+    SPISCKPin() : ReversePinLookup<registerChar, registerPin>(kPeripheral ## peripheralAorB) {};\
+    static const uint8_t moduleId = 0; \
+    static const bool is_real = std::true_type::value;\
 };
 
 
@@ -993,9 +995,9 @@ static const bool is_real = std::true_type::value;\
 #define _MAKE_MOTATE_UART_TX_PIN(registerChar, registerPin, uartNumVal, peripheralAorB)\
 template<>\
 struct UARTTxPin< ReversePinLookup<registerChar, registerPin>::number > : ReversePinLookup<registerChar, registerPin> {\
-UARTTxPin() : ReversePinLookup<registerChar, registerPin>(kPeripheral ## peripheralAorB, kPullUp) {};\
-static const uint8_t uartNum = uartNumVal;\
-static const bool is_real = true;\
+    UARTTxPin() : ReversePinLookup<registerChar, registerPin>(kPeripheral ## peripheralAorB, kPullUp) {};\
+    static const uint8_t uartNum = uartNumVal;\
+    static const bool is_real = true;\
 };
 
 
@@ -1011,9 +1013,9 @@ static const bool is_real = true;\
 #define _MAKE_MOTATE_UART_RX_PIN(registerChar, registerPin, uartNumVal, peripheralAorB)\
 template<>\
 struct UARTRxPin< ReversePinLookup<registerChar, registerPin>::number > : ReversePinLookup<registerChar, registerPin> {\
-UARTRxPin() : ReversePinLookup<registerChar, registerPin>(kPeripheral ## peripheralAorB) {};\
-static const uint8_t uartNum = uartNumVal;\
-static const bool is_real = true;\
+    UARTRxPin() : ReversePinLookup<registerChar, registerPin>(kPeripheral ## peripheralAorB) {};\
+    static const uint8_t uartNum = uartNumVal;\
+    static const bool is_real = true;\
 };
 
 
@@ -1030,9 +1032,9 @@ static const bool is_real = true;\
 #define _MAKE_MOTATE_UART_RTS_PIN(registerChar, registerPin, uartNumVal, peripheralAorB)\
 template<>\
 struct UARTRTSPin< ReversePinLookup<registerChar, registerPin>::number > : ReversePinLookup<registerChar, registerPin> {\
-UARTRTSPin() : ReversePinLookup<registerChar, registerPin>(kPeripheral ## peripheralAorB) {};\
-static const uint8_t uartNum = uartNumVal;\
-static const bool is_real = true;\
+    UARTRTSPin() : ReversePinLookup<registerChar, registerPin>(kPeripheral ## peripheralAorB) {};\
+    static const uint8_t uartNum = uartNumVal;\
+    static const bool is_real = true;\
 };
 
 
@@ -1048,9 +1050,9 @@ static const bool is_real = true;\
 #define _MAKE_MOTATE_UART_CTS_PIN(registerChar, registerPin, uartNumVal, peripheralAorB)\
 template<>\
 struct UARTCTSPin< ReversePinLookup<registerChar, registerPin>::number > : ReversePinLookup<registerChar, registerPin> {\
-UARTCTSPin() : ReversePinLookup<registerChar, registerPin>(kPeripheral ## peripheralAorB, kPullUp) {};\
-static const uint8_t uartNum = uartNumVal;\
-static const bool is_real = true;\
+    UARTCTSPin() : ReversePinLookup<registerChar, registerPin>(kPeripheral ## peripheralAorB, kPullUp) {};\
+    static const uint8_t uartNum = uartNumVal;\
+    static const bool is_real = true;\
 };
 
     typedef Pin<-1> NullPin;

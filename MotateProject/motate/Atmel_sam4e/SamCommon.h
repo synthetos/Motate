@@ -1,5 +1,5 @@
 /*
- utility/SamUSB.h - Library for the Motate system
+ utility/SamCommon.h - Library for the Motate system
  http://github.com/synthetos/motate/
  
  Copyright (c) 2013 - 2016 Robert Giseburt
@@ -25,17 +25,48 @@
  SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
  OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- 
  */
 
-#if defined(__SAM3X8E__) || defined(__SAM3X8C__)
+#ifndef SAMCOMMON_H_ONCE
+#define SAMCOMMON_H_ONCE
 
-#include "Atmel_sam3x/SamSPI.h"
+#include "sam.h"
 
 namespace Motate {
-//	template<> Spi * const     _SPIHardware<0u, kSPI_MISOPinNumber, kSPI_MOSIPinNumber, kSPI_SCKPinNumber>::spi()          { return SPI0; };
-//    template<> const uint32_t  _SPIHardware<0, kSPI_MISOPinNumber, kSPI_MOSIPinNumber, kSPI_SCKPinNumber>::peripheralId() { return ID_SPI0; };
-//    template<> const IRQn_Type _SPIHardware<0, kSPI_MISOPinNumber, kSPI_MOSIPinNumber, kSPI_SCKPinNumber>::spiIRQ()       { return SPI0_IRQn; };
-}
+   
+    template <class parent>
+	struct SamCommon {
+        
+        // ToDo: Make this inherited! It's repeated in timer, pins, USB, and SPI.
+		static void enablePeripheralClock() {
+			if (parent::peripheralId() < 32) {
+				uint32_t id_mask = 1u << ( parent::peripheralId() );
+				if ((PMC->PMC_PCSR0 & id_mask) != id_mask) {
+					PMC->PMC_PCER0 = id_mask;
+				}
+			} else {
+				uint32_t id_mask = 1u << ( parent::peripheralId() - 32 );
+				if ((PMC->PMC_PCSR1 & id_mask) != id_mask) {
+					PMC->PMC_PCER1 = id_mask;
+				}
+			}
+		};
+        
+		static void disablePeripheralClock() {
+			if (parent::peripheralId() < 32) {
+				uint32_t id_mask = 1u << ( parent::peripheralId() );
+				if ((PMC->PMC_PCSR0 & id_mask) == id_mask) {
+					PMC->PMC_PCDR0 = id_mask;
+				}
+			} else {
+				uint32_t id_mask = 1u << ( parent::peripheralId() - 32 );
+				if ((PMC->PMC_PCSR1 & id_mask) == id_mask) {
+					PMC->PMC_PCDR1 = id_mask;
+				}
+			}
+		};
+    };
+    
+} // namespace Motate
 
-#endif
+#endif /* end of include guard: SAMCOMMON_H_ONCE */

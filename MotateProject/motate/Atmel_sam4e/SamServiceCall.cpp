@@ -27,10 +27,10 @@
  OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#if defined(__SAM3X8E__) || defined(__SAM3X8C__)
+#if defined(__SAM4E8E__) || defined(__SAM4E16E__) || defined(__SAM4E8C__) || defined(__SAM4E16C__)
 
 #include <sam.h>
-#include "Atmel_sam3x/SamServiceCall.h"
+#include "SamServiceCall.h"
 
 extern "C" {
     void _null_svc_call_interrupt() __attribute__ ((unused));

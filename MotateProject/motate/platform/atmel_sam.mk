@@ -77,6 +77,17 @@ else ifeq ($(CHIP),$(findstring $(CHIP), $(SAM4S)))
 #BOARD:=SAM4S_EK
 CHIP_SERIES:=sam4s
 
+else ifeq ($(CHIP),$(findstring $(CHIP), $(SAM4E)))
+
+#BOARD:=SAM4S_EK
+CHIP_SERIES:=sam4e
+
+    ifeq ($(CHIP),$(findstring $(CHIP), $(SAM4E8)))
+        CHIP_SUBSERIES:=sam4e8
+    else
+        CHIP_SUBSERIES:=sam4e16
+    endif
+
 else
 
 $(error $(CHIP) is not a known Atmel processor.)
@@ -109,7 +120,7 @@ DEVICE_INCLUDE_DIRS += $(SAM_PATH)
 DEVICE_INCLUDE_DIRS += $(SAM_PATH)/preprocessor
 DEVICE_INCLUDE_DIRS += $(SAM_PATH)/$(CHIP_SERIES)/include
 DEVICE_INCLUDE_DIRS += $(SAM_PATH)/$(CHIP_SERIES)/source/templates
-DEVICE_INCLUDE_DIRS += $(MOTATE_PATH)/$(CHIP_SERIES)
+DEVICE_INCLUDE_DIRS += $(MOTATE_PATH)/Atmel_$(CHIP_SERIES)
 DEVICE_INCLUDE_DIRS += $(MOTATE_PATH)/platform/atmel_sam
 
 # Add this to search for the additional .ld script

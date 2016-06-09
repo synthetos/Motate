@@ -48,7 +48,11 @@ namespace Motate {
 #endif
 
 #if defined(__SAM3X8E__) || defined(__SAM3X8C__)
-#include <Atmel_sam3x/SamUART.h>
+#include <SamUART.h>
+#endif
+
+#if defined(__SAM4E8E__) || defined(__SAM4E16E__) || defined(__SAM4E8C__) || defined(__SAM4E16C__)
+#include <SamUART.h>
 #endif
 
 #if defined(__KL05Z__)

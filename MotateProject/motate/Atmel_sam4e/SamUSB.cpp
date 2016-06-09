@@ -28,9 +28,9 @@
 
 */
 
-#if defined(__SAM3X8E__) || defined(__SAM3X8C__)
+#if 0 && (defined(__SAM4E8E__) || defined(__SAM4E16E__) || defined(__SAM4E8C__) || defined(__SAM4E16C__))
 
-#include "Atmel_sam3x/SamUSB.h"
+#include "SamUSB.h"
 
 #define TRACE_CORE(x)
 

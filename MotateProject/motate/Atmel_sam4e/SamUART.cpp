@@ -28,11 +28,10 @@
  
  */
 
-#if defined(__SAM3X8E__) || defined(__SAM3X8C__)
+#if defined(__SAM4E8E__) || defined(__SAM4E16E__) || defined(__SAM4E8C__) || defined(__SAM4E16C__)
 
-#include "Atmel_sam3x/SamUART.h"
+#include "SamUART.h"
 
-Uart * const UART = UART_DONT_CONFLICT;
 
 namespace Motate {
 
@@ -41,26 +40,26 @@ namespace Motate {
     template<> const IRQn_Type _USARTHardware<0>::uartIRQ         = USART0_IRQn;
     template<> std::function<void(uint16_t)> _USARTHardware<0>::_uartInterruptHandler {};
 
+#ifdef USART1
     template<> Usart * const   _USARTHardware<1>::usart           = USART1;
     template<> const uint32_t  _USARTHardware<1>::peripheralId() { return ID_USART1; }
     template<> const IRQn_Type _USARTHardware<1>::uartIRQ         = USART1_IRQn;
     template<> std::function<void(uint16_t)> _USARTHardware<1>::_uartInterruptHandler {};
+#endif
 
-    template<> Usart * const   _USARTHardware<2>::usart           = USART2;
-    template<> const uint32_t  _USARTHardware<2>::peripheralId() { return ID_USART2; }
-    template<> const IRQn_Type _USARTHardware<2>::uartIRQ         = USART2_IRQn;
-    template<> std::function<void(uint16_t)> _USARTHardware<2>::_uartInterruptHandler {};
-
-//    template<> Usart * const   _USARTHardware<3>::usart           = USART3;
-//    template<> const uint32_t  _USARTHardware<3>::peripheralId(){ return ID_USART3; }
-//    template<> const IRQn_Type _USARTHardware<3>::uartIRQ         = USART3_IRQn;
-//    template<> std::function<void(uint16_t)> _USARTHardware<3>::_uartInterruptHandler;
-
-    template<> Uart * const    _UARTHardware<0>::uart            = ::UART;
-    template<> const uint32_t  _UARTHardware<0>::peripheralId() { return ID_UART; }
-    template<> const IRQn_Type _UARTHardware<0>::uartIRQ         = UART_IRQn;
+    Uart * const UART0 = UART0_DONT_CONFLICT;
+    template<> Uart * const    _UARTHardware<0>::uart            = UART0;
+    template<> const uint32_t  _UARTHardware<0>::peripheralId() { return ID_UART0; }
+    template<> const IRQn_Type _UARTHardware<0>::uartIRQ         = UART0_IRQn;
     template<> std::function<void(uint16_t)> _UARTHardware<0>::_uartInterruptHandler {};
 
+#ifdef UART1_DONT_CONFLICT
+    Uart * const UART1 = UART1_DONT_CONFLICT;
+    template<> Uart * const    _UARTHardware<1>::uart            = UART1;
+    template<> const uint32_t  _UARTHardware<1>::peripheralId() { return ID_UART1; }
+    template<> const IRQn_Type _UARTHardware<1>::uartIRQ         = UART1_IRQn;
+    template<> std::function<void(uint16_t)> _UARTHardware<1>::_uartInterruptHandler {};
+#endif
 }
 
 extern "C" void USART0_Handler(void)  {
@@ -72,6 +71,7 @@ extern "C" void USART0_Handler(void)  {
     //while (1) ;
 }
 
+#ifdef USART1
 extern "C" void USART1_Handler(void)  {
     if (Motate::_USARTHardware<1u>::_uartInterruptHandler) {
         Motate::_USARTHardware<1u>::_uartInterruptHandler(Motate::_USARTHardware<1u>::getInterruptCause());
@@ -80,34 +80,27 @@ extern "C" void USART1_Handler(void)  {
     __asm__("BKPT");
     //while (1) ;
 }
+#endif
 
-extern "C" void USART2_Handler(void)  {
-    if (Motate::_USARTHardware<2u>::_uartInterruptHandler) {
-        Motate::_USARTHardware<2u>::_uartInterruptHandler(Motate::_USARTHardware<2u>::getInterruptCause());
-        return;
-    }
-    __asm__("BKPT");
-    //while (1) ;
-}
-
-
-//extern "C" void USART3_Handler(void)  {
-//    if (Motate::_UARTHardware<3u>::_uartInterruptHandler) {
-//        Motate::_UARTHardware<3u>::_uartInterruptHandler(Motate::_UARTHardware<3u>::getInterruptCause());
-//        return;
-//    }
-//    __asm__("BKPT");
-//    //while (1) ;
-//}
 
 extern "C" void UART0_Handler(void)  {
-    if (Motate::_UARTHardware<0u>::_uartInterruptHandler) {
-        Motate::_UARTHardware<0u>::_uartInterruptHandler(Motate::_UARTHardware<0u>::getInterruptCause());
+    if (Motate::_UARTHardware<0>::_uartInterruptHandler) {
+        Motate::_UARTHardware<0>::_uartInterruptHandler(Motate::_UARTHardware<0>::getInterruptCause());
         return;
     }
     __asm__("BKPT");
     //while (1) ;
 }
 
+#ifdef UART1_DONT_CONFLICT
+extern "C" void UART1_Handler(void)  {
+    if (Motate::_UARTHardware<1>::_uartInterruptHandler) {
+        Motate::_UARTHardware<1>::_uartInterruptHandler(Motate::_UARTHardware<1>::getInterruptCause());
+        return;
+    }
+    __asm__("BKPT");
+    //while (1) ;
+}
+#endif
 
 #endif

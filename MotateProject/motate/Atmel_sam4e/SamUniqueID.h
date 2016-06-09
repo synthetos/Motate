@@ -1,8 +1,9 @@
 /*
- * SamPower.h - library for controlling the power on a Atmel sam3x8
+ * UniqueId.h - utility function for getting processor unique id
  * This file is part of the Motate project, imported from the TinyG project
  *
  * Copyright (c) 2015 Robert Giseburt
+ * Copyright (c) 2014 Tom Cauchois
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2 as published by the
@@ -25,48 +26,25 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#if defined(__SAM3X8E__) || defined(__SAM3X8C__)
+#ifndef SAMUNIQUEID_H_ONCE
+#define SAMUNIQUEID_H_ONCE
 
-#include <sam.h>
-#include "Atmel_sam3x/SamPower.h"
-
-#ifndef EEFC_FCR_FCMD_CGPB
-#define   EEFC_FCR_FCMD_CGPB (0xCu << 0) /**< \brief (EEFC_FCR) Clear GPNVM bit */
-#endif
+#include <sys/types.h>
 
 namespace Motate {
+    struct UUID_t {
+        static uint32_t _d[4];
+        static char _stringval[20];
 
-    // This is dangerous, let's add another level of namespace in case "use Motate" is in effect.
-    namespace System {
+        static const uint16_t length = 20;
 
-        void reset(bool bootloader)
-        {
-            // Disable all interrupts
-            __disable_irq();
+        UUID_t();
 
-            if (bootloader) {
-                // Set bootflag to run SAM-BA bootloader at restart
-                while ((EFC0->EEFC_FSR & EEFC_FSR_FRDY) == 0);
+        operator const char*();
 
-                //
-                EFC0->EEFC_FCR = EEFC_FCR_FCMD_CGPB | EEFC_FCR_FARG(1) | EEFC_FCR_FKEY(0x5A);
+    };
 
-                while ((EFC0->EEFC_FSR & EEFC_FSR_FRDY) == 0);
-
-                // From here flash memory is no longer available.
-
-                // Memory swap needs some time to stabilize
-                for (uint32_t i=0; i<1000000; i++) {
-                    // force compiler to not optimize this -- NOPs don't work!
-                    __asm__ __volatile__("");
-                }
-            }
-
-            // BANZAIIIIIII!!!
-            RSTC->RSTC_CR = RSTC_CR_KEY(0x5A) | RSTC_CR_PROCRST | RSTC_CR_PERRST;
-            while (true);
-        }
-    }
+    extern UUID_t UUID;
 }
 
-#endif
+#endif /* end of include guard: SAMUNIQUEID_H_ONCE */

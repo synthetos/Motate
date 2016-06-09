@@ -25,10 +25,10 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#if defined(__SAM3X8E__) || defined(__SAM3X8C__)
+#if defined(__SAM4E8E__) || defined(__SAM4E16E__) || defined(__SAM4E8C__) || defined(__SAM4E16C__)
 
 #include <sam.h>
-#include "Atmel_sam3x/SamPower.h"
+#include "SamPower.h"
 
 #ifndef EEFC_FCR_FCMD_CGPB
 #define   EEFC_FCR_FCMD_CGPB (0xCu << 0) /**< \brief (EEFC_FCR) Clear GPNVM bit */
@@ -46,12 +46,12 @@ namespace Motate {
 
             if (bootloader) {
                 // Set bootflag to run SAM-BA bootloader at restart
-                while ((EFC0->EEFC_FSR & EEFC_FSR_FRDY) == 0);
+                while ((EFC->EEFC_FSR & EEFC_FSR_FRDY) == 0);
 
                 //
-                EFC0->EEFC_FCR = EEFC_FCR_FCMD_CGPB | EEFC_FCR_FARG(1) | EEFC_FCR_FKEY(0x5A);
+                EFC->EEFC_FCR = EEFC_FCR_FCMD_CGPB | EEFC_FCR_FARG(1) | EEFC_FCR_FKEY_PASSWD;
 
-                while ((EFC0->EEFC_FSR & EEFC_FSR_FRDY) == 0);
+                while ((EFC->EEFC_FSR & EEFC_FSR_FRDY) == 0);
 
                 // From here flash memory is no longer available.
 
@@ -63,7 +63,7 @@ namespace Motate {
             }
 
             // BANZAIIIIIII!!!
-            RSTC->RSTC_CR = RSTC_CR_KEY(0x5A) | RSTC_CR_PROCRST | RSTC_CR_PERRST;
+            RSTC->RSTC_CR = RSTC_CR_KEY_PASSWD | RSTC_CR_PROCRST | RSTC_CR_PERRST;
             while (true);
         }
     }

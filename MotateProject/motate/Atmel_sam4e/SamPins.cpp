@@ -28,9 +28,9 @@
  */
 
 
-#if defined(__SAM3X8E__) || defined(__SAM3X8C__)
+#if defined(__SAM4E8E__) || defined(__SAM4E16E__) || defined(__SAM4E8C__) || defined(__SAM4E16C__)
 
-#include "Atmel_sam3x/SamPins.h"
+#include "SamPins.h"
 
 using namespace Motate;
 
@@ -49,6 +49,7 @@ extern "C" void PIOA_Handler(void) {
     NVIC_ClearPendingIRQ(PIOA_IRQn);
 }
 
+#ifdef PIOB
 template<> _pinChangeInterrupt * Port32<'B'>::_firstInterrupt = nullptr;
 extern "C" void PIOB_Handler(void) {
     uint32_t isr = PIOB->PIO_ISR;
@@ -63,6 +64,7 @@ extern "C" void PIOB_Handler(void) {
 
     NVIC_ClearPendingIRQ(PIOB_IRQn);
 }
+#endif // PIOB
 
 #ifdef PIOC
 template<> _pinChangeInterrupt * Port32<'C'>::_firstInterrupt = nullptr;
@@ -79,8 +81,7 @@ extern "C" void PIOC_Handler(void) {
 
     NVIC_ClearPendingIRQ(PIOC_IRQn);
 }
-
-#endif // PORTC
+#endif // PIOC
 
 #ifdef PIOD
 template<> _pinChangeInterrupt * Port32<'D'>::_firstInterrupt = nullptr;
@@ -97,9 +98,20 @@ extern "C" void PIOD_Handler(void) {
 
     NVIC_ClearPendingIRQ(PIOD_IRQn);
 }
+#endif // PIOD
 
-#endif // PORTD
-
+namespace Motate {
+    template<> const uint32_t Port32<'A'>::peripheralId() { return ID_PIOA; };
+#ifdef PIOB
+    template<> const uint32_t Port32<'B'>::peripheralId() { return ID_PIOB; };
+#endif
+#ifdef PIOC
+    template<> const uint32_t Port32<'C'>::peripheralId() { return ID_PIOC; };
+#endif
+#ifdef PIOD
+    template<> const uint32_t Port32<'D'>::peripheralId() { return ID_PIOD; };
+#endif
+} // Motate namespace
 
 #ifdef ADC
 
@@ -110,16 +122,6 @@ extern "C" {
 
 namespace Motate {
     bool ADC_Module::inited_ = false;
-
-    template<> const uint32_t Port32<'A'>::peripheralId() { return ID_PIOA; };
-    template<> const uint32_t Port32<'B'>::peripheralId() { return ID_PIOB; };
-#ifdef PIOC
-    template<> const uint32_t Port32<'C'>::peripheralId() { return ID_PIOC; };
-#endif
-#ifdef PIOD
-    template<> const uint32_t Port32<'D'>::peripheralId() { return ID_PIOD; };
-#endif
-
 
     template<> void ADCPin< LookupADCPinByADC< 0>::number >::interrupt() __attribute__ ((weak, alias("_null_adc_pin_interrupt")));
     template<> void ADCPin< LookupADCPinByADC< 1>::number >::interrupt() __attribute__ ((weak, alias("_null_adc_pin_interrupt")));

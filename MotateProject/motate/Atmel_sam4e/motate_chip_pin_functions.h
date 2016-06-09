@@ -37,108 +37,139 @@ namespace Motate {
     // PWM Pin assignments
     // Stupid preprocessor! Workaround for the comma in the TimerChannel name:
 #define _MOTATE_TEMP_TC(t,c) Motate::TimerChannel<t,c>
-    _MAKE_MOTATE_PWM_PIN('A',  0, Motate::PWMTimer<3>, /*Peripheral:*/ B, /*Inverted:*/ false);
-    _MAKE_MOTATE_PWM_PIN('A',  2, _MOTATE_TEMP_TC(1,0),            /*Peripheral:*/ A, /*Inverted:*/ false);
-    _MAKE_MOTATE_PWM_PIN('A',  3, _MOTATE_TEMP_TC(1,1),            /*Peripheral:*/ A, /*Inverted:*/ false);
-    _MAKE_MOTATE_PWM_PIN('A',  5, _MOTATE_TEMP_TC(2,0),            /*Peripheral:*/ A, /*Inverted:*/ false);
-    _MAKE_MOTATE_PWM_PIN('A',  6, _MOTATE_TEMP_TC(2,1),            /*Peripheral:*/ A, /*Inverted:*/ false);
-    _MAKE_MOTATE_PWM_PIN('A',  8, Motate::PWMTimer<0>, /*Peripheral:*/ B, /*Inverted:*/ true); // INVERTED!
-    _MAKE_MOTATE_PWM_PIN('A',  9, Motate::PWMTimer<3>, /*Peripheral:*/ B, /*Inverted:*/ true); // INVERTED!
-    _MAKE_MOTATE_PWM_PIN('A', 12, Motate::PWMTimer<1>, /*Peripheral:*/ B, /*Inverted:*/ false);
-    _MAKE_MOTATE_PWM_PIN('A', 13, Motate::PWMTimer<2>, /*Peripheral:*/ B, /*Inverted:*/ true); // INVERTED!
-    _MAKE_MOTATE_PWM_PIN('A', 19, Motate::PWMTimer<1>, /*Peripheral:*/ B, /*Inverted:*/ true); // INVERTED!
-    _MAKE_MOTATE_PWM_PIN('A', 20, Motate::PWMTimer<2>, /*Peripheral:*/ B, /*Inverted:*/ false);
-    _MAKE_MOTATE_PWM_PIN('A', 21, Motate::PWMTimer<0>, /*Peripheral:*/ B, /*Inverted:*/ false);
-
-    _MAKE_MOTATE_PWM_PIN('B', 12, Motate::PWMTimer<0>, /*Peripheral:*/ B, /*Inverted:*/ true); // INVERTED!
-    _MAKE_MOTATE_PWM_PIN('B', 13, Motate::PWMTimer<1>, /*Peripheral:*/ B, /*Inverted:*/ true); // INVERTED!
-    _MAKE_MOTATE_PWM_PIN('B', 14, Motate::PWMTimer<2>, /*Peripheral:*/ B, /*Inverted:*/ true); // INVERTED!
-    _MAKE_MOTATE_PWM_PIN('B', 15, Motate::PWMTimer<3>, /*Peripheral:*/ B, /*Inverted:*/ true); // INVERTED!
-    _MAKE_MOTATE_PWM_PIN('B', 16, Motate::PWMTimer<0>, /*Peripheral:*/ B, /*Inverted:*/ false);
-    _MAKE_MOTATE_PWM_PIN('B', 17, Motate::PWMTimer<1>, /*Peripheral:*/ B, /*Inverted:*/ false);
-    _MAKE_MOTATE_PWM_PIN('B', 18, Motate::PWMTimer<2>, /*Peripheral:*/ B, /*Inverted:*/ false);
-    _MAKE_MOTATE_PWM_PIN('B', 19, Motate::PWMTimer<3>, /*Peripheral:*/ B, /*Inverted:*/ false);
-    _MAKE_MOTATE_PWM_PIN('B', 25, _MOTATE_TEMP_TC(0,0),            /*Peripheral:*/ B, /*Inverted:*/ false);
-    _MAKE_MOTATE_PWM_PIN('B', 27, _MOTATE_TEMP_TC(0,1),            /*Peripheral:*/ B, /*Inverted:*/ false);
-
-// SAM3X8C doesn't have a PORT C or D
-#ifdef PIOC
-    _MAKE_MOTATE_PWM_PIN('C',  2, Motate::PWMTimer<0>, /*Peripheral:*/ B, /*Inverted:*/ false);
-    _MAKE_MOTATE_PWM_PIN('C',  3, Motate::PWMTimer<0>, /*Peripheral:*/ B, /*Inverted:*/ true); // INVERTED!
-    _MAKE_MOTATE_PWM_PIN('C',  4, Motate::PWMTimer<1>, /*Peripheral:*/ B, /*Inverted:*/ false);
-    _MAKE_MOTATE_PWM_PIN('C',  5, Motate::PWMTimer<1>, /*Peripheral:*/ B, /*Inverted:*/ true); // INVERTED!
-    _MAKE_MOTATE_PWM_PIN('C',  6, Motate::PWMTimer<2>, /*Peripheral:*/ B, /*Inverted:*/ false);
-    _MAKE_MOTATE_PWM_PIN('C',  7, Motate::PWMTimer<2>, /*Peripheral:*/ B, /*Inverted:*/ true); // INVERTED!
-    _MAKE_MOTATE_PWM_PIN('C',  8, Motate::PWMTimer<3>, /*Peripheral:*/ B, /*Inverted:*/ false);
-    _MAKE_MOTATE_PWM_PIN('C',  9, Motate::PWMTimer<3>, /*Peripheral:*/ B, /*Inverted:*/ true); // INVERTED!
-    _MAKE_MOTATE_PWM_PIN('C', 18, Motate::PWMTimer<6>, /*Peripheral:*/ B, /*Inverted:*/ true); // INVERTED!
-    _MAKE_MOTATE_PWM_PIN('C', 19, Motate::PWMTimer<5>, /*Peripheral:*/ B, /*Inverted:*/ true); // INVERTED!
-    _MAKE_MOTATE_PWM_PIN('C', 21, Motate::PWMTimer<4>, /*Peripheral:*/ B, /*Inverted:*/ false);
-    _MAKE_MOTATE_PWM_PIN('C', 22, Motate::PWMTimer<5>, /*Peripheral:*/ B, /*Inverted:*/ false);
-    _MAKE_MOTATE_PWM_PIN('C', 23, Motate::PWMTimer<6>, /*Peripheral:*/ B, /*Inverted:*/ false);
-    _MAKE_MOTATE_PWM_PIN('C', 24, Motate::PWMTimer<7>, /*Peripheral:*/ B, /*Inverted:*/ false);
-    _MAKE_MOTATE_PWM_PIN('C', 25, _MOTATE_TEMP_TC(6,0),            /*Peripheral:*/ B, /*Inverted:*/ false);
-    _MAKE_MOTATE_PWM_PIN('C', 26, _MOTATE_TEMP_TC(6,1),            /*Peripheral:*/ B, /*Inverted:*/ false);
-    _MAKE_MOTATE_PWM_PIN('C', 28, _MOTATE_TEMP_TC(7,0),            /*Peripheral:*/ B, /*Inverted:*/ false);
-    _MAKE_MOTATE_PWM_PIN('C', 29, _MOTATE_TEMP_TC(7,1),            /*Peripheral:*/ B, /*Inverted:*/ false);
+#ifdef PIOA
+    _MAKE_MOTATE_PWM_PIN('A',  0, Motate::PWMTimer<0>,        /*Peripheral:*/ A,  /*Inverted:*/ true);
+//    _MAKE_MOTATE_PWM_PIN('A',  0, _MOTATE_TEMP_TC(/*0*/0,0),  /*Peripheral:*/ B,  /*Inverted:*/ false);
+    _MAKE_MOTATE_PWM_PIN('A',  1, Motate::PWMTimer<1>,        /*Peripheral:*/ A,  /*Inverted:*/ true);
+//    _MAKE_MOTATE_PWM_PIN('A',  1, _MOTATE_TEMP_TC(/*0*/0,1),  /*Peripheral:*/ B,  /*Inverted:*/ false);
+    _MAKE_MOTATE_PWM_PIN('A',  2, Motate::PWMTimer<2>,        /*Peripheral:*/ A,  /*Inverted:*/ true);
+    _MAKE_MOTATE_PWM_PIN('A',  7, Motate::PWMTimer<3>,        /*Peripheral:*/ B,  /*Inverted:*/ true);
+    _MAKE_MOTATE_PWM_PIN('A', 11, Motate::PWMTimer<0>,        /*Peripheral:*/ B,  /*Inverted:*/ true);
+    _MAKE_MOTATE_PWM_PIN('A', 12, Motate::PWMTimer<1>,        /*Peripheral:*/ B,  /*Inverted:*/ true);
+    _MAKE_MOTATE_PWM_PIN('A', 13, Motate::PWMTimer<2>,        /*Peripheral:*/ B,  /*Inverted:*/ true);
+    _MAKE_MOTATE_PWM_PIN('A', 14, Motate::PWMTimer<3>,        /*Peripheral:*/ B,  /*Inverted:*/ true);
+    _MAKE_MOTATE_PWM_PIN('A', 15, Motate::PWMTimer<3>,        /*Peripheral:*/ C,  /*Inverted:*/ false);
+//    _MAKE_MOTATE_PWM_PIN('A', 15, _MOTATE_TEMP_TC(/*0*/1,0),  /*Peripheral:*/ B,  /*Inverted:*/ false);
+    _MAKE_MOTATE_PWM_PIN('A', 16, Motate::PWMTimer<2>,        /*Peripheral:*/ C,  /*Inverted:*/ false);
+//    _MAKE_MOTATE_PWM_PIN('A', 16, _MOTATE_TEMP_TC(/*0*/1,1),  /*Peripheral:*/ B,  /*Inverted:*/ false);
+    _MAKE_MOTATE_PWM_PIN('A', 17, Motate::PWMTimer<3>,        /*Peripheral:*/ C,  /*Inverted:*/ true);
+    _MAKE_MOTATE_PWM_PIN('A', 19, Motate::PWMTimer<0>,        /*Peripheral:*/ B,  /*Inverted:*/ false);
+    _MAKE_MOTATE_PWM_PIN('A', 20, Motate::PWMTimer<1>,        /*Peripheral:*/ B,  /*Inverted:*/ false);
+    _MAKE_MOTATE_PWM_PIN('A', 23, Motate::PWMTimer<0>,        /*Peripheral:*/ B,  /*Inverted:*/ true);
+    _MAKE_MOTATE_PWM_PIN('A', 24, Motate::PWMTimer<1>,        /*Peripheral:*/ B,  /*Inverted:*/ true);
+    _MAKE_MOTATE_PWM_PIN('A', 25, Motate::PWMTimer<2>,        /*Peripheral:*/ B,  /*Inverted:*/ true);
+    _MAKE_MOTATE_PWM_PIN('A', 26, _MOTATE_TEMP_TC(/*0*/2,0),  /*Peripheral:*/ B,  /*Inverted:*/ false);
+    _MAKE_MOTATE_PWM_PIN('A', 27, _MOTATE_TEMP_TC(/*0*/2,1),  /*Peripheral:*/ B,  /*Inverted:*/ false);
+    _MAKE_MOTATE_PWM_PIN('A', 30, Motate::PWMTimer<2>,        /*Peripheral:*/ A,  /*Inverted:*/ false);
 #endif
-
+#ifdef PIOB
+    _MAKE_MOTATE_PWM_PIN('B',  0, Motate::PWMTimer<0>,        /*Peripheral:*/ A,  /*Inverted:*/ true);
+    _MAKE_MOTATE_PWM_PIN('B',  1, Motate::PWMTimer<1>,        /*Peripheral:*/ A,  /*Inverted:*/ true);
+    _MAKE_MOTATE_PWM_PIN('B',  4, Motate::PWMTimer<2>,        /*Peripheral:*/ B,  /*Inverted:*/ true);
+//    _MAKE_MOTATE_PWM_PIN('B',  5, Motate::PWMTimer<0>,        /*Peripheral:*/ B,  /*Inverted:*/ false);
+//    _MAKE_MOTATE_PWM_PIN('B', 12, Motate::PWMTimer<1>,        /*Peripheral:*/ A,  /*Inverted:*/ false);
+    _MAKE_MOTATE_PWM_PIN('B', 13, Motate::PWMTimer<2>,        /*Peripheral:*/ A,  /*Inverted:*/ false);
+    _MAKE_MOTATE_PWM_PIN('B', 14, Motate::PWMTimer<3>,        /*Peripheral:*/ B,  /*Inverted:*/ true);
+#endif
+#ifdef PIOC
+    _MAKE_MOTATE_PWM_PIN('C',  0, Motate::PWMTimer<0>,        /*Peripheral:*/ B,  /*Inverted:*/ false);
+    _MAKE_MOTATE_PWM_PIN('C',  1, Motate::PWMTimer<1>,        /*Peripheral:*/ B,  /*Inverted:*/ false);
+    _MAKE_MOTATE_PWM_PIN('C',  2, Motate::PWMTimer<2>,        /*Peripheral:*/ B,  /*Inverted:*/ false);
+    _MAKE_MOTATE_PWM_PIN('C',  3, Motate::PWMTimer<3>,        /*Peripheral:*/ B,  /*Inverted:*/ false);
+#ifdef TC2
+#error here
+    _MAKE_MOTATE_PWM_PIN('C',  5, _MOTATE_TEMP_TC(/*2*/6,0),  /*Peripheral:*/ B,  /*Inverted:*/ false);
+    _MAKE_MOTATE_PWM_PIN('C',  6, _MOTATE_TEMP_TC(/*2*/6,1),  /*Peripheral:*/ B,  /*Inverted:*/ false);
+    _MAKE_MOTATE_PWM_PIN('C',  8, _MOTATE_TEMP_TC(/*2*/7,0),  /*Peripheral:*/ B,  /*Inverted:*/ false);
+    _MAKE_MOTATE_PWM_PIN('C',  9, _MOTATE_TEMP_TC(/*2*/7,1),  /*Peripheral:*/ B,  /*Inverted:*/ false);
+    _MAKE_MOTATE_PWM_PIN('C', 11, _MOTATE_TEMP_TC(/*2*/8,0),  /*Peripheral:*/ B,  /*Inverted:*/ false);
+    _MAKE_MOTATE_PWM_PIN('C', 12, _MOTATE_TEMP_TC(/*2*/8,1),  /*Peripheral:*/ B,  /*Inverted:*/ false);
+#endif // TC2
+    _MAKE_MOTATE_PWM_PIN('C', 13, Motate::PWMTimer<0>,        /*Peripheral:*/ B,  /*Inverted:*/ false);
+    _MAKE_MOTATE_PWM_PIN('C', 15, Motate::PWMTimer<1>,        /*Peripheral:*/ B,  /*Inverted:*/ false);
+    _MAKE_MOTATE_PWM_PIN('C', 18, Motate::PWMTimer<0>,        /*Peripheral:*/ B,  /*Inverted:*/ true);
+    _MAKE_MOTATE_PWM_PIN('C', 19, Motate::PWMTimer<1>,        /*Peripheral:*/ B,  /*Inverted:*/ true);
+    _MAKE_MOTATE_PWM_PIN('C', 20, Motate::PWMTimer<2>,        /*Peripheral:*/ B,  /*Inverted:*/ true);
+    _MAKE_MOTATE_PWM_PIN('C', 21, Motate::PWMTimer<3>,        /*Peripheral:*/ B,  /*Inverted:*/ true);
+    _MAKE_MOTATE_PWM_PIN('C', 22, Motate::PWMTimer<3>,        /*Peripheral:*/ B,  /*Inverted:*/ false);
+#ifdef TC1
+#error here
+    _MAKE_MOTATE_PWM_PIN('C', 23, _MOTATE_TEMP_TC(/*1*/3,0),  /*Peripheral:*/ B,  /*Inverted:*/ false);
+    _MAKE_MOTATE_PWM_PIN('C', 24, _MOTATE_TEMP_TC(/*1*/3,1),  /*Peripheral:*/ B,  /*Inverted:*/ false);
+    _MAKE_MOTATE_PWM_PIN('C', 26, _MOTATE_TEMP_TC(/*1*/4,0),  /*Peripheral:*/ B,  /*Inverted:*/ false);
+    _MAKE_MOTATE_PWM_PIN('C', 27, _MOTATE_TEMP_TC(/*1*/4,1),  /*Peripheral:*/ B,  /*Inverted:*/ false);
+    _MAKE_MOTATE_PWM_PIN('C', 29, _MOTATE_TEMP_TC(/*1*/5,0),  /*Peripheral:*/ B,  /*Inverted:*/ false);
+    _MAKE_MOTATE_PWM_PIN('C', 30, _MOTATE_TEMP_TC(/*1*/5,1),  /*Peripheral:*/ B,  /*Inverted:*/ false);
+#endif // TC1
+#endif
 #ifdef PIOD
-    _MAKE_MOTATE_PWM_PIN('D',  7, _MOTATE_TEMP_TC(8, 0),           /*Peripheral:*/ B, /*Inverted:*/ false);
-    _MAKE_MOTATE_PWM_PIN('D',  8, _MOTATE_TEMP_TC(8, 1),           /*Peripheral:*/ B, /*Inverted:*/ false);
+    _MAKE_MOTATE_PWM_PIN('D', 20, Motate::PWMTimer<0>,        /*Peripheral:*/ A,  /*Inverted:*/ true);
+    _MAKE_MOTATE_PWM_PIN('D', 21, Motate::PWMTimer<1>,        /*Peripheral:*/ A,  /*Inverted:*/ true);
+    _MAKE_MOTATE_PWM_PIN('D', 22, Motate::PWMTimer<2>,        /*Peripheral:*/ A,  /*Inverted:*/ true);
+    _MAKE_MOTATE_PWM_PIN('D', 23, Motate::PWMTimer<3>,        /*Peripheral:*/ A,  /*Inverted:*/ true);
+    _MAKE_MOTATE_PWM_PIN('D', 24, Motate::PWMTimer<0>,        /*Peripheral:*/ A,  /*Inverted:*/ false);
+    _MAKE_MOTATE_PWM_PIN('D', 25, Motate::PWMTimer<1>,        /*Peripheral:*/ A,  /*Inverted:*/ false);
+    _MAKE_MOTATE_PWM_PIN('D', 26, Motate::PWMTimer<2>,        /*Peripheral:*/ A,  /*Inverted:*/ false);
+    _MAKE_MOTATE_PWM_PIN('D', 27, Motate::PWMTimer<3>,        /*Peripheral:*/ A,  /*Inverted:*/ false);
 #endif
 
 #undef _MOTATE_TEMP_TC//(t,c)
 
-    // SPI Pin assignements
-    _MAKE_MOTATE_SPI_CS_PIN('A', 28, /* Peripheral:*/ A, /* CS Index:*/ 0);
-    _MAKE_MOTATE_SPI_CS_PIN('B', 20, /* Peripheral:*/ B, /* CS Index:*/ 1);
-    _MAKE_MOTATE_SPI_CS_PIN('B', 21, /* Peripheral:*/ B, /* CS Index:*/ 2);
-    _MAKE_MOTATE_SPI_CS_PIN('B', 23, /* Peripheral:*/ B, /* CS Index:*/ 3);
-
-    _MAKE_MOTATE_SPI_MISO_PIN('A', 25, /* Peripheral */ A);
-    _MAKE_MOTATE_SPI_MOSI_PIN('A', 26, /* Peripheral */ A);
-    _MAKE_MOTATE_SPI_SCK_PIN('A', 27, /* Peripheral */ A);
-
+//    // SPI Pin assignements
+//    _MAKE_MOTATE_SPI_CS_PIN('A', 28, /* Peripheral:*/ A, /* CS Index:*/ 0);
+//    _MAKE_MOTATE_SPI_CS_PIN('B', 20, /* Peripheral:*/ B, /* CS Index:*/ 1);
+//    _MAKE_MOTATE_SPI_CS_PIN('B', 21, /* Peripheral:*/ B, /* CS Index:*/ 2);
+//    _MAKE_MOTATE_SPI_CS_PIN('B', 23, /* Peripheral:*/ B, /* CS Index:*/ 3);
+//
+//    _MAKE_MOTATE_SPI_MISO_PIN('A', 25, /* Peripheral */ A);
+//    _MAKE_MOTATE_SPI_MOSI_PIN('A', 26, /* Peripheral */ A);
+//    _MAKE_MOTATE_SPI_SCK_PIN('A', 27, /* Peripheral */ A);
+//
     // UART Pin Assignments
-    _MAKE_MOTATE_UART_RX_PIN( 'A', 10, /* UART number: */ 0, /* Peripheral */ A);
-    _MAKE_MOTATE_UART_TX_PIN( 'A', 11, /* UART number: */ 0, /* Peripheral */ A);
-    _MAKE_MOTATE_UART_RTS_PIN('B', 25, /* UART number: */ 0, /* Peripheral */ A);
-    _MAKE_MOTATE_UART_CTS_PIN('B', 26, /* UART number: */ 0, /* Peripheral */ A);
+    // NOTE: UARTs 4 and 5 (here) are UART0 abd UART1 hardware
+    //       UARTs 0,1 and 2 are USART0 and up (note the S!)
+    _MAKE_MOTATE_UART_RX_PIN( 'A',  9, /* UART number: */ 4+0, /* Peripheral */ A);
+    _MAKE_MOTATE_UART_TX_PIN( 'A', 10, /* UART number: */ 4+0, /* Peripheral */ A);
 
-    _MAKE_MOTATE_UART_RX_PIN( 'A', 12, /* UART number: */ 1, /* Peripheral */ A);
-    _MAKE_MOTATE_UART_TX_PIN( 'A', 13, /* UART number: */ 1, /* Peripheral */ A);
-    _MAKE_MOTATE_UART_RTS_PIN('A', 14, /* UART number: */ 1, /* Peripheral */ A);
-    _MAKE_MOTATE_UART_CTS_PIN('A', 15, /* UART number: */ 1, /* Peripheral */ A);
+    _MAKE_MOTATE_UART_RX_PIN( 'A',  5, /* UART number: */ 4+1, /* Peripheral */ A);
+    _MAKE_MOTATE_UART_TX_PIN( 'A',  6, /* UART number: */ 4+1, /* Peripheral */ A);
 
-    _MAKE_MOTATE_UART_RX_PIN( 'B', 21, /* UART number: */ 2, /* Peripheral */ A);
-    _MAKE_MOTATE_UART_TX_PIN( 'B', 20, /* UART number: */ 2, /* Peripheral */ A);
-    _MAKE_MOTATE_UART_RTS_PIN('B', 22, /* UART number: */ 2, /* Peripheral */ A);
-    _MAKE_MOTATE_UART_CTS_PIN('B', 23, /* UART number: */ 2, /* Peripheral */ A);
 
-#if defined(PIOD) && defined(PIOF)
-    _MAKE_MOTATE_UART_RX_PIN( 'D',  5, /* UART number: */ 3, /* Peripheral */ B);
-    _MAKE_MOTATE_UART_TX_PIN( 'D',  4, /* UART number: */ 3, /* Peripheral */ B);
-    _MAKE_MOTATE_UART_RTS_PIN('F',  5, /* UART number: */ 3, /* Peripheral */ A);
-    _MAKE_MOTATE_UART_CTS_PIN('F',  4, /* UART number: */ 3, /* Peripheral */ A);
+#ifdef PIOB
+    _MAKE_MOTATE_UART_RX_PIN ( 'B',   0, /* UART number: */ 0, /* Peripheral */ C);
+    _MAKE_MOTATE_UART_TX_PIN ( 'B',   1, /* UART number: */ 0, /* Peripheral */ C);
+    _MAKE_MOTATE_UART_RTS_PIN( 'B',   3, /* UART number: */ 0, /* Peripheral */ C);
+    _MAKE_MOTATE_UART_CTS_PIN( 'B',   2, /* UART number: */ 0, /* Peripheral */ C);
+//    _MAKE_MOTATE_UART_SCK_PIN( 'B',  13, /* UART number: */ 0, /* Peripheral */ C);
 #endif
 
+    _MAKE_MOTATE_UART_RX_PIN ( 'A',  21, /* UART number: */ 1, /* Peripheral */ A);
+    _MAKE_MOTATE_UART_TX_PIN ( 'A',  22, /* UART number: */ 1, /* Peripheral */ A);
+    _MAKE_MOTATE_UART_RTS_PIN( 'A',  24, /* UART number: */ 1, /* Peripheral */ A);
+    _MAKE_MOTATE_UART_CTS_PIN( 'A',  25, /* UART number: */ 1, /* Peripheral */ A);
+//    _MAKE_MOTATE_UART_DCD_PIN( 'A',  26, /* UART number: */ 1, /* Peripheral */ A);
+//    _MAKE_MOTATE_UART_DSR_PIN( 'A',  28, /* UART number: */ 1, /* Peripheral */ A);
+//    _MAKE_MOTATE_UART_DTR_PIN( 'A',  27, /* UART number: */ 1, /* Peripheral */ A);
+//    _MAKE_MOTATE_UART_RI_PIN ( 'A',  29, /* UART number: */ 1, /* Peripheral */ A);
+//    _MAKE_MOTATE_UART_SCK_PIN( 'A',  23, /* UART number: */ 1, /* Peripheral */ A);
+
+    
     // ADC Pin assignments
-    _MAKE_MOTATE_ADC_PIN('A',  2, /* ADC number:*/  0);
-    _MAKE_MOTATE_ADC_PIN('A',  3, /* ADC number:*/  1);
-    _MAKE_MOTATE_ADC_PIN('A',  4, /* ADC number:*/  2);
-    _MAKE_MOTATE_ADC_PIN('A',  6, /* ADC number:*/  3);
-    _MAKE_MOTATE_ADC_PIN('A', 16, /* ADC number:*/  7);
-    _MAKE_MOTATE_ADC_PIN('A', 22, /* ADC number:*/  4);
-    _MAKE_MOTATE_ADC_PIN('A', 23, /* ADC number:*/  5);
-    _MAKE_MOTATE_ADC_PIN('A', 24, /* ADC number:*/  6);
-    _MAKE_MOTATE_ADC_PIN('B', 12, /* ADC number:*/  8);
-    _MAKE_MOTATE_ADC_PIN('B', 13, /* ADC number:*/  9);
-    _MAKE_MOTATE_ADC_PIN('B', 17, /* ADC number:*/ 10);
-    _MAKE_MOTATE_ADC_PIN('B', 18, /* ADC number:*/ 11);
-    _MAKE_MOTATE_ADC_PIN('B', 19, /* ADC number:*/ 12);
-    _MAKE_MOTATE_ADC_PIN('B', 20, /* ADC number:*/ 13);
-    _MAKE_MOTATE_ADC_PIN('B', 21, /* ADC number:*/ 14);
+//    _MAKE_MOTATE_ADC_PIN('A',  2, /* ADC number:*/  0);
+//    _MAKE_MOTATE_ADC_PIN('A',  3, /* ADC number:*/  1);
+//    _MAKE_MOTATE_ADC_PIN('A',  4, /* ADC number:*/  2);
+//    _MAKE_MOTATE_ADC_PIN('A',  6, /* ADC number:*/  3);
+//    _MAKE_MOTATE_ADC_PIN('A', 16, /* ADC number:*/  7);
+//    _MAKE_MOTATE_ADC_PIN('A', 22, /* ADC number:*/  4);
+//    _MAKE_MOTATE_ADC_PIN('A', 23, /* ADC number:*/  5);
+//    _MAKE_MOTATE_ADC_PIN('A', 24, /* ADC number:*/  6);
+//    _MAKE_MOTATE_ADC_PIN('B', 12, /* ADC number:*/  8);
+//    _MAKE_MOTATE_ADC_PIN('B', 13, /* ADC number:*/  9);
+//    _MAKE_MOTATE_ADC_PIN('B', 17, /* ADC number:*/ 10);
+//    _MAKE_MOTATE_ADC_PIN('B', 18, /* ADC number:*/ 11);
+//    _MAKE_MOTATE_ADC_PIN('B', 19, /* ADC number:*/ 12);
+//    _MAKE_MOTATE_ADC_PIN('B', 20, /* ADC number:*/ 13);
+//    _MAKE_MOTATE_ADC_PIN('B', 21, /* ADC number:*/ 14);
 
 
 }
