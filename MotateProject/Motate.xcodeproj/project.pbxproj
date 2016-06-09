@@ -602,7 +602,6 @@
 		D4D62A781D07B6380098C632 /* hooks.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79EEB1957C0B700A1BE28 /* hooks.c */; };
 		D4D62A791D07B6380098C632 /* syscalls.h in Sources */ = {isa = PBXBuildFile; fileRef = D4C79EEF1957C0B700A1BE28 /* syscalls.h */; };
 		D4D62A7A1D07B6380098C632 /* syscalls.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C79EF01957C0B700A1BE28 /* syscalls.cpp */; };
-		D4D62A7B1D07B6380098C632 /* motate_chip_pin_functions.h in Sources */ = {isa = PBXBuildFile; fileRef = D49367C41B825324000BB759 /* motate_chip_pin_functions.h */; };
 		D4D62A7C1D07B6510098C632 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C79F20195BCC9A00A1BE28 /* main.cpp */; };
 		D4D62A7D1D07B6510098C632 /* MotateBuffer.h in Sources */ = {isa = PBXBuildFile; fileRef = D48992C01965B118004F73A6 /* MotateBuffer.h */; };
 		D4D62A7E1D07B6510098C632 /* MotatePins.h in Sources */ = {isa = PBXBuildFile; fileRef = D4C78F63195201A900A1BE28 /* MotatePins.h */; };
@@ -714,7 +713,6 @@
 		D48992C01965B118004F73A6 /* MotateBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MotateBuffer.h; path = motate/MotateBuffer.h; sourceTree = SOURCE_ROOT; };
 		D48992C41965B460004F73A6 /* Makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
 		D48992C51965B460004F73A6 /* uart_demo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = uart_demo.cpp; sourceTree = "<group>"; };
-		D49367C41B825324000BB759 /* motate_chip_pin_functions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = motate_chip_pin_functions.h; sourceTree = "<group>"; };
 		D49367D31B8638F0000BB759 /* MotateServiceCall.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotateServiceCall.h; sourceTree = "<group>"; };
 		D4A74B2119C15DB00019633A /* frdm-kl05z.cfg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "frdm-kl05z.cfg"; sourceTree = "<group>"; };
 		D4C77F6D1950912300A1BE28 /* Tools.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Tools.xcodeproj; path = ../Tools/Tools.xcodeproj; sourceTree = "<group>"; };
@@ -4410,7 +4408,6 @@
 				D4C79EEF1957C0B700A1BE28 /* syscalls.h */,
 				D4C79EF01957C0B700A1BE28 /* syscalls.cpp */,
 				D46B98221B683C690088801D /* motate_additions.ld */,
-				D49367C41B825324000BB759 /* motate_chip_pin_functions.h */,
 			);
 			path = atmel_sam;
 			sourceTree = "<group>";
@@ -5481,7 +5478,6 @@
 				D4D62A781D07B6380098C632 /* hooks.c in Sources */,
 				D4D62A791D07B6380098C632 /* syscalls.h in Sources */,
 				D4D62A7A1D07B6380098C632 /* syscalls.cpp in Sources */,
-				D4D62A7B1D07B6380098C632 /* motate_chip_pin_functions.h in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
