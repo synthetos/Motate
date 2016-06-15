@@ -77,7 +77,6 @@ namespace Motate {
     _MAKE_MOTATE_PWM_PIN('C',  2, Motate::PWMTimer<2>,        /*Peripheral:*/ B,  /*Inverted:*/ false);
     _MAKE_MOTATE_PWM_PIN('C',  3, Motate::PWMTimer<3>,        /*Peripheral:*/ B,  /*Inverted:*/ false);
 #ifdef TC2
-#error here
     _MAKE_MOTATE_PWM_PIN('C',  5, _MOTATE_TEMP_TC(/*2*/6,0),  /*Peripheral:*/ B,  /*Inverted:*/ false);
     _MAKE_MOTATE_PWM_PIN('C',  6, _MOTATE_TEMP_TC(/*2*/6,1),  /*Peripheral:*/ B,  /*Inverted:*/ false);
     _MAKE_MOTATE_PWM_PIN('C',  8, _MOTATE_TEMP_TC(/*2*/7,0),  /*Peripheral:*/ B,  /*Inverted:*/ false);
@@ -93,7 +92,6 @@ namespace Motate {
     _MAKE_MOTATE_PWM_PIN('C', 21, Motate::PWMTimer<3>,        /*Peripheral:*/ B,  /*Inverted:*/ true);
     _MAKE_MOTATE_PWM_PIN('C', 22, Motate::PWMTimer<3>,        /*Peripheral:*/ B,  /*Inverted:*/ false);
 #ifdef TC1
-#error here
     _MAKE_MOTATE_PWM_PIN('C', 23, _MOTATE_TEMP_TC(/*1*/3,0),  /*Peripheral:*/ B,  /*Inverted:*/ false);
     _MAKE_MOTATE_PWM_PIN('C', 24, _MOTATE_TEMP_TC(/*1*/3,1),  /*Peripheral:*/ B,  /*Inverted:*/ false);
     _MAKE_MOTATE_PWM_PIN('C', 26, _MOTATE_TEMP_TC(/*1*/4,0),  /*Peripheral:*/ B,  /*Inverted:*/ false);
@@ -131,8 +129,8 @@ namespace Motate {
     _MAKE_MOTATE_UART_RX_PIN( 'A',  9, /* UART number: */ 4+0, /* Peripheral */ A);
     _MAKE_MOTATE_UART_TX_PIN( 'A', 10, /* UART number: */ 4+0, /* Peripheral */ A);
 
-    _MAKE_MOTATE_UART_RX_PIN( 'A',  5, /* UART number: */ 4+1, /* Peripheral */ A);
-    _MAKE_MOTATE_UART_TX_PIN( 'A',  6, /* UART number: */ 4+1, /* Peripheral */ A);
+    _MAKE_MOTATE_UART_RX_PIN( 'A',  5, /* UART number: */ 4+1, /* Peripheral */ C);
+    _MAKE_MOTATE_UART_TX_PIN( 'A',  6, /* UART number: */ 4+1, /* Peripheral */ C);
 
 
 #ifdef PIOB

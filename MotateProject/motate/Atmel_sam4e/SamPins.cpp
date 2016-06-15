@@ -30,18 +30,18 @@
 
 #if defined(__SAM4E8E__) || defined(__SAM4E16E__) || defined(__SAM4E8C__) || defined(__SAM4E16C__)
 
-#include "SamPins.h"
+#include "MotatePins.h"
 
 using namespace Motate;
 
-template<> _pinChangeInterrupt * Port32<'A'>::_firstInterrupt = nullptr;
+template<> _pinChangeInterrupt * PortHardware<'A'>::_firstInterrupt = nullptr;
 extern "C" void PIOA_Handler(void) {
     uint32_t isr = PIOA->PIO_ISR;
 
-    _pinChangeInterrupt *current = Port32<'A'>::_firstInterrupt;
+    _pinChangeInterrupt *current = PortHardware<'A'>::_firstInterrupt;
     while (current != nullptr) {
-        if (isr & current->mask) {
-            current->interrupt();
+        if (isr & current->pc_mask) {
+            current->interrupt_handler();
         }
         current = current->next;
     }
@@ -50,14 +50,14 @@ extern "C" void PIOA_Handler(void) {
 }
 
 #ifdef PIOB
-template<> _pinChangeInterrupt * Port32<'B'>::_firstInterrupt = nullptr;
+template<> _pinChangeInterrupt * PortHardware<'B'>::_firstInterrupt = nullptr;
 extern "C" void PIOB_Handler(void) {
     uint32_t isr = PIOB->PIO_ISR;
 
-    _pinChangeInterrupt *current = Port32<'B'>::_firstInterrupt;
+    _pinChangeInterrupt *current = PortHardware<'B'>::_firstInterrupt;
     while (current != nullptr) {
-        if (isr & current->mask) {
-            current->interrupt();
+        if (isr & current->pc_mask) {
+            current->interrupt_handler();
         }
         current = current->next;
     }
@@ -67,14 +67,14 @@ extern "C" void PIOB_Handler(void) {
 #endif // PIOB
 
 #ifdef PIOC
-template<> _pinChangeInterrupt * Port32<'C'>::_firstInterrupt = nullptr;
+template<> _pinChangeInterrupt * PortHardware<'C'>::_firstInterrupt = nullptr;
 extern "C" void PIOC_Handler(void) {
     uint32_t isr = PIOC->PIO_ISR;
 
-    _pinChangeInterrupt *current = Port32<'C'>::_firstInterrupt;
+    _pinChangeInterrupt *current = PortHardware<'C'>::_firstInterrupt;
     while (current != nullptr) {
-        if (isr & current->mask) {
-            current->interrupt();
+        if (isr & current->pc_mask) {
+            current->interrupt_handler();
         }
         current = current->next;
     }
@@ -84,14 +84,14 @@ extern "C" void PIOC_Handler(void) {
 #endif // PIOC
 
 #ifdef PIOD
-template<> _pinChangeInterrupt * Port32<'D'>::_firstInterrupt = nullptr;
+template<> _pinChangeInterrupt * PortHardware<'D'>::_firstInterrupt = nullptr;
 extern "C" void PIOD_Handler(void) {
     uint32_t isr = PIOD->PIO_ISR;
 
-    _pinChangeInterrupt *current = Port32<'D'>::_firstInterrupt;
+    _pinChangeInterrupt *current = PortHardware<'D'>::_firstInterrupt;
     while (current != nullptr) {
-        if (isr & current->mask) {
-            current->interrupt();
+        if (isr & current->pc_mask) {
+            current->interrupt_handler();
         }
         current = current->next;
     }
@@ -101,15 +101,15 @@ extern "C" void PIOD_Handler(void) {
 #endif // PIOD
 
 namespace Motate {
-    template<> const uint32_t Port32<'A'>::peripheralId() { return ID_PIOA; };
+    template<> const uint32_t PortHardware<'A'>::peripheralId() { return ID_PIOA; };
 #ifdef PIOB
-    template<> const uint32_t Port32<'B'>::peripheralId() { return ID_PIOB; };
+    template<> const uint32_t PortHardware<'B'>::peripheralId() { return ID_PIOB; };
 #endif
 #ifdef PIOC
-    template<> const uint32_t Port32<'C'>::peripheralId() { return ID_PIOC; };
+    template<> const uint32_t PortHardware<'C'>::peripheralId() { return ID_PIOC; };
 #endif
 #ifdef PIOD
-    template<> const uint32_t Port32<'D'>::peripheralId() { return ID_PIOD; };
+    template<> const uint32_t PortHardware<'D'>::peripheralId() { return ID_PIOD; };
 #endif
 } // Motate namespace
 
