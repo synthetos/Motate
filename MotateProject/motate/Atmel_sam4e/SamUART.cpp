@@ -35,29 +35,29 @@
 
 namespace Motate {
 
-    template<> Usart * const   _USARTHardware<0>::usart           = USART0;
-    template<> const uint32_t  _USARTHardware<0>::peripheralId() { return ID_USART0; }
-    template<> const IRQn_Type _USARTHardware<0>::uartIRQ         = USART0_IRQn;
+//    template<> Usart * const   _USARTHardware<0>::usart           = USART0;
+//    template<> const uint32_t  _USARTHardware<0>::peripheralId() { return ID_USART0; }
+//    template<> const IRQn_Type _USARTHardware<0>::uartIRQ         = USART0_IRQn;
     template<> std::function<void(uint16_t)> _USARTHardware<0>::_uartInterruptHandler {};
 
 #ifdef USART1
-    template<> Usart * const   _USARTHardware<1>::usart           = USART1;
-    template<> const uint32_t  _USARTHardware<1>::peripheralId() { return ID_USART1; }
-    template<> const IRQn_Type _USARTHardware<1>::uartIRQ         = USART1_IRQn;
+//    template<> Usart * const   _USARTHardware<1>::usart           = USART1;
+//    template<> const uint32_t  _USARTHardware<1>::peripheralId() { return ID_USART1; }
+//    template<> const IRQn_Type _USARTHardware<1>::uartIRQ         = USART1_IRQn;
     template<> std::function<void(uint16_t)> _USARTHardware<1>::_uartInterruptHandler {};
 #endif
 
-    Uart * const UART0 = UART0_DONT_CONFLICT;
-    template<> Uart * const    _UARTHardware<0>::uart            = UART0;
-    template<> const uint32_t  _UARTHardware<0>::peripheralId() { return ID_UART0; }
-    template<> const IRQn_Type _UARTHardware<0>::uartIRQ         = UART0_IRQn;
+//    Uart * const UART0 = UART0_DONT_CONFLICT;
+//    template<> Uart * const    _UARTHardware<0>::uart            = UART0;
+//    template<> const uint32_t  _UARTHardware<0>::peripheralId() { return ID_UART0; }
+//    template<> const IRQn_Type _UARTHardware<0>::uartIRQ         = UART0_IRQn;
     template<> std::function<void(uint16_t)> _UARTHardware<0>::_uartInterruptHandler {};
 
 #ifdef UART1_DONT_CONFLICT
-    Uart * const UART1 = UART1_DONT_CONFLICT;
-    template<> Uart * const    _UARTHardware<1>::uart            = UART1;
-    template<> const uint32_t  _UARTHardware<1>::peripheralId() { return ID_UART1; }
-    template<> const IRQn_Type _UARTHardware<1>::uartIRQ         = UART1_IRQn;
+//    Uart * const UART1 = UART1_DONT_CONFLICT;
+//    template<> Uart * const    _UARTHardware<1>::uart            = UART1;
+//    template<> const uint32_t  _UARTHardware<1>::peripheralId() { return ID_UART1; }
+//    template<> const IRQn_Type _UARTHardware<1>::uartIRQ         = UART1_IRQn;
     template<> std::function<void(uint16_t)> _UARTHardware<1>::_uartInterruptHandler {};
 #endif
 }

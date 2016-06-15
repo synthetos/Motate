@@ -43,16 +43,24 @@
 // Damn C defines. UART is a DEFINE, so we can't use it as an object type.
 // We will undefine it here.
 // Damn defines anyway
-#define UART0_DONT_CONFLICT UART0
-#undef UART0
-#ifdef UART1
-#define UART1_DONT_CONFLICT UART1
-#undef UART1
-#endif
+//#define UART0_DONT_CONFLICT UART0
+//#undef UART0
+//#ifdef UART1
+//#define UART1_DONT_CONFLICT UART1
+//#undef UART1
+//#endif
 
 //extern typename decltype(UART_DONT_CONFLICT) UART;
 
 namespace Motate {
+
+    Uart * const UART0_DONT_CONFLICT = UART0;
+    #undef UART0
+    Uart * const UART0 = UART0_DONT_CONFLICT;
+
+    Uart * const UART1_DONT_CONFLICT = UART1;
+    #undef UART1
+    Uart * const UART1 = UART1_DONT_CONFLICT;
 
     struct UARTMode {
 
@@ -172,9 +180,15 @@ namespace Motate {
     template<uint8_t uartPeripheralNumber>
     struct _USARTHardware : SamCommon< _USARTHardware<uartPeripheralNumber> > {
 
-        static Usart * const usart;
-        static const uint32_t peripheralId();
-        static const IRQn_Type uartIRQ;
+        static constexpr Usart * const usart() {
+            return (uartPeripheralNumber == 0) ? USART0 : USART1;
+        };
+        static constexpr uint32_t peripheralId() {
+            return (uartPeripheralNumber == 0) ? ID_USART0 : ID_USART1;
+        };
+        static constexpr IRQn_Type usartIRQ() {
+            return (uartPeripheralNumber == 0) ? USART0_IRQn : USART1_IRQn;
+        };
 
         static constexpr const uint8_t uartPeripheralNum=uartPeripheralNumber;
 
@@ -188,17 +202,17 @@ namespace Motate {
             common::enablePeripheralClock();
 
             // Reset and disable TX and RX
-            usart->US_CR = US_CR_RSTRX | US_CR_RSTTX | US_CR_RXDIS | US_CR_TXDIS;
+            usart()->US_CR = US_CR_RSTRX | US_CR_RSTTX | US_CR_RXDIS | US_CR_TXDIS;
 
             // reset PCR to zero
-            usart->US_RPR = 0;
-            usart->US_RNPR = 0;
-            usart->US_RCR = 0;
-            usart->US_RNCR = 0;
-            usart->US_TPR = 0;
-            usart->US_TNPR = 0;
-            usart->US_TCR = 0;
-            usart->US_TNCR = 0;
+            usart()->US_RPR = 0;
+            usart()->US_RNPR = 0;
+            usart()->US_RCR = 0;
+            usart()->US_RNCR = 0;
+            usart()->US_TPR = 0;
+            usart()->US_TNPR = 0;
+            usart()->US_TCR = 0;
+            usart()->US_TNCR = 0;
         };
 
         _USARTHardware() {
@@ -206,8 +220,8 @@ namespace Motate {
             // Instead, we call init from UART<>::init(), so that the optimizer will keep it.
         };
 
-        void enable() { usart->US_CR = US_CR_TXEN | US_CR_RXEN; };
-        void disable () { usart->US_CR = US_CR_TXDIS | US_CR_RXDIS; };
+        void enable() { usart()->US_CR = US_CR_TXEN | US_CR_RXEN; };
+        void disable () { usart()->US_CR = US_CR_TXDIS | US_CR_RXDIS; };
 
         void setOptions(const uint32_t baud, const uint16_t options, const bool fromConstructor=false) {
             disable();
@@ -217,33 +231,33 @@ namespace Motate {
 
             // For all of the speeds up to and including 230400, 16x multiplier worked fine in testing.
             // All yielded a <1% error in final baud.
-            usart->US_BRGR = US_BRGR_CD((((SystemCoreClock * 10) / (16 * baud)) + 5)/10) | US_BRGR_FP(0);
-            usart->US_MR &= ~US_MR_OVER;
+            usart()->US_BRGR = US_BRGR_CD((((SystemCoreClock * 10) / (16 * baud)) + 5)/10) | US_BRGR_FP(0);
+            usart()->US_MR &= ~US_MR_OVER;
 
 
             if (options & UARTMode::RTSCTSFlowControl) {
-                usart->US_MR = (usart->US_MR & ~US_MR_USART_MODE_Msk) | US_MR_USART_MODE_HW_HANDSHAKING;
+                usart()->US_MR = (usart()->US_MR & ~US_MR_USART_MODE_Msk) | US_MR_USART_MODE_HW_HANDSHAKING;
             } else {
-                usart->US_MR = (usart->US_MR & ~US_MR_USART_MODE_Msk) | US_MR_USART_MODE_NORMAL;
+                usart()->US_MR = (usart()->US_MR & ~US_MR_USART_MODE_Msk) | US_MR_USART_MODE_NORMAL;
             }
 
             if (options & UARTMode::TwoStopBits) {
-                usart->US_MR = (usart->US_MR & ~(US_MR_NBSTOP_Msk)) | US_MR_NBSTOP_2_BIT;
+                usart()->US_MR = (usart()->US_MR & ~(US_MR_NBSTOP_Msk)) | US_MR_NBSTOP_2_BIT;
             } else {
-                usart->US_MR = (usart->US_MR & ~(US_MR_NBSTOP_Msk)) | US_MR_NBSTOP_1_BIT;
+                usart()->US_MR = (usart()->US_MR & ~(US_MR_NBSTOP_Msk)) | US_MR_NBSTOP_1_BIT;
             }
 
             if (options & UARTMode::As9Bit) {
-                usart->US_MR |= US_MR_MODE9;
+                usart()->US_MR |= US_MR_MODE9;
             } else {
-                usart->US_MR = (usart->US_MR & ~(US_MR_MODE9|US_MR_CHRL_Msk)) | static_cast<uint32_t>(CHRL_t::CH_8_BIT);
+                usart()->US_MR = (usart()->US_MR & ~(US_MR_MODE9|US_MR_CHRL_Msk)) | static_cast<uint32_t>(CHRL_t::CH_8_BIT);
             }
             if (options & UARTMode::EvenParity) {
-                usart->US_MR = (usart->US_MR & ~(US_MR_PAR_Msk)) | US_MR_PAR_EVEN;
+                usart()->US_MR = (usart()->US_MR & ~(US_MR_PAR_Msk)) | US_MR_PAR_EVEN;
             } else if (options & UARTMode::OddParity) {
-                usart->US_MR = (usart->US_MR & ~(US_MR_PAR_Msk)) | US_MR_PAR_ODD;
+                usart()->US_MR = (usart()->US_MR & ~(US_MR_PAR_Msk)) | US_MR_PAR_ODD;
             } else {
-                usart->US_MR = (usart->US_MR & ~(US_MR_PAR_Msk)) | US_MR_PAR_NO;
+                usart()->US_MR = (usart()->US_MR & ~(US_MR_PAR_Msk)) | US_MR_PAR_NO;
             }
 
             /* Enable receiver and transmitter */
@@ -255,49 +269,49 @@ namespace Motate {
             if (interrupts != UARTInterrupt::Off) {
 
                 if (interrupts & UARTInterrupt::OnRxDone) {
-                    usart->US_IER = US_IER_RXRDY;
+                    usart()->US_IER = US_IER_RXRDY;
                 } else {
-                    usart->US_IDR = US_IDR_RXRDY;
+                    usart()->US_IDR = US_IDR_RXRDY;
                 }
                 if (interrupts & UARTInterrupt::OnTxDone) {
-                    usart->US_IER = US_IER_TXRDY;
+                    usart()->US_IER = US_IER_TXRDY;
                 } else {
-                    usart->US_IDR = US_IDR_TXRDY;
+                    usart()->US_IDR = US_IDR_TXRDY;
                 }
 
                 if (interrupts & UARTInterrupt::OnRxTransferDone) {
-                    usart->US_IER = US_IER_RXBUFF;
+                    usart()->US_IER = US_IER_RXBUFF;
                 } else {
-                    usart->US_IDR = US_IDR_RXBUFF;
+                    usart()->US_IDR = US_IDR_RXBUFF;
                 }
                 if (interrupts & UARTInterrupt::OnTxTransferDone) {
-                    usart->US_IER = US_IER_TXBUFE;
+                    usart()->US_IER = US_IER_TXBUFE;
                 } else {
-                    usart->US_IDR = US_IDR_TXBUFE;
+                    usart()->US_IDR = US_IDR_TXBUFE;
                 }
 
 
                 /* Set interrupt priority */
                 if (interrupts & UARTInterrupt::PriorityHighest) {
-                    NVIC_SetPriority(uartIRQ, 0);
+                    NVIC_SetPriority(usartIRQ(), 0);
                 }
                 else if (interrupts & UARTInterrupt::PriorityHigh) {
-                    NVIC_SetPriority(uartIRQ, 3);
+                    NVIC_SetPriority(usartIRQ(), 3);
                 }
                 else if (interrupts & UARTInterrupt::PriorityMedium) {
-                    NVIC_SetPriority(uartIRQ, 7);
+                    NVIC_SetPriority(usartIRQ(), 7);
                 }
                 else if (interrupts & UARTInterrupt::PriorityLow) {
-                    NVIC_SetPriority(uartIRQ, 11);
+                    NVIC_SetPriority(usartIRQ(), 11);
                 }
                 else if (interrupts & kInterruptPriorityLowest) {
-                    NVIC_SetPriority(uartIRQ, 15);
+                    NVIC_SetPriority(usartIRQ(), 15);
                 }
 
-                NVIC_EnableIRQ(uartIRQ);
+                NVIC_EnableIRQ(usartIRQ());
             } else {
 
-                NVIC_DisableIRQ(uartIRQ);
+                NVIC_DisableIRQ(usartIRQ());
             }
         };
 
@@ -307,57 +321,57 @@ namespace Motate {
 
         void _setInterruptTxReady(bool value) {
             if (value) {
-                usart->US_IER = US_IER_TXRDY;
+                usart()->US_IER = US_IER_TXRDY;
             } else {
-                usart->US_IDR = US_IDR_TXRDY;
+                usart()->US_IDR = US_IDR_TXRDY;
             }
         };
 
         void _setInterruptRxReady(bool value) {
             if (value) {
-                usart->US_IER = US_IER_RXRDY;
+                usart()->US_IER = US_IER_RXRDY;
             } else {
-                usart->US_IDR = US_IDR_RXRDY;
+                usart()->US_IDR = US_IDR_RXRDY;
             }
         };
 
         void _setInterruptCTSChange(bool value) {
             if (value) {
-                usart->US_IER = US_IER_CTSIC;
+                usart()->US_IER = US_IER_CTSIC;
             } else {
-                usart->US_IDR = US_IDR_CTSIC;
+                usart()->US_IDR = US_IDR_CTSIC;
             }
         };
 
         void _setInterruptTxTransferDone(bool value) {
             if (value) {
-                usart->US_IER = US_IER_TXBUFE;
+                usart()->US_IER = US_IER_TXBUFE;
             } else {
-                usart->US_IDR = US_IDR_TXBUFE;
+                usart()->US_IDR = US_IDR_TXBUFE;
             }
         };
 
         void _setInterruptRxTransferDone(bool value) {
             if (value) {
-                usart->US_IER = US_IER_RXBUFF;
+                usart()->US_IER = US_IER_RXBUFF;
             } else {
-                usart->US_IDR = US_IDR_RXBUFF;
+                usart()->US_IDR = US_IDR_RXBUFF;
             }
         };
 
         static uint16_t getInterruptCause() { // __attribute__ (( noinline ))
             uint16_t status = UARTInterrupt::Unknown;
-            auto US_CSR_hold = usart->US_CSR;
+            auto US_CSR_hold = usart()->US_CSR;
             if (US_CSR_hold & US_CSR_TXRDY) {
                 status |= UARTInterrupt::OnTxReady;
             }
-            if (US_CSR_hold & US_IER_TXBUFE) {
+            if (US_CSR_hold & US_CSR_TXBUFE) {
                 status |= UARTInterrupt::OnTxTransferDone;
             }
             if (US_CSR_hold & US_CSR_RXRDY) {
                 status |= UARTInterrupt::OnRxReady;
             }
-            if (US_CSR_hold & US_IER_RXBUFF) {
+            if (US_CSR_hold & US_CSR_RXBUFF) {
                 status |= UARTInterrupt::OnRxTransferDone;
             }
             if (US_CSR_hold & US_CSR_CTSIC) {
@@ -367,31 +381,31 @@ namespace Motate {
         }
 
         int16_t readByte() {
-            if (usart->US_CSR & US_CSR_RXRDY) {
-                return (usart->US_RHR & US_RHR_RXCHR_Msk);
+            if (usart()->US_CSR & US_CSR_RXRDY) {
+                return (usart()->US_RHR & US_RHR_RXCHR_Msk);
             }
 
             return -1;
         };
 
         int16_t writeByte(const char value) {
-            if (usart->US_CSR & US_CSR_TXRDY) {
-                usart->US_THR = US_THR_TXCHR(value);
+            if (usart()->US_CSR & US_CSR_TXRDY) {
+                usart()->US_THR = US_THR_TXCHR(value);
             }
             return -1;
         };
 
         void flush() {
             // Wait for the buffer to be empty
-            while (!usart->US_CSR & US_CSR_TXEMPTY) {
+            while (!usart()->US_CSR & US_CSR_TXEMPTY) {
                 ;
             }
         };
 
         void flushRead() {
             // kill any incoming transfers
-            usart->US_RNCR = 0;
-            usart->US_RCR = 0;
+            usart()->US_RNCR = 0;
+            usart()->US_RCR = 0;
         };
 
 
@@ -401,22 +415,22 @@ namespace Motate {
             // which gives us a reasonable guess, at least.
 
             // The USART gives us access to that pin.
-            return (usart->US_CSR & US_CSR_CTS) == 0; // active LOW
+            return (usart()->US_CSR & US_CSR_CTS) == 0; // active LOW
         };
 
 
         // ***** Handle Tranfers
         bool startRXTransfer(char *buffer, const uint16_t length) {
-            if (usart->US_RCR == 0) {
-                usart->US_RPR = (uint32_t)buffer;
-                usart->US_RCR = length;
-                usart->US_PTCR = US_PTCR_RXTEN;
+            if (usart()->US_RCR == 0) {
+                usart()->US_RPR = (uint32_t)buffer;
+                usart()->US_RCR = length;
+                usart()->US_PTCR = US_PTCR_RXTEN;
                 _setInterruptRxTransferDone(true);
                 return true;
             }
-            else if (usart->US_RNCR == 0) {
-                usart->US_RNPR = (uint32_t)buffer;
-                usart->US_RNCR = length;
+            else if (usart()->US_RNCR == 0) {
+                usart()->US_RNPR = (uint32_t)buffer;
+                usart()->US_RNCR = length;
                 _setInterruptRxTransferDone(true);
                 return true;
             }
@@ -424,20 +438,20 @@ namespace Motate {
         };
 
         char* getRXTransferPosition() {
-            return (char*)usart->US_RPR;
+            return (char*)usart()->US_RPR;
         };
 
         bool startTXTransfer(char *buffer, const uint16_t length) {
-            if (usart->US_TCR == 0) {
-                usart->US_TPR = (uint32_t)buffer;
-                usart->US_TCR = length;
-                usart->US_PTCR = US_PTCR_TXTEN;
+            if (usart()->US_TCR == 0) {
+                usart()->US_TPR = (uint32_t)buffer;
+                usart()->US_TCR = length;
+                usart()->US_PTCR = US_PTCR_TXTEN;
                 _setInterruptTxTransferDone(true);
                 return true;
             }
-            else if (usart->US_TNCR == 0) {
-                usart->US_TNPR = (uint32_t)buffer;
-                usart->US_TNCR = length;
+            else if (usart()->US_TNCR == 0) {
+                usart()->US_TNPR = (uint32_t)buffer;
+                usart()->US_TNCR = length;
                 _setInterruptTxTransferDone(true);
                 return true;
             }
@@ -445,7 +459,7 @@ namespace Motate {
         };
 
         char* getTXTransferPosition() {
-            return (char*)usart->US_TPR;
+            return (char*)usart()->US_TPR;
         };
 
     };
@@ -455,9 +469,15 @@ namespace Motate {
     template<uint8_t uartPeripheralNumber>
     struct _UARTHardware : SamCommon< _UARTHardware<uartPeripheralNumber> > {
 
-        static Uart * const uart;
-        static const uint32_t peripheralId();
-        static const IRQn_Type uartIRQ;
+        static constexpr Uart * const uart() {
+            return (uartPeripheralNumber == 0) ? UART0 : UART1;
+        };
+        static constexpr uint32_t peripheralId() {
+            return (uartPeripheralNumber == 0) ? 7u : 45u;
+        };
+        static constexpr IRQn_Type uartIRQ() {
+            return (uartPeripheralNumber == 0) ? UART0_IRQn : UART1_IRQn;
+        };
 
         static constexpr const uint8_t uartPeripheralNum=uartPeripheralNumber;
 
@@ -468,20 +488,25 @@ namespace Motate {
 
         void init() {
             // init is called once after reset, so clean up after a reset
-            common::enablePeripheralClock();
+            //common::enablePeripheralClock();
+            if (uartPeripheralNumber == 0) {
+                PMC->PMC_PCER0 = 1 << 7u;
+            } else {
+                PMC->PMC_PCER1 = 1 << (45u - 32);
+            }
 
             // Reset and disable TX and RX
-            uart->UART_CR = UART_CR_RSTRX | UART_CR_RSTTX | UART_CR_RXDIS | UART_CR_TXDIS;
+            uart()->UART_CR = UART_CR_RSTRX | UART_CR_RSTTX | UART_CR_RXDIS | UART_CR_TXDIS;
 
             // reset PCR to zero
-            uart->UART_RPR = 0;
-            uart->UART_RNPR = 0;
-            uart->UART_RCR = 0;
-            uart->UART_RNCR = 0;
-            uart->UART_TPR = 0;
-            uart->UART_TNPR = 0;
-            uart->UART_TCR = 0;
-            uart->UART_TNCR = 0;
+            uart()->UART_RPR = 0;
+            uart()->UART_RNPR = 0;
+            uart()->UART_RCR = 0;
+            uart()->UART_RNCR = 0;
+            uart()->UART_TPR = 0;
+            uart()->UART_TNPR = 0;
+            uart()->UART_TCR = 0;
+            uart()->UART_TNCR = 0;
         };
 
         _UARTHardware() {
@@ -489,8 +514,8 @@ namespace Motate {
             // Instead, we call init from UART<>::init(), so that the optimizer will keep it.
         };
 
-        void enable() { uart->UART_CR = UART_CR_TXEN | UART_CR_RXEN; };
-        void disable () { uart->UART_CR = UART_CR_TXDIS | UART_CR_RXDIS; };
+        void enable() { uart()->UART_CR = UART_CR_TXEN | UART_CR_RXEN; };
+        void disable () { uart()->UART_CR = UART_CR_TXDIS | UART_CR_RXDIS; };
 
         void setOptions(const uint32_t baud, const uint16_t options, const bool fromConstructor=false) {
             disable();
@@ -498,9 +523,7 @@ namespace Motate {
             // Oversampling is either 8 or 16. Depending on the baud, we may need to select 8x in
             // order to get the error low.
 
-            // For all of the speeds up to and including 230400, 16x multiplier worked fine in testing.
-            // All yielded a <1% error in final baud.
-            uart->UART_BRGR = UART_BRGR_CD((((SystemCoreClock * 10) / (16 * baud)) + 5)/10);
+            uart()->UART_BRGR = UART_BRGR_CD(SystemCoreClock / (16 * baud));
 
             // No hardware flow control
             // if (options & UARTMode::RTSCTSFlowControl) {
@@ -518,11 +541,11 @@ namespace Motate {
             // }
 
             if (options & UARTMode::EvenParity) {
-                uart->UART_MR = (uart->UART_MR & ~(UART_MR_PAR_Msk)) | UART_MR_PAR_EVEN;
+                uart()->UART_MR = (uart()->UART_MR & ~(UART_MR_PAR_Msk)) | UART_MR_PAR_EVEN;
             } else if (options & UARTMode::OddParity) {
-                uart->UART_MR = (uart->UART_MR & ~(UART_MR_PAR_Msk)) | UART_MR_PAR_ODD;
+                uart()->UART_MR = (uart()->UART_MR & ~(UART_MR_PAR_Msk)) | UART_MR_PAR_ODD;
             } else {
-                uart->UART_MR = (uart->UART_MR & ~(UART_MR_PAR_Msk)) | UART_MR_PAR_NO;
+                uart()->UART_MR = (uart()->UART_MR & ~(UART_MR_PAR_Msk)) | UART_MR_PAR_NO;
             }
 
             /* Enable receiver and transmitter */
@@ -534,49 +557,49 @@ namespace Motate {
             if (interrupts != UARTInterrupt::Off) {
 
                 if (interrupts & UARTInterrupt::OnRxDone) {
-                    uart->UART_IER = UART_IER_RXRDY;
+                    uart()->UART_IER = UART_IER_RXRDY;
                 } else {
-                    uart->UART_IDR = UART_IDR_RXRDY;
+                    uart()->UART_IDR = UART_IDR_RXRDY;
                 }
                 if (interrupts & UARTInterrupt::OnTxDone) {
-                    uart->UART_IER = UART_IER_TXRDY;
+                    uart()->UART_IER = UART_IER_TXRDY;
                 } else {
-                    uart->UART_IDR = UART_IDR_TXRDY;
+                    uart()->UART_IDR = UART_IDR_TXRDY;
                 }
 
                 if (interrupts & UARTInterrupt::OnRxTransferDone) {
-                    uart->UART_IER = UART_IER_RXBUFF;
+                    uart()->UART_IER = UART_IER_RXBUFF;
                 } else {
-                    uart->UART_IDR = UART_IDR_RXBUFF;
+                    uart()->UART_IDR = UART_IDR_RXBUFF;
                 }
                 if (interrupts & UARTInterrupt::OnTxTransferDone) {
-                    uart->UART_IER = UART_IER_TXBUFE;
+                    uart()->UART_IER = UART_IER_TXBUFE;
                 } else {
-                    uart->UART_IDR = UART_IDR_TXBUFE;
+                    uart()->UART_IDR = UART_IDR_TXBUFE;
                 }
 
 
                 /* Set interrupt priority */
                 if (interrupts & UARTInterrupt::PriorityHighest) {
-                    NVIC_SetPriority(uartIRQ, 0);
+                    NVIC_SetPriority(uartIRQ(), 0);
                 }
                 else if (interrupts & UARTInterrupt::PriorityHigh) {
-                    NVIC_SetPriority(uartIRQ, 3);
+                    NVIC_SetPriority(uartIRQ(), 3);
                 }
                 else if (interrupts & UARTInterrupt::PriorityMedium) {
-                    NVIC_SetPriority(uartIRQ, 7);
+                    NVIC_SetPriority(uartIRQ(), 7);
                 }
                 else if (interrupts & UARTInterrupt::PriorityLow) {
-                    NVIC_SetPriority(uartIRQ, 11);
+                    NVIC_SetPriority(uartIRQ(), 11);
                 }
                 else if (interrupts & kInterruptPriorityLowest) {
-                    NVIC_SetPriority(uartIRQ, 15);
+                    NVIC_SetPriority(uartIRQ(), 15);
                 }
 
-                NVIC_EnableIRQ(uartIRQ);
+                NVIC_EnableIRQ(uartIRQ());
             } else {
 
-                NVIC_DisableIRQ(uartIRQ);
+                NVIC_DisableIRQ(uartIRQ());
             }
         };
 
@@ -586,17 +609,17 @@ namespace Motate {
 
         void _setInterruptTxReady(bool value) {
             if (value) {
-                uart->UART_IER = UART_IER_TXRDY;
+                uart()->UART_IER = UART_IER_TXRDY;
             } else {
-                uart->UART_IDR = UART_IDR_TXRDY;
+                uart()->UART_IDR = UART_IDR_TXRDY;
             }
         };
 
         void _setInterruptRxReady(bool value) {
             if (value) {
-                uart->UART_IER = UART_IER_RXRDY;
+                uart()->UART_IER = UART_IER_RXRDY;
             } else {
-                uart->UART_IDR = UART_IDR_RXRDY;
+                uart()->UART_IDR = UART_IDR_RXRDY;
             }
         };
 
@@ -608,64 +631,64 @@ namespace Motate {
 
         void _setInterruptTxTransferDone(bool value) {
             if (value) {
-                uart->UART_IER = UART_IER_TXBUFE;
+                uart()->UART_IER = UART_IER_TXBUFE;
             } else {
-                uart->UART_IDR = UART_IDR_TXBUFE;
+                uart()->UART_IDR = UART_IDR_TXBUFE;
             }
         };
 
         void _setInterruptRxTransferDone(bool value) {
             if (value) {
-                uart->UART_IER = UART_IER_RXBUFF;
+                uart()->UART_IER = UART_IER_RXBUFF;
             } else {
-                uart->UART_IDR = UART_IDR_RXBUFF;
+                uart()->UART_IDR = UART_IDR_RXBUFF;
             }
         };
 
         static uint16_t getInterruptCause() { // __attribute__ (( noinline ))
             uint16_t status = UARTInterrupt::Unknown;
-            auto UART_SR_hold = uart->UART_SR;
+            auto UART_SR_hold = uart()->UART_SR;
             if (UART_SR_hold & UART_SR_TXRDY) {
                 status |= UARTInterrupt::OnTxReady;
             }
-            if (UART_SR_hold & UART_IER_TXBUFE) {
+            if (UART_SR_hold & UART_SR_TXBUFE) {
                 status |= UARTInterrupt::OnTxTransferDone;
             }
             if (UART_SR_hold & UART_SR_RXRDY) {
                 status |= UARTInterrupt::OnRxReady;
             }
-            if (UART_SR_hold & UART_IER_RXBUFF) {
+            if (UART_SR_hold & UART_SR_RXBUFF) {
                 status |= UARTInterrupt::OnRxTransferDone;
             }
             return status;
         }
 
         int16_t readByte() {
-            if (uart->UART_SR & UART_SR_RXRDY) {
-                return (uart->UART_RHR & UART_RHR_RXCHR_Msk);
+            if (uart()->UART_SR & UART_SR_RXRDY) {
+                return (uart()->UART_RHR & UART_RHR_RXCHR_Msk);
             }
 
             return -1;
         };
 
         int16_t writeByte(const char value) {
-            if (uart->UART_SR & UART_SR_TXRDY) {
-                uart->UART_THR = UART_THR_TXCHR(value);
+            if (uart()->UART_SR & UART_SR_TXRDY) {
+                uart()->UART_THR = UART_THR_TXCHR(value);
             }
             return -1;
         };
 
         void flush() {
             // Wait for the buffer to be empty
-            while (!uart->UART_SR & UART_SR_TXEMPTY) {
+            while (!uart()->UART_SR & UART_SR_TXEMPTY) {
                 ;
             }
         };
 
         void flushRead() {
             // kill any incoming transfers
-            uart->UART_RNCR = 0;
-            uart->UART_RCR = 0;
+            uart()->UART_RNCR = 0;
+            uart()->UART_RCR = 0;
         };
 
 
@@ -681,45 +704,45 @@ namespace Motate {
 
         // ***** Handle Tranfers
         bool startRXTransfer(char *buffer, const uint16_t length) {
-            if (uart->UART_RCR == 0) {
-                uart->UART_RPR = (uint32_t)buffer;
-                uart->UART_RCR = length;
-                uart->UART_PTCR = UART_PTCR_RXTEN;
+            if (uart()->UART_RCR == 0) {
+                uart()->UART_RPR = (uint32_t)buffer;
+                uart()->UART_RCR = length;
+                uart()->UART_PTCR = UART_PTCR_RXTEN;
                 _setInterruptRxTransferDone(true);
                 return true;
             }
-            else if (uart->UART_RNCR == 0) {
-                uart->UART_RNPR = (uint32_t)buffer;
-                uart->UART_RNCR = length;
-                _setInterruptRxTransferDone(true);
-                return true;
-            }
+//            else if (uart()->UART_RNCR == 0) {
+//                uart()->UART_RNPR = (uint32_t)buffer;
+//                uart()->UART_RNCR = length;
+//                _setInterruptRxTransferDone(true);
+//                return true;
+//            }
             return false;
         };
 
         char* getRXTransferPosition() {
-            return (char*)uart->UART_RPR;
+            return (char*)uart()->UART_RPR;
         };
 
         bool startTXTransfer(char *buffer, const uint16_t length) {
-            if (uart->UART_TCR == 0) {
-                uart->UART_TPR = (uint32_t)buffer;
-                uart->UART_TCR = length;
-                uart->UART_PTCR = UART_PTCR_TXTEN;
+            if (uart()->UART_TCR == 0) {
+                uart()->UART_TPR = (uint32_t)buffer;
+                uart()->UART_TCR = length;
+                uart()->UART_PTCR = UART_PTCR_TXTEN;
                 _setInterruptTxTransferDone(true);
                 return true;
             }
-            else if (uart->UART_TNCR == 0) {
-                uart->UART_TNPR = (uint32_t)buffer;
-                uart->UART_TNCR = length;
-                _setInterruptTxTransferDone(true);
-                return true;
-            }
+//            else if (uart()->UART_TNCR == 0) {
+//                uart()->UART_TNPR = (uint32_t)buffer;
+//                uart()->UART_TNCR = length;
+//                _setInterruptTxTransferDone(true);
+//                return true;
+//            }
             return false;
         };
         
         char* getTXTransferPosition() {
-            return (char*)uart->UART_TPR;
+            return (char*)uart()->UART_TPR;
         };
         
     };
@@ -737,6 +760,14 @@ namespace Motate {
         /* False: */ _UARTHardware<0xff> // static_assert below should prevent this
     >::type;
 
+    template<pin_number rtsPinNumber, pin_number rxPinNumber>
+    constexpr const bool isRealAndCorrectRTSPin() {
+        return IsUARTRTSPin<rtsPinNumber>() && UARTRTSPin<rtsPinNumber>::uartNum == UARTRxPin<rxPinNumber>::uartNum;
+    }
+    template<pin_number ctsPinNumber, pin_number rxPinNumber>
+    constexpr const bool isRealAndCorrectCTSPin() {
+        return IsUARTCTSPin<ctsPinNumber>() && UARTCTSPin<ctsPinNumber>::uartNum == UARTRxPin<rxPinNumber>::uartNum;
+    }
 
     template<uint8_t uartPeripheralNumber>
     struct _UARTHardwareProxy {
@@ -764,16 +795,17 @@ namespace Motate {
         static_assert(UARTRxPin<rxPinNumber>::uartNum == UARTTxPin<txPinNumber>::uartNum,
                       "USART RX Pin and TX Pin are not on the same hardware USART.");
 
-        static_assert((UARTRxPin<txPinNumber>::uartNum >= 4) || (UARTRTSPin<rtsPinNumber>::uartNum == UARTRxPin<rxPinNumber>::uartNum), // (rtsPinNumber == -1) ||
-                      "USART RX Pin and RTS Pin are not on the same hardware USART.");
-
-        static_assert((UARTRxPin<txPinNumber>::uartNum >= 4) || (UARTCTSPin<ctsPinNumber>::uartNum == UARTRxPin<rxPinNumber>::uartNum), // (ctsPinNumber == -1) ||
-                      "USART RX Pin and CTS Pin are not on the same hardware USART.");
+//        static_assert((UARTRxPin<txPinNumber>::uartNum >= 4) || (UARTRTSPin<rtsPinNumber>::uartNum == UARTRxPin<rxPinNumber>::uartNum), // (rtsPinNumber == -1) ||
+//                      "USART RX Pin and RTS Pin are not on the same hardware USART.");
+//
+//        static_assert((UARTRxPin<txPinNumber>::uartNum >= 4) || (UARTCTSPin<ctsPinNumber>::uartNum == UARTRxPin<rxPinNumber>::uartNum), // (ctsPinNumber == -1) ||
+//                      "USART RX Pin and CTS Pin are not on the same hardware USART.");
 
         UARTRxPin<rxPinNumber> rxPin;
         UARTTxPin<txPinNumber> txPin;
-        UARTRTSPin<rtsPinNumber> rtsPin;
-        UARTCTSPin<ctsPinNumber> ctsPin;
+
+        std::conditional_t<isRealAndCorrectRTSPin<rtsPinNumber, rxPinNumber>(), UARTRTSPin<rtsPinNumber>, OutputPin<rtsPinNumber>> rtsPin;
+        std::conditional_t<isRealAndCorrectCTSPin<ctsPinNumber, rxPinNumber>(), UARTCTSPin<ctsPinNumber>, IRQPin<ctsPinNumber>> ctsPin;
 
         UARTGetHardware<rxPinNumber, txPinNumber> hardware;
 
@@ -784,10 +816,10 @@ namespace Motate {
 
         Buffer<16> overflowBuffer;
 
-        UART(const uint32_t baud = 115200, const uint16_t options = UARTMode::As8N1) {
+        UART(const uint32_t baud = 115200, const uint16_t options = UARTMode::As8N1) : ctsPin{kPullUp, [&]{this->uartInterruptHandler(UARTInterrupt::OnCTSChanged);}} {
             hardware.init();
             // Auto-enable RTS/CTS if the pins are provided.
-            setOptions(baud, options | (rtsPin.is_real ? UARTMode::RTSCTSFlowControl : 0), /*fromConstructor =*/ true);
+            setOptions(baud, options | UARTMode::RTSCTSFlowControl, /*fromConstructor =*/ true);
         };
 
         // WARNING!!
@@ -797,6 +829,12 @@ namespace Motate {
                 this->uartInterruptHandler(interruptCause);
             });
             hardware.setInterrupts(kInterruptPriorityLowest); // enable interrupts and set the priority
+            if (!isRealAndCorrectRTSPin<rtsPinNumber, rxPinNumber>()) {
+                rtsPin = true; // active low
+            }
+            if (!isRealAndCorrectCTSPin<ctsPinNumber, rxPinNumber>()) {
+                ctsPin.setInterrupts(kInterruptPriorityLowest); // enable interrupts and set the priority
+            }
         };
 
         void setOptions(const uint32_t baud, const uint16_t options, const bool fromConstructor=false) {
@@ -808,7 +846,7 @@ namespace Motate {
             // which gives us a reasonable guess, at least.
 
             // The USART gives us access to that pin.
-            return hardware.isConnected();
+            return isRealAndCorrectCTSPin<ctsPinNumber, rxPinNumber>() ? hardware.isConnected() : !ctsPin;
         };
 
         int16_t readByte() {
@@ -918,7 +956,7 @@ namespace Motate {
             hardware._setInterruptCTSChange((bool)connection_state_changed_callback);
 
             // Call it immediately if it's connected
-            if(connection_state_changed_callback && hardware.isConnected()) {
+            if (connection_state_changed_callback && isConnected()) {
                 connection_state_changed_callback(true);
             }
 
@@ -939,6 +977,9 @@ namespace Motate {
 
             // what happens if length == 0?
 
+            if (!isRealAndCorrectRTSPin<rtsPinNumber, rxPinNumber>()) {
+                rtsPin = false; // active low
+            }
             return hardware.startRXTransfer(buffer, length);
             return false;
         };
@@ -988,6 +1029,9 @@ namespace Motate {
             }
 
             if (interruptCause & UARTInterrupt::OnRxTransferDone) {
+                if (!isRealAndCorrectRTSPin<rtsPinNumber, rxPinNumber>()) {
+                    rtsPin = true; // active low
+                }
                 if (transfer_rx_done_callback) {
                     hardware._setInterruptRxTransferDone(false);
                     hardware._setInterruptRxReady(true);
@@ -996,9 +1040,9 @@ namespace Motate {
             }
 
             if (interruptCause & UARTInterrupt::OnCTSChanged) {
-                if (connection_state_changed_callback && hardware.isConnected()) {
+                if (connection_state_changed_callback && isConnected()) {
                     // We only report when it's connected, NOT disconnected
-                    connection_state_changed_callback(hardware.isConnected());
+                    connection_state_changed_callback(isConnected());
                 }
             }
         };
