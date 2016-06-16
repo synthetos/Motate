@@ -40,7 +40,7 @@ namespace Motate {
     template <uint16_t _size, typename base_type = char>
     struct Buffer {
         // Internal properties!
-        base_type _data[_size];
+        base_type _data[_size+1];
 
         const base_type* const _end_pos = _data+_size; // NOTE: _end_pos is one *past* the end of the buffer.
         volatile base_type* _read_pos = _data;
@@ -146,21 +146,22 @@ namespace Motate {
         owner_type _owner;
 
         // Internal properties!
-        base_type _data[_size];
+        base_type _data[_size+1];
 
-        uint16_t _read_offset;              // The offset into the buffer we of our next read
-        uint16_t _last_known_write_offset;  // The offset into the buffer we of the last known write (cached)
+        volatile uint16_t _read_offset;              // The offset into the buffer we of our next read
+        volatile uint16_t _last_known_write_offset;  // The offset into the buffer we of the last known write (cached)
 
-        uint16_t _transfer_requested = 0; // keep track of how much we have requested. Non-zero means a request is active.
+        volatile uint16_t _transfer_requested = 0; // keep track of how much we have requested. Non-zero means a request is active.
 
         constexpr int16_t size() { return _size; };
 
-        RXBuffer(owner_type owner) : _owner(owner) { };
+        RXBuffer(owner_type owner) : _owner(owner) { _data[_size] = 0; };
 
         void init() {
             _owner->setRXTransferDoneCallback([&]() { // use a closure
                 _transfer_requested = 0;
-                _restartTransfer();
+                // This is called from an interrupt!
+//                _restartTransfer();
             });
         };
 
@@ -172,7 +173,7 @@ namespace Motate {
             if (pos == _last_known_write_offset) {
                 _getWriteOffset();
                 if (pos == _last_known_write_offset) {
-                    _restartTransfer();
+//                    _restartTransfer();
                     return false;
                 }
             }
@@ -319,7 +320,7 @@ namespace Motate {
         owner_type _owner;
 
         // Internal properties!
-        base_type _data[_size];
+        base_type _data[_size+1];
 
         uint16_t _write_offset;             // The offset into the buffer we of our next write
         uint16_t _last_known_read_offset;   // The offset into the buffer we of the last known read (cached)
@@ -328,12 +329,13 @@ namespace Motate {
 
         constexpr int16_t size() { return _size; };
 
-        TXBuffer(owner_type owner) : _owner(owner) {};
+        TXBuffer(owner_type owner) : _owner(owner) { _data[_size] = 0; };
 
         void init() {
             _owner->setTXTransferDoneCallback([&]() { // use a closure
                 _transfer_requested = 0;
-                _restartTransfer();
+                // This is caled from an interrupt!
+//                _restartTransfer();
             });
         }
 

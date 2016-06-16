@@ -499,6 +499,8 @@ namespace Motate {
             uart()->UART_CR = UART_CR_RSTRX | UART_CR_RSTTX | UART_CR_RXDIS | UART_CR_TXDIS;
 
             // reset PCR to zero
+            uart()->UART_IDR = 0xffffffff; // disable all the things
+            uart()->UART_PTCR = UART_PTCR_RXTDIS | UART_PTCR_TXTDIS; // disable all the things
             uart()->UART_RPR = 0;
             uart()->UART_RNPR = 0;
             uart()->UART_RCR = 0;
@@ -647,17 +649,31 @@ namespace Motate {
 
         static uint16_t getInterruptCause() { // __attribute__ (( noinline ))
             uint16_t status = UARTInterrupt::Unknown;
+
+            // Notes from experience:
+            // This processor will sometimes allow one of these bits to be set,
+            // even when there is no interrupt requested, and the setup conditions
+            // don't appear to be done.
+            // The simple but unfortunate fix is to verify that the Interrupt Mask
+            // calls for that interrupt before considering it as a possible interrupt
+            // source. This should be a best practice anyway, really. -Giseburt
+
             auto UART_SR_hold = uart()->UART_SR;
-            if (UART_SR_hold & UART_SR_TXRDY) {
+            auto UART_IMR_hold = uart()->UART_IMR;
+            if ((UART_IMR_hold & UART_IMR_TXRDY) && (UART_SR_hold & UART_SR_TXRDY))
+            {
                 status |= UARTInterrupt::OnTxReady;
             }
-            if (UART_SR_hold & UART_SR_TXBUFE) {
+            if ((UART_IMR_hold & UART_IMR_TXBUFE) && (UART_SR_hold & UART_SR_TXBUFE))
+            {
                 status |= UARTInterrupt::OnTxTransferDone;
             }
-            if (UART_SR_hold & UART_SR_RXRDY) {
+            if ((UART_IMR_hold & UART_IMR_RXRDY) && (UART_SR_hold & UART_SR_RXRDY))
+            {
                 status |= UARTInterrupt::OnRxReady;
             }
-            if (UART_SR_hold & UART_SR_RXBUFF) {
+            if ((UART_IMR_hold & UART_IMR_RXBUFF) && (UART_SR_hold & UART_SR_RXBUFF))
+            {
                 status |= UARTInterrupt::OnRxTransferDone;
             }
             return status;
@@ -705,9 +721,11 @@ namespace Motate {
         // ***** Handle Tranfers
         bool startRXTransfer(char *buffer, const uint16_t length) {
             if (uart()->UART_RCR == 0) {
+                _setInterruptRxTransferDone(false);
+                uart()->UART_PTCR = UART_PTCR_RXTDIS; // disable for setup
                 uart()->UART_RPR = (uint32_t)buffer;
                 uart()->UART_RCR = length;
-                uart()->UART_PTCR = UART_PTCR_RXTEN;
+                uart()->UART_PTCR = UART_PTCR_RXTEN;  // enable again
                 _setInterruptRxTransferDone(true);
                 return true;
             }
@@ -717,7 +735,8 @@ namespace Motate {
 //                _setInterruptRxTransferDone(true);
 //                return true;
 //            }
-            return false;
+            // return true is this same transaction has already been setup
+            return (uart()->UART_RPR == (uint32_t)buffer);
         };
 
         char* getRXTransferPosition() {
@@ -726,9 +745,11 @@ namespace Motate {
 
         bool startTXTransfer(char *buffer, const uint16_t length) {
             if (uart()->UART_TCR == 0) {
+                _setInterruptTxTransferDone(false);
+                uart()->UART_PTCR = UART_PTCR_TXTDIS; // disable for setup
                 uart()->UART_TPR = (uint32_t)buffer;
                 uart()->UART_TCR = length;
-                uart()->UART_PTCR = UART_PTCR_TXTEN;
+                uart()->UART_PTCR = UART_PTCR_TXTEN;  // enable again
                 _setInterruptTxTransferDone(true);
                 return true;
             }
@@ -738,7 +759,7 @@ namespace Motate {
 //                _setInterruptTxTransferDone(true);
 //                return true;
 //            }
-            return false;
+            return (uart()->UART_TPR == (uint32_t)buffer);
         };
         
         char* getTXTransferPosition() {
@@ -975,12 +996,17 @@ namespace Motate {
                 length--;
             }
 
-            // what happens if length == 0?
-
-            if (!isRealAndCorrectRTSPin<rtsPinNumber, rxPinNumber>()) {
-                rtsPin = false; // active low
+            if (length == 0) {
+                hardware._setInterruptRxReady(true);
+                return false;
             }
-            return hardware.startRXTransfer(buffer, length);
+
+            if (hardware.startRXTransfer(buffer, length)) {
+                if (!isRealAndCorrectRTSPin<rtsPinNumber, rxPinNumber>()) {
+                    rtsPin = false; // active low
+                }
+                return true;
+            }
             return false;
         };
 
