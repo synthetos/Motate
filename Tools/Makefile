@@ -30,10 +30,13 @@ ifeq ($(ARCH), gcc-arm-none-eabi)
 
 TOOLS_EASYPATH = gcc-arm-none-eabi
 
-TOOLS_VERSION_SHORT = 4.9
-TOOLS_VERSION_LONG = 4.9-2015-q2-update
-TOOLS_VERSION_FILENAME = 4_9-2015q2-20150609
-TOOLS_EXPANDED_DIRNAME = gcc-arm-none-eabi-4_9-2015q2
+TOOLS_VERSION_SHORT = 5.0
+TOOLS_VERSION_LONG = 5-2016-q1-update
+TOOLS_VERSION_FILENAME = 5_3-2016q1-20160330
+TOOLS_EXPANDED_DIRNAME = gcc-arm-none-eabi-5_3-2016q1
+
+# Example:        https://launchpad.net/gcc-arm-embedded/5.0/5-2016-q1-update/+download/gcc-arm-none-eabi-5_3-2016q1-20160330-mac.tar.bz2
+# Expands to: gcc-arm-none-eabi-5_3-2016q1
 
 TOOLS_URL_PREFIX = https://launchpad.net/gcc-arm-embedded/${TOOLS_VERSION_SHORT}/${TOOLS_VERSION_LONG}/+download/
 TOOLS_OSX_ARCHIVE_FILENAME = gcc-arm-none-eabi-${TOOLS_VERSION_FILENAME}-mac.tar.bz2
@@ -108,6 +111,7 @@ $(TOOLS_SUBPATH)/$(TOOLS_EASYPATH): $(TOOLS_SUBPATH)/${TOOLS_EXPANDED_DIRNAME}
 
 ${TOOLS_SUBPATH}/${TOOLS_EXPANDED_DIRNAME}: ${TOOLS_SUBPATH}/${TOOLS_${OS}_ARCHIVE_FILENAME}
 	cd $(TOOLS_SUBPATH) && \
+	rm -f "${TOOLS_EASYPATH}" && \
 	${EXPAND_COMMAND} ${TOOLS_${OS}_ARCHIVE_FILENAME}
 
 else
