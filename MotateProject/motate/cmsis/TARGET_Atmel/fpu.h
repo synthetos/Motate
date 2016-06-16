@@ -49,23 +49,50 @@
 
 #include <compiler.h>
 
+typedef uint32_t irqflags_t;
+
 /** Address for ARM CPACR */
 #define ADDR_CPACR 0xE000ED88
 
 /** CPACR Register */
 #define REG_CPACR  (*((volatile uint32_t *)ADDR_CPACR))
 
+/* This irq crap is from interuupt_sam_nvic.h,
+ * and is proptly removed to not further poolute the namespace
+ * with evil macros that are only to be used once. -Rob G
+ */
+
+#  define cpu_irq_enable()                     \
+	do {                                       \
+		__DMB();                               \
+		__enable_irq();                        \
+	} while (0)
+#  define cpu_irq_disable()                    \
+	do {                                       \
+		__disable_irq();                       \
+		__DMB();                               \
+	} while (0)
+#define cpu_irq_is_enabled()    (__get_PRIMASK() == 0)
+
 /**
  * \brief Enable FPU
  */
 __always_inline static void fpu_enable(void)
 {
-	irqflags_t flags;
-	flags = cpu_irq_save();
-	REG_CPACR |=  (0xFu << 20);
+//	irqflags_t flags;
+//	flags = cpu_irq_save();
+
+    volatile irqflags_t flags = cpu_irq_is_enabled();
+    cpu_irq_disable();
+
+    REG_CPACR |=  (0xFu << 20);
 	__DSB();
 	__ISB();
-	cpu_irq_restore(flags);
+//	cpu_irq_restore(flags);
+
+    if (flags) {
+        cpu_irq_enable();
+    }
 }
 
 /**
@@ -73,13 +100,25 @@ __always_inline static void fpu_enable(void)
  */
 __always_inline static void fpu_disable(void)
 {
-	irqflags_t flags;
-	flags = cpu_irq_save();
+//	irqflags_t flags;
+//	flags = cpu_irq_save();
+
+    volatile irqflags_t flags = cpu_irq_is_enabled();
+    cpu_irq_disable();
+
 	REG_CPACR &= ~(0xFu << 20);
 	__DSB();
 	__ISB();
-	cpu_irq_restore(flags);
+//	cpu_irq_restore(flags);
+
+    if (flags) {
+        cpu_irq_enable();
+    }
 }
+
+#undef cpu_irq_enable
+#undef cpu_irq_disable
+#undef cpu_irq_is_enabled
 
 /**
  * \brief Check if FPU is enabled

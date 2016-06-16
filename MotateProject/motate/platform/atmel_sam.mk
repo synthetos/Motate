@@ -72,10 +72,15 @@ CHIP_SERIES:=sam3x
         CHIP_SUBSERIES:=sam3x4
     endif
 
+CPU_DEV = cortex-m3
+
 else ifeq ($(CHIP),$(findstring $(CHIP), $(SAM4S)))
 
 #BOARD:=SAM4S_EK
 CHIP_SERIES:=sam4s
+
+CPU_DEV = cortex-m4
+#FLOAT_OPTIONS = -mfloat-abi=hard -mfpu=fpv4-sp-d16
 
 else ifeq ($(CHIP),$(findstring $(CHIP), $(SAM4E)))
 
@@ -87,6 +92,9 @@ CHIP_SERIES:=sam4e
     else
         CHIP_SUBSERIES:=sam4e16
     endif
+
+CPU_DEV = cortex-m4
+#FLOAT_OPTIONS = -mfloat-abi=hard -mfpu=fpv4-sp-d16
 
 else
 
@@ -127,7 +135,6 @@ DEVICE_INCLUDE_DIRS += $(MOTATE_PATH)/platform/atmel_sam
 DEVICE_LIB_DIRS     += $(MOTATE_PATH)/platform/atmel_sam
 
 
-CPU_DEV = cortex-m3
 DEVICE_LINKER_SCRIPT = $(SAM_PATH)/linker_scripts/$(CHIP_SERIES)/$(CHIP_SUBSERIES)/$(GCC_TOOLCHAIN)/flash.ld
 DEVICE_LINKER_SCRIPT_PATH = $(DEVICE_PATH)/source/$(GCC_TOOLCHAIN)/
 
