@@ -148,10 +148,10 @@ namespace Motate {
         // Internal properties!
         base_type _data[_size+1];
 
-        volatile uint16_t _read_offset;              // The offset into the buffer we of our next read
-        volatile uint16_t _last_known_write_offset;  // The offset into the buffer we of the last known write (cached)
+         uint16_t _read_offset;              // The offset into the buffer we of our next read
+         uint16_t _last_known_write_offset;  // The offset into the buffer we of the last known write (cached)
 
-        volatile uint16_t _transfer_requested = 0; // keep track of how much we have requested. Non-zero means a request is active.
+         uint16_t _transfer_requested = 0; // keep track of how much we have requested. Non-zero means a request is active.
 
         constexpr int16_t size() { return _size; };
 
@@ -160,8 +160,6 @@ namespace Motate {
         void init() {
             _owner->setRXTransferDoneCallback([&]() { // use a closure
                 _transfer_requested = 0;
-                // This is called from an interrupt!
-//                _restartTransfer();
             });
         };
 
@@ -173,7 +171,6 @@ namespace Motate {
             if (pos == _last_known_write_offset) {
                 _getWriteOffset();
                 if (pos == _last_known_write_offset) {
-//                    _restartTransfer();
                     return false;
                 }
             }
@@ -334,8 +331,6 @@ namespace Motate {
         void init() {
             _owner->setTXTransferDoneCallback([&]() { // use a closure
                 _transfer_requested = 0;
-                // This is caled from an interrupt!
-//                _restartTransfer();
             });
         }
 
@@ -347,7 +342,6 @@ namespace Motate {
             if (pos == _last_known_read_offset) {
                 _getReadOffset();
                 if (pos == _last_known_read_offset) {
-                    _restartTransfer();
                     return false;
                 }
             }
