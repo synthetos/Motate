@@ -30,7 +30,7 @@
 
 #if defined(__SAM3X8E__) || defined(__SAM3X8C__)
 
-#include "Atmel_sam3x/SamTimers.h"
+#include "SamTimers.h"
 
 extern "C" {
     void _null_pwm_timer_interrupt() __attribute__ ((unused));

@@ -148,7 +148,7 @@ namespace Motate {
     typedef const uint8_t timer_number;
 
     template <uint8_t timerNum>
-    struct Timer : SamCommon< Timer<timerNum> > {
+    struct Timer {
 
         // NOTE: Notice! The *pointers* are const, not the *values*.
         static Tc * const tc();
@@ -156,8 +156,6 @@ namespace Motate {
         static const uint32_t peripheralId(); // ID_TC0 .. ID_TC8
         static const IRQn_Type tcIRQ();
         static uint32_t _interrupt_cause_cached;
-
-        typedef SamCommon< Timer<timerNum> > common;
 
         static const bool has_channel_interrupts = false;
 
@@ -199,7 +197,7 @@ namespace Motate {
             /*   Clear status register */
             tcChan()->TC_SR;
 
-            common::enablePeripheralClock();
+            SamCommon::enablePeripheralClock(peripheralId());
 
             if (mode == kTimerUpDownToMatch || mode == kTimerUpDown)
                 freq /= 2;

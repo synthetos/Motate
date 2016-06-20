@@ -27,46 +27,9 @@
  OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef SAMCOMMON_H_ONCE
-#define SAMCOMMON_H_ONCE
+#ifndef SAM3XCOMMON_H_ONCE
+#define SAM3XCOMMON_H_ONCE
 
-#include "sam.h"
+#include "Atmel_sam4e/SamCommon.h"
 
-namespace Motate {
-   
-    template <class parent>
-	struct SamCommon {
-        
-        // ToDo: Make this inherited! It's repeated in timer, pins, USB, and SPI.
-		static void enablePeripheralClock() {
-			if (parent::peripheralId() < 32) {
-				uint32_t id_mask = 1u << ( parent::peripheralId() );
-				if ((PMC->PMC_PCSR0 & id_mask) != id_mask) {
-					PMC->PMC_PCER0 = id_mask;
-				}
-			} else {
-				uint32_t id_mask = 1u << ( parent::peripheralId() - 32 );
-				if ((PMC->PMC_PCSR1 & id_mask) != id_mask) {
-					PMC->PMC_PCER1 = id_mask;
-				}
-			}
-		};
-        
-		static void disablePeripheralClock() {
-			if (parent::peripheralId() < 32) {
-				uint32_t id_mask = 1u << ( parent::peripheralId() );
-				if ((PMC->PMC_PCSR0 & id_mask) == id_mask) {
-					PMC->PMC_PCDR0 = id_mask;
-				}
-			} else {
-				uint32_t id_mask = 1u << ( parent::peripheralId() - 32 );
-				if ((PMC->PMC_PCSR1 & id_mask) == id_mask) {
-					PMC->PMC_PCDR1 = id_mask;
-				}
-			}
-		};
-    };
-    
-} // namespace Motate
-
-#endif /* end of include guard: SAMCOMMON_H_ONCE */
+#endif /* end of include guard: SAM3XCOMMON_H_ONCE */

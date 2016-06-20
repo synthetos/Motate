@@ -178,7 +178,7 @@ namespace Motate {
 
     // USART peripherals
     template<uint8_t uartPeripheralNumber>
-    struct _USARTHardware : SamCommon< _USARTHardware<uartPeripheralNumber> > {
+    struct _USARTHardware {
 
         static constexpr Usart * const usart() {
             return (uartPeripheralNumber == 0) ? USART0 : USART1;
@@ -193,13 +193,13 @@ namespace Motate {
         static constexpr const uint8_t uartPeripheralNum=uartPeripheralNumber;
 
         typedef _USARTHardware<uartPeripheralNumber> this_type_t;
-        typedef SamCommon< this_type_t > common;
+        
 
         static std::function<void(uint16_t)> _uartInterruptHandler;
 
         void init() {
             // init is called once after reset, so clean up after a reset
-            common::enablePeripheralClock();
+            SamCommon::enablePeripheralClock(peripheralId());
 
             // Reset and disable TX and RX
             usart()->US_CR = US_CR_RSTRX | US_CR_RSTTX | US_CR_RXDIS | US_CR_TXDIS;
@@ -467,13 +467,13 @@ namespace Motate {
 
     // UART peripheral
     template<uint8_t uartPeripheralNumber>
-    struct _UARTHardware : SamCommon< _UARTHardware<uartPeripheralNumber> > {
+    struct _UARTHardware {
 
         static constexpr Uart * const uart() {
             return (uartPeripheralNumber == 0) ? UART0 : UART1;
         };
         static constexpr uint32_t peripheralId() {
-            return (uartPeripheralNumber == 0) ? 7u : 45u;
+            return (uartPeripheralNumber == 0) ? ID_UART0 : ID_UART1;
         };
         static constexpr IRQn_Type uartIRQ() {
             return (uartPeripheralNumber == 0) ? UART0_IRQn : UART1_IRQn;
@@ -482,24 +482,19 @@ namespace Motate {
         static constexpr const uint8_t uartPeripheralNum=uartPeripheralNumber;
 
         typedef _UARTHardware<uartPeripheralNumber> this_type_t;
-        typedef SamCommon< this_type_t > common;
+        
 
         static std::function<void(uint16_t)> _uartInterruptHandler;
 
         void init() {
             // init is called once after reset, so clean up after a reset
-            //common::enablePeripheralClock();
-            if (uartPeripheralNumber == 0) {
-                PMC->PMC_PCER0 = 1 << 7u;
-            } else {
-                PMC->PMC_PCER1 = 1 << (45u - 32);
-            }
+            SamCommon::enablePeripheralClock(peripheralId());
 
             // Reset and disable TX and RX
             uart()->UART_CR = UART_CR_RSTRX | UART_CR_RSTTX | UART_CR_RXDIS | UART_CR_TXDIS;
 
             // reset PCR to zero
-            uart()->UART_IDR = 0xffffffff; // disable all the things
+            //uart()->UART_IDR = 0xffffffff; // disable all the things
             uart()->UART_PTCR = UART_PTCR_RXTDIS | UART_PTCR_TXTDIS; // disable all the things
             uart()->UART_RPR = 0;
             uart()->UART_RNPR = 0;

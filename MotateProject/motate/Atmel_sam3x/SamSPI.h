@@ -99,7 +99,7 @@ namespace Motate {
                         spiMOSIPinNumber,
                         spiSCKPinNumber,
                         IsValidSPIHardware<spiMISOPinNumber, spiMOSIPinNumber, spiSCKPinNumber>>
-    : SamCommon< _SPIHardware<0u, spiMISOPinNumber, spiMOSIPinNumber, spiSCKPinNumber> > {
+    {
         static Spi * const spi() { return SPI0; };
         static const uint32_t peripheralId() { return ID_SPI0; }; // ID_SPI0 .. ID_SPI1
         static const IRQn_Type spiIRQ() { return SPI0_IRQn; };
@@ -107,7 +107,7 @@ namespace Motate {
         static const uint8_t spiPeripheralNum=0;
 
         typedef _SPIHardware<0u, spiMISOPinNumber, spiMOSIPinNumber, spiSCKPinNumber> this_type_t;
-        typedef SamCommon< this_type_t > common;
+        
 
         /* We have to play some tricks here, because templates and static members are tricky.
          * See https://groups.google.com/forum/#!topic/comp.lang.c++.moderated/yun9X6OMiY4
@@ -128,7 +128,7 @@ namespace Motate {
                 return;
             inited = true;
 
-            common::enablePeripheralClock();
+            SamCommon::enablePeripheralClock(peripheralId());
             disable();
 
             /* Execute a software reset of the SPI twice */
@@ -140,7 +140,7 @@ namespace Motate {
             spi()->SPI_MR = SPI_MR_MSTR | SPI_MR_MODFDIS;
         };
 
-        _SPIHardware() :  SamCommon< this_type_t >() {
+        _SPIHardware() {
             //            init();
         };
 
@@ -254,7 +254,7 @@ namespace Motate {
         static const uint32_t peripheralId() { return hardware.peripheralId(); };
         static const IRQn_Type spiIRQ() { return hardware.spiIRQ(); };
 
-        typedef SamCommon< SPI<spiCSPinNumber> > common;
+        
 
         SPI(const uint32_t baud = 4000000, const uint16_t options = kSPI8Bit | kSPIMode0) {
             hardware.init();

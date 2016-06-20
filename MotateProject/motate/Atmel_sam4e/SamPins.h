@@ -140,13 +140,13 @@ namespace Motate {
      **************************************************/
 
     template <unsigned char portLetter>
-    struct PortHardware : SamCommon<PortHardware<portLetter>> {
+    struct PortHardware {
         static const uint8_t letter = portLetter;
         constexpr Pio* const rawPort() const;
         static const uint32_t peripheralId();
         constexpr const IRQn_Type _IRQn() const;
 
-        typedef SamCommon<PortHardware<portLetter>> common;
+        
 
         static _pinChangeInterrupt *_firstInterrupt;
 
@@ -157,7 +157,7 @@ namespace Motate {
                     rawPort()->PIO_PER = mask ;
                     break;
                 case kInput:
-                    common::enablePeripheralClock();
+                    SamCommon::enablePeripheralClock(peripheralId());
                     rawPort()->PIO_ODR = mask ;
                     rawPort()->PIO_PER = mask ;
                     break;
@@ -210,9 +210,9 @@ namespace Motate {
             /* if all pins are output, disable PIO Controller clocking, reduce power consumption */
             if ( rawPort()->PIO_OSR == 0xffffffff )
             {
-                common::disablePeripheralClock();
+                SamCommon::disablePeripheralClock(peripheralId());
             } else {
-                common::enablePeripheralClock();
+                SamCommon::enablePeripheralClock(peripheralId());
             }
         };
         // Returns the mode of ONE pin, and only Input or Output
@@ -437,7 +437,7 @@ namespace Motate {
     // Internal ADC object, and a parent of the ADCPin objects.
     // Handles: Setting options for the ADC module as a whole,
     //          and initializing the ADC module once.
-//    struct ADC_Module : SamCommon< ADC_Module > {
+//    struct ADC_Module {
 //        static const uint32_t default_adc_clock_frequency = 20000000;
 //        static const uint32_t default_adc_startup_time = 12;
 //        static const uint32_t peripheralId() { return ID_ADC; }
