@@ -28,12 +28,11 @@
 
  */
 
-#ifndef SAMUART_H_ONCE
-#define SAMUART_H_ONCE
+#ifndef SAM4XUART_H_ONCE
+#define SAM4XUART_H_ONCE
 
-#include "MotatePins.h"
-#include "MotateBuffer.h"
-#include "MotateUtilities.h" // for BitField
+#include <MotatePins.h>
+#include <MotateBuffer.h>
 #include <type_traits>
 #include <algorithm> // for std::max, etc.
 #include <functional>
@@ -54,13 +53,73 @@
 
 namespace Motate {
 
-    Uart * const UART0_DONT_CONFLICT = UART0;
-    #undef UART0
-    Uart * const UART0 = UART0_DONT_CONFLICT;
 
+/* HERE we do a stupid anti-#define dance, since these defines screw EVERYTHING up */
+
+#ifdef UART0
+    // This is for the Sam4e
+    constexpr Uart * const UART0_DONT_CONFLICT = UART0;
+    #undef UART0
+    constexpr Uart * const UART0 = UART0_DONT_CONFLICT;
+    #define HAS_UART0
+
+    constexpr uint16_t const ID_UART0_DONT_CONFLICT = ID_UART0;
+    #undef ID_UART0
+    constexpr uint16_t const ID_UART0 = ID_UART0_DONT_CONFLICT;
+
+#else
+#ifdef UART
+
+    // This is for the Sam3x
+    constexpr Uart * const UART0_DONT_CONFLICT = UART;
+    #undef UART
+    constexpr Uart * const UART0 = UART0_DONT_CONFLICT;
+    #define HAS_UART0
+
+    constexpr Uart * const UART1 = nullptr;
+    constexpr uint32_t ID_UART0 = ID_UART;
+    #undef ID_UART
+    constexpr uint32_t ID_UART1 = 0;
+
+    constexpr IRQn_Type UART0_IRQn = UART_IRQn;
+    constexpr IRQn_Type UART1_IRQn = (IRQn_Type)0u;
+#endif
+#endif
+
+#ifdef UART1
     Uart * const UART1_DONT_CONFLICT = UART1;
     #undef UART1
     Uart * const UART1 = UART1_DONT_CONFLICT;
+    #define HAS_UART1
+
+    constexpr uint32_t const ID_UART1_DONT_CONFLICT = ID_UART1;
+    #undef ID_UART1
+    constexpr uint32_t const ID_UART1 = ID_UART1_DONT_CONFLICT;
+#endif
+
+#ifdef USART0
+    // Thi isn't strictly necessary, but preventative and for consistency.
+    Usart * const USART0_DONT_CONFLICT = USART0;
+    #undef USART0
+    Usart * const USART0 = USART0_DONT_CONFLICT;
+    #define HAS_USART0
+
+    constexpr uint32_t const ID_USART0_DONT_CONFLICT = ID_USART0;
+    #undef ID_USART0
+//    constexpr uint32_t const ID_USART0 = ID_USART0_DONT_CONFLICT;
+#endif
+
+#ifdef USART1
+    // Thi isn't strictly necessary, but preventative and for consistency.
+    Usart * const USART1_DONT_CONFLICT = USART1;
+    #undef USART1
+    Usart * const USART1 = USART1_DONT_CONFLICT;
+    #define HAS_USART1
+
+    constexpr uint32_t const ID_USART1_DONT_CONFLICT = ID_USART1;
+    #undef ID_USART1
+//    constexpr uint32_t const ID_USART1 = ID_USART1_DONT_CONFLICT;
+#endif
 
     struct UARTMode {
 
@@ -184,7 +243,7 @@ namespace Motate {
             return (uartPeripheralNumber == 0) ? USART0 : USART1;
         };
         static constexpr uint32_t peripheralId() {
-            return (uartPeripheralNumber == 0) ? ID_USART0 : ID_USART1;
+            return (uartPeripheralNumber == 0) ? ID_USART0_DONT_CONFLICT : ID_USART1_DONT_CONFLICT;
         };
         static constexpr IRQn_Type usartIRQ() {
             return (uartPeripheralNumber == 0) ? USART0_IRQn : USART1_IRQn;
@@ -205,6 +264,8 @@ namespace Motate {
             usart()->US_CR = US_CR_RSTRX | US_CR_RSTTX | US_CR_RXDIS | US_CR_TXDIS;
 
             // reset PCR to zero
+            usart()->US_IDR = 0xffffffff; // disable all the things
+            usart()->US_PTCR = UART_PTCR_RXTDIS | UART_PTCR_TXTDIS; // disable all the things
             usart()->US_RPR = 0;
             usart()->US_RNPR = 0;
             usart()->US_RCR = 0;
@@ -361,20 +422,35 @@ namespace Motate {
 
         static uint16_t getInterruptCause() { // __attribute__ (( noinline ))
             uint16_t status = UARTInterrupt::Unknown;
+
+            // Notes from experience:
+            // This processor will sometimes allow one of these bits to be set,
+            // even when there is no interrupt requested, and the setup conditions
+            // don't appear to be done.
+            // The simple but unfortunate fix is to verify that the Interrupt Mask
+            // calls for that interrupt before considering it as a possible interrupt
+            // source. This should be a best practice anyway, really. -Giseburt
+
             auto US_CSR_hold = usart()->US_CSR;
-            if (US_CSR_hold & US_CSR_TXRDY) {
+            auto US_IMR_hold = usart()->US_IMR;
+            if ((US_IMR_hold & US_IMR_TXRDY) && (US_CSR_hold & US_CSR_TXRDY))
+            {
                 status |= UARTInterrupt::OnTxReady;
             }
-            if (US_CSR_hold & US_CSR_TXBUFE) {
+            if ((US_IMR_hold & US_IMR_TXBUFE) && (US_CSR_hold & US_CSR_TXBUFE))
+            {
                 status |= UARTInterrupt::OnTxTransferDone;
             }
-            if (US_CSR_hold & US_CSR_RXRDY) {
+            if ((US_IMR_hold & US_IMR_RXRDY) && (US_CSR_hold & US_CSR_RXRDY))
+            {
                 status |= UARTInterrupt::OnRxReady;
             }
-            if (US_CSR_hold & US_CSR_RXBUFF) {
+            if ((US_IMR_hold & US_IMR_RXBUFF) && (US_CSR_hold & US_CSR_RXBUFF))
+            {
                 status |= UARTInterrupt::OnRxTransferDone;
             }
-            if (US_CSR_hold & US_CSR_CTSIC) {
+            if ((US_IMR_hold & US_IMR_CTSIC) && (US_CSR_hold & US_CSR_CTSIC))
+            {
                 status |= UARTInterrupt::OnCTSChanged;
             }
             return status;
@@ -384,7 +460,6 @@ namespace Motate {
             if (usart()->US_CSR & US_CSR_RXRDY) {
                 return (usart()->US_RHR & US_RHR_RXCHR_Msk);
             }
-
             return -1;
         };
 
@@ -422,19 +497,21 @@ namespace Motate {
         // ***** Handle Tranfers
         bool startRXTransfer(char *buffer, const uint16_t length) {
             if (usart()->US_RCR == 0) {
+                _setInterruptRxTransferDone(false);
+                usart()->US_PTCR = UART_PTCR_RXTDIS; // disable for setup
                 usart()->US_RPR = (uint32_t)buffer;
                 usart()->US_RCR = length;
-                usart()->US_PTCR = US_PTCR_RXTEN;
+                usart()->US_PTCR = UART_PTCR_RXTEN;  // enable again
                 _setInterruptRxTransferDone(true);
                 return true;
             }
-            else if (usart()->US_RNCR == 0) {
-                usart()->US_RNPR = (uint32_t)buffer;
-                usart()->US_RNCR = length;
-                _setInterruptRxTransferDone(true);
-                return true;
-            }
-            return false;
+//            else if (usart()->US_RNCR == 0) {
+//                usart()->US_RNPR = (uint32_t)buffer;
+//                usart()->US_RNCR = length;
+//                _setInterruptRxTransferDone(true);
+//                return true;
+//            }
+            return (usart()->US_RPR == (uint32_t)buffer);
         };
 
         char* getRXTransferPosition() {
@@ -443,19 +520,21 @@ namespace Motate {
 
         bool startTXTransfer(char *buffer, const uint16_t length) {
             if (usart()->US_TCR == 0) {
+                _setInterruptTxTransferDone(false);
+                usart()->US_PTCR = UART_PTCR_TXTDIS; // disable for setup
                 usart()->US_TPR = (uint32_t)buffer;
                 usart()->US_TCR = length;
-                usart()->US_PTCR = US_PTCR_TXTEN;
+                usart()->US_PTCR = US_PTCR_TXTEN;  // enable again
                 _setInterruptTxTransferDone(true);
                 return true;
             }
-            else if (usart()->US_TNCR == 0) {
-                usart()->US_TNPR = (uint32_t)buffer;
-                usart()->US_TNCR = length;
-                _setInterruptTxTransferDone(true);
-                return true;
-            }
-            return false;
+//            else if (usart()->US_TNCR == 0) {
+//                usart()->US_TNPR = (uint32_t)buffer;
+//                usart()->US_TNCR = length;
+//                _setInterruptTxTransferDone(true);
+//                return true;
+//            }
+            return (usart()->US_TPR == (uint32_t)buffer);;
         };
 
         char* getTXTransferPosition() {
@@ -720,6 +799,7 @@ namespace Motate {
                 uart()->UART_PTCR = UART_PTCR_RXTDIS; // disable for setup
                 uart()->UART_RPR = (uint32_t)buffer;
                 uart()->UART_RCR = length;
+                while (uart()->UART_RCR != length) {;}
                 uart()->UART_PTCR = UART_PTCR_RXTEN;  // enable again
                 _setInterruptRxTransferDone(true);
                 return true;
@@ -744,6 +824,7 @@ namespace Motate {
                 uart()->UART_PTCR = UART_PTCR_TXTDIS; // disable for setup
                 uart()->UART_TPR = (uint32_t)buffer;
                 uart()->UART_TCR = length;
+                while (uart()->UART_TCR != length) {;}
                 uart()->UART_PTCR = UART_PTCR_TXTEN;  // enable again
                 _setInterruptTxTransferDone(true);
                 return true;
@@ -778,572 +859,291 @@ namespace Motate {
 
     template<pin_number rtsPinNumber, pin_number rxPinNumber>
     constexpr const bool isRealAndCorrectRTSPin() {
-        return IsUARTRTSPin<rtsPinNumber>() && UARTRTSPin<rtsPinNumber>::uartNum == UARTRxPin<rxPinNumber>::uartNum;
+        return IsUARTRTSPin<rtsPinNumber>() && (UARTRTSPin<rtsPinNumber>::uartNum == UARTRxPin<rxPinNumber>::uartNum);
     }
     template<pin_number ctsPinNumber, pin_number rxPinNumber>
     constexpr const bool isRealAndCorrectCTSPin() {
-        return IsUARTCTSPin<ctsPinNumber>() && UARTCTSPin<ctsPinNumber>::uartNum == UARTRxPin<rxPinNumber>::uartNum;
+        return IsUARTCTSPin<ctsPinNumber>() && (UARTCTSPin<ctsPinNumber>::uartNum == UARTRxPin<rxPinNumber>::uartNum);
     }
 
-    template<uint8_t uartPeripheralNumber>
-    struct _UARTHardwareProxy {
-    };
+//    template<uint8_t uartPeripheralNumber>
+//    struct _UARTHardwareProxy {
+//    };
 
-    // Declare that these are specilized
-//    template<> const uint32_t  _UARTHardware<0>::peripheralId();
-//    template<> std::function<void(uint16_t)> _UARTHardware<0>::_uartInterruptHandler;
+
+//    template<uint8_t uartPeripheralNumber, pin_number rtsPinNumber, pin_number ctsPinNumber, typename rxBufferClass, typename txBufferClass>
+//    struct _BufferedUARTHardware : _UARTHardware<uartPeripheralNumber> {
+//        rxBufferClass rxBuffer;
+//        txBufferClass txBuffer;
 //
-//    template<> const uint32_t  _UARTHardware<1>::peripheralId();
-//    template<> std::function<void(uint16_t)> _UARTHardware<1>::_uartInterruptHandler;
+//        OutputPin<rtsPinNumber> rtsPin;
+//        IRQPin<ctsPinNumber> ctsPin;
 //
-//    template<> const uint32_t  _UARTHardware<2>::peripheralId();
-//    template<> std::function<void(uint16_t)> _UARTHardware<2>::_uartInterruptHandler;
-
-    template<pin_number rxPinNumber, pin_number txPinNumber, pin_number rtsPinNumber = -1, pin_number ctsPinNumber = -1>
-    struct UART {
-
-        static_assert(UARTRxPin<rxPinNumber>::uartNum >= 0,
-                      "USART RX Pin is not on a hardware USART.");
-
-        static_assert(UARTTxPin<txPinNumber>::uartNum >= 0,
-                      "USART TX Pin is not on a hardware USART.");
-
-        static_assert(UARTRxPin<rxPinNumber>::uartNum == UARTTxPin<txPinNumber>::uartNum,
-                      "USART RX Pin and TX Pin are not on the same hardware USART.");
-
-//        static_assert((UARTRxPin<txPinNumber>::uartNum >= 4) || (UARTRTSPin<rtsPinNumber>::uartNum == UARTRxPin<rxPinNumber>::uartNum), // (rtsPinNumber == -1) ||
-//                      "USART RX Pin and RTS Pin are not on the same hardware USART.");
+//        uint32_t txDelayAfterResume = 3;
+//        uint32_t txDelayUntilTime   = 0;
 //
-//        static_assert((UARTRxPin<txPinNumber>::uartNum >= 4) || (UARTCTSPin<ctsPinNumber>::uartNum == UARTRxPin<rxPinNumber>::uartNum), // (ctsPinNumber == -1) ||
-//                      "USART RX Pin and CTS Pin are not on the same hardware USART.");
-
-        UARTRxPin<rxPinNumber> rxPin;
-        UARTTxPin<txPinNumber> txPin;
-
-        std::conditional_t<isRealAndCorrectRTSPin<rtsPinNumber, rxPinNumber>(), UARTRTSPin<rtsPinNumber>, OutputPin<rtsPinNumber>> rtsPin;
-        std::conditional_t<isRealAndCorrectCTSPin<ctsPinNumber, rxPinNumber>(), UARTCTSPin<ctsPinNumber>, IRQPin<ctsPinNumber>> ctsPin;
-
-        UARTGetHardware<rxPinNumber, txPinNumber> hardware;
-
-        // Use to handle pass interrupts back to the user
-        std::function<void(bool)> connection_state_changed_callback;
-        std::function<void(void)> transfer_rx_done_callback;
-        std::function<void(void)> transfer_tx_done_callback;
-
-        Buffer<16> overflowBuffer;
-
-        UART(const uint32_t baud = 115200, const uint16_t options = UARTMode::As8N1) : ctsPin{kPullUp, [&]{this->uartInterruptHandler(UARTInterrupt::OnCTSChanged);}} {
-            hardware.init();
-            // Auto-enable RTS/CTS if the pins are provided.
-            setOptions(baud, options | UARTMode::RTSCTSFlowControl, /*fromConstructor =*/ true);
-        };
-
-        // WARNING!!
-        // This must be called later, outside of the contructors, to ensure that all dependencies are contructed.
-        void init() {
-            hardware.setInterruptHandler([&](uint16_t interruptCause) { // use a closure
-                this->uartInterruptHandler(interruptCause);
-            });
-            hardware.setInterrupts(kInterruptPriorityLowest); // enable interrupts and set the priority
-            if (!isRealAndCorrectRTSPin<rtsPinNumber, rxPinNumber>()) {
-                rtsPin = true; // active low
-            }
-            if (!isRealAndCorrectCTSPin<ctsPinNumber, rxPinNumber>()) {
-                ctsPin.setInterrupts(kInterruptPriorityLowest); // enable interrupts and set the priority
-            }
-        };
-
-        void setOptions(const uint32_t baud, const uint16_t options, const bool fromConstructor=false) {
-            hardware.setOptions(baud, options, fromConstructor);
-        };
-
-        bool isConnected() {
-            // The cts pin allows to know if we're allowed to send,
-            // which gives us a reasonable guess, at least.
-
-            // The USART gives us access to that pin.
-            return isRealAndCorrectCTSPin<ctsPinNumber, rxPinNumber>() ? hardware.isConnected() : !ctsPin;
-        };
-
-        int16_t readByte() {
-            return hardware.readByte();
-        };
-
-        // WARNING: Currently only reads in bytes. For more-that-byte size data, we'll need another call.
-        int16_t read(const uint8_t *buffer, const uint16_t length) {
-            int16_t total_read = 0;
-            int16_t to_read = length;
-            const uint8_t *read_ptr = buffer;
-
-            // BLOCKING!!
-            while (to_read > 0) {
-                int16_t ret = readByte();
-
-                if (ret >= 0) {
-                    *read_ptr++ = ret;
-                    total_read++;
-                    to_read--;
-                }
-            };
-
-            return total_read;
-        };
-
-        int16_t writeByte(uint8_t data) {
-            hardware.flush();
-            return hardware.writeByte(data);
-        };
-
-        void flush() {
-            // Wait for the buffer to be empty...
-            hardware.flush();
-        };
-
-        void flushRead() {
-            hardware.flushRead();
-        };
-
-        // WARNING: Currently only writes in bytes. For more-that-byte size data, we'll need another call.
-        int16_t write(const char* data, const uint16_t length = 0, bool autoFlush = false) {
-            int16_t total_written = 0;
-            const char* out_ptr = data;
-            int16_t to_write = length;
-
-            if (length==0 && *out_ptr==0) {
-                return 0;
-            }
-
-            do {
-                int16_t ret = hardware.writeByte(*out_ptr);
-
-                if (ret > 0) {
-                    out_ptr++;
-                    total_written++;
-                    to_write--;
-
-                    if (length==0 && *out_ptr==0) {
-                        break;
-                    }
-                } else if (autoFlush) {
-                    flush();
-                } else {
-                    break;
-                }
-            } while (to_write);
-
-            if (autoFlush && total_written > 0)
-                flush();
-
-            return total_written;
-        };
-
-    	template<uint16_t _size>
-        int16_t write(Motate::Buffer<_size> &data, const uint16_t length = 0, bool autoFlush = false) {
-            int16_t total_written = 0;
-            int16_t to_write = length;
-
-            do {
-                int16_t value = data.peek();
-                if (value < 0) // no more data
-                    break;
-
-                int16_t ret = hardware.writeByte(value);
-                if (ret > 0) {
-                    data.pop();
-                    to_write--;
-                } else if (autoFlush) {
-                    flush();
-                } else {
-                    break;
-                }
-            } while (to_write != 0);
-
-            if (autoFlush && total_written > 0)
-                flush();
-
-            return total_written;
-        };
-
-
-        // **** Transfers and handling transfers
-
-        void setConnectionCallback(std::function<void(bool)> &&callback) {
-            connection_state_changed_callback = std::move(callback);
-            hardware._setInterruptCTSChange((bool)connection_state_changed_callback);
-
-            // Call it immediately if it's connected
-            if (connection_state_changed_callback && isConnected()) {
-                connection_state_changed_callback(true);
-            }
-
-            // pretend we're ALWAYS connected:
-//            connection_state_changed_callback(true);
-        }
-
-
-        bool startRXTransfer(char *buffer, uint16_t length) {
-            hardware._setInterruptRxReady(false);
-
-            int16_t overflow;
-            while (((overflow = overflowBuffer.read()) > 0) && (length > 0)) {
-                *buffer = (char)overflow;
-                buffer++;
-                length--;
-            }
-
-            if (length == 0) {
-                hardware._setInterruptRxReady(true);
-                return false;
-            }
-
-            if (hardware.startRXTransfer(buffer, length)) {
-                if (!isRealAndCorrectRTSPin<rtsPinNumber, rxPinNumber>()) {
-                    rtsPin = false; // active low
-                }
-                return true;
-            }
-            return false;
-        };
-
-        char* getRXTransferPosition() {
-            return hardware.getRXTransferPosition();
-            return nullptr;
-        };
-
-        void setRXTransferDoneCallback(std::function<void()> &&callback) {
-            transfer_rx_done_callback = std::move(callback);
-        }
-
-
-        bool startTXTransfer(char *buffer, const uint16_t length) {
-            return hardware.startTXTransfer(buffer, length);
-            return false;
-
-        };
-
-        char* getTXTransferPosition() {
-            return hardware.getTXTransferPosition();
-            return nullptr;
-        };
-
-        void setTXTransferDoneCallback(std::function<void()> &&callback) {
-            transfer_tx_done_callback = std::move(callback);
-        }
-
-        // *** Handling interrupts
-
-        void uartInterruptHandler(uint16_t interruptCause) {
-            if (interruptCause & UARTInterrupt::OnTxReady) {
-                // ready to transfer...
-            }
-
-            if (interruptCause & UARTInterrupt::OnRxReady) {
-                // new data is ready to read. If we're between transfers we need to squirrel away the value
-                overflowBuffer.write(hardware.readByte());
-            }
-
-            if (interruptCause & UARTInterrupt::OnTxTransferDone) {
-                if (transfer_tx_done_callback) {
-                    hardware._setInterruptTxTransferDone(false);
-                    transfer_tx_done_callback();
-                }
-            }
-
-            if (interruptCause & UARTInterrupt::OnRxTransferDone) {
-                if (!isRealAndCorrectRTSPin<rtsPinNumber, rxPinNumber>()) {
-                    rtsPin = true; // active low
-                }
-                if (transfer_rx_done_callback) {
-                    hardware._setInterruptRxTransferDone(false);
-                    hardware._setInterruptRxReady(true);
-                    transfer_rx_done_callback();
-                }
-            }
-
-            if (interruptCause & UARTInterrupt::OnCTSChanged) {
-                if (connection_state_changed_callback && isConnected()) {
-                    // We only report when it's connected, NOT disconnected
-                    connection_state_changed_callback(isConnected());
-                }
-            }
-        };
-
-    };
-
-
-    template<uint8_t uartPeripheralNumber, pin_number rtsPinNumber, pin_number ctsPinNumber, typename rxBufferClass, typename txBufferClass>
-    struct _BufferedUARTHardware : _UARTHardware<uartPeripheralNumber> {
-        rxBufferClass rxBuffer;
-        txBufferClass txBuffer;
-
-        OutputPin<rtsPinNumber> rtsPin;
-        IRQPin<ctsPinNumber> ctsPin;
-
-        uint32_t txDelayAfterResume = 3;
-        uint32_t txDelayUntilTime   = 0;
-
-        bool _rtsCtsFlowControl    = false;
-        bool _xonXoffFlowControl   = false;
-        volatile bool _xonXoffCanSend       = true;
-        volatile char _xonXoffStartStop     = kUARTXOn;
-        volatile bool _xonXoffStartStopSent = true;
-
-        typedef _UARTHardware<uartPeripheralNumber> parent;
-
-        _BufferedUARTHardware() {
-        };
-
-        void init() {
-            parent::init();
-            parent::setInterrupts(UARTInterrupt::OnRxReady | UARTInterrupt::PriorityLowest);
-            _UARTHardwareProxy<uartPeripheralNumber>::uartInterruptHandler = [&](uint16_t interruptCause) { // use a closure
-                uartInterruptHandler(interruptCause);
-            };
-        };
-
-        void setOptions(const uint32_t baud, const uint16_t options, const bool fromConstructor=false) {
-            parent::setOptions(baud, options, fromConstructor);
-
-            if (options & UARTMode::RTSCTSFlowControl && IsIRQPin<ctsPinNumber>() && !rtsPin.isNull()) {
-                _rtsCtsFlowControl = true;
-//                parent::setInterruptTxReady(!canSend());
-                ctsPin.setInterrupts(kPinInterruptOnChange);
-            } else {
-                _rtsCtsFlowControl = false;
-            }
-//            if (options & UARTMode::XonXoffFlowControl) {
-//                _xonXoffFlowControl = true;
+//        bool _rtsCtsFlowControl    = false;
+//        bool _xonXoffFlowControl   = false;
+//        volatile bool _xonXoffCanSend       = true;
+//        volatile char _xonXoffStartStop     = kUARTXOn;
+//        volatile bool _xonXoffStartStopSent = true;
+//
+//        typedef _UARTHardware<uartPeripheralNumber> parent;
+//
+//        _BufferedUARTHardware() {
+//        };
+//
+//        void init() {
+//            parent::init();
+//            parent::setInterrupts(UARTInterrupt::OnRxReady | UARTInterrupt::PriorityLowest);
+//            _UARTHardwareProxy<uartPeripheralNumber>::uartInterruptHandler = [&](uint16_t interruptCause) { // use a closure
+//                uartInterruptHandler(interruptCause);
+//            };
+//        };
+//
+//        void setOptions(const uint32_t baud, const uint16_t options, const bool fromConstructor=false) {
+//            parent::setOptions(baud, options, fromConstructor);
+//
+//            if (options & UARTMode::RTSCTSFlowControl && IsIRQPin<ctsPinNumber>() && !rtsPin.isNull()) {
+//                _rtsCtsFlowControl = true;
+////                parent::setInterruptTxReady(!canSend());
+//                ctsPin.setInterrupts(kPinInterruptOnChange);
 //            } else {
-//                _xonXoffFlowControl = false;
-//                _xonXoffStartStopSent = true;
+//                _rtsCtsFlowControl = false;
 //            }
-        }
-
-//        void stopRx() {
-//            if (_rtsCtsFlowControl) {
-//                rtsPin = true;
-//            }
-//            if (_xonXoffFlowControl && _xonXoffStartStop != kUARTXOff) {
-//                _xonXoffStartStop = kUARTXOff;
-//                _xonXoffStartStopSent = false;
-//                parent::setInterruptTxReady(true);
-//            }
+////            if (options & UARTMode::XonXoffFlowControl) {
+////                _xonXoffFlowControl = true;
+////            } else {
+////                _xonXoffFlowControl = false;
+////                _xonXoffStartStopSent = true;
+////            }
+//        }
+//
+////        void stopRx() {
+////            if (_rtsCtsFlowControl) {
+////                rtsPin = true;
+////            }
+////            if (_xonXoffFlowControl && _xonXoffStartStop != kUARTXOff) {
+////                _xonXoffStartStop = kUARTXOff;
+////                _xonXoffStartStopSent = false;
+////                parent::setInterruptTxReady(true);
+////            }
+////        };
+////
+////        void startRx() {
+////            if (_rtsCtsFlowControl) {
+////                rtsPin = false;
+////            }
+////            if (_xonXoffFlowControl && _xonXoffStartStop != kUARTXOn) {
+////                _xonXoffStartStop = kUARTXOn;
+////                _xonXoffStartStopSent = false;
+////                parent::setInterruptTxReady(true);
+////            }
+////        };
+//
+////        bool canSend() {
+////            if (_rtsCtsFlowControl) {
+////                return !ctsPin;
+////            }
+////            if (_xonXoffFlowControl) {
+////                return _xonXoffCanSend;
+////            }
+////            return true;
+////        };
+//
+//        void setTxDelayAfterResume(uint32_t newDelay) { txDelayAfterResume = newDelay; };
+//
+//        int16_t readByte() {
+//            return rxBuffer.read();
 //        };
 //
-//        void startRx() {
-//            if (_rtsCtsFlowControl) {
-//                rtsPin = false;
-//            }
-//            if (_xonXoffFlowControl && _xonXoffStartStop != kUARTXOn) {
-//                _xonXoffStartStop = kUARTXOn;
-//                _xonXoffStartStopSent = false;
-//                parent::setInterruptTxReady(true);
-//            }
+//        int16_t writeByte(const uint8_t data) {
+//            int16_t ret = txBuffer.write(data);
+//            return ret;
 //        };
-
-//        bool canSend() {
-//            if (_rtsCtsFlowControl) {
-//                return !ctsPin;
-//            }
-//            if (_xonXoffFlowControl) {
-//                return _xonXoffCanSend;
-//            }
-//            return true;
+//
+//        void uartInterruptHandler(uint16_t interruptCause) {
+////            if ((interruptCause & (UARTInterrupt::OnTxReady /*| UARTInterrupt::OnTxDone*/))) {
+////                if (txDelayUntilTime && SysTickTimer.getValue() < txDelayUntilTime)
+////                    return;
+////                txDelayUntilTime = 0;
+////                if (_xonXoffFlowControl) {
+////                    if (_xonXoffStartStopSent == false) {
+////                        parent::writeByte(_xonXoffStartStop);
+////                        _xonXoffStartStopSent = true;
+////                        return;
+////                    }
+////                }
+////                int16_t value = txBuffer.read();
+////                if (value >= 0) {
+////                    parent::writeByte(value);
+////                }
+////            }
+////            if (txBuffer.isEmpty() || txBuffer.isLocked()) {
+////                // This is tricky: If it's write locked, we have to bail, and SHUT OFF TxReady interrupts.
+////                // On the ARM, it won't return to the main code as long as there's a pending interrupt,
+////                // and the txReady interrupt will continue to fire, causing deadlock.
+////                parent::setInterruptTxReady(false);
+////            }
+////
+////            if ((interruptCause & UARTInterrupt::OnRxReady) && !rxBuffer.isFull()) {
+////                int16_t value = parent::readByte();
+////                if (_xonXoffFlowControl) {
+////                    if (value == kUARTXOn) {
+////                        _xonXoffCanSend = true;
+////                        return;
+////                    } else if (value == kUARTXOff) {
+////                        _xonXoffCanSend = false;
+////                        return;
+////                    }
+////                }
+////                // We don't double check to ensure value is not -1 -- should we?
+////                rxBuffer.write(value);
+////                if (rxBuffer.available() < 4) {
+////                    stopRx();
+////                }
+////            }
 //        };
+//
+////        void pinChangeInterrupt() {
+////            txDelayUntilTime = SysTickTimer.getValue() + txDelayAfterResume;
+////            parent::setInterruptTxReady(canSend());
+////        };
+//
+//        void flush() {
+//            // Wait for the buffer to be empty...
+//            while(!txBuffer.isEmpty());
+//        };
+//    };
 
-        void setTxDelayAfterResume(uint32_t newDelay) { txDelayAfterResume = newDelay; };
 
-        int16_t readByte() {
-            return rxBuffer.read();
-        };
 
-        int16_t writeByte(const uint8_t data) {
-            int16_t ret = txBuffer.write(data);
-            return ret;
-        };
-
-        void uartInterruptHandler(uint16_t interruptCause) {
-//            if ((interruptCause & (UARTInterrupt::OnTxReady /*| UARTInterrupt::OnTxDone*/))) {
-//                if (txDelayUntilTime && SysTickTimer.getValue() < txDelayUntilTime)
-//                    return;
-//                txDelayUntilTime = 0;
-//                if (_xonXoffFlowControl) {
-//                    if (_xonXoffStartStopSent == false) {
-//                        parent::writeByte(_xonXoffStartStop);
-//                        _xonXoffStartStopSent = true;
-//                        return;
-//                    }
+//    template<pin_number rxPinNumber, pin_number txPinNumber, pin_number rtsPinNumber = -1, pin_number ctsPinNumber = -1, typename rxBufferClass = Buffer<128>, typename txBufferClass = rxBufferClass>
+//    struct BufferedUART {
+//        UARTRxPin<rxPinNumber> rxPin;
+//        UARTTxPin<txPinNumber> txPin;
+//
+//
+//        _BufferedUARTHardware< UARTGetHardware<rxPinNumber, txPinNumber>::uartPeripheralNum, rtsPinNumber, ctsPinNumber, rxBufferClass, txBufferClass > hardware;
+//
+//
+//        const uint8_t uartPeripheralNum() { return hardware.uartPeripheralNum; };
+//
+//        BufferedUART(const uint32_t baud = 115200, const uint16_t options = UARTMode::As8N1) {
+//            hardware.init();
+//            init(baud, options, /*fromConstructor =*/ true);
+//        };
+//
+//        void init(const uint32_t baud, const uint16_t options, const bool fromConstructor=false) {
+//            setOptions(baud, options, fromConstructor);
+//        };
+//
+//        void setOptions(const uint32_t baud, const uint16_t options, const bool fromConstructor=false) {
+//            hardware.setOptions(baud, options, fromConstructor);
+//        };
+//
+//
+//
+//        int16_t readByte() {
+//            return hardware.readByte();
+//        };
+//
+//        // WARNING: Currently only reads in bytes. For more-that-byte size data, we'll need another call.
+//        int16_t read(const uint8_t *buffer, const uint16_t length) {
+//            int16_t total_read = 0;
+//            int16_t to_read = length;
+//            const uint8_t *read_ptr = buffer;
+//
+//            // BLOCKING!!
+//            while (to_read > 0) {
+//                int16_t ret = hardware.readByte();
+//
+//                if (ret >= 0) {
+//                    *read_ptr++ = ret;
+//                    total_read++;
+//                    to_read--;
 //                }
-//                int16_t value = txBuffer.read();
-//                if (value >= 0) {
-//                    parent::writeByte(value);
-//                }
-//            }
-//            if (txBuffer.isEmpty() || txBuffer.isLocked()) {
-//                // This is tricky: If it's write locked, we have to bail, and SHUT OFF TxReady interrupts.
-//                // On the ARM, it won't return to the main code as long as there's a pending interrupt,
-//                // and the txReady interrupt will continue to fire, causing deadlock.
-//                parent::setInterruptTxReady(false);
+//            };
+//
+//            return total_read;
+//        };
+//
+//        int16_t writeByte(uint8_t data) {
+//            return hardware.writeByte(data);
+//        };
+//
+//        void flush() {
+//            hardware.flush();
+//        };
+//
+//        // WARNING: Currently only writes in bytes. For more-that-byte size data, we'll need another call.
+//        int16_t write(const char* data, const uint16_t length = 0, bool autoFlush = false) {
+//            int16_t total_written = 0;
+//            const char* out_ptr = data;
+//            int16_t to_write = length;
+//
+//            if (length==0 && *out_ptr==0) {
+//                return 0;
 //            }
 //
-//            if ((interruptCause & UARTInterrupt::OnRxReady) && !rxBuffer.isFull()) {
-//                int16_t value = parent::readByte();
-//                if (_xonXoffFlowControl) {
-//                    if (value == kUARTXOn) {
-//                        _xonXoffCanSend = true;
-//                        return;
-//                    } else if (value == kUARTXOff) {
-//                        _xonXoffCanSend = false;
-//                        return;
+//            do {
+//                int16_t ret = hardware.writeByte(*out_ptr);
+//
+//                if (ret > 0) {
+//                    out_ptr++;
+//                    total_written++;
+//                    to_write--;
+//
+//                    if (length==0 && *out_ptr==0) {
+//                        break;
 //                    }
+//                } else if (autoFlush) {
+//                    flush();
+//                } else {
+//                    break;
 //                }
-//                // We don't double check to ensure value is not -1 -- should we?
-//                rxBuffer.write(value);
-//                if (rxBuffer.available() < 4) {
-//                    stopRx();
+//            } while (to_write);
+//
+//            if (autoFlush && total_written > 0)
+//                flush();
+//
+//            return total_written;
+//        };
+//
+//        template<uint16_t _size>
+//        int16_t write(Motate::Buffer<_size> &data, const uint16_t length = 0, bool autoFlush = false) {
+//            int16_t total_written = 0;
+//            int16_t to_write = length;
+//
+//            do {
+//                int16_t value = data.peek();
+//                if (value < 0) // no more data
+//                    break;
+//
+//                int16_t ret = hardware.writeByte(value);
+//                if (ret > 0) {
+//                    data.pop();
+//                    to_write--;
+//                } else if (autoFlush) {
+//                    flush();
+//                } else {
+//                    break;
 //                }
-//            }
-        };
-
+//            } while (to_write != 0);
+//
+//            if (autoFlush && total_written > 0)
+//                flush();
+//
+//            return total_written;
+//        };
+//
 //        void pinChangeInterrupt() {
-//            txDelayUntilTime = SysTickTimer.getValue() + txDelayAfterResume;
-//            parent::setInterruptTxReady(canSend());
+//            hardware.pinChangeInterrupt();
 //        };
-
-        void flush() {
-            // Wait for the buffer to be empty...
-            while(!txBuffer.isEmpty());
-        };
-    };
-
-
-
-    template<pin_number rxPinNumber, pin_number txPinNumber, pin_number rtsPinNumber = -1, pin_number ctsPinNumber = -1, typename rxBufferClass = Buffer<128>, typename txBufferClass = rxBufferClass>
-    struct BufferedUART {
-        UARTRxPin<rxPinNumber> rxPin;
-        UARTTxPin<txPinNumber> txPin;
-
-
-        _BufferedUARTHardware< UARTGetHardware<rxPinNumber, txPinNumber>::uartPeripheralNum, rtsPinNumber, ctsPinNumber, rxBufferClass, txBufferClass > hardware;
-
-
-        const uint8_t uartPeripheralNum() { return hardware.uartPeripheralNum; };
-
-        BufferedUART(const uint32_t baud = 115200, const uint16_t options = UARTMode::As8N1) {
-            hardware.init();
-            init(baud, options, /*fromConstructor =*/ true);
-        };
-
-        void init(const uint32_t baud, const uint16_t options, const bool fromConstructor=false) {
-            setOptions(baud, options, fromConstructor);
-        };
-
-        void setOptions(const uint32_t baud, const uint16_t options, const bool fromConstructor=false) {
-            hardware.setOptions(baud, options, fromConstructor);
-        };
-
-
-
-        int16_t readByte() {
-            return hardware.readByte();
-        };
-
-        // WARNING: Currently only reads in bytes. For more-that-byte size data, we'll need another call.
-        int16_t read(const uint8_t *buffer, const uint16_t length) {
-            int16_t total_read = 0;
-            int16_t to_read = length;
-            const uint8_t *read_ptr = buffer;
-
-            // BLOCKING!!
-            while (to_read > 0) {
-                int16_t ret = hardware.readByte();
-
-                if (ret >= 0) {
-                    *read_ptr++ = ret;
-                    total_read++;
-                    to_read--;
-                }
-            };
-
-            return total_read;
-        };
-
-        int16_t writeByte(uint8_t data) {
-            return hardware.writeByte(data);
-        };
-
-        void flush() {
-            hardware.flush();
-        };
-
-        // WARNING: Currently only writes in bytes. For more-that-byte size data, we'll need another call.
-        int16_t write(const char* data, const uint16_t length = 0, bool autoFlush = false) {
-            int16_t total_written = 0;
-            const char* out_ptr = data;
-            int16_t to_write = length;
-
-            if (length==0 && *out_ptr==0) {
-                return 0;
-            }
-
-            do {
-                int16_t ret = hardware.writeByte(*out_ptr);
-
-                if (ret > 0) {
-                    out_ptr++;
-                    total_written++;
-                    to_write--;
-
-                    if (length==0 && *out_ptr==0) {
-                        break;
-                    }
-                } else if (autoFlush) {
-                    flush();
-                } else {
-                    break;
-                }
-            } while (to_write);
-
-            if (autoFlush && total_written > 0)
-                flush();
-
-            return total_written;
-        };
-
-        template<uint16_t _size>
-        int16_t write(Motate::Buffer<_size> &data, const uint16_t length = 0, bool autoFlush = false) {
-            int16_t total_written = 0;
-            int16_t to_write = length;
-
-            do {
-                int16_t value = data.peek();
-                if (value < 0) // no more data
-                    break;
-
-                int16_t ret = hardware.writeByte(value);
-                if (ret > 0) {
-                    data.pop();
-                    to_write--;
-                } else if (autoFlush) {
-                    flush();
-                } else {
-                    break;
-                }
-            } while (to_write != 0);
-
-            if (autoFlush && total_written > 0)
-                flush();
-
-            return total_written;
-        };
-
-        void pinChangeInterrupt() {
-            hardware.pinChangeInterrupt();
-        };
-
-        //	// Placeholder for user code.
-        //	static void interrupt() __attribute__ ((weak));
-    };
+//
+//        //	// Placeholder for user code.
+//        //	static void interrupt() __attribute__ ((weak));
+//    };
 }
 
-#endif /* end of include guard: SAMUART_H_ONCE */
+#endif /* end of include guard: SAM4XUART_H_ONCE */

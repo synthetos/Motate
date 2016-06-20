@@ -124,8 +124,8 @@ namespace Motate {
 //    _MAKE_MOTATE_SPI_SCK_PIN('A', 27, /* Peripheral */ A);
 //
     // UART Pin Assignments
-    // NOTE: UARTs 4 and 5 (here) are UART0 abd UART1 hardware
-    //       UARTs 0,1 and 2 are USART0 and up (note the S!)
+    // NOTE: UARTs 4 and 5 (here) are UART0 and UART1 hardware
+    //       UARTs 0,1 and 2 are USART0 and up (note the S in USART!)
     _MAKE_MOTATE_UART_RX_PIN( 'A',  9, /* UART number: */ 4+0, /* Peripheral */ A);
     _MAKE_MOTATE_UART_TX_PIN( 'A', 10, /* UART number: */ 4+0, /* Peripheral */ A);
 
