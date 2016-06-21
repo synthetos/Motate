@@ -250,7 +250,7 @@ namespace Motate {
         };
 
         void _restartTransfer() {
-            if ((_transfer_requested == 0)) {
+            if ((!_is_requesting) && (_transfer_requested == 0)) {
                 _is_requesting = true;
                 // We can only request contiguous chunks. Let's see what the next one is.
                 _getWriteOffset(); // cache the write position
