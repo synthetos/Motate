@@ -582,7 +582,7 @@ namespace Motate {
             typedef timerOrPWM parentTimerType; \
             static const pin_number pinNum = ReversePinLookup<registerChar, registerPin>::number; \
             PWMOutputPin() : RealPWMOutputPin<pinNum, timerOrPWM>(kPeripheral ## peripheralAorB) { pwmpin_init(invertedByDefault ? kPWMOnInverted : kPWMOn);}; \
-            PWMOutputPin(const PinOptions_t options, const uint32_t freq = kDefaultPWMFrequency) : RealPWMOutputPin<pinNum, timerOrPWM>(kPeripheral ## peripheralAorB, options, freq) { \
+            PWMOutputPin(const PinOptions_t options, const uint32_t freq) : RealPWMOutputPin<pinNum, timerOrPWM>(kPeripheral ## peripheralAorB, options, freq) { \
                 pwmpin_init((invertedByDefault ^ ((options & kPWMPinInverted)?true:false)) ? kPWMOnInverted : kPWMOn); \
             }; \
             using RealPWMOutputPin<pinNum, timerOrPWM>::operator=; \
