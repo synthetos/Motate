@@ -575,41 +575,41 @@ namespace Motate {
 
     template<int8_t pinNum>
     struct UARTTxPin {
-        static const bool is_real = false;
-        static const uint8_t uartNum = -1; // use, we assigned -1 to a uint8_t
+        static constexpr bool is_real = false;
+        static constexpr uint8_t uartNum = -1; // use, we assigned -1 to a uint8_t
     };
     template <int8_t pinNum>
-    constexpr const bool IsUARTTxPin() { return UARTTxPin<pinNum>::is_real; };
+    constexpr bool IsUARTTxPin() { return UARTTxPin<pinNum>::is_real; };
 
 
     template<int8_t pinNum>
     struct UARTRxPin {
-        static const bool is_real = false;
-        static const uint8_t uartNum = -1; // use, we assigned -1 to a uint8_t
+        static constexpr bool is_real = false;
+        static constexpr uint8_t uartNum = -1; // use, we assigned -1 to a uint8_t
     };
     template <int8_t pinNum>
-    constexpr const bool IsUARTRxPin() { return UARTRxPin<pinNum>::is_real; };
+    constexpr bool IsUARTRxPin() { return UARTRxPin<pinNum>::is_real; };
 
 
 
     template<int8_t pinNum>
     struct UARTRTSPin {
-        static const bool is_real = false;
-        static const uint8_t uartNum = -1; // use, we assigned -1 to a uint8_t
+        static constexpr bool is_real = false;
+        static constexpr uint8_t uartNum = -1; // use, we assigned -1 to a uint8_t
     };
     template <int8_t pinNum>
-    constexpr const bool IsUARTRTSPin() { return UARTRTSPin<pinNum>::is_real; };
+    constexpr bool IsUARTRTSPin() { return UARTRTSPin<pinNum>::is_real; };
 
 
 
     template<int8_t pinNum>
     struct UARTCTSPin {
-        static const bool is_real = false;
-        static const uint8_t uartNum = -1; // use, we assigned -1 to a uint8_t
+        static constexpr bool is_real = false;
+        static constexpr uint8_t uartNum = -1; // use, we assigned -1 to a uint8_t
     };
 
     template <int8_t pinNum>
-    constexpr const bool IsUARTCTSPin() { return UARTCTSPin<pinNum>::is_real; };
+    constexpr bool IsUARTCTSPin() { return UARTCTSPin<pinNum>::is_real; };
 
 } // namespace motate
 

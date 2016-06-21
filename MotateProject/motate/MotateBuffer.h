@@ -148,10 +148,14 @@ namespace Motate {
         // Internal properties!
         base_type _data[_size+1];
 
-         uint16_t _read_offset;              // The offset into the buffer we of our next read
-         uint16_t _last_known_write_offset;  // The offset into the buffer we of the last known write (cached)
+        uint32_t _data_end_guard = 0xBEEF;
 
-         uint16_t _transfer_requested = 0; // keep track of how much we have requested. Non-zero means a request is active.
+        uint16_t _read_offset;              // The offset into the buffer we of our next read
+        uint16_t _last_known_write_offset;  // The offset into the buffer we of the last known write (cached)
+
+        uint16_t _transfer_requested = 0; // keep track of how much we have requested. Non-zero means a request is active.
+        
+        volatile bool _is_requesting = false;
 
         constexpr int16_t size() { return _size; };
 
@@ -159,7 +163,10 @@ namespace Motate {
 
         void init() {
             _owner->setRXTransferDoneCallback([&]() { // use a closure
-                _transfer_requested = 0;
+                if (!_is_requesting && (_transfer_requested != 0)) {
+                    _transfer_requested = 0;
+                    _restartTransfer();
+                }
             });
         };
 
@@ -171,6 +178,7 @@ namespace Motate {
             if (pos == _last_known_write_offset) {
                 _getWriteOffset();
                 if (pos == _last_known_write_offset) {
+                    _restartTransfer();
                     return false;
                 }
             }
@@ -242,38 +250,61 @@ namespace Motate {
         };
 
         void _restartTransfer() {
-            if ((_transfer_requested == 0) && !isFull()) {
+            if ((_transfer_requested == 0)) {
+                _is_requesting = true;
                 // We can only request contiguous chunks. Let's see what the next one is.
                 _getWriteOffset(); // cache the write position
 
                 int16_t transfer_size = 0;
                 char *_write_pos = _data + _last_known_write_offset;
 
-                // Possible cases:
-                // [1] _read_pos > _write_pos
-                //     IOW: We read to some position in the middle, and _write_pos is before it
-                //          The unread data is between read->end, then 0->write.
-                //          So, we transfer from _write_pos to the _read_pos position.
-                // [2] _read_pos <= _write_pos
-                //     IOW: We read to some position in the middle, and _read_pos is in the range 0 through _write_pos.
-                //          So, we can transfer from _write_pos to the end of the buffer.
+                // We use a do..while here to repeat until the transfer "takes".
+                // The transfer can only fail if the startRXTransfer immediately loaded data into
+                // the buffer.
+                do {
+                    if (isFull()) {
+                        break;
+                    }
 
-                // Case [1]
-                if (_read_offset > _last_known_write_offset) {
-                    transfer_size = _read_offset - _last_known_write_offset;
+                    // Possible cases:
+                    // We must keep in mind we don't want to read _size bytes, but _size-1.
+                    // [0] _write_pos+1 = _read_pos
+                    //     We just eliminated that.
+                    // [1] _read_pos > _write_pos
+                    //     IOW: We read to some position in the middle, and _write_pos is before it
+                    //          The unread data is between read->end, then 0->write.
+                    //          So, we transfer from _write_pos to the _read_pos position - 1.
+                    // [2] _read_pos <= _write_pos
+                    //     IOW: We read to some position in the middle, and _read_pos is in the range 0 through _write_pos.
+                    //          So, we can transfer from _write_pos to the end of the buffer.
+                    // [2a] _read_pos <= _write_pos && _read_pos == 0
+                    //     IOW: If we read to the end, we will read _size bytes, and our "full" will look like "empty".
+                    //          So, we read to the end of the buffer - 1.
 
-                // Case [2]
-                } else {
-                    transfer_size = _size - _last_known_write_offset;
-                }
+                    // Case [1]
+                    if (_read_offset > _last_known_write_offset) {
+                        transfer_size = (_read_offset - _last_known_write_offset) - 1;
 
-                // We set _transfer_requested BEFORE startRXTransfer, in case an interrupt fires before we exit startRXTransfer
-                //   (which should only happen if it started succesfully).
-                // startRXTransfer will return false if it couldn't start the transfer.
-                _transfer_requested = transfer_size;
-                if (!_owner->startRXTransfer(_write_pos, transfer_size)) {
+                    // Case [2a]
+                    } else if (_read_offset == 0) {
+                        transfer_size = (_size - _last_known_write_offset) - 1;
+
+                    // Case [2]
+                    } else {
+                        transfer_size = (_size - _last_known_write_offset);
+                    }
+
+                    _transfer_requested = transfer_size;
+                    // startRXTransfer will return false if it couldn't start the transfer.
+                    if (_owner->startRXTransfer(_write_pos, transfer_size)) {
+                        break;
+                    }
+
+                    // If we're here, startRXTransfer loaded some data into the buffer and ran out of room.
+                    // Note that _getWriteOffset() must return the new position
                     _transfer_requested = 0;
-                }
+                } while (1);
+                _is_requesting = false;
             }
         };
 
@@ -323,6 +354,7 @@ namespace Motate {
         uint16_t _last_known_read_offset;   // The offset into the buffer we of the last known read (cached)
 
         uint16_t _transfer_requested = 0;   // keep track of how much we have requested. Non-zero means a request is active.
+        volatile bool _is_requesting = false;
 
         constexpr int16_t size() { return _size; };
 
@@ -330,7 +362,11 @@ namespace Motate {
 
         void init() {
             _owner->setTXTransferDoneCallback([&]() { // use a closure
-                _transfer_requested = 0;
+                // we have to be careful here, since we are in an interrupt context
+                if (!_is_requesting && (_transfer_requested != 0)) {
+                    _transfer_requested = 0;
+                    _restartTransfer();
+                }
             });
         }
 
@@ -396,7 +432,12 @@ namespace Motate {
         }
 
         void _restartTransfer() {
-            if ((_transfer_requested == 0) && !isEmpty()) {
+            // this can be called from an interrupt and from the main loop
+            // so we have to make sure this test is first, since _transfer_requested is NOT
+            // volatile.
+            if (!_is_requesting && (_transfer_requested == 0) && !isEmpty()) {
+                _is_requesting = true;
+
                 // We can only request contiguous chunks. Let's see what the next one is.
                 _getReadOffset(); // cache the read position
 
@@ -430,6 +471,7 @@ namespace Motate {
                 if (!_owner->startTXTransfer(_read_pos, transfer_size)) {
                     _transfer_requested = 0;
                 }
+                _is_requesting = false;
             }
         };
 

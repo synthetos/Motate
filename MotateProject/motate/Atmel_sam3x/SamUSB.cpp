@@ -155,6 +155,9 @@ namespace Motate {
         UOTGHS->UOTGHS_DEVEPTIER[endpoint] = UOTGHS_DEVEPTIER_SHORTPACKETES;
     }
 
+    inline void _disableShortPacketInterrupt(const uint8_t endpoint) {
+        UOTGHS->UOTGHS_DEVEPTIDR[endpoint] = UOTGHS_DEVEPTIDR_SHORTPACKETEC;
+    }
 
     void _enableReceiveInterrupt(const uint8_t endpoint) {
         _enableEndpointInterrupt(endpoint);
@@ -162,6 +165,7 @@ namespace Motate {
     }
 
     void _disableReceiveInterrupt(const uint8_t endpoint) {
+        _disableEndpointInterrupt(endpoint);
         UOTGHS->UOTGHS_DEVEPTIDR[endpoint] = UOTGHS_DEVEPTIDR_RXOUTEC;
     }
 
@@ -360,6 +364,7 @@ namespace Motate {
         // Disable DMA interrupts for this endpoint as well
         if (endpoint > 0) {
             UOTGHS->UOTGHS_DEVIDR = UOTGHS_DEVIDR_DMA_1 << (endpoint-1);
+            _disableShortPacketInterrupt(endpoint);
         }
     }
     inline bool _isEndpointInterruptEnabled(const uint8_t endpoint) {
@@ -399,7 +404,7 @@ namespace Motate {
     }
 
     void _waitForUsableUSBClock() {
-        while (!UOTGHS->UOTGHS_SR & UOTGHS_SR_CLKUSABLE)
+        while (!(UOTGHS->UOTGHS_SR & UOTGHS_SR_CLKUSABLE))
             ;
     }
 
@@ -433,11 +438,25 @@ namespace Motate {
         UOTGHS->UOTGHS_DEVEPTICR[endpoint] = UOTGHS_DEVEPTICR_SHORTPACKETC;
     }
 
+    inline uint32_t _getDMAStatus(const uint8_t endpoint) {
+        return UOTGHS->UOTGHS_DEVDMA[endpoint-1].UOTGHS_DEVDMASTATUS;
+    }
 
-    inline bool _isDMADone(const uint8_t endpoint) {
-        // If the transfer ended or the buffer filled up, the DMA is done
+    inline bool _isDMADoneWithPacket(const uint32_t status) {
+        // If the transfer ended (a USB packet was done) we need to deal with it
         // IMPORTANT: UOTGHS_DEVDMA[0] is endpoint 1!!
-        return (UOTGHS->UOTGHS_DEVDMA[endpoint-1].UOTGHS_DEVDMASTATUS & (UOTGHS_DEVDMASTATUS_END_TR_ST | UOTGHS_DEVDMASTATUS_END_BF_ST)) != 0;
+        return (status & (UOTGHS_DEVDMASTATUS_END_TR_ST)) != 0;
+    }
+
+    inline bool _isDMADone(const uint32_t status) {
+        // If the buffer filled up, the DMA is done
+        // IMPORTANT: UOTGHS_DEVDMA[0] is endpoint 1!!
+        return (status & (UOTGHS_DEVDMASTATUS_END_BF_ST)) != 0;
+    }
+
+    inline void _resumeDMATransfer(const uint8_t endpoint) {
+        // IMPORTANT: UOTGHS_DEVDMA[0] is endpoint 1!!
+        UOTGHS->UOTGHS_DEVDMA[endpoint-1].UOTGHS_DEVDMACONTROL |= (UOTGHS_DEVDMACONTROL_CHANN_ENB | (UOTGHS_DEVDMACONTROL_BUFF_LENGTH(_getDMABufferCount(endpoint))));
     }
 
     inline bool _isReadWriteAllowed(const uint8_t endpoint) {
@@ -639,7 +658,7 @@ namespace Motate {
 
     volatile uint8_t _DMA_Used_By_Endpoint = 0;
 
-    // The endpoint determines if it's IS or OUT
+    // The endpoint determines if it's IN or OUT
     void _transferEndpointData(const uint8_t endpoint, USB_DMA_Descriptor& desc) {
         desc.controlData.command = USB_DMA_Descriptor::run_and_stop;
         desc.controlData.end_transfer_enable = true; // allow the DMA transfer to be stopped by USB (small packet, etc)
@@ -979,15 +998,22 @@ namespace Motate {
                     }
                 } else {
                     // Receive OUT
-                    if (_isReceiveOUTAvailable(endpoint) || _isShortpacketSet(endpoint)) {
+                    bool short_packet = _isShortpacketSet(endpoint);
+                    if (_isReceiveOUTAvailable(endpoint) || short_packet) {
+                        bool resume_dma = short_packet;
                         if (_getDMABufferCount(endpoint) == 0) {
                             _DMA_Used_By_Endpoint &= ~(1<<endpoint);
                             USBProxy.handleTransferDone(endpoint);
+                            resume_dma = false;
                         }
-                        if (!_isReadWriteAllowed(endpoint)) { // If not RWALL, then the buffer is full (TX IN) or empty (RX OUT)
+                        if (!_isReadWriteAllowed(endpoint) || short_packet) { // If not RWALL, then the buffer is full (TX IN) or empty (RX OUT)
                             _clearShortpacket(endpoint);
                             _clearReceiveOUT(endpoint);
                             _clearFIFOControl(endpoint);
+
+                            if (resume_dma) {
+                                _resumeDMATransfer(endpoint);
+                            }
                         }
                     }
                 }
@@ -1019,9 +1045,21 @@ namespace Motate {
             // test for interrupts in endpoints
             // Datasheet says: This bit is cleared when the interrupt source is serviced.
             uint8_t endpoint = _firstDMAOfInterrupt();
-            if ((_DMA_Used_By_Endpoint & (1<<endpoint)) && _isDMADone(endpoint)) {
+            uint32_t dma_status = _getDMAStatus(endpoint);
+
+            if (_isDMADoneWithPacket(dma_status)) {
+//                For Debugging:
+                __asm__("BKPT"); // UOTGHS_DEVDMASTATUS_END_TR_ST
+                _resumeDMATransfer(endpoint);
+            }
+
+            if ((_DMA_Used_By_Endpoint & (1<<endpoint)) && _isDMADone(dma_status)) {
                 _DMA_Used_By_Endpoint &= ~(1<<endpoint);
-                _disableTransmitInterrupt(endpoint);
+                if (_isEndpointATransmitIN(endpoint)) {
+                    _disableTransmitInterrupt(endpoint);
+                } else {
+                    _disableReceiveInterrupt(endpoint);
+                }
                 USBProxy.handleTransferDone(endpoint);
             }
         }

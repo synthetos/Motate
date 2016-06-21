@@ -576,17 +576,17 @@ namespace Motate {
      *
      **************************************************/
 
-#define _MAKE_MOTATE_PWM_PIN(registerChar, registerPin, timerOrPWM, peripheralAorB, invertedByDefault) \
-    template<> \
-    struct PWMOutputPin< ReversePinLookup<registerChar, registerPin>::number > : RealPWMOutputPin< ReversePinLookup<registerChar, registerPin>::number, timerOrPWM > { \
-        typedef timerOrPWM parentTimerType; \
-        static const pin_number pinNum = ReversePinLookup<registerChar, registerPin>::number; \
-        PWMOutputPin() : RealPWMOutputPin<pinNum, timerOrPWM>(kPeripheral ## peripheralAorB) { pwmpin_init(invertedByDefault ? kPWMOnInverted : kPWMOn);}; \
-        PWMOutputPin(const PinOptions_t options, const uint32_t freq = kDefaultPWMFrequency) : RealPWMOutputPin<pinNum, timerOrPWM>(kPeripheral ## peripheralAorB, options, freq) { \
-            pwmpin_init((invertedByDefault ^ ((options & kPWMPinInverted)?true:false)) ? kPWMOnInverted : kPWMOn); \
-        }; \
-        using RealPWMOutputPin<pinNum, timerOrPWM>::operator=; \
-    };
+    #define _MAKE_MOTATE_PWM_PIN(registerChar, registerPin, timerOrPWM, peripheralAorB, invertedByDefault) \
+        template<> \
+        struct PWMOutputPin< ReversePinLookup<registerChar, registerPin>::number > : RealPWMOutputPin< ReversePinLookup<registerChar, registerPin>::number, timerOrPWM > { \
+            typedef timerOrPWM parentTimerType; \
+            static const pin_number pinNum = ReversePinLookup<registerChar, registerPin>::number; \
+            PWMOutputPin() : RealPWMOutputPin<pinNum, timerOrPWM>(kPeripheral ## peripheralAorB) { pwmpin_init(invertedByDefault ? kPWMOnInverted : kPWMOn);}; \
+            PWMOutputPin(const PinOptions_t options, const uint32_t freq = kDefaultPWMFrequency) : RealPWMOutputPin<pinNum, timerOrPWM>(kPeripheral ## peripheralAorB, options, freq) { \
+                pwmpin_init((invertedByDefault ^ ((options & kPWMPinInverted)?true:false)) ? kPWMOnInverted : kPWMOn); \
+            }; \
+            using RealPWMOutputPin<pinNum, timerOrPWM>::operator=; \
+        };
 
 
 #pragma mark SPI Pins support
@@ -602,40 +602,40 @@ namespace Motate {
      **************************************************/
 
 
-#define _MAKE_MOTATE_SPI_CS_PIN(registerChar, registerPin, peripheralAorB, csNum)\
-    template<>\
-    struct SPIChipSelectPin< ReversePinLookup<registerChar, registerPin>::number > : ReversePinLookup<registerChar, registerPin> {\
-        SPIChipSelectPin() : ReversePinLookup<registerChar, registerPin>(kPeripheral ## peripheralAorB) {};\
-        static const uint8_t moduleId = 0; \
-        static const bool is_real = std::true_type::value;\
-        static const uint8_t csOffset = csNum;\
-    };
+    #define _MAKE_MOTATE_SPI_CS_PIN(registerChar, registerPin, peripheralAorB, csNum)\
+        template<>\
+        struct SPIChipSelectPin< ReversePinLookup<registerChar, registerPin>::number > : ReversePinLookup<registerChar, registerPin> {\
+            SPIChipSelectPin() : ReversePinLookup<registerChar, registerPin>(kPeripheral ## peripheralAorB) {};\
+            static const uint8_t moduleId = 0; \
+            static const bool is_real = std::true_type::value;\
+            static const uint8_t csOffset = csNum;\
+        };
 
-#define _MAKE_MOTATE_SPI_MISO_PIN(registerChar, registerPin, peripheralAorB)\
-    template<>\
-    struct SPIMISOPin< ReversePinLookup<registerChar, registerPin>::number > : ReversePinLookup<registerChar, registerPin> {\
-        SPIMISOPin() : ReversePinLookup<registerChar, registerPin>(kPeripheral ## peripheralAorB) {};\
-        static const uint8_t moduleId = 0; \
-        static const bool is_real = std::true_type::value;\
-    };
-
-
-#define _MAKE_MOTATE_SPI_MOSI_PIN(registerChar, registerPin, peripheralAorB)\
-    template<>\
-    struct SPIMOSIPin< ReversePinLookup<registerChar, registerPin>::number > : ReversePinLookup<registerChar, registerPin> {\
-        SPIMOSIPin() : ReversePinLookup<registerChar, registerPin>(kPeripheral ## peripheralAorB) {};\
-        static const uint8_t moduleId = 0; \
-        static const bool is_real = std::true_type::value;\
-    };
+    #define _MAKE_MOTATE_SPI_MISO_PIN(registerChar, registerPin, peripheralAorB)\
+        template<>\
+        struct SPIMISOPin< ReversePinLookup<registerChar, registerPin>::number > : ReversePinLookup<registerChar, registerPin> {\
+            SPIMISOPin() : ReversePinLookup<registerChar, registerPin>(kPeripheral ## peripheralAorB) {};\
+            static const uint8_t moduleId = 0; \
+            static const bool is_real = std::true_type::value;\
+        };
 
 
-#define _MAKE_MOTATE_SPI_SCK_PIN(registerChar, registerPin, peripheralAorB)\
-    template<>\
-    struct SPISCKPin< ReversePinLookup<registerChar, registerPin>::number > : ReversePinLookup<registerChar, registerPin> {\
-        SPISCKPin() : ReversePinLookup<registerChar, registerPin>(kPeripheral ## peripheralAorB) {};\
-        static const uint8_t moduleId = 0; \
-        static const bool is_real = std::true_type::value;\
-    };
+    #define _MAKE_MOTATE_SPI_MOSI_PIN(registerChar, registerPin, peripheralAorB)\
+        template<>\
+        struct SPIMOSIPin< ReversePinLookup<registerChar, registerPin>::number > : ReversePinLookup<registerChar, registerPin> {\
+            SPIMOSIPin() : ReversePinLookup<registerChar, registerPin>(kPeripheral ## peripheralAorB) {};\
+            static const uint8_t moduleId = 0; \
+            static const bool is_real = std::true_type::value;\
+        };
+
+
+    #define _MAKE_MOTATE_SPI_SCK_PIN(registerChar, registerPin, peripheralAorB)\
+        template<>\
+        struct SPISCKPin< ReversePinLookup<registerChar, registerPin>::number > : ReversePinLookup<registerChar, registerPin> {\
+            SPISCKPin() : ReversePinLookup<registerChar, registerPin>(kPeripheral ## peripheralAorB) {};\
+            static const uint8_t moduleId = 0; \
+            static const bool is_real = std::true_type::value;\
+        };
 
 
 #pragma mark UART / USART Pin support
@@ -672,12 +672,15 @@ namespace Motate {
             UARTRTSPin() : ReversePinLookup<registerChar, registerPin>(kPeripheral ## peripheralAorB) {};\
             static const uint8_t uartNum = uartNumVal;\
             static const bool is_real = true;\
+            void operator=(const bool value); /*Will cause a failure if used.*/\
         };
 
     #define _MAKE_MOTATE_UART_CTS_PIN(registerChar, registerPin, uartNumVal, peripheralAorB)\
         template<>\
         struct UARTCTSPin< ReversePinLookup<registerChar, registerPin>::number > : ReversePinLookup<registerChar, registerPin> {\
             UARTCTSPin() : ReversePinLookup<registerChar, registerPin>(kPeripheral ## peripheralAorB, kPullUp) {};\
+            UARTCTSPin(const PinOptions_t options, const std::function<void(void)> &&_interrupt, const uint32_t interrupt_settings = kPinInterruptOnChange|kPinInterruptPriorityMedium) : ReversePinLookup<registerChar, registerPin>(kPeripheral ## peripheralAorB, options) {};\
+            void setInterrupts(const uint32_t interrupts); /*Will cause a failure if used.*/\
             static const uint8_t uartNum = uartNumVal;\
             static const bool is_real = true;\
         };

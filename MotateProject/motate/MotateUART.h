@@ -249,8 +249,8 @@ namespace Motate {
             //            connection_state_changed_callback(true);
         }
 
-
-        bool startRXTransfer(char *buffer, uint16_t length) {
+        char* _manual_rx_position = nullptr;
+        bool startRXTransfer(char *&buffer, uint16_t length) {
             hardware._setInterruptRxReady(false);
 
             int16_t overflow;
@@ -261,22 +261,26 @@ namespace Motate {
             }
 
             if (length == 0) {
-                hardware._setInterruptRxReady(true);
-                return false;
+                _manual_rx_position = buffer;
+            } else {
+                _manual_rx_position = nullptr;
+                if (hardware.startRXTransfer(buffer, length)) {
+                    if (!isRealAndCorrectRTSPin<rtsPinNumber, rxPinNumber>()) {
+                        rtsPin = false; // active low
+                    }
+                    return true;
+                }
             }
 
-            if (hardware.startRXTransfer(buffer, length)) {
-                if (!isRealAndCorrectRTSPin<rtsPinNumber, rxPinNumber>()) {
-                    rtsPin = false; // active low
-                }
-                return true;
-            }
+            hardware._setInterruptRxReady(true);
             return false;
         };
 
         char* getRXTransferPosition() {
+            if (_manual_rx_position) {
+                return _manual_rx_position;
+            }
             return hardware.getRXTransferPosition();
-            return nullptr;
         };
 
         void setRXTransferDoneCallback(std::function<void()> &&callback) {

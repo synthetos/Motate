@@ -799,10 +799,12 @@ namespace Motate {
                 uart()->UART_PTCR = UART_PTCR_RXTDIS; // disable for setup
                 uart()->UART_RPR = (uint32_t)buffer;
                 uart()->UART_RCR = length;
-                while (uart()->UART_RCR != length) {;}
-                uart()->UART_PTCR = UART_PTCR_RXTEN;  // enable again
-                _setInterruptRxTransferDone(true);
-                return true;
+                if (length != 0) {
+                    uart()->UART_PTCR = UART_PTCR_RXTEN;  // enable again
+                    _setInterruptRxTransferDone(true);
+                    return true;
+                }
+                return false;
             }
 //            else if (uart()->UART_RNCR == 0) {
 //                uart()->UART_RNPR = (uint32_t)buffer;
@@ -824,7 +826,6 @@ namespace Motate {
                 uart()->UART_PTCR = UART_PTCR_TXTDIS; // disable for setup
                 uart()->UART_TPR = (uint32_t)buffer;
                 uart()->UART_TCR = length;
-                while (uart()->UART_TCR != length) {;}
                 uart()->UART_PTCR = UART_PTCR_TXTEN;  // enable again
                 _setInterruptTxTransferDone(true);
                 return true;
