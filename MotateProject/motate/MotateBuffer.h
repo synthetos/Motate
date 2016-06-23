@@ -163,7 +163,7 @@ namespace Motate {
 
         void init() {
             _owner->setRXTransferDoneCallback([&]() { // use a closure
-                if (!_is_requesting && (_transfer_requested != 0)) {
+                if (!_is_requesting) { //  && (_transfer_requested != 0)
                     _transfer_requested = 0;
                     _restartTransfer();
                 }
@@ -363,7 +363,7 @@ namespace Motate {
         void init() {
             _owner->setTXTransferDoneCallback([&]() { // use a closure
                 // we have to be careful here, since we are in an interrupt context
-                if (!_is_requesting && (_transfer_requested != 0)) {
+                if (!_is_requesting) { //  && (_transfer_requested != 0)
                     _transfer_requested = 0;
                     _restartTransfer();
                 }
