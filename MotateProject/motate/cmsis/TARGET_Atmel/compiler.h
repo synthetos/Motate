@@ -772,6 +772,11 @@ typedef struct
  *   - abs, min and max to apply to non-constant expressions (values unknown at
  *     compile time), abs is found in stdlib.h.
  */
+
+// THIS IS ALL SO DUMB, ATMEL!! Define of a three letter macro, really?
+// This trashes most of C++ algorithm, and a ton of our code. Removing it.
+// -- Rob Giseburt
+
 //! @{
 
 /*! \brief Takes the absolute value of \a a.
@@ -782,7 +787,7 @@ typedef struct
  *
  * \note More optimized if only used with values known at compile time.
  */
-#define Abs(a)              (((a) <  0 ) ? -(a) : (a))
+//#define Abs(a)              (((a) <  0 ) ? -(a) : (a))
 
 /*! \brief Takes the minimal value of \a a and \a b.
  *
@@ -793,7 +798,7 @@ typedef struct
  *
  * \note More optimized if only used with values known at compile time.
  */
-#define Min(a, b)           (((a) < (b)) ?  (a) : (b))
+//#define Min(a, b)           (((a) < (b)) ?  (a) : (b))
 
 /*! \brief Takes the maximal value of \a a and \a b.
  *
@@ -804,7 +809,7 @@ typedef struct
  *
  * \note More optimized if only used with values known at compile time.
  */
-#define Max(a, b)           (((a) > (b)) ?  (a) : (b))
+//#define Max(a, b)           (((a) > (b)) ?  (a) : (b))
 
 // abs() is already defined by stdlib.h
 
@@ -817,7 +822,7 @@ typedef struct
  *
  * \note More optimized if only used with values unknown at compile time.
  */
-#define min(a, b)   Min(a, b)
+//#define min(a, b)   Min(a, b)
 
 /*! \brief Takes the maximal value of \a a and \a b.
  *
@@ -828,7 +833,7 @@ typedef struct
  *
  * \note More optimized if only used with values unknown at compile time.
  */
-#define max(a, b)   Max(a, b)
+//#define max(a, b)   Max(a, b)
 
 //! @}
 
