@@ -597,7 +597,6 @@
 		D4D62A721D07B60E0098C632 /* core_cm4_simd.h in Sources */ = {isa = PBXBuildFile; fileRef = D4C78F891957C0AA00A1BE28 /* core_cm4_simd.h */; };
 		D4D62A731D07B60E0098C632 /* core_cmFunc.h in Sources */ = {isa = PBXBuildFile; fileRef = D4C78F8A1957C0AA00A1BE28 /* core_cmFunc.h */; };
 		D4D62A741D07B60E0098C632 /* core_cmInstr.h in Sources */ = {isa = PBXBuildFile; fileRef = D4C78F8B1957C0AA00A1BE28 /* core_cmInstr.h */; };
-		D4D62A761D07B61A0098C632 /* sam3x in Sources */ = {isa = PBXBuildFile; fileRef = D4D62A751D07B61A0098C632 /* sam3x */; };
 		D4D62A771D07B6380098C632 /* cortex_handlers.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79EE81957C0B700A1BE28 /* cortex_handlers.c */; };
 		D4D62A781D07B6380098C632 /* hooks.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79EEB1957C0B700A1BE28 /* hooks.c */; };
 		D4D62A791D07B6380098C632 /* syscalls.h in Sources */ = {isa = PBXBuildFile; fileRef = D4C79EEF1957C0B700A1BE28 /* syscalls.h */; };
@@ -1941,7 +1940,6 @@
 		D4C7A1AB1963B66D00A1BE28 /* MotateUART.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotateUART.h; sourceTree = "<group>"; };
 		D4C7A1AC19649C2200A1BE28 /* ArduinoDue.gdb */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ArduinoDue.gdb; sourceTree = "<group>"; };
 		D4C7A1AD19649C2900A1BE28 /* FRDM-KLxx.gdb */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = "FRDM-KLxx.gdb"; path = "motate/board/FRDM-KLxx.gdb"; sourceTree = SOURCE_ROOT; };
-		D4D62A751D07B61A0098C632 /* sam3x */ = {isa = PBXFileReference; lastKnownFileType = folder; name = sam3x; path = motate/cmsis/TARGET_Atmel/sam3x; sourceTree = "<group>"; };
 		D4DD3E8319BFE1AE0081E1BB /* Makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
 		D4DD3E8419BFE1AE0081E1BB /* soft_pwm_demo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = soft_pwm_demo.cpp; sourceTree = "<group>"; };
 		D4E90E261ABB3A670042A16C /* TinyGv8.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = TinyGv8.mk; path = motate/board/TinyGv8.mk; sourceTree = SOURCE_ROOT; };
@@ -2034,7 +2032,6 @@
 		D45710B7170532AC00EA19A8 = {
 			isa = PBXGroup;
 			children = (
-				D4D62A751D07B61A0098C632 /* sam3x */,
 				D457117B17053EFA00EA19A8 /* Makefile */,
 				D40A24031ACE2C5A00406A3A /* openocd.cfg */,
 				D4C79F19195BC80800A1BE28 /* demos */,
@@ -5451,7 +5448,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				D4D62A6D1D07B5D30098C632 /* Atmel_sam3x in Sources */,
-				D4D62A761D07B61A0098C632 /* sam3x in Sources */,
 				D4D62A6E1D07B60E0098C632 /* core_cm0.h in Sources */,
 				D4D62A6F1D07B60E0098C632 /* core_cm0plus.h in Sources */,
 				D4D62A701D07B60E0098C632 /* core_cm3.h in Sources */,
