@@ -354,7 +354,6 @@ namespace Motate {
         uint16_t _last_known_read_offset;   // The offset into the buffer we of the last known read (cached)
 
         uint16_t _transfer_requested = 0;   // keep track of how much we have requested. Non-zero means a request is active.
-        volatile bool _is_requesting = false;
 
         constexpr int16_t size() { return _size; };
 
@@ -362,11 +361,8 @@ namespace Motate {
 
         void init() {
             _owner->setTXTransferDoneCallback([&]() { // use a closure
-                // we have to be careful here, since we are in an interrupt context
-                if (!_is_requesting) { //  && (_transfer_requested != 0)
-                    _transfer_requested = 0;
-                    _restartTransfer();
-                }
+                _transfer_requested = 0;
+                _restartTransfer();
             });
         }
 
@@ -378,6 +374,7 @@ namespace Motate {
             if (pos == _last_known_read_offset) {
                 _getReadOffset();
                 if (pos == _last_known_read_offset) {
+                    _restartTransfer();
                     return false;
                 }
             }
@@ -432,12 +429,7 @@ namespace Motate {
         }
 
         void _restartTransfer() {
-            // this can be called from an interrupt and from the main loop
-            // so we have to make sure this test is first, since _transfer_requested is NOT
-            // volatile.
-            if (!_is_requesting && (_transfer_requested == 0) && !isEmpty()) {
-                _is_requesting = true;
-
+            if ((_transfer_requested == 0) && !isEmpty()) {
                 // We can only request contiguous chunks. Let's see what the next one is.
                 _getReadOffset(); // cache the read position
 
@@ -471,7 +463,6 @@ namespace Motate {
                 if (!_owner->startTXTransfer(_read_pos, transfer_size)) {
                     _transfer_requested = 0;
                 }
-                _is_requesting = false;
             }
         };
 
