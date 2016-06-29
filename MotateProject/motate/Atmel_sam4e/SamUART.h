@@ -754,18 +754,14 @@ namespace Motate {
         }
 
         int16_t readByte() {
-            if (uart()->UART_SR & UART_SR_RXRDY) {
-                return (uart()->UART_RHR & UART_RHR_RXCHR_Msk);
-            }
-
-            return -1;
+            while (!(uart()->UART_SR & UART_SR_RXRDY)) { ; }
+            return (uart()->UART_RHR & UART_RHR_RXCHR_Msk);
         };
 
         int16_t writeByte(const char value) {
-            if (uart()->UART_SR & UART_SR_TXRDY) {
-                uart()->UART_THR = UART_THR_TXCHR(value);
-            }
-            return -1;
+            while (!(uart()->UART_SR & UART_SR_TXRDY)) { ; }
+            uart()->UART_THR = UART_THR_TXCHR(value);
+            return 1;
         };
 
         void flush() {
@@ -800,10 +796,11 @@ namespace Motate {
                 uart()->UART_RPR = (uint32_t)buffer;
                 uart()->UART_RCR = length;
                 if (length != 0) {
-                    uart()->UART_PTCR = UART_PTCR_RXTEN;  // enable again
                     _setInterruptRxTransferDone(true);
+                    uart()->UART_PTCR = UART_PTCR_RXTEN;  // enable again
                     return true;
                 }
+//                __asm__("BKPT"); // ("length was zero in startRXTransfer");
                 return false;
             }
 //            else if (uart()->UART_RNCR == 0) {
@@ -813,6 +810,8 @@ namespace Motate {
 //                return true;
 //            }
             // return true is this same transaction has already been setup
+
+//            __asm__("BKPT"); // ("UART_RCR wasn't zero when startRXTransfer called");
             return (uart()->UART_RPR == (uint32_t)buffer);
         };
 
@@ -826,8 +825,8 @@ namespace Motate {
                 uart()->UART_PTCR = UART_PTCR_TXTDIS; // disable for setup
                 uart()->UART_TPR = (uint32_t)buffer;
                 uart()->UART_TCR = length;
-                uart()->UART_PTCR = UART_PTCR_TXTEN;  // enable again
                 _setInterruptTxTransferDone(true);
+                uart()->UART_PTCR = UART_PTCR_TXTEN;  // enable again
                 return true;
             }
 //            else if (uart()->UART_TNCR == 0) {
@@ -836,6 +835,8 @@ namespace Motate {
 //                _setInterruptTxTransferDone(true);
 //                return true;
 //            }
+
+//            __asm__("BKPT"); // ("UART_TCR wasn't zero when startTXTransfer called");
             return (uart()->UART_TPR == (uint32_t)buffer);
         };
         

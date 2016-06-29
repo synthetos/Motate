@@ -113,12 +113,12 @@ namespace Motate {
             hardware.setInterruptHandler([&](uint16_t interruptCause) { // use a closure
                 this->uartInterruptHandler(interruptCause);
             });
-            hardware.setInterrupts(kInterruptPriorityLowest); // enable interrupts and set the priority
+            hardware.setInterrupts(kInterruptPriorityHigh); // enable interrupts and set the priority
             if (!isRealAndCorrectRTSPin<rtsPinNumber, rxPinNumber>()) {
                 rtsPin = true; // active low
             }
             if (!isRealAndCorrectCTSPin<ctsPinNumber, rxPinNumber>()) {
-                ctsPin.setInterrupts(kInterruptPriorityLowest); // enable interrupts and set the priority
+                ctsPin.setInterrupts(kInterruptPriorityHigh); // enable interrupts and set the priority
             }
         };
 
@@ -262,6 +262,7 @@ namespace Motate {
 
             if (length == 0) {
                 _manual_rx_position = buffer;
+
             } else {
                 _manual_rx_position = nullptr;
                 if (hardware.startRXTransfer(buffer, length)) {
@@ -270,6 +271,10 @@ namespace Motate {
                     }
                     return true;
                 }
+            }
+
+            if (!isRealAndCorrectRTSPin<rtsPinNumber, rxPinNumber>()) {
+                rtsPin = true; // active low
             }
 
             hardware._setInterruptRxReady(true);
