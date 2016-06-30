@@ -53,16 +53,13 @@ namespace Motate {
 
 extern "C" void SysTick_Handler(void)
 {
-//	if (sysTickHook)
-//		sysTickHook();
-
-//	tickReset();
-
 	Motate::SysTickTimer._increment();
 
 	if (Motate::SysTickTimer.interrupt) {
 		Motate::SysTickTimer.interrupt();
 	}
+
+    Motate::SysTickTimer._handleEvents();
 }
 
 #define _MAKE_TCx_Handler(x) \
