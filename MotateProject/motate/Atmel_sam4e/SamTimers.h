@@ -32,6 +32,7 @@
 
 #include "sam.h"
 #include "SamCommon.h"
+#include <functional> // for std::function and related
 
 /* Sam hardware has two types of timer: "Timers" and "PWMTimers"
  *
@@ -1056,10 +1057,16 @@ namespace Motate {
          */
     };
 
+    struct SysTickEvent {
+        const std::function<void(void)> callback;
+        SysTickEvent *next;
+    };
+
     static const timer_number SysTickTimerNum = 0xFF;
     template <>
     struct Timer<SysTickTimerNum> {
         static volatile uint32_t _motateTickCount;
+        SysTickEvent *firstEvent = nullptr;
 
         Timer() { init(); };
         Timer(const TimerMode mode, const uint32_t freq) {
@@ -1084,6 +1091,24 @@ namespace Motate {
 
         void _increment() {
             _motateTickCount++;
+        };
+
+        void registerEvent(SysTickEvent *new_event) {
+            if (firstEvent == nullptr) {
+                firstEvent = new_event;
+                return;
+            }
+            SysTickEvent *event = firstEvent;
+            while (event->next != nullptr) { event = event->next; }
+            event->next = new_event;
+        };
+
+        void _handleEvents() {
+            SysTickEvent *event = firstEvent;
+            while (event != nullptr) {
+                event->callback();
+                event = event->next;
+            }
         };
 
         // Placeholder for user code.

@@ -63,6 +63,8 @@ extern "C" void SysTick_Handler(void)
 	if (Motate::SysTickTimer.interrupt) {
 		Motate::SysTickTimer.interrupt();
 	}
+
+    Motate::SysTickTimer._handleEvents();
 }
 
 #define _MAKE_TCx_Handler(x) \
