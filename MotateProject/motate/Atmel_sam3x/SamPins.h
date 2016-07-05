@@ -578,14 +578,16 @@ namespace Motate {
 
     #define _MAKE_MOTATE_PWM_PIN(registerChar, registerPin, timerOrPWM, peripheralAorB, invertedByDefault) \
         template<> \
-        struct PWMOutputPin< ReversePinLookup<registerChar, registerPin>::number > : RealPWMOutputPin< ReversePinLookup<registerChar, registerPin>::number, timerOrPWM > { \
+        struct AvailablePWMOutputPin< ReversePinLookup<registerChar, registerPin>::number > : RealPWMOutputPin< ReversePinLookup<registerChar, registerPin>::number, timerOrPWM > { \
             typedef timerOrPWM parentTimerType; \
             static const pin_number pinNum = ReversePinLookup<registerChar, registerPin>::number; \
-            PWMOutputPin() : RealPWMOutputPin<pinNum, timerOrPWM>(kPeripheral ## peripheralAorB) { pwmpin_init(invertedByDefault ? kPWMOnInverted : kPWMOn);}; \
-            PWMOutputPin(const PinOptions_t options, const uint32_t freq) : RealPWMOutputPin<pinNum, timerOrPWM>(kPeripheral ## peripheralAorB, options, freq) { \
+            AvailablePWMOutputPin() : RealPWMOutputPin<pinNum, timerOrPWM>(kPeripheral ## peripheralAorB) { pwmpin_init(invertedByDefault ? kPWMOnInverted : kPWMOn);}; \
+            AvailablePWMOutputPin(const PinOptions_t options, const uint32_t freq) : RealPWMOutputPin<pinNum, timerOrPWM>(kPeripheral ## peripheralAorB, options, freq) { \
                 pwmpin_init((invertedByDefault ^ ((options & kPWMPinInverted)?true:false)) ? kPWMOnInverted : kPWMOn); \
             }; \
             using RealPWMOutputPin<pinNum, timerOrPWM>::operator=; \
+            /* Signal to _GetAvailablePWMOrAlike that we're here, AND a real Pin<> exists. */ \
+            static constexpr bool _isAvailable() { return !ReversePinLookup<registerChar, registerPin>::isNull(); };  \
         };
 
 

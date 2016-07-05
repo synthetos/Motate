@@ -31,6 +31,7 @@
 #define MOTATEPINS_H_ONCE
 
 #include <inttypes.h>
+#include <algorithm> // for std::conditional
 
 /* After some setup, we call the processor-specific bits, then we have the
  * any-processor parts.
@@ -103,7 +104,7 @@ namespace Motate {
     // IOW: This exact "non-specialization" is the do-nothing non-real pin implementation.
     template<int16_t pinNum>
     struct Pin {
-        static const int8_t number = -1;
+        static const int16_t number = -1;
         static const uint8_t portLetter = 0;
         static const uint32_t mask = 0;
 
@@ -397,44 +398,22 @@ namespace Motate {
      *
      * PWM pins use a PWM-capable hardware Timer, and configure it to drive the output pin.
      *
+     * We have an additional criteria: We need both to have an "available" PWMable pin,
+     *  IOW, associated to hardware with a pin, AND have that pin assigned a numbered Pin<>.
+     *
+     * _GetAvailablePWMOrAlike<n> returns the correct ype to use, based on if the Pin<n>
+     *   is real, AND we have an AvailablePWMOutputPin<n> (which is what _MAKE_MOTATE_PWM_PIN()
+     *   should create.
+     *
      **************************************************/
 
     static const uint32_t kDefaultPWMFrequency = 1000;
-
-    template<int16_t pinNum>
-    struct PWMOutputPin : Pin<pinNum> {
-        PWMOutputPin() : Pin<pinNum>(kOutput) {};
-        PWMOutputPin(const PinOptions_t options, const uint32_t freq = kDefaultPWMFrequency) : Pin<pinNum>(kOutput, options) {};
-//        PWMOutputPin(const uint32_t freq) : Pin<pinNum>(kOutput, kNormal) {};
-        void setFrequency(const uint32_t freq) {};
-        operator float() { return !!Pin<pinNum>::getOutputValue(); };
-        operator uint32_t() { return (100 * (!!Pin<pinNum>::getOutputValue())); };
-        void operator=(const float value) { write(value); };
-        void write(const float value) { Pin<pinNum>::write(value >= 0.5); };
-        void writeRaw(const uint16_t duty) { Pin<pinNum>::write(duty >= 50); };
-        uint16_t getTopValue() { return 100; };
-        bool canPWM() { return false; };
-
-        void setInterrupts(const uint32_t interrupts) {
-            // This is for timer interrupts, not pin interrupts.
-        };
-
-        /*Override these to pick up new methods */
-
-    private: /* Make these private to catch them early. */
-        /* These are intentially not defined. */
-        void init(const PinMode type, const PinOptions_t options = kNormal);
-
-        /* WARNING: Covariant return types! */
-        bool get();
-        operator bool();
-    };
 
     template<pin_number pinNum, typename timerOrPWM>
     struct RealPWMOutputPin : Pin<pinNum>, timerOrPWM {
 
         RealPWMOutputPin(const PinMode pinMode) : Pin<pinNum>(pinMode, pinMode), timerOrPWM(kTimerUpToMatch, kDefaultPWMFrequency) {};
-        RealPWMOutputPin(const PinMode pinMode, const PinOptions_t options, const uint32_t freq = kDefaultPWMFrequency) : Pin<pinNum>(pinMode, options), timerOrPWM(kTimerUpToMatch, freq) {};
+        RealPWMOutputPin(const PinMode pinMode, const PinOptions_t options, const uint32_t freq) : Pin<pinNum>(pinMode, options), timerOrPWM(kTimerUpToMatch, freq) {};
 //        RealPWMOutputPin(const PinMode pinMode, const uint32_t freq) : Pin<pinNum>(pinMode, kNormal), timerOrPWM(kTimerUpToMatch, freq) {};
         bool canPWM() { return true; };
 
@@ -480,6 +459,12 @@ namespace Motate {
         operator bool();
     };
 
+    template <int16_t pinNum>
+    struct AvailablePWMOutputPin {
+        // empty shell to fill for actual available PWMPins
+        static constexpr bool _isAvailable() { return false; }
+    };
+
     // PWMLikeOutputPin is the PWMOutputPin interface on a normal output pin.
     // This is for cases where you want it to act like a non-PWM capable
     // PWMOutputPin, but there actually IS a PWMOutputPin that you explictly
@@ -487,7 +472,7 @@ namespace Motate {
     template<int16_t pinNum>
     struct PWMLikeOutputPin : Pin<pinNum> {
         PWMLikeOutputPin() : Pin<pinNum>(kOutput) {};
-        PWMLikeOutputPin(const PinOptions_t options, const uint32_t freq = kDefaultPWMFrequency) : Pin<pinNum>(kOutput, options) {};
+        PWMLikeOutputPin(const PinOptions_t options, const uint32_t freq) : Pin<pinNum>(kOutput, options) {};
 //        PWMLikeOutputPin(const uint32_t freq) : Pin<pinNum>(kOutput, kNormal) {};
         void setFrequency(const uint32_t freq) {};
         operator float() { return !!Pin<pinNum>::getOutputValue(); };
@@ -510,6 +495,26 @@ namespace Motate {
         /* WARNING: Covariant return types! */
         bool get();
         operator bool();
+    };
+
+
+    
+    template <int16_t pinNum>
+    using _GetAvailablePWMOrAlike = typename std::conditional<
+    (AvailablePWMOutputPin<pinNum>::_isAvailable()),
+        /* True: */  AvailablePWMOutputPin<pinNum>,
+        /* False: */ PWMLikeOutputPin<pinNum>
+    >::type;
+
+    template<int16_t pinNum>
+    struct PWMOutputPin : _GetAvailablePWMOrAlike<pinNum> {
+        typedef _GetAvailablePWMOrAlike<pinNum> _pin_parent;
+        PWMOutputPin() : _pin_parent() {};
+        PWMOutputPin(const PinOptions_t options, const uint32_t freq) : _pin_parent(options, freq) {};
+//        PWMOutputPin(const uint32_t freq) : _pin_parent(kOutput, kNormal) {};
+
+        using _GetAvailablePWMOrAlike<pinNum>::operator=;
+        using _GetAvailablePWMOrAlike<pinNum>::setFrequency;
     };
 
 
