@@ -146,13 +146,13 @@ namespace Motate {
         };
 
         bool _canBeRead(uint16_t pos) {
-            if (pos == _last_known_write_offset) {
+//            if (pos == _last_known_write_offset) {
                 _getWriteOffset();
                 if (pos == _last_known_write_offset) {
                     _restartTransfer();
                     return false;
                 }
-            }
+//            }
             return true;
         };
 
@@ -251,10 +251,16 @@ namespace Motate {
                     //     IOW: If we read to the end, we will read _size bytes, and our "full" will look like "empty".
                     //          So, we read to the end of the buffer - 1.
 
+                    // Additional note: SOME DMA systems transfer is 4-byte words, and so a non-4-byte transfer will
+                    // drop 3 NULLS (or other garbage) into the area past what we requested. So, we are using
+                    // transfer_size - 4 for case [1] to work around that.
+
                     // Case [1]
                     if (_read_offset > _last_known_write_offset) {
-                        transfer_size = (_read_offset - _last_known_write_offset) - 1;
-
+                        transfer_size = (_read_offset - _last_known_write_offset) - 4;
+                        if (transfer_size < 1) {
+                            return;
+                        }
                     // Case [2a]
                     } else if (_read_offset == 0) {
                         transfer_size = (_size - _last_known_write_offset) - 1;
