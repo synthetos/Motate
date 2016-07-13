@@ -153,9 +153,9 @@ namespace Motate {
         };
     };
 
-    template<int16_t pinNum>
+    template<pin_number pinNum>
     struct Pin {
-        static const int8_t number = -1;
+        static const pin_number number = -1;
         static const uint8_t portLetter = 0;
         static const uint32_t mask = 0;
 
@@ -187,7 +187,7 @@ namespace Motate {
         ReversePinLookup(const PinMode type, const PinOptions_n options = kNormal) : Pin<-1>(type, options) {};
     };
 
-    template<int16_t pinNum>
+    template<pin_number pinNum>
     struct InputPin : Pin<pinNum> {
         InputPin() : Pin<pinNum>(kInput) {};
         InputPin(const PinOptions_n options) : Pin<pinNum>(kInput, options) {};
@@ -203,7 +203,7 @@ namespace Motate {
         void write(const bool);
     };
 
-    template<int16_t pinNum>
+    template<pin_number pinNum>
     struct OutputPin : Pin<pinNum> {
         OutputPin() : Pin<pinNum>(kOutput) {};
         OutputPin(const PinOptions_n options) : Pin<pinNum>(kOutput, options) {};
@@ -222,7 +222,7 @@ namespace Motate {
 
     // All of the pins on the SAM can be an interrupt pin
     // but we create these objects to share the interface with other architectures.
-    template<int16_t pinNum>
+    template<pin_number pinNum>
     struct IRQPin : Pin<pinNum> {
         IRQPin() : Pin<pinNum>(kInput) {};
         IRQPin(const PinOptions_n options) : Pin<pinNum>(kInput, options) {};
@@ -232,7 +232,7 @@ namespace Motate {
         static void interrupt() __attribute__ (( weak ));
     };
 
-    template<int16_t pinNum>
+    template<pin_number pinNum>
     constexpr const bool IsIRQPin() { return IRQPin<pinNum>::is_real; }; // Basically return if we have a valid pin.
 
     template<pin_number gpioPinNumber>
@@ -258,13 +258,13 @@ namespace Motate {
     // Also we use the GCC-specific __COUNTER__
     // See https://gcc.gnu.org/onlinedocs/cpp/Common-Predefined-Macros.html
 #define MOTATE_PIN_INTERRUPT(number) \
-    Motate::_pinChangeInterrupt MOTATE_PIN_INTERRUPT_NAME( _Motate_PinChange_Interrupt_Trampoline, __COUNTER__ )\
+    _pinChangeInterrupt MOTATE_PIN_INTERRUPT_NAME( _Motate_PinChange_Interrupt_Trampoline, __COUNTER__ )\
             __attribute__(( used,section(".motate.pin_change_interrupts") )) {\
-        Motate::IRQPin<number>::portLetter,\
-        Motate::IRQPin<number>::mask,\
-        Motate::IRQPin<number>::interrupt\
+        IRQPin<number>::portLetter,\
+        IRQPin<number>::mask,\
+        IRQPin<number>::interrupt\
     };\
-    template<> void Motate::IRQPin<number>::interrupt()
+    template<> void IRQPin<number>::interrupt()
 
     constexpr uint32_t startup_table[] = { 0, 8, 16, 24, 64, 80, 96, 112, 512, 576, 640, 704, 768, 832, 896, 960 };
 
@@ -337,7 +337,7 @@ namespace Motate {
     };
 
     // Some pins are ADC pins.
-    template<int16_t pinNum>
+    template<pin_number pinNum>
     struct ADCPin : Pin<-1> {
         ADCPin() : Pin<-1>() {};
         ADCPin(const PinOptions_n options) : Pin<-1>() {};
@@ -360,7 +360,7 @@ namespace Motate {
         static void interrupt() __attribute__ (( weak )); // Allow setting an interrupt on a invalid ADC pin -- will never be called
     };
 
-    template<int16_t adcNum>
+    template<pin_number adcNum>
     struct ReverseADCPin : ADCPin<-1> {
         ReverseADCPin() : ADCPin<-1>() {};
         ReverseADCPin(const PinOptions_n options) : ADCPin<-1>() {};
@@ -442,13 +442,13 @@ namespace Motate {
         ReverseADCPin(const PinOptions_n options) : ADCPin<ReversePinLookup<registerChar, registerPin>::number>(options) {}; \
     };
 
-    template<int16_t pinNum>
+    template<pin_number pinNum>
     constexpr const bool IsADCPin() { return ADCPin<pinNum>::is_real; };
 
     template<uint8_t portChar, int16_t portPin>
     using LookupADCPin = ADCPin< ReversePinLookup<portChar, portPin>::number >;
 
-    template<int16_t adcNum>
+    template<pin_number adcNum>
     using LookupADCPinByADC = ADCPin< ReverseADCPin< adcNum >::number >;
 
     // TODO: Make the Pin<> use the appropriate Port<>, reducing duplication when there's no penalty
@@ -601,7 +601,7 @@ namespace Motate {
 
 
     static const uint32_t kDefaultPWMFrequency = 1000;
-    template<int16_t pinNum>
+    template<pin_number pinNum>
     struct PWMOutputPin : Pin<pinNum> {
         PWMOutputPin() : Pin<pinNum>(kOutput) {};
         PWMOutputPin(const PinOptions_n options, const uint32_t freq = kDefaultPWMFrequency) : Pin<pinNum>(kOutput, options) {};
@@ -633,7 +633,7 @@ namespace Motate {
     // This is for cases where you want it to act like a non-PWM capable
     // PWMOutputPin, but there actually IS a PWMOutputPin that you explictly
     // don't want to use.
-    template<int16_t pinNum>
+    template<pin_number pinNum>
     struct PWMLikeOutputPin : Pin<pinNum> {
         PWMLikeOutputPin() : Pin<pinNum>(kOutput) {};
         PWMLikeOutputPin(const PinOptions_n options, const uint32_t freq = kDefaultPWMFrequency) : Pin<pinNum>(kOutput, options) {};
@@ -717,12 +717,12 @@ namespace Motate {
         operator bool();\
     };
 
-    template<int16_t pinNum>
+    template<pin_number pinNum>
     struct SPIChipSelectPin {
         static const bool is_real = std::false_type::value;
     };
 
-    template<int16_t pinNum>
+    template<pin_number pinNum>
     constexpr const bool IsSPICSPin() { return SPIChipSelectPin<pinNum>::is_real; };
 
 #define _MAKE_MOTATE_SPI_CS_PIN(registerChar, registerPin, peripheralAorB, csNum)\
@@ -735,12 +735,12 @@ namespace Motate {
     };
 
 
-    template<int16_t pinNum>
+    template<pin_number pinNum>
     struct SPIMISOPin {
         static const bool is_real = std::false_type::value;
     };
 
-    template <int16_t pinNum>
+    template <pin_number pinNum>
     constexpr const bool IsSPIMISOPin() { return SPIMISOPin<pinNum>::is_real; };
 
 #define _MAKE_MOTATE_SPI_MISO_PIN(registerChar, registerPin, peripheralAorB)\
@@ -752,12 +752,12 @@ namespace Motate {
     };
 
 
-    template<int16_t pinNum>
+    template<pin_number pinNum>
     struct SPIMOSIPin {
         static const bool is_real = std::false_type::value;
     };
 
-    template <int16_t pinNum>
+    template <pin_number pinNum>
     constexpr const bool IsSPIMOSIPin() { return SPIMOSIPin<pinNum>::is_real; };
 
 #define _MAKE_MOTATE_SPI_MOSI_PIN(registerChar, registerPin, peripheralAorB)\
@@ -770,12 +770,12 @@ namespace Motate {
 
 
 
-    template<int16_t pinNum>
+    template<pin_number pinNum>
     struct SPISCKPin {
         static const bool is_real = std::false_type::value;
     };
 
-    template <int16_t pinNum>
+    template <pin_number pinNum>
     constexpr const bool IsSPISCKPin() { return SPISCKPin<pinNum>::is_real; };
 
 #define _MAKE_MOTATE_SPI_SCK_PIN(registerChar, registerPin, peripheralAorB)\
@@ -788,13 +788,13 @@ namespace Motate {
 
         
     
-    template<int8_t pinNum>
+    template<pin_number pinNum>
     struct UARTTxPin {
         static const bool is_real = false;
         static const uint8_t uartNum = -1; // use, we assigned -1 to a uint8_t
     };
 
-    template <int8_t pinNum>
+    template <pin_number pinNum>
     constexpr const bool IsUARTTxPin() { return UARTTxPin<pinNum>::is_real; };
 
     #define _MAKE_MOTATE_UART_TX_PIN(registerChar, registerPin, uartNumVal, peripheralAorB)\
@@ -806,13 +806,13 @@ namespace Motate {
         };
 
     
-    template<int8_t pinNum>
+    template<pin_number pinNum>
     struct UARTRxPin {
         static const bool is_real = false;
         static const uint8_t uartNum = -1; // use, we assigned -1 to a uint8_t
     };
 
-    template <int8_t pinNum>
+    template <pin_number pinNum>
     constexpr const bool IsUARTRxPin() { return UARTRxPin<pinNum>::is_real; };
 
     #define _MAKE_MOTATE_UART_RX_PIN(registerChar, registerPin, uartNumVal, peripheralAorB)\
@@ -825,13 +825,13 @@ namespace Motate {
 
         
     
-    template<int8_t pinNum>
+    template<pin_number pinNum>
     struct UARTRTSPin {
         static const bool is_real = false;
         static const uint8_t uartNum = -1; // use, we assigned -1 to a uint8_t
     };
 
-    template <int8_t pinNum>
+    template <pin_number pinNum>
     constexpr const bool IsUARTRTSPin() { return UARTRTSPin<pinNum>::is_real; };
 
     #define _MAKE_MOTATE_UART_RTS_PIN(registerChar, registerPin, uartNumVal, peripheralAorB)\
@@ -843,13 +843,13 @@ namespace Motate {
         };
 
     
-    template<int8_t pinNum>
+    template<pin_number pinNum>
     struct UARTCTSPin {
         static const bool is_real = false;
         static const uint8_t uartNum = -1; // use, we assigned -1 to a uint8_t
     };
 
-    template <int8_t pinNum>
+    template <pin_number pinNum>
     constexpr const bool IsUARTCTSPin() { return UARTCTSPin<pinNum>::is_real; };
 
     #define _MAKE_MOTATE_UART_CTS_PIN(registerChar, registerPin, uartNumVal, peripheralAorB)\
