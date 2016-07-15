@@ -766,7 +766,7 @@ namespace Motate {
 
         void flush() {
             // Wait for the buffer to be empty
-            while (!uart()->UART_SR & UART_SR_TXEMPTY) {
+            while (!(uart()->UART_SR & UART_SR_TXEMPTY)) {
                 ;
             }
         };

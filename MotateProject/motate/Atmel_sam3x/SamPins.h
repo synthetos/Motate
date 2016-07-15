@@ -604,21 +604,21 @@ namespace Motate {
      **************************************************/
 
 
-    #define _MAKE_MOTATE_SPI_CS_PIN(registerChar, registerPin, peripheralAorB, csNum)\
-        template<>\
-        struct SPIChipSelectPin< ReversePinLookup<registerChar, registerPin>::number > : ReversePinLookup<registerChar, registerPin> {\
-            SPIChipSelectPin() : ReversePinLookup<registerChar, registerPin>(kPeripheral ## peripheralAorB) {};\
-            static const uint8_t moduleId = 0; \
-            static const bool is_real = std::true_type::value;\
-            static const uint8_t csOffset = csNum;\
+    #define _MAKE_MOTATE_SPI_CS_PIN(registerChar, registerPin, peripheralAorB, csNum) \
+        template<> \
+        struct SPIChipSelectPin< ReversePinLookup<registerChar, registerPin>::number > : ReversePinLookup<registerChar, registerPin> { \
+            SPIChipSelectPin() : ReversePinLookup<registerChar, registerPin>(kPeripheral ## peripheralAorB) {}; \
+            static constexpr bool is_real = true; \
+            static constexpr uint8_t spiNum = 0; /* There is only one*/ \
+            static const uint8_t csOffset = csNum; \
         };
 
     #define _MAKE_MOTATE_SPI_MISO_PIN(registerChar, registerPin, peripheralAorB)\
         template<>\
         struct SPIMISOPin< ReversePinLookup<registerChar, registerPin>::number > : ReversePinLookup<registerChar, registerPin> {\
             SPIMISOPin() : ReversePinLookup<registerChar, registerPin>(kPeripheral ## peripheralAorB) {};\
-            static const uint8_t moduleId = 0; \
-            static const bool is_real = std::true_type::value;\
+            static constexpr bool is_real = true; \
+            static constexpr uint8_t spiNum = 0; /* There is only one*/ \
         };
 
 
@@ -626,8 +626,8 @@ namespace Motate {
         template<>\
         struct SPIMOSIPin< ReversePinLookup<registerChar, registerPin>::number > : ReversePinLookup<registerChar, registerPin> {\
             SPIMOSIPin() : ReversePinLookup<registerChar, registerPin>(kPeripheral ## peripheralAorB) {};\
-            static const uint8_t moduleId = 0; \
-            static const bool is_real = std::true_type::value;\
+            static constexpr bool is_real = true; \
+            static constexpr uint8_t spiNum = 0; /* There is only one*/ \
         };
 
 
@@ -635,8 +635,8 @@ namespace Motate {
         template<>\
         struct SPISCKPin< ReversePinLookup<registerChar, registerPin>::number > : ReversePinLookup<registerChar, registerPin> {\
             SPISCKPin() : ReversePinLookup<registerChar, registerPin>(kPeripheral ## peripheralAorB) {};\
-            static const uint8_t moduleId = 0; \
-            static const bool is_real = std::true_type::value;\
+            static constexpr bool is_real = true; \
+            static constexpr uint8_t spiNum = 0; /* There is only one*/ \
         };
 
 

@@ -43,11 +43,13 @@ namespace Motate {
                 if ((PMC->PMC_PCSR0 & id_mask) != id_mask) {
                     PMC->PMC_PCER0 = id_mask;
                 }
+#if (SAM3S || SAM3XA || SAM4S || SAM4E || SAM4C || SAM4CM || SAM4CP || SAMG55 || SAMV71 || SAMV70 || SAME70 || SAMS70)
             } else {
                 uint32_t id_mask = 1u << ( peripheralId - 32 );
                 if ((PMC->PMC_PCSR1 & id_mask) != id_mask) {
                     PMC->PMC_PCER1 = id_mask;
                 }
+#endif
             }
         };
 
@@ -57,11 +59,13 @@ namespace Motate {
                 if ((PMC->PMC_PCSR0 & id_mask) == id_mask) {
                     PMC->PMC_PCDR0 = id_mask;
                 }
+#if (SAM3S || SAM3XA || SAM4S || SAM4E || SAM4C || SAM4CM || SAM4CP || SAMG55 || SAMV71 || SAMV70 || SAME70 || SAMS70)
             } else {
                 uint32_t id_mask = 1u << ( peripheralId - 32 );
                 if ((PMC->PMC_PCSR1 & id_mask) == id_mask) {
                     PMC->PMC_PCDR1 = id_mask;
                 }
+#endif
             }
         };
     };

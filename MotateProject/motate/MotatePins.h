@@ -102,7 +102,7 @@ namespace Motate {
     // Pin is the external interface, but only RealPins are real, and so real pins
     // are specialized to have RelPins as their parent.
     // IOW: This exact "non-specialization" is the do-nothing non-real pin implementation.
-    template<int16_t pinNum>
+    template<pin_number pinNum>
     struct Pin {
         static const int16_t number = -1;
         static const uint8_t portLetter = 0;
@@ -255,7 +255,7 @@ namespace Motate {
      **************************************************/
 
 
-    template<int16_t pinNum>
+    template<pin_number pinNum>
     struct InputPin : Pin<pinNum> {
         InputPin() : Pin<pinNum>(kInput) {};
         InputPin(const PinOptions_t options) : Pin<pinNum>(kInput, options) {};
@@ -271,7 +271,7 @@ namespace Motate {
         void write(const bool);
     };
 
-    template<int16_t pinNum>
+    template<pin_number pinNum>
     struct OutputPin : Pin<pinNum> {
         OutputPin() : Pin<pinNum>(kOutput) {};
         OutputPin(const PinOptions_t options) : Pin<pinNum>(kOutput, options) {};
@@ -303,7 +303,7 @@ namespace Motate {
      *
      **************************************************/
 
-    template<int16_t pinNum, class _enabled = void>
+    template<pin_number pinNum, class _enabled = void>
     struct IRQPin : Pin<pinNum> {
         static_assert(Pin<pinNum>::isNull() || !IsIRQPin<pinNum>(), "Fake IRQPin should only be on a null pin or non-IRQ pin.");
 
@@ -322,7 +322,7 @@ namespace Motate {
     };
 
     // This is the REAL IRQPin defintition, and is used only wehn the pin is really defined.
-    template<int16_t pinNum>
+    template<pin_number pinNum>
     struct IRQPin<pinNum, typename std::enable_if<IsIRQPin<pinNum>() && !Pin<pinNum>::isNull()>::type> : Pin<pinNum>, _pinChangeInterrupt {
         static_assert(!Pin<pinNum>::isNull(), "Cannot have a null pin be an IRQ");
 
@@ -459,7 +459,7 @@ namespace Motate {
         operator bool();
     };
 
-    template <int16_t pinNum>
+    template <pin_number pinNum>
     struct AvailablePWMOutputPin {
         // empty shell to fill for actual available PWMPins
         static constexpr bool _isAvailable() { return false; }
@@ -469,7 +469,7 @@ namespace Motate {
     // This is for cases where you want it to act like a non-PWM capable
     // PWMOutputPin, but there actually IS a PWMOutputPin that you explictly
     // don't want to use.
-    template<int16_t pinNum>
+    template<pin_number pinNum>
     struct PWMLikeOutputPin : Pin<pinNum> {
         PWMLikeOutputPin() : Pin<pinNum>(kOutput) {};
         PWMLikeOutputPin(const PinOptions_t options, const uint32_t freq) : Pin<pinNum>(kOutput, options) {};
@@ -499,14 +499,14 @@ namespace Motate {
 
 
     
-    template <int16_t pinNum>
+    template <pin_number pinNum>
     using _GetAvailablePWMOrAlike = typename std::conditional<
     (AvailablePWMOutputPin<pinNum>::_isAvailable()),
         /* True: */  AvailablePWMOutputPin<pinNum>,
         /* False: */ PWMLikeOutputPin<pinNum>
     >::type;
 
-    template<int16_t pinNum>
+    template<pin_number pinNum>
     struct PWMOutputPin : _GetAvailablePWMOrAlike<pinNum> {
         typedef _GetAvailablePWMOrAlike<pinNum> _pin_parent;
         PWMOutputPin() : _pin_parent() {};
@@ -533,34 +533,38 @@ namespace Motate {
      **************************************************/
 
 
-    template<int16_t pinNum>
+    template<pin_number pinNum>
     struct SPIChipSelectPin {
-        static const bool is_real = std::false_type::value;
+        static constexpr bool is_real = false;
+        static constexpr uint8_t spiNum = -1; // yes, we assigned -1 to a uint8_t
     };
-    template<int16_t pinNum>
-    constexpr const bool IsSPICSPin() { return SPIChipSelectPin<pinNum>::is_real; };
+    template<pin_number pinNum>
+    constexpr bool IsSPICSPin() { return SPIChipSelectPin<pinNum>::is_real; };
 
 
-    template<int16_t pinNum>
+    template<pin_number pinNum>
     struct SPIMISOPin {
-        static const bool is_real = std::false_type::value;
+        static constexpr bool is_real = false;
+        static constexpr uint8_t spiNum = -1; // yes, we assigned -1 to a uint8_t
     };
-    template <int16_t pinNum>
-    constexpr const bool IsSPIMISOPin() { return SPIMISOPin<pinNum>::is_real; };
+    template <pin_number pinNum>
+    constexpr bool IsSPIMISOPin() { return SPIMISOPin<pinNum>::is_real; };
 
-    template<int16_t pinNum>
+    template<pin_number pinNum>
     struct SPIMOSIPin {
-        static const bool is_real = std::false_type::value;
+        static constexpr bool is_real = false;
+        static constexpr uint8_t spiNum = -1; // yes, we assigned -1 to a uint8_t
     };
-    template <int16_t pinNum>
-    constexpr const bool IsSPIMOSIPin() { return SPIMOSIPin<pinNum>::is_real; };
+    template <pin_number pinNum>
+    constexpr bool IsSPIMOSIPin() { return SPIMOSIPin<pinNum>::is_real; };
 
-    template<int16_t pinNum>
+    template<pin_number pinNum>
     struct SPISCKPin {
-        static const bool is_real = std::false_type::value;
+        static constexpr bool is_real = false;
+        static constexpr uint8_t spiNum = -1; // yes, we assigned -1 to a uint8_t
     };
-    template <int16_t pinNum>
-    constexpr const bool IsSPISCKPin() { return SPISCKPin<pinNum>::is_real; };
+    template <pin_number pinNum>
+    constexpr bool IsSPISCKPin() { return SPISCKPin<pinNum>::is_real; };
 
 
 #pragma mark UARTTxPin / UARTRxPin / UARTRTSPin / UARTCTSPin
@@ -578,42 +582,42 @@ namespace Motate {
      **************************************************/
 
 
-    template<int8_t pinNum>
+    template<pin_number pinNum>
     struct UARTTxPin {
         static constexpr bool is_real = false;
-        static constexpr uint8_t uartNum = -1; // use, we assigned -1 to a uint8_t
+        static constexpr uint8_t uartNum = -1; // yes, we assigned -1 to a uint8_t
     };
-    template <int8_t pinNum>
+    template <pin_number pinNum>
     constexpr bool IsUARTTxPin() { return UARTTxPin<pinNum>::is_real; };
 
 
-    template<int8_t pinNum>
+    template<pin_number pinNum>
     struct UARTRxPin {
         static constexpr bool is_real = false;
-        static constexpr uint8_t uartNum = -1; // use, we assigned -1 to a uint8_t
+        static constexpr uint8_t uartNum = -1; // yes, we assigned -1 to a uint8_t
     };
-    template <int8_t pinNum>
+    template <pin_number pinNum>
     constexpr bool IsUARTRxPin() { return UARTRxPin<pinNum>::is_real; };
 
 
 
-    template<int8_t pinNum>
+    template<pin_number pinNum>
     struct UARTRTSPin {
         static constexpr bool is_real = false;
-        static constexpr uint8_t uartNum = -1; // use, we assigned -1 to a uint8_t
+        static constexpr uint8_t uartNum = -1; // yes, we assigned -1 to a uint8_t
     };
-    template <int8_t pinNum>
+    template <pin_number pinNum>
     constexpr bool IsUARTRTSPin() { return UARTRTSPin<pinNum>::is_real; };
 
 
 
-    template<int8_t pinNum>
+    template<pin_number pinNum>
     struct UARTCTSPin {
         static constexpr bool is_real = false;
-        static constexpr uint8_t uartNum = -1; // use, we assigned -1 to a uint8_t
+        static constexpr uint8_t uartNum = -1; // yes, we assigned -1 to a uint8_t
     };
 
-    template <int8_t pinNum>
+    template <pin_number pinNum>
     constexpr bool IsUARTCTSPin() { return UARTCTSPin<pinNum>::is_real; };
 
 } // namespace motate

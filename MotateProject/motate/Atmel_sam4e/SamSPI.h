@@ -39,110 +39,133 @@
 
 namespace Motate {
 
-    // WHOA!! We only support master mode ... for now.
+    /* HERE we do a stupid anti-#define dance, since these defines screw EVERYTHING up */
 
+#if defined(SPI)
 
-    enum SPIMode {
+    // This is for the Sam4e
+    constexpr Spi * const SPI0_DONT_CONFLICT = SPI;
+#undef SPI
+    constexpr Spi * const SPI0_Peripheral = SPI0_DONT_CONFLICT;
 
-        kSPIPolarityNormal     = 0,
-        kSPIPolarityReversed   = SPI_CSR_CPOL,
+    constexpr uint16_t const ID_SPI0_DONT_CONFLICT = ID_SPI;
+#undef ID_SPI
+    constexpr uint16_t const ID_SPI0 = ID_SPI0_DONT_CONFLICT;
 
-        // Using the wikipedia deifinition of "normal phase," see:
-        //   http://en.wikipedia.org/wiki/Serial_Peripheral_Interface_Bus#Clock_polarity_and_phase
-        // Wikipedia, in turn, sites Freescale's SPI Block Guide:
-        //   http://www.ee.nmt.edu/~teare/ee308l/datasheets/S12SPIV3.pdf
+    constexpr IRQn_Type SPI0_IRQn = SPI_IRQn;
 
-        // This makes the Phase flag INVERTED from that of the SAM3X/A datasheet.
+#define SPI0_Handler SPI_Handler
+#elif defined(SPI0)
 
-        kSPIClockPhaseNormal   = SPI_CSR_NCPHA,
-        kSPIClockPhaseReversed = 0,
+    // This is for the Sam3x and SamS70
+    constexpr Spi * const SPI0_DONT_CONFLICT = SPI0;
+#undef SPI0
+    constexpr Spi * const SPI0_Peripheral = SPI0_DONT_CONFLICT;
 
-        // Using the wikipedia/freescale mode numbers (and the SAM3X/A datashgeet agrees).
-        // The arduino mode settings appear to mirror that of wikipedia as well,
-        //  so we should all be in agreement here.
-        kSPIMode0              = kSPIPolarityNormal   | kSPIClockPhaseNormal,
-        kSPIMode1              = kSPIPolarityNormal   | kSPIClockPhaseReversed,
-        kSPIMode2              = kSPIPolarityReversed | kSPIClockPhaseNormal,
-        kSPIMode3              = kSPIPolarityReversed | kSPIClockPhaseReversed,
+    constexpr uint16_t const ID_SPI0_DONT_CONFLICT = ID_SPI0;
+#undef ID_SPI0
+    constexpr uint16_t const ID_SPI0 = ID_SPI_DONT_CONFLICT;
 
-        kSPI8Bit               = SPI_CSR_BITS_8_BIT,
-        kSPI9Bit               = SPI_CSR_BITS_9_BIT,
-        kSPI10Bit              = SPI_CSR_BITS_10_BIT,
-        kSPI11Bit              = SPI_CSR_BITS_11_BIT,
-        kSPI12Bit              = SPI_CSR_BITS_12_BIT,
-        kSPI13Bit              = SPI_CSR_BITS_13_BIT,
-        kSPI14Bit              = SPI_CSR_BITS_14_BIT,
-        kSPI15Bit              = SPI_CSR_BITS_15_BIT,
-        kSPI16Bit              = SPI_CSR_BITS_16_BIT
-    };
+#endif
 
-    // This is an internal representation of the peripheral.
-    // This is *not* to be used externally.
+#if defined(SPI1)
+    // This is for the Sam3x and SamS70
+    constexpr Spi * const SPI1_DONT_CONFLICT = SPI1;
+#undef SPI1
+    constexpr Spi * const SPI1_Peripheral = SPI1_DONT_CONFLICT;
 
-    enum class _SPI_HARDWARE_ENABLED { _SPI_HARDWARE_DUMMY };
-    constexpr auto _SPI_HARDWARE_DUMMY = _SPI_HARDWARE_ENABLED::_SPI_HARDWARE_DUMMY;
+    constexpr uint16_t const ID_SPI1_DONT_CONFLICT = ID_SPI1;
+#undef ID_SPI1
+    constexpr uint16_t const ID_SPI1 = ID_SPI1_DONT_CONFLICT;
 
+#define HAS_SPI1
+#endif
 
-    template<uint8_t spiPeripheralNum, int8_t spiMISOPinNumber, int8_t spiMOSIPinNumber, int8_t spiSCKPinNumber, typename = void>
-    struct _SPIHardware {
-        // BITBANG HERE!
-    };
-
-    template <int8_t spiMISOPinNumber, int8_t spiMOSIPinNumber, int8_t spiSCKPinNumber>
-    using IsValidSPIHardware = typename std::enable_if<IsSPIMISOPin<spiMISOPinNumber>() &&
-                                                       IsSPIMOSIPin<spiMOSIPinNumber>() &&
-                                                       IsSPISCKPin<spiSCKPinNumber>() >::type;
-
-    template<int8_t spiMISOPinNumber, int8_t spiMOSIPinNumber, int8_t spiSCKPinNumber>
-    struct _SPIHardware<0u,
-                        spiMISOPinNumber,
-                        spiMOSIPinNumber,
-                        spiSCKPinNumber,
-                        IsValidSPIHardware<spiMISOPinNumber, spiMOSIPinNumber, spiSCKPinNumber>>
+    template<int8_t spiPeripheralNumber>
+    struct _SPIHardware
     {
-        static Spi * const spi() { return SPI0; };
-        static const uint32_t peripheralId() { return ID_SPI0; }; // ID_SPI0 .. ID_SPI1
-        static const IRQn_Type spiIRQ() { return SPI0_IRQn; };
+#if !defined(HAS_SPI1)
+        static_assert(spiPeripheralNumber == 0,
+                      "Only _SPIHardware<0> is valid on this processor.");
+        static constexpr Spi * const spi() {
+            return SPI0_Peripheral;
+        };
+        static constexpr uint32_t peripheralId() {
+            return ID_SPI0;
+        };
+        static constexpr IRQn_Type spiIRQ() {
+            return SPI0_IRQn;
+        };
+#else
+        static_assert((spiPeripheralNumber == 0) || (spiPeripheralNumber == 1),
+                      "Only _SPIHardware<0> or _SPIHardware<1> is valid on this processor.");
 
-        static const uint8_t spiPeripheralNum=0;
+        static constexpr Spi * const spi() {
+            return (spiPeripheralNumber == 0) ? SPI0_Peripheral : SPI1_Peripheral;
+        };
+        static constexpr uint32_t peripheralId() {
+            return (spiPeripheralNumber == 0) ? ID_SPI0 : ID_SPI1;
+        };
+        static constexpr IRQn_Type spiIRQ() {
+            return (spiPeripheralNumber == 0) ? SPI0_IRQn : SPI1_IRQn;
+        };
+#endif
 
-        typedef _SPIHardware<0u, spiMISOPinNumber, spiMOSIPinNumber, spiSCKPinNumber> this_type_t;
-        
+        static const uint8_t spiPeripheralNum = spiPeripheralNumber;
 
-        /* We have to play some tricks here, because templates and static members are tricky.
-         * See https://groups.google.com/forum/#!topic/comp.lang.c++.moderated/yun9X6OMiY4
-         *
-         * Basically, we want a guard to make sure we dont itinig the SPI0 IC modules every time
-         * we create a new SPI object for the individual chip selects.
-         *
-         * However, since we don't use the module *directly* in the code, other than to init it,
-         * the optimizer removes that object and it's init in it's entrety.
-         *
-         * The solution: Make sure each SPI<> object calls hardware.init(), and then use a static guard
-         * in init() to prevent re-running it.
-         */
+        typedef _SPIHardware<spiPeripheralNumber> this_type_t;
+
+        static std::function<void(uint16_t)> _spiInterruptHandler;
 
         void init() {
-            static bool inited = false;
-            if (inited)
-                return;
-            inited = true;
+//            static bool inited = false;
+//            if (inited)
+//                return;
+//            inited = true;
 
             SamCommon::enablePeripheralClock(peripheralId());
             disable();
 
-            /* Execute a software reset of the SPI twice */
-            /* Why? Because ATMEL said!  -Rob*/
-            spi()->SPI_CR = SPI_CR_SWRST;
+            // Softare reset of SPI module
             spi()->SPI_CR = SPI_CR_SWRST;
 
-            // Set Mode Register to Master mode + Mode Fault Detection Disabled
-            spi()->SPI_MR = SPI_MR_MSTR | SPI_MR_MODFDIS;
+            // Set last transfer
+            spi()->SPI_CR = SPI_CR_LASTXFER;
+
+            // Set Mode Register to Master mode
+            spi()->SPI_MR |= SPI_MR_MSTR;
+
+            // Mode Fault Detection Disabled
+            spi()->SPI_MR |= SPI_MR_MODFDIS;
+
+            // Ensure Fixed Peripheral Select
+            spi()->SPI_MR &= (~SPI_MR_PS);
+
+            enable();
+
+            // Reset the PDC
+            spi()->SPI_PTCR = SPI_PTCR_RXTDIS | SPI_PTCR_TXTDIS;
+            spi()->SPI_RPR = 0;
+            spi()->SPI_RCR = 0;
+            spi()->SPI_TPR = 0;
+            spi()->SPI_TCR = 0;
+            spi()->SPI_RNPR = 0;
+            spi()->SPI_RNCR = 0;
+            spi()->SPI_TNPR = 0;
+            spi()->SPI_TNCR = 0;
         };
 
-        _SPIHardware() :  SamCommon< this_type_t >() {
-            //            init();
+        _SPIHardware() {
         };
+
+        // This is to be called by the device, once it detects a "decoded" CS pin
+        static void setUsingCSDecoder(bool decoder) {
+            if (decoder) {
+                spi()->SPI_MR |= SPI_MR_PCSDEC;
+            } else {
+                spi()->SPI_MR &= ~SPI_MR_PCSDEC;
+            }
+        }
 
         static void enable() {
             spi()->SPI_CR = SPI_CR_SPIEN ;
@@ -152,7 +175,9 @@ namespace Motate {
             spi()->SPI_CR = SPI_CR_SPIDIS;
         };
 
-        bool setChannel(const uint8_t channel) {
+        static bool setChannel(const uint8_t channel) {
+//            disable();
+
             // if we are transmitting, we cannot switch
             while (!(spi()->SPI_SR & SPI_SR_TXEMPTY)) {
                 ;
@@ -163,14 +188,115 @@ namespace Motate {
             if (!(spi()->SPI_MR & SPI_MR_PCSDEC)) {
                 channel_setting = ~(1 << channel);
             } else {
-                channel_setting = ~channel; // <- Is this right? -Rob
+                channel_setting = channel;
             }
 
             spi()->SPI_MR = (spi()->SPI_MR & ~SPI_MR_PCS_Msk) | SPI_MR_PCS(channel_setting);
 
+//            enable();
+
             return true;
         }
 
+        static void setChannelOptions(const uint8_t channel, const uint32_t baud, const uint16_t options, uint32_t min_between_cs_delay_ns, uint32_t cs_to_sck_delay_ns, uint32_t between_word_delay_ns) {
+            // We derive the baud from the master clock with a divider.
+            // We want the closest match *below* the value asked for. It's safer to bee too slow.
+
+            uint32_t new_otions = 0;
+
+            uint16_t divider = SystemCoreClock / baud;
+            if (divider > 255) {
+                divider = 255;
+            } else if (divider < 1) {
+                divider = 1;
+            }
+
+            new_otions |= SPI_CSR_SCBR(divider);
+
+            if (options & kSPIPolarityReversed) {
+                new_otions |= SPI_CSR_CPOL;
+            }
+
+            if (options & kSPIClockPhaseReversed) {
+                new_otions |= SPI_CSR_NCPHA;
+            }
+
+            switch (options & kSPIBitsMask) {
+                case kSPI9Bit:
+                    new_otions |= SPI_CSR_BITS_9_BIT;
+                    break;
+                case kSPI10Bit:
+                    new_otions |= SPI_CSR_BITS_10_BIT;
+                    break;
+                case kSPI11Bit:
+                    new_otions |= SPI_CSR_BITS_11_BIT;
+                    break;
+                case kSPI12Bit:
+                    new_otions |= SPI_CSR_BITS_12_BIT;
+                    break;
+                case kSPI13Bit:
+                    new_otions |= SPI_CSR_BITS_13_BIT;
+                    break;
+                case kSPI14Bit:
+                    new_otions |= SPI_CSR_BITS_14_BIT;
+                    break;
+                case kSPI15Bit:
+                    new_otions |= SPI_CSR_BITS_15_BIT;
+                    break;
+                case kSPI16Bit:
+                    new_otions |= SPI_CSR_BITS_16_BIT;
+                    break;
+
+                case kSPI8Bit:
+                default:
+                    new_otions |= SPI_CSR_BITS_8_BIT;
+                    break;
+            }
+
+
+            // min_between_cs_delay_ns = DLYBCS
+            // cs_to_sck_delay_ns = DLYBS
+            // between_word_delay_ns = DLYBCT
+
+            // these are in mupliples of MCLK (mater clock, a.k.a. SystemCoreClock)
+            // we want to round up, not down, so we divide by 100,000,000 instead of
+            // 1,000,000,000, then add 5 and then further divide by 10.
+
+            uint32_t dlybcs = (((min_between_cs_delay_ns*SystemCoreClock)/100000000)+5)/10;
+
+            if (dlybcs > 0xff) {
+                // Break into the debugger
+                __asm__("BKPT"); // SPI dlybcs is too high!
+            }
+
+            // Check to see if the new value is bigger than the old one
+            if ( ((spi()->SPI_MR & SPI_MR_DLYBCS_Msk) >> SPI_MR_DLYBCS_Pos) < dlybcs ) {
+                spi()->SPI_MR = (spi()->SPI_MR & ~SPI_MR_DLYBCS_Msk) | SPI_MR_DLYBCS(dlybcs);
+            }
+
+
+            uint32_t dlybs = (((cs_to_sck_delay_ns*SystemCoreClock)/100000000)+5)/10;
+            if (dlybs > 0xff) {
+                // Break into the debugger
+                __asm__("BKPT"); // SPI dlybs is too high!
+            }
+            new_otions |= SPI_CSR_DLYBS(dlybs);
+
+            uint32_t dlybct = (((between_word_delay_ns*SystemCoreClock)/100000000)+5)/10;
+            if (dlybct > 0xff) {
+                // Break into the debugger
+                __asm__("BKPT"); // SPI dlybct is too high!
+            }
+            new_otions |= SPI_CSR_DLYBCT(dlybct);
+
+            // We'll drive CS low after we're done, so we want this:
+            new_otions |= SPI_CSR_CSAAT;
+
+            spi()->SPI_CSR[channel] = new_otions;
+        };
+
+        /* TEMPORARILY REMOVING DIRECT READ/WRITE/TRANSFER. Can be brought back later */
+//#if 0
         static int16_t read(const bool lastXfer = false, uint8_t toSendAsNoop = 0) {
             if (!(spi()->SPI_SR & SPI_SR_RDRF)) {
                 if (spi()->SPI_SR & SPI_SR_TXEMPTY) {
@@ -192,6 +318,8 @@ namespace Motate {
         };
 
         static int16_t write(uint8_t value, int16_t &readValue, const bool lastXfer = false) {
+            while (!(spi()->SPI_SR & SPI_SR_TDRE)) {;}
+
             if (spi()->SPI_SR & SPI_SR_RDRF) {
                 readValue = spi()->SPI_RDR;
             } else {
@@ -231,8 +359,161 @@ namespace Motate {
             uint16_t outdata = spi()->SPI_RDR;
             return outdata;
         };
+//#endif // temporarily removed read/write/transfer
+
+
+        void setInterruptHandler(std::function<void(uint16_t)> &&handler) {
+            _spiInterruptHandler = std::move(handler);
+        }
+
+        static uint16_t getInterruptCause() {
+            uint16_t status = SPIInterrupt::Unknown;
+
+            // Notes from experience:
+            // This processor will sometimes allow one of these bits to be set,
+            // even when there is no interrupt requested, and the setup conditions
+            // don't appear to be done.
+            // The simple but unfortunate fix is to verify that the Interrupt Mask
+            // calls for that interrupt before considering it as a possible interrupt
+            // source. This should be a best practice anyway, really. -Giseburt
+
+            auto SPI_SR_hold = spi()->SPI_SR;
+            auto SPI_IMR_hold = spi()->SPI_IMR;
+
+            if ((SPI_IMR_hold & SPI_IMR_TDRE) && (SPI_SR_hold & SPI_SR_TDRE))
+            {
+                status |= SPIInterrupt::OnTxReady;
+            }
+            if ((SPI_IMR_hold & SPI_IMR_TXBUFE) && (SPI_SR_hold & SPI_SR_TXBUFE))
+            {
+                status |= SPIInterrupt::OnTxTransferDone;
+            }
+
+            if ((SPI_IMR_hold & SPI_IMR_RDRF) && (SPI_SR_hold & SPI_SR_RDRF))
+            {
+                status |= SPIInterrupt::OnRxReady;
+            }
+            if ((SPI_IMR_hold & SPI_IMR_RXBUFF) && (SPI_SR_hold & SPI_SR_RXBUFF))
+            {
+                status |= SPIInterrupt::OnRxTransferDone;
+            }
+            return status;
+        }
+
+        void setInterrupts(const uint16_t interrupts) {
+            if (interrupts != SPIInterrupt::Off) {
+
+                if (interrupts & SPIInterrupt::OnTxReady) {
+                    spi()->SPI_IER = SPI_IER_TDRE;
+                } else {
+                    spi()->SPI_IDR = SPI_IDR_TDRE;
+                }
+                if (interrupts & SPIInterrupt::OnRxReady) {
+                    spi()->SPI_IER = SPI_IER_RDRF;
+                } else {
+                    spi()->SPI_IDR = SPI_IDR_RDRF;
+                }
+
+                if (interrupts & SPIInterrupt::OnTxTransferDone) {
+                    spi()->SPI_IER = SPI_IER_TXBUFE;
+                } else {
+                    spi()->SPI_IDR = SPI_IDR_TXBUFE;
+                }
+                if (interrupts & SPIInterrupt::OnRxTransferDone) {
+                    spi()->SPI_IER = SPI_IER_RXBUFF;
+                } else {
+                    spi()->SPI_IDR = SPI_IDR_RXBUFF;
+                }
+
+
+                /* Set interrupt priority */
+                if (interrupts & SPIInterrupt::PriorityHighest) {
+                    NVIC_SetPriority(spiIRQ(), 0);
+                }
+                else if (interrupts & SPIInterrupt::PriorityHigh) {
+                    NVIC_SetPriority(spiIRQ(), 3);
+                }
+                else if (interrupts & SPIInterrupt::PriorityMedium) {
+                    NVIC_SetPriority(spiIRQ(), 7);
+                }
+                else if (interrupts & SPIInterrupt::PriorityLow) {
+                    NVIC_SetPriority(spiIRQ(), 11);
+                }
+                else if (interrupts & SPIInterrupt::PriorityLowest) {
+                    NVIC_SetPriority(spiIRQ(), 15);
+                }
+
+                NVIC_EnableIRQ(spiIRQ());
+            } else {
+                
+                NVIC_DisableIRQ(spiIRQ());
+            }
+        };
+
+        static uint8_t getMessageSlotsAvailable() {
+            uint8_t count = 0;
+            if (spi()->SPI_RCR > 0) { count++; }
+            if (spi()->SPI_NRCR > 0) { count++; }
+            return count;
+        };
+
+        // start transfer of message
+        static bool startTransfer(uint8_t *tx_buffer, uint8_t *rx_buffer, uint16_t size) {
+            if ((spi()->SPI_RCR == 0) && (spi()->SPI_TCR == 0)) {
+                // setup immediate PDC transfer
+                if (rx_buffer != nullptr) {
+                    spi()->SPI_RPR = (uint32_t)rx_buffer;
+                    spi()->SPI_RCR = size;
+                } else {
+                    spi()->SPI_RPR = 0;
+                    spi()->SPI_RCR = 0;
+                }
+                if (tx_buffer != nullptr) {
+                    spi()->SPI_TPR = (uint32_t)tx_buffer;
+                    spi()->SPI_TCR = size;
+                } else {
+                    spi()->SPI_TPR = 0;
+                    spi()->SPI_TCR = 0;
+                }
+
+                // enable both transfers - we use zero size to diable, but this
+                // allows the next transfer to be of a different direction set
+                spi()->SPI_PTCR = SPI_PTCR_RXTEN | SPI_PTCR_TXTEN;
+
+                return true;
+            }
+            else if ((spi()->SPI_RNCR == 0) && (spi()->SPI_TNCR == 0)) {
+                // setup next PDC transfer
+                if (rx_buffer != nullptr) {
+                    spi()->SPI_RNPR = (uint32_t)rx_buffer;
+                    spi()->SPI_RNCR = size;
+                } else {
+                    spi()->SPI_RNPR = 0;
+                    spi()->SPI_RNCR = 0;
+                }
+                if (tx_buffer != nullptr) {
+                    spi()->SPI_TNPR = (uint32_t)tx_buffer;
+                    spi()->SPI_TNCR = size;
+                } else {
+                    spi()->SPI_TNPR = 0;
+                    spi()->SPI_TNCR = 0;
+                }
+
+                // current transfer should already be enabled...
+                return true;
+            }
+
+            // We didn't set anything up...
+            return false;
+        }
+
+        // abort transfer of message
+
+        // get transfer status
+
     };
 
+#if 0
     pin_number _default_MISOPinNumber = ReversePinLookup<'A', 25>::number;
     pin_number _default_MOSIPinNumber = ReversePinLookup<'A', 26>::number;
     pin_number _default_SCKPinNumber = ReversePinLookup<'A', 27>::number;
@@ -246,7 +527,7 @@ namespace Motate {
         SPIMOSIPin<spiMOSIPinNumber> mosiPin;
         SPISCKPin<spiSCKSPinNumber> sckPin;
 
-        static _SPIHardware< csPinType::moduleId, spiMISOPinNumber, spiMOSIPinNumber, spiSCKSPinNumber > hardware;
+        static _SPIHardware< misoPin::spiNum > hardware;
         static const uint8_t spiPeripheralNum() { return csPinType::moduleId; };
         static const uint8_t spiChannelNumber() { return SPIChipSelectPin<spiCSPinNumber>::csOffset; };
 
@@ -259,45 +540,36 @@ namespace Motate {
         SPI(const uint32_t baud = 4000000, const uint16_t options = kSPI8Bit | kSPIMode0) {
             hardware.init();
             init(baud, options, /*fromConstructor =*/ true);
-
-            /* TEMP HACK !! */
-            //            csPin.setMode(kPeripheralA);
-            //            misoPin.setMode(kPeripheralA);
-            //            mosiPin.setMode(kPeripheralA);
-            //            sckPin.setMode(kPeripheralA);
         };
 
         void init(const uint32_t baud, const uint16_t options, const bool fromConstructor=false) {
             setOptions(baud, options, fromConstructor);
         };
 
-        void setOptions(const uint32_t baud, const uint16_t options, const bool fromConstructor=false) {
-            // We derive the baud from the master clock with a divider.
-            // We want the closest match *below* the value asked for. It's safer to bee too slow.
-
-            uint16_t divider = SystemCoreClock / baud;
-            if (divider > 255)
-                divider = 255;
-            else if (divider < 1)
-                divider = 1;
-
-            // Cruft from Arduino: TODO: Make configurable.
-            // SPI_CSR_DLYBCT(1) keeps CS enabled for 32 MCLK after a completed
-            // transfer. Some device needs that for working properly.
-            spi()->SPI_CSR[spiChannelNumber()] = (options & (SPI_CSR_NCPHA | SPI_CSR_CPOL | SPI_CSR_BITS_Msk)) | SPI_CSR_SCBR(divider) | SPI_CSR_DLYBCT(1) | SPI_CSR_CSAAT;
-
-            // Should be a non-op for already-enabled devices.
-            hardware.enable();
-
-        };
+//        void setOptions(const uint32_t baud, const uint16_t options, const bool fromConstructor=false) {
+//            // We derive the baud from the master clock with a divider.
+//            // We want the closest match *below* the value asked for. It's safer to bee too slow.
+//
+//            uint16_t divider = SystemCoreClock / baud;
+//            if (divider > 255)
+//                divider = 255;
+//            else if (divider < 1)
+//                divider = 1;
+//
+//            spi()->SPI_CSR[spiChannelNumber()] = (options & (SPI_CSR_NCPHA | SPI_CSR_CPOL | SPI_CSR_BITS_Msk)) | SPI_CSR_SCBR(divider) | SPI_CSR_DLYBCT(1) | SPI_CSR_CSAAT;
+//
+//            // Should be a non-op for already-enabled devices.
+//            hardware.enable();
+//
+//        };
 
         bool setChannel() {
             return hardware.setChannel(spiChannelNumber());
         };
 
-        uint16_t getOptions() {
-            return spi()->SPI_CSR[spiChannelNumber()]/* & (SPI_CSR_NCPHA | SPI_CSR_CPOL | SPI_CSR_BITS_Msk)*/;
-        };
+//        uint16_t getOptions() {
+//            return spi()->SPI_CSR[spiChannelNumber()]/* & (SPI_CSR_NCPHA | SPI_CSR_CPOL | SPI_CSR_BITS_Msk)*/;
+//        };
 
         int16_t readByte(const bool lastXfer = false, uint8_t toSendAsNoop = 0) {
             return hardware.read(lastXfer, toSendAsNoop);
@@ -378,7 +650,70 @@ namespace Motate {
             return total_written;
         }
     };
+
+#endif
     
+
+
+    template <pin_number csBit0PinNumber, pin_number csBit1PinNumber, pin_number csBit2PinNumber, pin_number csBit3PinNumber>
+    struct SPIChipSelectPinMux {
+        // These pins may be null, but if they're not, they must be valid CS pins
+        static_assert(SPIChipSelectPin<csBit0PinNumber>::is_real || Pin<csBit0PinNumber>::isNull(),
+                      "SPIChipSelectPinMux bit 0 pin is not on a real CS pin.");
+        static_assert(SPIChipSelectPin<csBit1PinNumber>::is_real || Pin<csBit1PinNumber>::isNull(),
+                      "SPIChipSelectPinMux bit 0 pin is not on a real CS pin.");
+        static_assert(SPIChipSelectPin<csBit2PinNumber>::is_real || Pin<csBit2PinNumber>::isNull(),
+                      "SPIChipSelectPinMux bit 0 pin is not on a real CS pin.");
+        static_assert(SPIChipSelectPin<csBit3PinNumber>::is_real || Pin<csBit3PinNumber>::isNull(),
+                      "SPIChipSelectPinMux bit 0 pin is not on a real CS pin.");
+
+        struct _dummyCSPin { static constexpr uint8_t csNumber = 0; };
+
+        template<pin_number n>
+        using dummyOrCSPin = typename std::conditional<SPIChipSelectPin<n>::is_real, SPIChipSelectPin<n>, _dummyCSPin>::type;
+
+        // create and initialize the CS pins we use
+        dummyOrCSPin<csBit0PinNumber> bit0Pin;
+        dummyOrCSPin<csBit1PinNumber> bit1Pin;
+        dummyOrCSPin<csBit2PinNumber> bit2Pin;
+        dummyOrCSPin<csBit3PinNumber> bit3Pin;
+
+        typedef SPIChipSelectPinMux<csBit0PinNumber, csBit1PinNumber, csBit2PinNumber, csBit3PinNumber> type;
+
+        constexpr uint8_t computeCsValue(uint8_t cs) {
+            uint8_t csValue = 0;
+            if (cs & (1<<0)) { csValue |= (1<<bit0Pin.csNumber); }
+            if (cs & (1<<1)) { csValue |= (1<<bit1Pin.csNumber); }
+            if (cs & (1<<2)) { csValue |= (1<<bit2Pin.csNumber); }
+            if (cs & (1<<3)) { csValue |= (1<<bit3Pin.csNumber); }
+            return csValue;
+        };
+
+        // Now provide a subobject that offers corect csNumber and csValue for each muxed output
+        // We have three names that are confusing:
+
+        // cs = the number we're going to call this one externally, using the order of the bits we provided
+        //  IOW, cs of 3  is what you get when bit0Pin and bit1Pin are HIGH
+
+        // csNumber = the internal cs number used by the hardware. All cs where csNumber is the same MUST share settings.
+        // csValue  = the internal value provided to the spi hardware (PCS for the Sam chips)
+        template <uint8_t cs>
+        struct SPIChipSelect {
+            const uint8_t csValue;
+            const uint8_t csNumber;
+
+            SPIChipSelect(SPIChipSelectPinMux * const pm) : csValue{pm->computeCsValue(cs)}, csNumber {(uint8_t)(csValue >> 2)} {
+            };
+        };
+
+        template <uint8_t cs>
+        constexpr SPIChipSelect<cs> getCS() { return {this}; };
+    };
+
+
+    // SPIGetHardware is just a pass-through for now
+    template <pin_number spiMISOPinNumber, pin_number spiMOSIPinNumber, pin_number spiSCKPinNumber>
+    using SPIGetHardware = _SPIHardware<SPIMISOPin<spiMISOPinNumber>::spiNum>;
 }
 
 #endif /* end of include guard: SAMSPI_H_ONCE */

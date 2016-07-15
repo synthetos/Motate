@@ -28,14 +28,31 @@
  
  */
 
-#if defined(__SAM3X8E__) || defined(__SAM3X8C__)
+#if defined(__SAM4E8E__) || defined(__SAM4E16E__) || defined(__SAM4E8C__) || defined(__SAM4E16C__)
 
-#include "SamSPI.h"
+#include "MotateSPI.h"
 
 namespace Motate {
-//	template<> Spi * const     _SPIHardware<0u, kSPI_MISOPinNumber, kSPI_MOSIPinNumber, kSPI_SCKPinNumber>::spi()          { return SPI0; };
-//    template<> const uint32_t  _SPIHardware<0, kSPI_MISOPinNumber, kSPI_MOSIPinNumber, kSPI_SCKPinNumber>::peripheralId() { return ID_SPI0; };
-//    template<> const IRQn_Type _SPIHardware<0, kSPI_MISOPinNumber, kSPI_MOSIPinNumber, kSPI_SCKPinNumber>::spiIRQ()       { return SPI0_IRQn; };
+    template<> std::function<void(uint16_t)> _SPIHardware<0>::_spiInterruptHandler {};
+
 }
+
+extern "C" void SPI0_Handler(void)  {
+    if (Motate::_SPIHardware<0u>::_spiInterruptHandler) {
+        Motate::_SPIHardware<0u>::_spiInterruptHandler(Motate::_SPIHardware<0u>::getInterruptCause());
+        return;
+    }
+    __asm__("BKPT");
+}
+
+#if defined(HAS_SPI1)
+extern "C" void SPI1_Handler(void)  {
+    if (Motate::_SPIHardware<1u>::_spiInterruptHandler) {
+        Motate::_SPIHardware<1u>::_spiInterruptHandler(Motate::_SPIHardware<1u>::getInterruptCause());
+        return;
+    }
+    __asm__("BKPT");
+}
+#endif // HAS_SPI1
 
 #endif
