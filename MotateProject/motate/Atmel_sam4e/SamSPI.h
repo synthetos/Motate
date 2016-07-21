@@ -141,7 +141,8 @@ namespace Motate {
             // Ensure Fixed Peripheral Select
             spi()->SPI_MR &= (~SPI_MR_PS);
 
-            enable();
+            // Disable all interrupts
+            spi()->SPI_IDR = 0x7FF;
 
             // Reset the PDC
             spi()->SPI_PTCR = SPI_PTCR_RXTDIS | SPI_PTCR_TXTDIS;
@@ -171,13 +172,15 @@ namespace Motate {
             spi()->SPI_CR = SPI_CR_SPIEN ;
         };
 
-        static void disable () {
+        static void disable() {
             spi()->SPI_CR = SPI_CR_SPIDIS;
         };
 
-        static bool setChannel(const uint8_t channel) {
-//            disable();
+        static void deassert() {
+            disable();
+        }
 
+        static bool setChannel(const uint8_t channel) {
             // if we are transmitting, we cannot switch
             while (!(spi()->SPI_SR & SPI_SR_TXEMPTY)) {
                 ;
@@ -193,8 +196,7 @@ namespace Motate {
 
             spi()->SPI_MR = (spi()->SPI_MR & ~SPI_MR_PCS_Msk) | SPI_MR_PCS(channel_setting);
 
-//            enable();
-
+            enable();
             return true;
         }
 
@@ -296,7 +298,7 @@ namespace Motate {
         };
 
         /* TEMPORARILY REMOVING DIRECT READ/WRITE/TRANSFER. Can be brought back later */
-//#if 0
+#if 0
         static int16_t read(const bool lastXfer = false, uint8_t toSendAsNoop = 0) {
             if (!(spi()->SPI_SR & SPI_SR_RDRF)) {
                 if (spi()->SPI_SR & SPI_SR_TXEMPTY) {
@@ -359,7 +361,7 @@ namespace Motate {
             uint16_t outdata = spi()->SPI_RDR;
             return outdata;
         };
-//#endif // temporarily removed read/write/transfer
+#endif // temporarily removed read/write/transfer
 
 
         void setInterruptHandler(std::function<void(uint16_t)> &&handler) {
@@ -450,6 +452,22 @@ namespace Motate {
             }
         };
 
+        void _enableOnTXTransferDoneInterrupt() {
+            spi()->SPI_IER = SPI_IER_TXBUFE;
+        };
+
+        void _disableOnTXTransferDoneInterrupt() {
+            spi()->SPI_IDR = SPI_IDR_TXBUFE;
+        };
+
+        void _enableOnRXTransferDoneInterrupt() {
+            spi()->SPI_IER = SPI_IER_RXBUFF;
+        };
+
+        void _disableOnRXTransferDoneInterrupt() {
+            spi()->SPI_IDR = SPI_IDR_RXBUFF;
+        };
+
         static uint8_t getMessageSlotsAvailable() {
             uint8_t count = 0;
             if (spi()->SPI_RCR > 0) { count++; }
@@ -457,20 +475,38 @@ namespace Motate {
             return count;
         };
 
+        bool _toss_next_read = false;
+
         // start transfer of message
-        static bool startTransfer(uint8_t *tx_buffer, uint8_t *rx_buffer, uint16_t size) {
+        bool startTransfer(uint8_t *tx_buffer, uint8_t *rx_buffer, uint16_t size) {
+            if (_toss_next_read) {
+                if (spi()->SPI_SR & SPI_SR_RDRF) {
+                    /*uint16_t dont_care =*/ spi()->SPI_RDR;
+                }
+                _toss_next_read = false;
+            }
+
             if ((spi()->SPI_RCR == 0) && (spi()->SPI_TCR == 0)) {
+                spi()->SPI_PTCR = SPI_PTCR_RXTDIS | SPI_PTCR_TXTDIS;
+
+                uint32_t PTCR_prep = 0;
+
                 // setup immediate PDC transfer
                 if (rx_buffer != nullptr) {
                     spi()->SPI_RPR = (uint32_t)rx_buffer;
                     spi()->SPI_RCR = size;
+                    _enableOnRXTransferDoneInterrupt();
+                    PTCR_prep = SPI_PTCR_RXTEN;
                 } else {
                     spi()->SPI_RPR = 0;
                     spi()->SPI_RCR = 0;
+                    _toss_next_read = true;
                 }
                 if (tx_buffer != nullptr) {
                     spi()->SPI_TPR = (uint32_t)tx_buffer;
                     spi()->SPI_TCR = size;
+                    _enableOnTXTransferDoneInterrupt();
+                    PTCR_prep |= SPI_PTCR_TXTEN;
                 } else {
                     spi()->SPI_TPR = 0;
                     spi()->SPI_TCR = 0;
@@ -478,8 +514,7 @@ namespace Motate {
 
                 // enable both transfers - we use zero size to diable, but this
                 // allows the next transfer to be of a different direction set
-                spi()->SPI_PTCR = SPI_PTCR_RXTEN | SPI_PTCR_TXTEN;
-
+                spi()->SPI_PTCR = PTCR_prep;
                 return true;
             }
             else if ((spi()->SPI_RNCR == 0) && (spi()->SPI_TNCR == 0)) {
@@ -497,6 +532,7 @@ namespace Motate {
                 } else {
                     spi()->SPI_TNPR = 0;
                     spi()->SPI_TNCR = 0;
+                    // HMM, how to handle _toss_next_read here?
                 }
 
                 // current transfer should already be enabled...
@@ -697,17 +733,22 @@ namespace Motate {
 
         // csNumber = the internal cs number used by the hardware. All cs where csNumber is the same MUST share settings.
         // csValue  = the internal value provided to the spi hardware (PCS for the Sam chips)
-        template <uint8_t cs>
         struct SPIChipSelect {
             const uint8_t csValue;
             const uint8_t csNumber;
+            const bool usesDecoder = true;
 
-            SPIChipSelect(SPIChipSelectPinMux * const pm) : csValue{pm->computeCsValue(cs)}, csNumber {(uint8_t)(csValue >> 2)} {
+            SPIChipSelect(SPIChipSelectPinMux * const pm, const uint8_t cs) : csValue{pm->computeCsValue(cs)}, csNumber {(uint8_t)(csValue >> 2)} {
             };
+
+            // delete copy constructor
+            SPIChipSelect(const SPIChipSelect &) = delete;
+
+            // build move constructor
+            SPIChipSelect(SPIChipSelect && other) : csValue{other.csValue}, csNumber{other.csNumber} {};
         };
 
-        template <uint8_t cs>
-        constexpr SPIChipSelect<cs> getCS() { return {this}; };
+        constexpr SPIChipSelect getCS(const uint8_t cs) { return {this, cs}; };
     };
 
 

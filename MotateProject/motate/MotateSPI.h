@@ -131,10 +131,6 @@ namespace Motate {
         static constexpr uint16_t PriorityMedium    = 1<<7;
         static constexpr uint16_t PriorityLow       = 1<<8;
         static constexpr uint16_t PriorityLowest    = 1<<9;
-
-        /* These are for internal use only: */
-        static constexpr uint16_t OnCTSChanged      = 1<<10;
-        
     };
 
 
@@ -168,7 +164,72 @@ namespace Motate {
 namespace Motate {
 
 
+#pragma mark SPIBusDeviceBase
+    /**************************************************
+     *
+     * SPI Bus Device Base, a base class for a member of an SPI Bus
+     *
+     **************************************************/
 
+    struct SPIMessage;
+
+    struct SPIBusDeviceBase
+    {
+        // store a link to the next device on the bus (maintained by the Bus)
+        SPIBusDeviceBase *_next_device = 0;
+
+        // set device options
+        virtual void setOptions(const uint32_t baud, const uint16_t options, uint32_t min_between_cs_delay_ns, uint32_t cs_to_sck_delay_ns, uint32_t between_word_delay_ns) {};
+        // queue message
+        virtual void queueMessage(SPIMessage *msg) {};
+        // return a value that can be used by hardware to select this device
+        virtual uint32_t getChannel() { return 0; };
+    };
+
+    // useful verbose enums
+    enum {
+        SPIMessageRemainAsserted = false,
+        SPIMessageDeassertAfter = true,
+
+        SPIMessageKeepTransaction = false,
+        SPIMessageEndTransaction = true
+
+    };
+
+    struct SPIMessage
+    {
+        uint8_t *tx_buffer;
+        uint8_t *rx_buffer; // "pointer to uint8_t that is const"
+        uint16_t size;
+        bool deassert_after;
+        bool immediate_deassert_after; // allows changing deassert_after from the callback
+        bool ends_transaction;
+        bool immediate_ends_transaction; // allows changing ends_transaction from the callback
+
+
+        SPIBusDeviceBase *device;
+        SPIMessage *next_message;
+
+        std::function<void(void)> message_done_callback;
+        bool sending = false;
+
+
+        SPIMessage() {};
+//        SPIMessage(std::function<void(void)>&& callback) : message_done_callback{std::move(callback)} {};
+//        SPIMessage(std::function<void(void)> callback) : message_done_callback{callback} {};
+
+        SPIMessage *setup(uint8_t *new_tx_buffer, uint8_t * new_rx_buffer, const uint16_t new_size, const bool new_deassert_after, const bool new_ends_transaction) {
+            tx_buffer = new_tx_buffer;
+            rx_buffer = new_rx_buffer;
+            size = new_size;
+            deassert_after = new_deassert_after;
+            ends_transaction = new_ends_transaction;
+
+            return this;
+        }
+    };
+
+    // attach device to spi bus
 
 #pragma mark SPIBus
     /**************************************************
@@ -201,13 +262,53 @@ namespace Motate {
 
         SPIGetHardware<spiMISOPinNumber, spiMOSIPinNumber, spiSCKPinNumber> hardware;
 
-        std::function<void(void)> message_done_callback;
-
+        SPIBusDeviceBase *_first_device, *_current_transaction_device;
+        SPIMessage *_first_message;//, *_last_message;
 
         SPIBus() : hardware{} {
             hardware.init();
         }
 
+        void addDevice(SPIBusDeviceBase *new_next) {
+            if (_first_device == nullptr) {
+                _first_device = new_next;
+                return;
+            }
+
+            SPIBusDeviceBase *walker = nullptr;
+            SPIBusDeviceBase *walker_next = _first_device;
+            while (walker_next != nullptr) {
+                if (new_next == walker_next) { return; }
+
+                walker = walker_next;
+                walker_next = walker->_next_device;
+            }
+            walker->_next_device = new_next;
+        }
+
+        void removeDevice(SPIBusDeviceBase *old) {
+            if (_first_device == nullptr) {return;}
+
+            if (_first_device == old) {
+                _first_device = old->_next_device;
+                return;
+            }
+
+            SPIBusDeviceBase *walker = _first_device;
+            SPIBusDeviceBase *walker_next = _first_device->_next_device;
+            while (walker_next != nullptr) {
+                if (walker_next == old) {
+                    // WARNING: Assumes walker_next (a.k.a. old) still has a valid _next_device
+                    walker->_next_device = walker_next->_next_device;
+                    return;
+                }
+
+                walker = walker_next;
+                walker_next = walker->_next_device;
+            }
+
+            // we didn't find it. Oh well.
+        }
 
         // WARNING!!
         // This must be called later, outside of the contructors, to ensure that all dependencies are contructed.
@@ -215,27 +316,48 @@ namespace Motate {
             hardware.setInterruptHandler([&](uint16_t interruptCause) { // use a closure
                 this->spiInterruptHandler(interruptCause);
             });
-            hardware.setInterrupts(kInterruptPriorityHigh); // enable interrupts and set the priority
+            hardware.setInterrupts(kInterruptPriorityLow); // enable interrupts and set the priority
             hardware.enable();
         };
 
-        void _TMP_setUsingCSDecoder(bool v) { hardware.setUsingCSDecoder(v); };
+        void sendNextMessage() {
+            if (_first_message == nullptr) { return;}
+            if (_first_message->sending) { return; }
 
-        void _TMP_setChannelOptions(const uint8_t channel, const uint32_t baud, const uint16_t options, uint32_t min_between_cs_delay_ns, uint32_t cs_to_sck_delay_ns, uint32_t between_word_delay_ns) {
-            hardware.setChannelOptions(channel, baud, options, min_between_cs_delay_ns, cs_to_sck_delay_ns, between_word_delay_ns);
-        };
+            if (_current_transaction_device != nullptr) {
+                // the next message we send must be from the _current_transaction_device
+                if (!(_first_message->device == _current_transaction_device)) {
+                    // now we'll make a pass throught the messages, looking for one
+                    // for the _current_transaction_device
+                    SPIMessage *previous_message = _first_message;
+                    SPIMessage *walker_message = _first_message->next_message;
 
-        bool _TMP_startTransfer(uint8_t *tx_buffer, uint8_t *rx_buffer, uint16_t size) {
-            return hardware.startTransfer(tx_buffer, rx_buffer, size);
-        };
+                    while (walker_message != nullptr) {
+                        if (walker_message->device == _current_transaction_device) {
+                            // we have our actual next message, we'll pop it to the first position
+                            previous_message->next_message = walker_message->next_message;
+                            walker_message->next_message = _first_message;
+                            _first_message = walker_message;
+                            break;
+                        }
 
-        void _TMP_setChannel(const uint8_t channel) {
-            hardware.setChannel(channel);
-        };
+                        previous_message = walker_message;
+                        walker_message = walker_message->next_message;
+                    }
 
-        int16_t _TMP_write(uint8_t value, int16_t &readValue, const bool lastXfer = false) {
-            return hardware.write(value, readValue, lastXfer);
-        };
+                    if (walker_message == nullptr) {
+                        // we have to wait for a new message to be queued up
+                        return;
+                    }
+                }
+            }
+
+            _first_message->sending = true;
+            _current_transaction_device = _first_message->device;
+            hardware.setChannel(_current_transaction_device->getChannel());
+            hardware.startTransfer(_first_message->tx_buffer, _first_message->rx_buffer, _first_message->size);
+        }
+
         void spiInterruptHandler(uint16_t interruptCause) {
             if (interruptCause & SPIInterrupt::OnTxReady) {
                 // ready to transfer...
@@ -245,31 +367,150 @@ namespace Motate {
                 // something is in the buffer right now...
             }
 
-            if (interruptCause & SPIInterrupt::OnTxTransferDone) {
-//                if (transfer_tx_done_callback) {
-//                    hardware._setInterruptTxTransferDone(false);
-//                    transfer_tx_done_callback();
-//                }
-            }
+            if (interruptCause & (SPIInterrupt::OnTxTransferDone | SPIInterrupt::OnRxTransferDone)) {
+                // This needs to be cleaned up:
+                hardware._disableOnTXTransferDoneInterrupt();
+                hardware._disableOnRXTransferDoneInterrupt();
 
-            if (interruptCause & SPIInterrupt::OnRxTransferDone) {
-//                if (!isRealAndCorrectRTSPin<rtsPinNumber, rxPinNumber>()) {
-//                    rtsPin = true; // active low
-//                }
-//                if (transfer_rx_done_callback) {
-//                    hardware._setInterruptRxTransferDone(false);
-//                    hardware._setInterruptRxReady(true);
-//                    transfer_rx_done_callback();
-//                }
-            }
+                // _first_message is done sending.
+                // Go ahead and pop it from the list and reset (partially)
+                auto this_message = _first_message;
+                _first_message = _first_message->next_message;
+                this_message->next_message = nullptr;
+                this_message->sending = false;
 
-            if (interruptCause & SPIInterrupt::OnCTSChanged) {
-//                if (connection_state_changed_callback && isConnected()) {
-//                    // We only report when it's connected, NOT disconnected
-//                    connection_state_changed_callback(isConnected());
-//                }
+                // Set the values for *this* message before the callback, so
+                // the callback can re-queue with different values AND tell us
+                // how to handle the rest of this transaction. With these defaulted
+                // like this, the callback can do nothing and get the original
+                // behavior the message was configured for.
+                this_message->immediate_ends_transaction = this_message->ends_transaction;
+                this_message->immediate_deassert_after = this_message->deassert_after;
+
+                // call it's callback, if any, THEN check deassert_after and ends_transaction
+                // since the callback might decide to change those
+                if (this_message->message_done_callback) {
+                    this_message->message_done_callback();
+                }
+
+                if (this_message->immediate_ends_transaction) {
+                    _current_transaction_device = nullptr;
+                }
+
+                if (this_message->immediate_deassert_after) {
+                    hardware.deassert();
+                }
+
+                sendNextMessage();
             }
         };
+
+
+#pragma mark SPIBusDevice (inside SPIBus)
+        /**************************************************
+         *
+         * SPI Bus Device, a member of an SPI Bus.
+         *
+         **************************************************/
+
+        struct SPIBusDevice : SPIBusDeviceBase
+        {
+            // Since we are defining this INSIDE the SPIBus struct, we'll use SPIBus internals liberally
+            SPIBus<spiMISOPinNumber, spiMOSIPinNumber, spiSCKPinNumber> * const _spi_bus;
+
+            uint32_t _cs_number; // the chip select number
+            uint32_t _cs_value;  // the internal value to give the hardware to select the right chip
+
+            template <typename chipSelectType>
+            constexpr SPIBusDevice(SPIBus<spiMISOPinNumber, spiMOSIPinNumber, spiSCKPinNumber> *parent_bus, const chipSelectType &cs, const uint32_t baud, const uint16_t options, uint32_t min_between_cs_delay_ns, uint32_t cs_to_sck_delay_ns, uint32_t between_word_delay_ns) : _spi_bus {parent_bus}
+            {
+                _cs_number = cs.csNumber;
+                _cs_value  = cs.csValue;
+
+                _spi_bus->addDevice(this);
+                _spi_bus->hardware.setUsingCSDecoder(cs.usesDecoder);
+
+                this->setOptions(baud, options, min_between_cs_delay_ns, cs_to_sck_delay_ns, between_word_delay_ns);
+            };
+
+            // prevent copying or deleting
+            SPIBusDevice(const SPIBusDevice&) = delete;
+
+            // update the bus upon deletion
+            ~SPIBusDevice() {
+                _spi_bus->removeDevice(this);
+            };
+
+            // build move constructor
+            SPIBusDevice(SPIBusDevice&& other) : _spi_bus{other._spi_bus}, _cs_number{other._cs_number}, _cs_value{other._cs_value} {
+                // since we just changed addresses, we'll let the old one deregister, but we must register this one
+                _spi_bus->addDevice(this);
+            };
+
+            // set device options
+            void setOptions (const uint32_t baud, const uint16_t options, uint32_t min_between_cs_delay_ns, uint32_t cs_to_sck_delay_ns, uint32_t between_word_delay_ns) override {
+                _spi_bus->hardware.setChannelOptions(_cs_number, baud, options, min_between_cs_delay_ns, cs_to_sck_delay_ns, between_word_delay_ns);
+            };
+
+            // queue message
+            void queueMessage (SPIMessage *msg) override {
+                msg->device = this;
+                if (_spi_bus->_first_message == nullptr) {
+                    _spi_bus->_first_message = msg;
+                    //_spi_bus->_last_message = msg;
+                }
+                else {
+//                    _spi_bus->_last_message->next_message = msg;
+//                    _spi_bus->_last_message = msg;
+                    SPIMessage *previous_message = _spi_bus->_first_message;
+                    SPIMessage *walker_message = _spi_bus->_first_message->next_message;
+
+                    while (walker_message != nullptr) {
+                        previous_message = walker_message;
+                        walker_message = walker_message->next_message;
+                    }
+
+                    previous_message->next_message = msg;
+                }
+
+                // Either we just queued the first message, OR we *might* have
+                // just queued a message for the current transaction
+                // that has stalled, waiting for more messages.
+
+                // In either case, we want to:
+                _spi_bus->sendNextMessage();
+            };
+
+            uint32_t getChannel() override { return _cs_value; };
+        };
+
+        template <typename chipSelectType>
+        constexpr SPIBusDevice getDevice(chipSelectType &&cs, const uint32_t baud, const uint16_t options, uint32_t min_between_cs_delay_ns, uint32_t cs_to_sck_delay_ns, uint32_t between_word_delay_ns)
+        {
+            return {this, std::move(cs), baud, options, min_between_cs_delay_ns, cs_to_sck_delay_ns, between_word_delay_ns};
+        }
+
+//        void _TMP_setUsingCSDecoder(bool v) { hardware.setUsingCSDecoder(v); };
+//
+//        void _TMP_setChannelOptions(const uint8_t channel, const uint32_t baud, const uint16_t options, uint32_t min_between_cs_delay_ns, uint32_t cs_to_sck_delay_ns, uint32_t between_word_delay_ns) {
+//        };
+//
+//        bool _TMP_startTransfer(uint8_t *tx_buffer, uint8_t *rx_buffer, uint16_t size) {
+//            return hardware.startTransfer(tx_buffer, rx_buffer, size);
+//        };
+//
+//        void _TMP_setChannel(const uint8_t channel) {
+//            hardware.setChannel(channel);
+//        };
+//
+//        int16_t _TMP_write(uint8_t value, int16_t &readValue, const bool lastXfer = false) {
+//            return hardware.write(value, readValue, lastXfer);
+//        };
+//
+//        void _TMP_setMsgDone(std::function<void(void)> &&handler) {
+//            message_done_callback = std::move(handler);
+//        }
+
 
     }; // SPIBus
 
