@@ -151,8 +151,6 @@ namespace Motate {
         static _pinChangeInterrupt *_firstInterrupt;
 
         void setModes(const PinMode type, const uintPort_t mask) {
-            SamCommon::enablePeripheralClock(peripheralId());
-
             switch (type) {
                 case kOutput:
                     rawPort()->PIO_OER = mask ;
@@ -209,11 +207,12 @@ namespace Motate {
             }
 
             /* if all pins are output, disable PIO Controller clocking, reduce power consumption */
-//            if ( rawPort()->PIO_OSR == 0xffffffff )
-//            {
-//                SamCommon::disablePeripheralClock(peripheralId());
-//            } else {
-//            }
+            if ( rawPort()->PIO_OSR == 0xffffffff )
+            {
+                SamCommon::disablePeripheralClock(peripheralId());
+            } else {
+                SamCommon::enablePeripheralClock(peripheralId());
+            }
         };
         // Returns the mode of ONE pin, and only Input or Output
         PinMode getMode(const uintPort_t mask) {
@@ -679,6 +678,7 @@ namespace Motate {
             static constexpr uint8_t spiNum = 0; /* There is only one*/ \
             static constexpr uint8_t csNumber =  csNum; \
             static constexpr uint8_t csValue  = ~csNum; \
+            static constexpr bool usesDecoder = false; \
         };
 
     #define _MAKE_MOTATE_SPI_MISO_PIN(registerChar, registerPin, peripheralAorB)\
