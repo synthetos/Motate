@@ -517,27 +517,27 @@ namespace Motate {
                 spi()->SPI_PTCR = PTCR_prep;
                 return true;
             }
-            else if ((spi()->SPI_RNCR == 0) && (spi()->SPI_TNCR == 0)) {
-                // setup next PDC transfer
-                if (rx_buffer != nullptr) {
-                    spi()->SPI_RNPR = (uint32_t)rx_buffer;
-                    spi()->SPI_RNCR = size;
-                } else {
-                    spi()->SPI_RNPR = 0;
-                    spi()->SPI_RNCR = 0;
-                }
-                if (tx_buffer != nullptr) {
-                    spi()->SPI_TNPR = (uint32_t)tx_buffer;
-                    spi()->SPI_TNCR = size;
-                } else {
-                    spi()->SPI_TNPR = 0;
-                    spi()->SPI_TNCR = 0;
-                    // HMM, how to handle _toss_next_read here?
-                }
-
-                // current transfer should already be enabled...
-                return true;
-            }
+//            else if ((spi()->SPI_RNCR == 0) && (spi()->SPI_TNCR == 0)) {
+//                // setup next PDC transfer
+//                if (rx_buffer != nullptr) {
+//                    spi()->SPI_RNPR = (uint32_t)rx_buffer;
+//                    spi()->SPI_RNCR = size;
+//                } else {
+//                    spi()->SPI_RNPR = 0;
+//                    spi()->SPI_RNCR = 0;
+//                }
+//                if (tx_buffer != nullptr) {
+//                    spi()->SPI_TNPR = (uint32_t)tx_buffer;
+//                    spi()->SPI_TNCR = size;
+//                } else {
+//                    spi()->SPI_TNPR = 0;
+//                    spi()->SPI_TNCR = 0;
+//                    // HMM, how to handle _toss_next_read here?
+//                }
+//
+//                // current transfer should already be enabled...
+//                return true;
+//            }
 
             // We didn't set anything up...
             return false;

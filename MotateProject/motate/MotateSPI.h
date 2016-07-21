@@ -211,7 +211,7 @@ namespace Motate {
         SPIMessage *next_message;
 
         std::function<void(void)> message_done_callback;
-        bool sending = false;
+        volatile bool sending = false;
 
 
         SPIMessage() {};
@@ -264,6 +264,8 @@ namespace Motate {
 
         SPIBusDeviceBase *_first_device, *_current_transaction_device;
         SPIMessage *_first_message;//, *_last_message;
+
+        volatile bool sending = false; // as long as this is true, sendNextMessage() does nothing
 
         SPIBus() : hardware{} {
             hardware.init();
@@ -321,36 +323,39 @@ namespace Motate {
         };
 
         void sendNextMessage() {
+            if (sending) { return; }
+            sending = true;
+
             if (_first_message == nullptr) { return;}
             if (_first_message->sending) { return; }
 
-            if (_current_transaction_device != nullptr) {
-                // the next message we send must be from the _current_transaction_device
-                if (!(_first_message->device == _current_transaction_device)) {
-                    // now we'll make a pass throught the messages, looking for one
-                    // for the _current_transaction_device
-                    SPIMessage *previous_message = _first_message;
-                    SPIMessage *walker_message = _first_message->next_message;
-
-                    while (walker_message != nullptr) {
-                        if (walker_message->device == _current_transaction_device) {
-                            // we have our actual next message, we'll pop it to the first position
-                            previous_message->next_message = walker_message->next_message;
-                            walker_message->next_message = _first_message;
-                            _first_message = walker_message;
-                            break;
-                        }
-
-                        previous_message = walker_message;
-                        walker_message = walker_message->next_message;
-                    }
-
-                    if (walker_message == nullptr) {
-                        // we have to wait for a new message to be queued up
-                        return;
-                    }
-                }
-            }
+//            if (_current_transaction_device != nullptr) {
+//                // the next message we send must be from the _current_transaction_device
+//                if (!(_first_message->device == _current_transaction_device)) {
+//                    // now we'll make a pass throught the messages, looking for one
+//                    // for the _current_transaction_device
+//                    SPIMessage *previous_message = _first_message;
+//                    SPIMessage *walker_message = _first_message->next_message;
+//
+//                    while (walker_message != nullptr) {
+//                        if (walker_message->device == _current_transaction_device) {
+//                            // we have our actual next message, we'll pop it to the first position
+//                            previous_message->next_message = walker_message->next_message;
+//                            walker_message->next_message = _first_message;
+//                            _first_message = walker_message;
+//                            break;
+//                        }
+//
+//                        previous_message = walker_message;
+//                        walker_message = walker_message->next_message;
+//                    }
+//
+//                    if (walker_message == nullptr) {
+//                        // we have to wait for a new message to be queued up
+//                        return;
+//                    }
+//                }
+//            }
 
             _first_message->sending = true;
             _current_transaction_device = _first_message->device;
@@ -387,8 +392,15 @@ namespace Motate {
                 this_message->immediate_ends_transaction = this_message->ends_transaction;
                 this_message->immediate_deassert_after = this_message->deassert_after;
 
-                // call it's callback, if any, THEN check deassert_after and ends_transaction
-                // since the callback might decide to change those
+                // Call the message's callback, if any, THEN check immediate_ends_transaction
+                // and immediate_deassert_after, since the callback might decide to change those.
+
+                // Ignore ends_transaction and deassert_after, since those are for the next queueing
+                // of the message - which may happen in the callback as well.
+
+                // IMPORTANT NOTE: the callback may call sendNextMessage(), so we
+                //   keep sending at true to prevent issues.
+
                 if (this_message->message_done_callback) {
                     this_message->message_done_callback();
                 }
@@ -401,6 +413,7 @@ namespace Motate {
                     hardware.deassert();
                 }
 
+                sending = false; // we can now allow more sending
                 sendNextMessage();
             }
         };
