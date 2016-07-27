@@ -31,11 +31,11 @@ ifeq ($(ARCH), gcc-arm-none-eabi)
 TOOLS_EASYPATH = gcc-arm-none-eabi
 
 TOOLS_VERSION_SHORT = 5.0
-TOOLS_VERSION_LONG = 5-2016-q1-update
-TOOLS_VERSION_FILENAME = 5_3-2016q1-20160330
-TOOLS_EXPANDED_DIRNAME = gcc-arm-none-eabi-5_3-2016q1
+TOOLS_VERSION_LONG = 5-2016-q2-update
+TOOLS_VERSION_FILENAME = 5_4-2016q2-20160622
+TOOLS_EXPANDED_DIRNAME = gcc-arm-none-eabi-5_4-2016q2
 
-# Example:        https://launchpad.net/gcc-arm-embedded/5.0/5-2016-q1-update/+download/gcc-arm-none-eabi-5_3-2016q1-20160330-mac.tar.bz2
+# Example:        https://launchpad.net/gcc-arm-embedded/5.0/5-2016-q2-update/+download/gcc-arm-none-eabi-5_4-2016q2-20160622-win32.exe
 # Expands to: gcc-arm-none-eabi-5_3-2016q1
 
 TOOLS_URL_PREFIX = https://launchpad.net/gcc-arm-embedded/${TOOLS_VERSION_SHORT}/${TOOLS_VERSION_LONG}/+download/
