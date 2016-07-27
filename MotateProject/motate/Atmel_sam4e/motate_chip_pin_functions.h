@@ -181,7 +181,15 @@ namespace Motate {
 //    _MAKE_MOTATE_ADC_PIN('B', 20, /* ADC number:*/ 13);
 //    _MAKE_MOTATE_ADC_PIN('B', 21, /* ADC number:*/ 14);
 
-
+    _MAKE_MOTATE_CLOCK_OUTPUT_PIN('A',  6, /*clockNumber*/0, /*peripheralAorB*/B);
+    _MAKE_MOTATE_CLOCK_OUTPUT_PIN('A', 17, /*clockNumber*/1, /*peripheralAorB*/B);
+    _MAKE_MOTATE_CLOCK_OUTPUT_PIN('A', 18, /*clockNumber*/2, /*peripheralAorB*/B);
+    _MAKE_MOTATE_CLOCK_OUTPUT_PIN('A', 21, /*clockNumber*/1, /*peripheralAorB*/B);
+    _MAKE_MOTATE_CLOCK_OUTPUT_PIN('A', 31, /*clockNumber*/2, /*peripheralAorB*/B);
+#ifdef PIOB
+    _MAKE_MOTATE_CLOCK_OUTPUT_PIN('B',  3, /*clockNumber*/2, /*peripheralAorB*/B);
+    _MAKE_MOTATE_CLOCK_OUTPUT_PIN('B', 13, /*clockNumber*/0, /*peripheralAorB*/B);
+#endif
 }
 
 #endif

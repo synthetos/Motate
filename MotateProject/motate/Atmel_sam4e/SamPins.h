@@ -755,6 +755,32 @@ namespace Motate {
             static const bool is_real = true;\
         };
 
+#pragma mark ClockOutputPin
+    /**************************************************
+     *
+     * Clock Output PIN METADATA and wiring: CLKOutPin
+     *
+     * Provides: _MAKE_MOTATE_CLOCK_OUTPUT_PIN
+     *
+     **************************************************/
+
+    #define _MAKE_MOTATE_CLOCK_OUTPUT_PIN(registerChar, registerPin, clockNumber, peripheralAorB)\
+        template<>\
+        struct ClockOutputPin< ReversePinLookup<registerChar, registerPin>::number > : ReversePinLookup<registerChar, registerPin> {\
+            ClockOutputPin(const uint32_t target_freq) : ReversePinLookup<registerChar, registerPin>(kPeripheral ## peripheralAorB) {\
+                uint32_t prescaler = PMC_PCK_PRES_CLK_1;\
+                if ((SystemCoreClock >> 1) < target_freq) { prescaler = PMC_PCK_PRES_CLK_2; }\
+                if ((SystemCoreClock >> 2) < target_freq) { prescaler = PMC_PCK_PRES_CLK_4; }\
+                if ((SystemCoreClock >> 3) < target_freq) { prescaler = PMC_PCK_PRES_CLK_8; }\
+                if ((SystemCoreClock >> 4) < target_freq) { prescaler = PMC_PCK_PRES_CLK_16; }\
+                if ((SystemCoreClock >> 5) < target_freq) { prescaler = PMC_PCK_PRES_CLK_32; }\
+                if ((SystemCoreClock >> 6) < target_freq) { prescaler = PMC_PCK_PRES_CLK_64; }\
+                PMC->PMC_PCK[clockNumber] = PMC_PCK_CSS_MCK | prescaler;\
+            };\
+            static const bool is_real = true;\
+            void operator=(const bool value); /*Will cause a failure if used.*/\
+        };
+
 } // end namespace Motate
 
 #endif /* end of include guard: SAMPINS_H_ONCE */

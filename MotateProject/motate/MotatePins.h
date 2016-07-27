@@ -620,6 +620,25 @@ namespace Motate {
     template <pin_number pinNum>
     constexpr bool IsUARTCTSPin() { return UARTCTSPin<pinNum>::is_real; };
 
+
+#pragma mark ClockOutputPin
+    /**************************************************
+     *
+     * Clock Output PIN METADATA and wiring: CLKOutPin
+     *
+     * REQUIRES: _MAKE_MOTATE_CLOCK_OUTPUT_PIN
+     *
+     **************************************************/
+
+
+    template<pin_number pinNum>
+    struct ClockOutputPin {
+        static constexpr bool is_real = false;
+        ClockOutputPin(const uint32_t target_freq) {};
+    };
+    template <pin_number pinNum>
+    constexpr bool IsClockOutputPin() { return ClockOutputPin<pinNum>::is_real; };
+
 } // namespace motate
 
 
