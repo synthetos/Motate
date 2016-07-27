@@ -475,16 +475,16 @@ namespace Motate {
             return count;
         };
 
-        bool _toss_next_read = false;
-
+//        bool _toss_next_read = false;
+//
         // start transfer of message
         bool startTransfer(uint8_t *tx_buffer, uint8_t *rx_buffer, uint16_t size) {
-            if (_toss_next_read) {
+//            if (_toss_next_read) {
                 if (spi()->SPI_SR & SPI_SR_RDRF) {
                     /*uint16_t dont_care =*/ spi()->SPI_RDR;
                 }
-                _toss_next_read = false;
-            }
+//                _toss_next_read = false;
+//            }
 
             if ((spi()->SPI_RCR == 0) && (spi()->SPI_TCR == 0)) {
                 spi()->SPI_PTCR = SPI_PTCR_RXTDIS | SPI_PTCR_TXTDIS;
@@ -500,12 +500,12 @@ namespace Motate {
                 } else {
                     spi()->SPI_RPR = 0;
                     spi()->SPI_RCR = 0;
-                    _toss_next_read = true;
+//                    _toss_next_read = true;
                 }
                 if (tx_buffer != nullptr) {
                     spi()->SPI_TPR = (uint32_t)tx_buffer;
                     spi()->SPI_TCR = size;
-                    _enableOnTXTransferDoneInterrupt();
+//                    _enableOnTXTransferDoneInterrupt();
                     PTCR_prep |= SPI_PTCR_TXTEN;
                 } else {
                     spi()->SPI_TPR = 0;
