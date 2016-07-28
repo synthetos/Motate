@@ -187,17 +187,16 @@ namespace Motate {
     };
 
     // useful verbose enums
-    enum {
-        SPIMessageRemainAsserted = false,
-        SPIMessageDeassertAfter = true,
-
-        SPIMessageKeepTransaction = false,
-        SPIMessageEndTransaction = true
-
-    };
-
     struct SPIMessage
     {
+        enum {
+            RemainAsserted = false,
+            DeassertAfter = true,
+
+            KeepTransaction = false,
+            EndTransaction = true
+        };
+
         uint8_t *tx_buffer;
         uint8_t *rx_buffer; // "pointer to uint8_t that is const"
         uint16_t size;
