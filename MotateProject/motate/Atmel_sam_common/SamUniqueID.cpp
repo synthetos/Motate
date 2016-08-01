@@ -33,6 +33,10 @@
 #define EFC EFC0
 #endif
 
+#if !defined(EEFC_FCR_FKEY_PASSWD)
+#define EEFC_FCR_FKEY_PASSWD EEFC_FCR_FKEY(0x5A)
+#endif
+
 #define   EEFC_FCR_FCMD_STUI (0xEu << 0) /**< \brief (EEFC_FCR) Start read unique identifier */
 #define   EEFC_FCR_FCMD_SPUI (0xFu << 0) /**< \brief (EEFC_FCR) Stop read unique identifier */
 
@@ -107,5 +111,3 @@ namespace Motate {
         return _stringval;
     }
 }
-
-#endif

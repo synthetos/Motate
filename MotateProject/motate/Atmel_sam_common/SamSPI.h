@@ -42,7 +42,7 @@ namespace Motate {
     /* HERE we do a stupid anti-#define dance, since these defines screw EVERYTHING up */
 
 #if defined(SPI)
-
+#define CAN_SPI_PDC_DMA 1
     // This is for the Sam4e
     constexpr Spi * const SPI0_DONT_CONFLICT = SPI;
 #undef SPI
@@ -64,7 +64,7 @@ namespace Motate {
 
     constexpr uint16_t const ID_SPI0_DONT_CONFLICT = ID_SPI0;
 #undef ID_SPI0
-    constexpr uint16_t const ID_SPI0 = ID_SPI_DONT_CONFLICT;
+    constexpr uint16_t const ID_SPI0 = ID_SPI0_DONT_CONFLICT;
 
 #endif
 
@@ -144,6 +144,7 @@ namespace Motate {
             // Disable all interrupts
             spi()->SPI_IDR = 0x7FF;
 
+#ifdef CAN_SPI_PDC_DMA
             // Reset the PDC
             spi()->SPI_PTCR = SPI_PTCR_RXTDIS | SPI_PTCR_TXTDIS;
             spi()->SPI_RPR = 0;
@@ -154,6 +155,7 @@ namespace Motate {
             spi()->SPI_RNCR = 0;
             spi()->SPI_TNPR = 0;
             spi()->SPI_TNCR = 0;
+#endif
         };
 
         _SPIHardware() {
@@ -386,19 +388,22 @@ namespace Motate {
             {
                 status |= SPIInterrupt::OnTxReady;
             }
+#ifdef CAN_SPI_PDC_DMA
             if ((SPI_IMR_hold & SPI_IMR_TXBUFE) && (SPI_SR_hold & SPI_SR_TXBUFE))
             {
                 status |= SPIInterrupt::OnTxTransferDone;
             }
-
+#endif
             if ((SPI_IMR_hold & SPI_IMR_RDRF) && (SPI_SR_hold & SPI_SR_RDRF))
             {
                 status |= SPIInterrupt::OnRxReady;
             }
+#ifdef CAN_SPI_PDC_DMA
             if ((SPI_IMR_hold & SPI_IMR_RXBUFF) && (SPI_SR_hold & SPI_SR_RXBUFF))
             {
                 status |= SPIInterrupt::OnRxTransferDone;
             }
+#endif
             return status;
         }
 
@@ -416,6 +421,7 @@ namespace Motate {
                     spi()->SPI_IDR = SPI_IDR_RDRF;
                 }
 
+#ifdef CAN_SPI_PDC_DMA
                 if (interrupts & SPIInterrupt::OnTxTransferDone) {
                     spi()->SPI_IER = SPI_IER_TXBUFE;
                 } else {
@@ -426,7 +432,7 @@ namespace Motate {
                 } else {
                     spi()->SPI_IDR = SPI_IDR_RXBUFF;
                 }
-
+#endif
 
                 /* Set interrupt priority */
                 if (interrupts & SPIInterrupt::PriorityHighest) {
@@ -452,6 +458,7 @@ namespace Motate {
             }
         };
 
+#ifdef CAN_SPI_PDC_DMA
         void _enableOnTXTransferDoneInterrupt() {
             spi()->SPI_IER = SPI_IER_TXBUFE;
         };
@@ -475,16 +482,11 @@ namespace Motate {
             return count;
         };
 
-//        bool _toss_next_read = false;
-//
         // start transfer of message
         bool startTransfer(uint8_t *tx_buffer, uint8_t *rx_buffer, uint16_t size) {
-//            if (_toss_next_read) {
-                if (spi()->SPI_SR & SPI_SR_RDRF) {
-                    /*uint16_t dont_care =*/ spi()->SPI_RDR;
-                }
-//                _toss_next_read = false;
-//            }
+            if (spi()->SPI_SR & SPI_SR_RDRF) {
+                /*uint16_t dont_care =*/ spi()->SPI_RDR;
+            }
 
             if ((spi()->SPI_RCR == 0) && (spi()->SPI_TCR == 0)) {
                 spi()->SPI_PTCR = SPI_PTCR_RXTDIS | SPI_PTCR_TXTDIS;
@@ -542,7 +544,7 @@ namespace Motate {
             // We didn't set anything up...
             return false;
         }
-
+#endif // CAN_SPI_PDC_DMA
         // abort transfer of message
 
         // get transfer status

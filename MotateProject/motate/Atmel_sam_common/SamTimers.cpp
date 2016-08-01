@@ -28,8 +28,6 @@
 */
 
 
-#if defined(__SAM4E8E__) || defined(__SAM4E16E__) || defined(__SAM4E8C__) || defined(__SAM4E16C__)
-
 #include "SamTimers.h"
 
 extern "C" {
@@ -155,6 +153,3 @@ void PWM_Handler(void) {
         Motate::PWMTimer< 7>::interrupt();
     };
 }
-
-
-#endif // __SAM3X8E__

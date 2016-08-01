@@ -162,7 +162,7 @@ namespace Motate {
 #endif
             }
         };
-        constexpr static const uint32_t peripheralId() const
+        constexpr static const uint32_t peripheralId()
         {
             switch (portLetter) {
                 case 'A': return ID_PIOA;

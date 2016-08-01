@@ -27,9 +27,6 @@
  OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
-#if defined(__SAM4E8E__) || defined(__SAM4E16E__) || defined(__SAM4E8C__) || defined(__SAM4E16C__)
-
 #include "MotatePins.h"
 
 using namespace Motate;
@@ -160,5 +157,3 @@ if (ADCPin< LookupADCPinByADC<num>::number >::interrupt) { \
 //    NVIC_ClearPendingIRQ(ADC_IRQn);
 }
 #endif // ADC
-
-#endif

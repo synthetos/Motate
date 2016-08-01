@@ -167,8 +167,10 @@ namespace Motate {
         static constexpr Tc * const tc()
         {
             if (timerNum < 3) { return TC0; }
+#ifdef TC1
             else
             if (timerNum < 6) { return TC1; }
+#endif
 #ifdef TC2
             else { return TC2; }
 #endif
@@ -176,8 +178,10 @@ namespace Motate {
         static constexpr TcChannel * const tcChan()
         {
             if (timerNum < 3) { return TC0->TC_CHANNEL + timerNum; }
+#ifdef TC1
             else
             if (timerNum < 6) { return TC1->TC_CHANNEL + (timerNum - 3); }
+#endif
 #ifdef TC2
             else { return TC2->TC_CHANNEL + (timerNum - 6); }
 #endif
@@ -188,9 +192,11 @@ namespace Motate {
                 case 0: return ID_TC0;
                 case 1: return ID_TC1;
                 case 2: return ID_TC2;
+#ifdef TC1
                 case 3: return ID_TC3;
                 case 4: return ID_TC4;
                 case 5: return ID_TC5;
+#endif
 #ifdef TC2
                 case 6: return ID_TC6;
                 case 7: return ID_TC7;
@@ -204,9 +210,11 @@ namespace Motate {
                 case 0: return TC0_IRQn;
                 case 1: return TC1_IRQn;
                 case 2: return TC2_IRQn;
+#ifdef TC1
                 case 3: return TC3_IRQn;
                 case 4: return TC4_IRQn;
                 case 5: return TC5_IRQn;
+#endif
 #ifdef TC2
                 case 6: return TC6_IRQn;
                 case 7: return TC7_IRQn;
