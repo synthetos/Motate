@@ -95,51 +95,6 @@
     <Compile Include="MotateProject\motate\Atmel_sam3x\motate_chip_pin_functions.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="MotateProject\motate\Atmel_sam3x\SamCommon.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="MotateProject\motate\Atmel_sam3x\SamPins.cpp">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="MotateProject\motate\Atmel_sam3x\SamPins.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="MotateProject\motate\Atmel_sam3x\SamPower.cpp">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="MotateProject\motate\Atmel_sam3x\SamPower.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="MotateProject\motate\Atmel_sam3x\SamServiceCall.cpp">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="MotateProject\motate\Atmel_sam3x\SamServiceCall.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="MotateProject\motate\Atmel_sam3x\SamSPI.cpp">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="MotateProject\motate\Atmel_sam3x\SamSPI.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="MotateProject\motate\Atmel_sam3x\SamTimers.cpp">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="MotateProject\motate\Atmel_sam3x\SamTimers.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="MotateProject\motate\Atmel_sam3x\SamUART.cpp">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="MotateProject\motate\Atmel_sam3x\SamUART.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="MotateProject\motate\Atmel_sam3x\SamUniqueID.cpp">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="MotateProject\motate\Atmel_sam3x\SamUniqueID.h">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="MotateProject\motate\Atmel_sam3x\SamUSB.cpp">
       <SubType>compile</SubType>
     </Compile>
@@ -149,55 +104,55 @@
     <Compile Include="MotateProject\motate\Atmel_sam4e\motate_chip_pin_functions.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="MotateProject\motate\Atmel_sam4e\SamCommon.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="MotateProject\motate\Atmel_sam4e\SamPins.cpp">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="MotateProject\motate\Atmel_sam4e\SamPins.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="MotateProject\motate\Atmel_sam4e\SamPower.cpp">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="MotateProject\motate\Atmel_sam4e\SamPower.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="MotateProject\motate\Atmel_sam4e\SamServiceCall.cpp">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="MotateProject\motate\Atmel_sam4e\SamServiceCall.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="MotateProject\motate\Atmel_sam4e\SamSPI.cpp">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="MotateProject\motate\Atmel_sam4e\SamSPI.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="MotateProject\motate\Atmel_sam4e\SamTimers.cpp">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="MotateProject\motate\Atmel_sam4e\SamTimers.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="MotateProject\motate\Atmel_sam4e\SamUART.cpp">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="MotateProject\motate\Atmel_sam4e\SamUART.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="MotateProject\motate\Atmel_sam4e\SamUniqueID.cpp">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="MotateProject\motate\Atmel_sam4e\SamUniqueID.h">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="MotateProject\motate\Atmel_sam4e\SamUSB.cpp">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="MotateProject\motate\Atmel_sam4e\SamUSB.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\Atmel_sam_common\SamCommon.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\Atmel_sam_common\SamPins.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\Atmel_sam_common\SamPins.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\Atmel_sam_common\SamPower.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\Atmel_sam_common\SamPower.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\Atmel_sam_common\SamServiceCall.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\Atmel_sam_common\SamServiceCall.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\Atmel_sam_common\SamSPI.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\Atmel_sam_common\SamSPI.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\Atmel_sam_common\SamTimers.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\Atmel_sam_common\SamTimers.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\Atmel_sam_common\SamUART.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\Atmel_sam_common\SamUART.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\Atmel_sam_common\SamUniqueID.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\Atmel_sam_common\SamUniqueID.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="MotateProject\motate\Atmel_XMega\XMegaPins.cpp">
@@ -1267,6 +1222,7 @@
     <Folder Include="MotateProject\motate\arch" />
     <Folder Include="MotateProject\motate\Atmel_sam3x\" />
     <Folder Include="MotateProject\motate\Atmel_sam4e\" />
+    <Folder Include="MotateProject\motate\Atmel_sam_common\" />
     <Folder Include="MotateProject\motate\Atmel_XMega" />
     <Folder Include="MotateProject\motate\board" />
     <Folder Include="MotateProject\motate\board\ArduinoDue" />
