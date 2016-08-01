@@ -151,11 +151,69 @@ namespace Motate {
     template <uint8_t timerNum>
     struct Timer {
 
+        // Try to catch invalid Timer usage ASAP
+#ifndef TC1
+        static_assert(timerNum!=3, "Timer<3> cannot be used on this processor.");
+        static_assert(timerNum!=4, "Timer<4> cannot be used on this processor.");
+        static_assert(timerNum!=5, "Timer<5> cannot be used on this processor.");
+#endif
+#ifndef TC2
+        static_assert(timerNum!=6, "Timer<6> cannot be used on this processor.");
+        static_assert(timerNum!=7, "Timer<7> cannot be used on this processor.");
+        static_assert(timerNum!=8, "Timer<8> cannot be used on this processor.");
+#endif
+
         // NOTE: Notice! The *pointers* are const, not the *values*.
-        static Tc * const tc();
-        static TcChannel * const tcChan();
-        static const uint32_t peripheralId(); // ID_TC0 .. ID_TC8
-        static const IRQn_Type tcIRQ();
+        static constexpr Tc * const tc()
+        {
+            if (timerNum < 3) { return TC0; }
+            else
+            if (timerNum < 6) { return TC1; }
+#ifdef TC2
+            else { return TC2; }
+#endif
+        };
+        static constexpr TcChannel * const tcChan()
+        {
+            if (timerNum < 3) { return TC0->TC_CHANNEL + timerNum; }
+            else
+            if (timerNum < 6) { return TC1->TC_CHANNEL + (timerNum - 3); }
+#ifdef TC2
+            else { return TC2->TC_CHANNEL + (timerNum - 6); }
+#endif
+        };
+        static constexpr const uint32_t peripheralId()
+        {
+            switch (timerNum) {
+                case 0: return ID_TC0;
+                case 1: return ID_TC1;
+                case 2: return ID_TC2;
+                case 3: return ID_TC3;
+                case 4: return ID_TC4;
+                case 5: return ID_TC5;
+#ifdef TC2
+                case 6: return ID_TC6;
+                case 7: return ID_TC7;
+                case 8: return ID_TC8;
+#endif
+            }
+        };
+        static constexpr const IRQn_Type tcIRQ()
+        {
+            switch (timerNum) {
+                case 0: return TC0_IRQn;
+                case 1: return TC1_IRQn;
+                case 2: return TC2_IRQn;
+                case 3: return TC3_IRQn;
+                case 4: return TC4_IRQn;
+                case 5: return TC5_IRQn;
+#ifdef TC2
+                case 6: return TC6_IRQn;
+                case 7: return TC7_IRQn;
+                case 8: return TC8_IRQn;
+#endif
+            }
+        };
         static uint32_t _interrupt_cause_cached;
 
         static const bool has_channel_interrupts = false;
@@ -177,13 +235,17 @@ namespace Motate {
             unlock();
         }
 
+#if !defined(TC_WPMR_WPKEY_PASSWD)
+        static const uint32_t TC_WPMR_WPKEY_PASSWD = TC_WPMR_WPKEY(0x54494D);
+#endif
+
         void unlock() const {
-            tc()->TC_WPMR = TC_WPMR_WPKEY(0x54494D);
+            tc()->TC_WPMR = TC_WPMR_WPKEY_PASSWD;
         }
 
         /* WHOA!! Only do this if you know what you're doing!! */
         void lock() const {
-            tc()->TC_WPMR = TC_WPMR_WPEN | TC_WPMR_WPKEY(0x54494D);
+            tc()->TC_WPMR = TC_WPMR_WPEN | TC_WPMR_WPKEY_PASSWD;
         }
 
         // Set the mode and frequency.
@@ -515,64 +577,7 @@ namespace Motate {
         // Placeholder for user code.
         static void interrupt();
     }; // Timer<>
-
-    template<> inline Tc * const        Timer<0>::tc()           { return TC0; };
-    template<> inline TcChannel * const Timer<0>::tcChan()       { return TC0->TC_CHANNEL + 0; };
-    template<> inline const uint32_t    Timer<0>::peripheralId() { return ID_TC0; };
-    template<> inline const IRQn_Type   Timer<0>::tcIRQ()        { return TC0_IRQn; };
-//    template<> void Timer<0>::interrupt();
-
-    template<> inline Tc * const        Timer<1>::tc()           { return TC0; };
-    template<> inline TcChannel * const Timer<1>::tcChan()       { return TC0->TC_CHANNEL + 1; };
-    template<> inline const uint32_t    Timer<1>::peripheralId() { return ID_TC1; };
-    template<> inline const IRQn_Type   Timer<1>::tcIRQ()        { return TC1_IRQn; };
-//    template<> void Timer<1>::interrupt();
-
-    template<> inline Tc * const        Timer<2>::tc()           { return TC0; };
-    template<> inline TcChannel * const Timer<2>::tcChan()       { return TC0->TC_CHANNEL + 2; };
-    template<> inline const uint32_t    Timer<2>::peripheralId() { return ID_TC2; };
-    template<> inline const IRQn_Type   Timer<2>::tcIRQ()        { return TC2_IRQn; };
-//    template<> void Timer<2>::interrupt();
-
-    template<> inline Tc * const        Timer<3>::tc()           { return TC1; };
-    template<> inline TcChannel * const Timer<3>::tcChan()       { return TC1->TC_CHANNEL + 0; };
-    template<> inline const uint32_t    Timer<3>::peripheralId() { return ID_TC3; };
-    template<> inline const IRQn_Type   Timer<3>::tcIRQ()        { return TC3_IRQn; };
-//    template<> void Timer<3>::interrupt();
-
-    template<> inline Tc * const        Timer<4>::tc()           { return TC1; };
-    template<> inline TcChannel * const Timer<4>::tcChan()       { return TC1->TC_CHANNEL + 1; };
-    template<> inline const uint32_t    Timer<4>::peripheralId() { return ID_TC4; };
-    template<> inline const IRQn_Type   Timer<4>::tcIRQ()        { return TC4_IRQn; };
-//    template<> void Timer<4>::interrupt();
-
-    template<> inline Tc * const        Timer<5>::tc()           { return TC1; };
-    template<> inline TcChannel * const Timer<5>::tcChan()       { return TC1->TC_CHANNEL + 2; };
-    template<> inline const uint32_t    Timer<5>::peripheralId() { return ID_TC5; };
-    template<> inline const IRQn_Type   Timer<5>::tcIRQ()        { return TC5_IRQn; };
-//    template<> void Timer<5>::interrupt();
-
-#ifdef TC2
-    template<> inline Tc * const        Timer<6>::tc()           { return TC2; };
-    template<> inline TcChannel * const Timer<6>::tcChan()       { return TC2->TC_CHANNEL + 0; };
-    template<> inline const uint32_t    Timer<6>::peripheralId() { return ID_TC6; };
-    template<> inline const IRQn_Type   Timer<6>::tcIRQ()        { return TC6_IRQn; };
-//    template<> void Timer<6>::interrupt();
-
-    template<> inline Tc * const        Timer<7>::tc()           { return TC2; };
-    template<> inline TcChannel * const Timer<7>::tcChan()       { return TC2->TC_CHANNEL + 1; };
-    template<> inline const uint32_t    Timer<7>::peripheralId() { return ID_TC7; };
-    template<> inline const IRQn_Type   Timer<7>::tcIRQ()        { return TC7_IRQn; };
-//    template<> void Timer<7>::interrupt();
-
-    template<> inline Tc * const        Timer<8>::tc()           { return TC2; };
-    template<> inline TcChannel * const Timer<8>::tcChan()       { return TC2->TC_CHANNEL + 2; };
-    template<> inline const uint32_t    Timer<8>::peripheralId() { return ID_TC8; };
-    template<> inline const IRQn_Type   Timer<8>::tcIRQ()        { return TC8_IRQn; };
-//    template<> void Timer<8>::interrupt();
-#endif
-
-
+    
 
     template<uint8_t timerNum, uint8_t channelNum>
     struct TimerChannel : Timer<timerNum> {
@@ -638,10 +643,10 @@ namespace Motate {
     struct PWMTimer {
 
         // NOTE: Notice! The *pointers* are const, not the *values*.
-        static Pwm * const pwm();
-        static PwmCh_num * const pwmChan();
-        static const uint32_t peripheralId(); // ID_TC0 .. ID_TC8
-        static const IRQn_Type pwmIRQ();
+        static constexpr Pwm * const pwm() { return PWM; };
+        static constexpr PwmCh_num * const pwmChan() { return PWM->PWM_CH_NUM + timerNum; };
+        static constexpr const uint32_t peripheralId() { return ID_PWM; };
+        static constexpr const IRQn_Type pwmIRQ() { return PWM_IRQn; };
 
         /********************************************************************
          **                          WARNING                                **
@@ -681,34 +686,6 @@ namespace Motate {
         void lock() {};
 #endif
 
-        void enablePeripheralClock() {
-            if (peripheralId() < 32) {
-                uint32_t id_mask = 1u << ( peripheralId() );
-                if ((PMC->PMC_PCSR0 & id_mask) != id_mask) {
-                    PMC->PMC_PCER0 = id_mask;
-                }
-            } else {
-                uint32_t id_mask = 1u << ( peripheralId() - 32 );
-                if ((PMC->PMC_PCSR1 & id_mask) != id_mask) {
-                    PMC->PMC_PCER1 = id_mask;
-                }
-            }
-        };
-
-        void disablePeripheralClock() {
-            if (peripheralId() < 32) {
-                uint32_t id_mask = 1u << ( peripheralId() );
-                if ((PMC->PMC_PCSR0 & id_mask) == id_mask) {
-                    PMC->PMC_PCDR0 = id_mask;
-                }
-            } else {
-                uint32_t id_mask = 1u << ( peripheralId() - 32 );
-                if ((PMC->PMC_PCSR1 & id_mask) == id_mask) {
-                    PMC->PMC_PCDR1 = id_mask;
-                }
-            }
-        };
-
         /* Set the mode and frequency.
          * Returns: The actual frequency that was used, or kFrequencyUnattainable
          * freq is not const since we may "change" it.
@@ -726,7 +703,7 @@ namespace Motate {
             pwm()->PWM_IDR1 = 0xFFFFFFFF ;
             pwm()->PWM_IDR2	= 0xFFFFFFFF ;
 
-            enablePeripheralClock();
+            SamCommon::enablePeripheralClock(peripheralId());
 
             if (mode == kTimerInputCapture || mode == kTimerInputCaptureToMatch)
                 return kFrequencyUnattainable;
@@ -966,47 +943,6 @@ namespace Motate {
         // Placeholder for user code.
         static void interrupt();
     }; // struct PWMTimer
-
-    template<> inline Pwm * const       PWMTimer<0>::pwm()           { return PWM; };
-    template<> inline PwmCh_num * const PWMTimer<0>::pwmChan()       { return PWM->PWM_CH_NUM + 0; };
-    template<> inline const uint32_t    PWMTimer<0>::peripheralId()  { return ID_PWM; };
-    template<> inline const IRQn_Type   PWMTimer<0>::pwmIRQ()        { return PWM_IRQn; };
-
-    template<> inline Pwm * const       PWMTimer<1>::pwm()           { return PWM; };
-    template<> inline PwmCh_num * const PWMTimer<1>::pwmChan()       { return PWM->PWM_CH_NUM + 1; };
-    template<> inline const uint32_t    PWMTimer<1>::peripheralId()  { return ID_PWM; };
-    template<> inline const IRQn_Type   PWMTimer<1>::pwmIRQ()        { return PWM_IRQn; };
-
-    template<> inline Pwm * const       PWMTimer<2>::pwm()           { return PWM; };
-    template<> inline PwmCh_num * const PWMTimer<2>::pwmChan()       { return PWM->PWM_CH_NUM + 2; };
-    template<> inline const uint32_t    PWMTimer<2>::peripheralId()  { return ID_PWM; };
-    template<> inline const IRQn_Type   PWMTimer<2>::pwmIRQ()        { return PWM_IRQn; };
-
-    template<> inline Pwm * const       PWMTimer<3>::pwm()           { return PWM; };
-    template<> inline PwmCh_num * const PWMTimer<3>::pwmChan()       { return PWM->PWM_CH_NUM + 3; };
-    template<> inline const uint32_t    PWMTimer<3>::peripheralId()  { return ID_PWM; };
-    template<> inline const IRQn_Type   PWMTimer<3>::pwmIRQ()        { return PWM_IRQn; };
-
-    template<> inline Pwm * const       PWMTimer<4>::pwm()           { return PWM; };
-    template<> inline PwmCh_num * const PWMTimer<4>::pwmChan()       { return PWM->PWM_CH_NUM + 4; };
-    template<> inline const uint32_t    PWMTimer<4>::peripheralId()  { return ID_PWM; };
-    template<> inline const IRQn_Type   PWMTimer<4>::pwmIRQ()        { return PWM_IRQn; };
-
-    template<> inline Pwm * const       PWMTimer<5>::pwm()           { return PWM; };
-    template<> inline PwmCh_num * const PWMTimer<5>::pwmChan()       { return PWM->PWM_CH_NUM + 5; };
-    template<> inline const uint32_t    PWMTimer<5>::peripheralId()  { return ID_PWM; };
-    template<> inline const IRQn_Type   PWMTimer<5>::pwmIRQ()        { return PWM_IRQn; };
-
-    template<> inline Pwm * const       PWMTimer<6>::pwm()           { return PWM; };
-    template<> inline PwmCh_num * const PWMTimer<6>::pwmChan()       { return PWM->PWM_CH_NUM + 6; };
-    template<> inline const uint32_t    PWMTimer<6>::peripheralId()  { return ID_PWM; };
-    template<> inline const IRQn_Type   PWMTimer<6>::pwmIRQ()        { return PWM_IRQn; };
-
-    template<> inline Pwm * const       PWMTimer<7>::pwm()           { return PWM; };
-    template<> inline PwmCh_num * const PWMTimer<7>::pwmChan()       { return PWM->PWM_CH_NUM + 7; };
-    template<> inline const uint32_t    PWMTimer<7>::peripheralId()  { return ID_PWM; };
-    template<> inline const IRQn_Type   PWMTimer<7>::pwmIRQ()        { return PWM_IRQn; };
-
 
 
     template<uint8_t timerNum, uint8_t channelNum>

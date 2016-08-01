@@ -34,23 +34,6 @@
 #include "MotateTimers.h" // for the interrupt definitions
 
 namespace Motate {
-//    enum ServiceCallInterruptOptions {
-//        kInterruptsOff              = 0,
-//        /* Alias for "off" to make more sense
-//         when returned from setInterruptPending(). */
-//        kInterruptUnknown           = 0,
-//
-//        /* This turns the IRQ on, and matches the interface of Timers. */
-//        kInterruptOnSoftwareTrigger = 1<<4,
-//
-//        /* Set priority levels here as well: */
-//        kInterruptPriorityHighest   = 1<<5,
-//        kInterruptPriorityHigh      = 1<<6,
-//        kInterruptPriorityMedium    = 1<<7,
-//        kInterruptPriorityLow       = 1<<8,
-//        kInterruptPriorityLowest    = 1<<9,
-//    };
-
     extern uint32_t _internal_pendsv_handler_number;
 
     template <uint8_t svcNumber>

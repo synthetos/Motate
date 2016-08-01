@@ -28,12 +28,10 @@
  
  */
 
-#if defined(__SAM3X8E__) || defined(__SAM3X8C__)
-
 #include "SamUART.h"
 
-namespace Motate {
 
+namespace Motate {
     template<> std::function<void(uint16_t)> _USARTHardware<0>::_uartInterruptHandler {};
 
 #ifdef HAS_USART1
@@ -42,6 +40,9 @@ namespace Motate {
 
     template<> std::function<void(uint16_t)> _UARTHardware<0>::_uartInterruptHandler {};
 
+#ifdef HAS_UART1
+    template<> std::function<void(uint16_t)> _UARTHardware<1>::_uartInterruptHandler {};
+#endif
 }
 
 extern "C" void USART0_Handler(void)  {
@@ -64,24 +65,26 @@ extern "C" void USART1_Handler(void)  {
 }
 #endif
 
-//extern "C" void USART2_Handler(void)  {
-//    if (Motate::_USARTHardware<2u>::_uartInterruptHandler) {
-//        Motate::_USARTHardware<2u>::_uartInterruptHandler(Motate::_USARTHardware<2u>::getInterruptCause());
-//        return;
-//    }
-//    __asm__("BKPT");
-//    //while (1) ;
-//}
 
+extern "C" void UART0_Handler(void)  {
+    if (Motate::_UARTHardware<0>::_uartInterruptHandler) {
+        Motate::_UARTHardware<0>::_uartInterruptHandler(Motate::_UARTHardware<0>::getInterruptCause());
+        return;
+    }
+    __asm__("BKPT");
+    //while (1) ;
+}
 
-//extern "C" void USART3_Handler(void)  {
-//    if (Motate::_UARTHardware<3u>::_uartInterruptHandler) {
-//        Motate::_UARTHardware<3u>::_uartInterruptHandler(Motate::_UARTHardware<3u>::getInterruptCause());
-//        return;
-//    }
-//    __asm__("BKPT");
-//    //while (1) ;
-//}
+#ifdef HAS_UART1
+extern "C" void UART1_Handler(void)  {
+    if (Motate::_UARTHardware<1>::_uartInterruptHandler) {
+        Motate::_UARTHardware<1>::_uartInterruptHandler(Motate::_UARTHardware<1>::getInterruptCause());
+        return;
+    }
+    __asm__("BKPT");
+    //while (1) ;
+}
+#endif
 
 extern "C" void UART_Handler(void)  {
     if (Motate::_UARTHardware<0u>::_uartInterruptHandler) {
@@ -91,6 +94,3 @@ extern "C" void UART_Handler(void)  {
     __asm__("BKPT");
     //while (1) ;
 }
-
-
-#endif

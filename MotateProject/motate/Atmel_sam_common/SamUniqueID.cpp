@@ -2,7 +2,7 @@
  * SamID.h - motate function to retrieve the processor unique ID
  * This file is part of the Motate project, imported from the TinyG project
  *
- * Copyright (c) 2015 Robert Giseburt
+ * Copyright (c) 2015-2016 Robert Giseburt
  * Copyright (c) 2014 Tom Cauchois
  *
  * This file ("the software") is free software: you can redistribute it and/or modify
@@ -26,10 +26,12 @@
  * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#if defined(__SAM3X8E__) || defined(__SAM3X8C__)
-
 #include <sam.h>
-#include "Atmel_sam3x/SamUniqueID.h"
+#include "SamUniqueID.h"
+
+#if !defined(EFC) && defined(EFC0)
+#define EFC EFC0
+#endif
 
 #define   EEFC_FCR_FCMD_STUI (0xEu << 0) /**< \brief (EEFC_FCR) Start read unique identifier */
 #define   EEFC_FCR_FCMD_SPUI (0xFu << 0) /**< \brief (EEFC_FCR) Stop read unique identifier */
@@ -51,18 +53,18 @@ namespace Motate {
         __disable_irq();
 
         // Run EEFC uuid sequence
-        while ((EFC0->EEFC_FSR & EEFC_FSR_FRDY) == 0);
+        while ((EFC->EEFC_FSR & EEFC_FSR_FRDY) == 0);
 
-        EFC0->EEFC_FCR = EEFC_FCR_FCMD_STUI | EEFC_FCR_FKEY(0x5A);
-        while ((EFC0->EEFC_FSR & EEFC_FSR_FRDY) == 1);
+        EFC->EEFC_FCR = EEFC_FCR_FCMD_STUI | EEFC_FCR_FKEY_PASSWD;
+        while ((EFC->EEFC_FSR & EEFC_FSR_FRDY) == 1);
         // Read unique id @ 0x00080000
         UUID._d[0] = _UUID_REGISTER[0];
         UUID._d[1] = _UUID_REGISTER[1];
         UUID._d[2] = _UUID_REGISTER[2];
         UUID._d[3] = _UUID_REGISTER[3];
 
-        EFC0->EEFC_FCR = EEFC_FCR_FCMD_SPUI | EEFC_FCR_FKEY(0x5A);
-        while ((EFC0->EEFC_FSR & EEFC_FSR_FRDY) == 0);
+        EFC->EEFC_FCR = EEFC_FCR_FCMD_SPUI | EEFC_FCR_FKEY_PASSWD;
+        while ((EFC->EEFC_FSR & EEFC_FSR_FRDY) == 0);
 
         // Memory swap needs some time to stabilize
         for (uint32_t i=0; i<1000000; i++) {
@@ -75,29 +77,29 @@ namespace Motate {
 
     UUID_t::UUID_t()
     {
-            _readUUID();
+        _readUUID();
 
-            // Precalculate the _stringval
-            char *p =_stringval;
-            for (int i = 0; i < 16; ++i) {
-                // Network/Big-endian
-                uint8_t byte = (_d[i/4] >> (i%4)) & 0xF;
+        // Precalculate the _stringval
+        char *p =_stringval;
+        for (int i = 0; i < 16; ++i) {
+            // Network/Big-endian
+            uint8_t byte = (_d[i/4] >> (i%4)) & 0xF;
 
-                // Put a dash every four characters
-                if (i > 0 && (i%4) == 0) {
-                    *p++ = '-';
-                }
+            // Put a dash every four characters
+            if (i > 0 && (i%4) == 0) {
+                *p++ = '-';
+            }
 
-                // Put the HEX ASCII in the string
-                if (byte < 0xA) {
-                    *p++ = byte + '0';
-                }
-                else
-                {
-                    *p++ = (byte - 0xA) + 'a';
-                }
+            // Put the HEX ASCII in the string
+            if (byte < 0xA) {
+                *p++ = byte + '0';
+            }
+            else
+            {
+                *p++ = (byte - 0xA) + 'a';
             }
         }
+    }
 
 
     UUID_t::operator const char*()

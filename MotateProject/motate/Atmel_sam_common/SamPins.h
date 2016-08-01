@@ -51,6 +51,10 @@ namespace Motate {
         // end-user (sketch) code.
         kPeripheralA    = 3,
         kPeripheralB    = 4,
+#if defined(__SAM4E8E__) || defined(__SAM4E16E__) || defined(__SAM4E8C__) || defined(__SAM4E16C__)
+        kPeripheralC    = 5,
+        kPeripheralD    = 6,
+#endif
     };
 
     // Numbering is arbitrary, but bit unique for bitwise operations (unlike other architectures):
@@ -140,11 +144,55 @@ namespace Motate {
     template <unsigned char portLetter>
     struct PortHardware {
         static const uint8_t letter = portLetter;
-        constexpr Pio* const rawPort() const;
-        static const uint32_t peripheralId();
-        constexpr const IRQn_Type _IRQn() const;
 
-        
+        // The constexpr functions we can define here, and get really great optimization.
+        // These switch statements are handled by the compiler, not at runtime.
+        constexpr Pio* const rawPort() const
+        {
+            switch (portLetter) {
+                case 'A': return PIOA;
+#ifdef PIOB
+                case 'B': return PIOB;
+#endif
+#ifdef PIOC
+                case 'C': return PIOC;
+#endif
+#ifdef PIOD
+                case 'D': return PIOD;
+#endif
+            }
+        };
+        constexpr static const uint32_t peripheralId() const
+        {
+            switch (portLetter) {
+                case 'A': return ID_PIOA;
+#ifdef PIOB
+                case 'B': return ID_PIOB;
+#endif
+#ifdef PIOC
+                case 'C': return ID_PIOC;
+#endif
+#ifdef PIOD
+                case 'D': return ID_PIOD;
+#endif
+            }
+        };
+        constexpr const IRQn_Type _IRQn() const
+        {
+            switch (portLetter) {
+                case 'A': return PIOA_IRQn;
+#ifdef PIOB
+                case 'B': return PIOB_IRQn;
+#endif
+#ifdef PIOC
+                case 'C': return PIOC_IRQn;
+#endif
+#ifdef PIOD
+                case 'D': return PIOD_IRQn;
+#endif
+            }
+        };
+
 
         static _pinChangeInterrupt *_firstInterrupt;
 
@@ -155,10 +203,10 @@ namespace Motate {
                     rawPort()->PIO_PER = mask ;
                     break;
                 case kInput:
-                    SamCommon::enablePeripheralClock(peripheralId());
                     rawPort()->PIO_ODR = mask ;
                     rawPort()->PIO_PER = mask ;
                     break;
+#if defined(__SAM3X8E__) || defined(__SAM3X8C__)
                 case kPeripheralA:
                     rawPort()->PIO_ABSR &= ~mask ;
                     rawPort()->PIO_PDR = mask ;
@@ -167,10 +215,53 @@ namespace Motate {
                     rawPort()->PIO_ABSR |= mask ;
                     rawPort()->PIO_PDR = mask ;
                     break;
+#else
+                /* From the datasheet (corrected typo based on the register info):
+                 * The corresponding bit at level zero in PIO_ABCDSR1 and
+                   the corresponding bit at level zero in PIO_ABCDSR2 means peripheral A is selected.
+
+                 * The corresponding bit at level one in PIO_ABCDSR1 and
+                   the corresponding bit at level zero in PIO_ABCDSR2 means peripheral B is selected.
+
+                 * The corresponding bit at level zero in PIO_ABCDSR1 and
+                   the corresponding bit at level one in PIO_ABCDSR2 means peripheral C is selected.
+
+                 * The corresponding bit at level one in PIO_ABCDSR1 and
+                   the corresponding bit at level one in PIO_ABCDSR2 means peripheral D is selected.
+
+
+                 *   Truth Table:
+                 *  Sel | SR2 | SR1
+                 *    A |  0  |  0
+                 *    B |  0  |  1
+                 *    C |  1  |  0
+                 *    D |  1  |  1
+                 */
+                case kPeripheralA:
+                    rawPort()->PIO_ABCDSR[1] &= ~mask ;
+                    rawPort()->PIO_ABCDSR[0] &= ~mask ;
+                    rawPort()->PIO_PDR = mask ;
+                    break;
+                case kPeripheralB:
+                    rawPort()->PIO_ABCDSR[1] &= ~mask ;
+                    rawPort()->PIO_ABCDSR[0] |=  mask ;
+                    rawPort()->PIO_PDR = mask ;
+                    break;
+                case kPeripheralC:
+                    rawPort()->PIO_ABCDSR[1] |=  mask ;
+                    rawPort()->PIO_ABCDSR[0] &= ~mask ;
+                    rawPort()->PIO_PDR = mask ;
+                    break;
+                case kPeripheralD:
+                    rawPort()->PIO_ABCDSR[1] |=  mask ;
+                    rawPort()->PIO_ABCDSR[0] |=  mask ;
+                    rawPort()->PIO_PDR = mask ;
+                    break;
+#endif
+
                 default:
                     break;
             }
-
             /* if all pins are output, disable PIO Controller clocking, reduce power consumption */
             if ( rawPort()->PIO_OSR == 0xffffffff )
             {
@@ -210,14 +301,22 @@ namespace Motate {
             if (kDeglitch & options)
             {
                 rawPort()->PIO_IFER = mask ;
+#if defined(__SAM3X8E__) || defined(__SAM3X8C__)
                 rawPort()->PIO_SCIFSR = mask ;
+#else
+                rawPort()->PIO_IFSCDR = mask ;
+#endif
             }
             else
             {
                 if (kDebounce & options)
                 {
                     rawPort()->PIO_IFER = mask ;
+#if defined(__SAM3X8E__) || defined(__SAM3X8C__)
                     rawPort()->PIO_DIFSR = mask ;
+#else
+                    rawPort()->PIO_IFSCER = mask ;
+#endif
                 }
                 else
                 {
@@ -227,9 +326,9 @@ namespace Motate {
         };
         PinOptions_t getOptions(const uintPort_t mask) {
             return ((rawPort()->PIO_PUSR & mask) ? kPullUp : 0) |
-                   ((rawPort()->PIO_MDSR & mask) ? kWiredAnd : 0) |
-                   ((rawPort()->PIO_IFSR & mask) ?
-                    ((rawPort()->PIO_IFDGSR & mask) ? kDebounce : kDeglitch) : 0);
+            ((rawPort()->PIO_MDSR & mask) ? kWiredAnd : 0) |
+            ((rawPort()->PIO_IFSR & mask) ?
+             ((rawPort()->PIO_IFDGSR & mask) ? kDebounce : kDeglitch) : 0);
         };
         void set(const uintPort_t mask) {
             rawPort()->PIO_SODR = mask;
@@ -238,9 +337,14 @@ namespace Motate {
             rawPort()->PIO_CODR = mask;
         };
         void toggle(const uintPort_t mask) {
-            rawPort()->PIO_OWDR = 0xffffffff;/*Disable all registers for writing thru ODSR*/
-            rawPort()->PIO_OWER = mask;/*Enable masked registers for writing thru ODSR*/
-            rawPort()->PIO_ODSR ^= mask;
+//            rawPort()->PIO_OWDR = 0xffffffff;/*Disable all registers for writing thru ODSR*/
+//            rawPort()->PIO_OWER = mask;/*Enable masked registers for writing thru ODSR*/
+//            rawPort()->PIO_ODSR = rawPort()->PIO_ODSR ^ mask;
+            if (rawPort()->PIO_ODSR & mask) {
+                clear(mask);
+            } else {
+                set(mask);
+            }
         };
         void write(const uintPort_t value) {
             rawPort()->PIO_OWER = 0xffffffff;/*Enable all registers for writing thru ODSR*/
@@ -273,10 +377,10 @@ namespace Motate {
                         rawPort()->PIO_ESR = mask;
                     }
                     else
-                    if ((interrupts & kPinInterruptTypeMask) == kPinInterruptOnHighLevel ||
-                        (interrupts & kPinInterruptTypeMask) == kPinInterruptOnLowLevel) {
-                        rawPort()->PIO_LSR = mask;
-                    }
+                        if ((interrupts & kPinInterruptTypeMask) == kPinInterruptOnHighLevel ||
+                            (interrupts & kPinInterruptTypeMask) == kPinInterruptOnLowLevel) {
+                            rawPort()->PIO_LSR = mask;
+                        }
                     /*Rising Edge/High Level, or Falling Edge/LowLevel?*/
                     if ((interrupts & kPinInterruptTypeMask) == kPinInterruptOnRisingEdge ||
                         (interrupts & kPinInterruptTypeMask) == kPinInterruptOnHighLevel) {
@@ -334,33 +438,13 @@ namespace Motate {
         }
     };
 
-    // The constexpr functions we can define here, and get really great optimization.
-    // The static functions must be handled in the cpp file for linking reasons.
-
-    template<> constexpr Pio* const PortHardware<'A'>::rawPort() const { return PIOA; };
-    template<> constexpr const IRQn_Type PortHardware<'A'>::_IRQn() const { return PIOA_IRQn; };
-
-    template<> constexpr Pio* const PortHardware<'B'>::rawPort() const { return PIOB; };
-    template<> constexpr const IRQn_Type PortHardware<'B'>::_IRQn() const { return PIOB_IRQn; };
-
-#ifdef PIOC
-    template<> constexpr Pio* const PortHardware<'C'>::rawPort() const { return PIOC; };
-    template<> constexpr const IRQn_Type PortHardware<'C'>::_IRQn() const { return PIOC_IRQn; };
-#endif
-
-#ifdef PIOD
-    template<> constexpr Pio* const PortHardware<'D'>::rawPort() const { return PIOD; };
-    template<> constexpr const IRQn_Type PortHardware<'D'>::_IRQn() const { return PIOD_IRQn; };
-#endif
-
-
     /**************************************************
      *
      * BASIC PINS: _MAKE_MOTATE_PIN
      *
      **************************************************/
 
-#define _MAKE_MOTATE_PIN(pinNum, registerLetter, registerChar, registerPin) \
+#define _MAKE_MOTATE_PIN(pinNum, registerChar, registerPin) \
     template<> \
     struct Pin<pinNum> : RealPin<registerChar, registerPin> { \
         static const int16_t number = pinNum; \
@@ -389,6 +473,16 @@ namespace Motate {
 #define MOTATE_PIN_INTERRUPT(number) \
     template<> void Motate::IRQPin<number>::interrupt()
 
+
+
+#if defined(__SAM3X8E__) || defined(__SAM3X8C__)
+
+#pragma mark ADC_Module/ACD_Pin (Sam3x)
+    /**************************************************
+     *
+     * PIN CHANGE INTERRUPT SUPPORT: IsIRQPin / MOTATE_PIN_INTERRUPT
+     *
+     **************************************************/
 
     constexpr uint32_t startup_table[] = { 0, 8, 16, 24, 64, 80, 96, 112, 512, 576, 640, 704, 768, 832, 896, 960 };
 
@@ -567,6 +661,76 @@ namespace Motate {
     template<int16_t adcNum>
     using LookupADCPinByADC = ADCPin< ReverseADCPin< adcNum >::number >;
 
+#else // not Sam3x
+
+#pragma mark ADC_Module/ACD_Pin (Sam3x)
+    /**************************************************
+     *
+     * PIN CHANGE INTERRUPT SUPPORT: IsIRQPin / MOTATE_PIN_INTERRUPT
+     *
+     **************************************************/
+
+    template<pin_number pinNum>
+    struct ADCPinParent {
+        static const uint32_t adcMask = 0;
+        static const uint32_t adcNumber = 0;
+        static const uint16_t getTop() { return 4095; };
+    };
+
+    // Some pins are ADC pins.
+     template<pin_number n>
+     struct ADCPin : Pin<-1> {
+         ADCPin() : Pin<-1>() {};
+         ADCPin(const PinOptions_t options) : Pin<-1>() {};
+    
+         uint32_t getRaw() {
+             return 0;
+         };
+         uint32_t getValue() {
+             return 0;
+         };
+         operator int16_t() {
+             return getValue();
+         };
+         operator float() {
+             return 0.0;
+         };
+         static const uint16_t getTop() { return 4095; };
+    
+         static const bool is_real = false;
+         void setInterrupts(const uint32_t interrupts) {};
+         static void interrupt() __attribute__ (( weak )); // Allow setting an interrupt on a invalid ADC pin -- will never be called
+     };
+
+    template<int16_t adcNum>
+    struct ReverseADCPin : ADCPin<-1> {
+        ReverseADCPin() : ADCPin<-1>() {};
+        ReverseADCPin(const PinOptions_t options) : ADCPin<-1>() {};
+    };
+
+    #define _MAKE_MOTATE_ADC_PIN(registerChar, registerPin, adcNum) \
+        template<> \
+            struct ADCPinParent< ReversePinLookup<registerChar, registerPin>::number > { \
+            static const uint32_t adcMask = 1 << adcNum; \
+            static const uint32_t adcNumber = adcNum; \
+            static const uint16_t getTop() { return 4095; }; \
+        }; \
+        template<> \
+        struct ReverseADCPin<adcNum> : ADCPin<ReversePinLookup<registerChar, registerPin>::number> { \
+            ReverseADCPin() : ADCPin<ReversePinLookup<registerChar, registerPin>::number>() {}; \
+            ReverseADCPin(const PinOptions_t options) : ADCPin<ReversePinLookup<registerChar, registerPin>::number>(options) {}; \
+        };
+
+    template<int16_t pinNum>
+    constexpr const bool IsADCPin() { return ADCPin<pinNum>::is_real; };
+
+    template<uint8_t portChar, int16_t portPin>
+    using LookupADCPin = ADCPin< ReversePinLookup<portChar, portPin>::number >;
+
+    template<int16_t adcNum>
+    using LookupADCPinByADC = ADCPin< ReverseADCPin< adcNum >::number >;
+
+#endif
 
 
 #pragma mark PWMOutputPin support
@@ -610,13 +774,15 @@ namespace Motate {
             SPIChipSelectPin() : ReversePinLookup<registerChar, registerPin>(kPeripheral ## peripheralAorB) {}; \
             static constexpr bool is_real = true; \
             static constexpr uint8_t spiNum = 0; /* There is only one*/ \
-            static const uint8_t csOffset = csNum; \
+            static constexpr uint8_t csNumber =  csNum; \
+            static constexpr uint8_t csValue  = ~csNum; \
+            static constexpr bool usesDecoder = false; \
         };
 
     #define _MAKE_MOTATE_SPI_MISO_PIN(registerChar, registerPin, peripheralAorB)\
         template<>\
         struct SPIMISOPin< ReversePinLookup<registerChar, registerPin>::number > : ReversePinLookup<registerChar, registerPin> {\
-            SPIMISOPin() : ReversePinLookup<registerChar, registerPin>(kPeripheral ## peripheralAorB) {};\
+            SPIMISOPin() : ReversePinLookup<registerChar, registerPin>{kPeripheral ## peripheralAorB} {};\
             static constexpr bool is_real = true; \
             static constexpr uint8_t spiNum = 0; /* There is only one*/ \
         };
@@ -625,7 +791,7 @@ namespace Motate {
     #define _MAKE_MOTATE_SPI_MOSI_PIN(registerChar, registerPin, peripheralAorB)\
         template<>\
         struct SPIMOSIPin< ReversePinLookup<registerChar, registerPin>::number > : ReversePinLookup<registerChar, registerPin> {\
-            SPIMOSIPin() : ReversePinLookup<registerChar, registerPin>(kPeripheral ## peripheralAorB) {};\
+            SPIMOSIPin() : ReversePinLookup<registerChar, registerPin>{kPeripheral ## peripheralAorB} {};\
             static constexpr bool is_real = true; \
             static constexpr uint8_t spiNum = 0; /* There is only one*/ \
         };
@@ -634,7 +800,7 @@ namespace Motate {
     #define _MAKE_MOTATE_SPI_SCK_PIN(registerChar, registerPin, peripheralAorB)\
         template<>\
         struct SPISCKPin< ReversePinLookup<registerChar, registerPin>::number > : ReversePinLookup<registerChar, registerPin> {\
-            SPISCKPin() : ReversePinLookup<registerChar, registerPin>(kPeripheral ## peripheralAorB) {};\
+            SPISCKPin() : ReversePinLookup<registerChar, registerPin> { kPeripheral ## peripheralAorB } {};\
             static constexpr bool is_real = true; \
             static constexpr uint8_t spiNum = 0; /* There is only one*/ \
         };
@@ -686,6 +852,33 @@ namespace Motate {
             static const uint8_t uartNum = uartNumVal;\
             static const bool is_real = true;\
         };
+
+#pragma mark ClockOutputPin
+    /**************************************************
+     *
+     * Clock Output PIN METADATA and wiring: CLKOutPin
+     *
+     * Provides: _MAKE_MOTATE_CLOCK_OUTPUT_PIN
+     *
+     **************************************************/
+
+    #define _MAKE_MOTATE_CLOCK_OUTPUT_PIN(registerChar, registerPin, clockNumber, peripheralAorB)\
+        template<>\
+        struct ClockOutputPin< ReversePinLookup<registerChar, registerPin>::number > : ReversePinLookup<registerChar, registerPin> {\
+            ClockOutputPin(const uint32_t target_freq) : ReversePinLookup<registerChar, registerPin>(kPeripheral ## peripheralAorB) {\
+                uint32_t prescaler = PMC_PCK_PRES_CLK_1;\
+                if ((SystemCoreClock >> 1) < target_freq) { prescaler = PMC_PCK_PRES_CLK_2; }\
+                if ((SystemCoreClock >> 2) < target_freq) { prescaler = PMC_PCK_PRES_CLK_4; }\
+                if ((SystemCoreClock >> 3) < target_freq) { prescaler = PMC_PCK_PRES_CLK_8; }\
+                if ((SystemCoreClock >> 4) < target_freq) { prescaler = PMC_PCK_PRES_CLK_16; }\
+                if ((SystemCoreClock >> 5) < target_freq) { prescaler = PMC_PCK_PRES_CLK_32; }\
+                if ((SystemCoreClock >> 6) < target_freq) { prescaler = PMC_PCK_PRES_CLK_64; }\
+                PMC->PMC_PCK[clockNumber] = PMC_PCK_CSS_MCK | prescaler;\
+            };\
+            static const bool is_real = true;\
+            void operator=(const bool value); /*Will cause a failure if used.*/\
+        };
+
 } // end namespace Motate
 
 #endif /* end of include guard: SAMPINS_H_ONCE */

@@ -27,8 +27,6 @@
  OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#if defined(__SAM4E8E__) || defined(__SAM4E16E__) || defined(__SAM4E8C__) || defined(__SAM4E16C__)
-
 #include <sam.h>
 #include "SamServiceCall.h"
 
@@ -75,74 +73,6 @@ namespace Motate {
     template<> uint32_t ServiceCall< 10 >::_interrupt_level = 0;
 }
 
-#if 0 
-
-//-- to toss later
-
-// Here we use some tricks that require knowledge of the ARMv7-M (for M3 processors) architecture.
-// See the ARMv7-m Technical Reference Manual (TRM) PDF available from:
-//   http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.ddi0403e.b/index.html
-// In particular, section B1.5.8 "Exception return behavior" for description of how the LR hold in bit 2
-// which stack is in use outside of rthe interrupt context, so we can tell which stack to look at for the
-// SVC instruction used.
-
-void _internal_svc_handler(uint32_t *svc_args) {
-    // Now that we have the stack in svc_args, we need to get to the previous program counter to
-    // get the SVC instruction. See section 2.3.7 of:
-    //   http://infocenter.arm.com/help/topic/com.arm.doc.dui0552a/DUI0552A_cortex_m3_dgug.pdf
-    // for the stack structure of the M3. You'll see int he picture on page 2-26 that PC is at
-    // byte offset 0x18 (24), or the 6th 32-bit offset.
-    // Then in the ARMv7-M TRM (linked to above) in section A6.7.136 SVC (formerly SWI) you see
-    // the lower byte of the SVC instruction holds the value we want.
-    // Since an instruction is two bytes in size, we want the bottom byte of the previous
-    // instruction, so we use an offset of -2.
-
-    uint32_t handler_number = ((char *)svc_args[6])[-2];
-
-#define _temp_call_handler(n) \
-if (Motate::ServiceCall< n >::interrupt && handler_number == n) {\
-Motate::ServiceCall< n >::interrupt();\
-}
-
-    _temp_call_handler( 0)
-    else _temp_call_handler( 1)
-    else _temp_call_handler( 2)
-    else _temp_call_handler( 3)
-    else _temp_call_handler( 4)
-    else _temp_call_handler( 5)
-    else _temp_call_handler( 6)
-    else _temp_call_handler( 7)
-    else _temp_call_handler( 8)
-    else _temp_call_handler( 9)
-    else _temp_call_handler(10)
-#undef _temp_call_handler
-}
-
-
-__attribute__ (( naked ))
-void SVC_Handler() {
-
-    /*
-     * Get the pointer to the stack frame which was saved before the SVC
-     * call, so we can grab the SVC call and know where to go from here.
-     */
-    asm volatile (
-                  "tst lr, #4 \t\n"       // Check EXC_RETURN[2]
-                  "ite eq \t\n"           // Set the next instructions as If equal...Else
-                  "mrseq r0, msp \t\n"    // Grab the Main Stack Pointer and put it in R0
-                  "mrsne r0, psp \t\n"    // Grab the Priveledged Stack Pointer and put it in R0
-                  "b %[_internal_svc_handler] \n\t"
-                  : // no outputs
-                  : [_internal_svc_handler] "i" (_internal_svc_handler)// input is function address
-                  : "r0" // clobbers
-                  );
-
-}
-
-
-#else // if 0
-
-
 void PendSV_Handler() {
 
 #define _temp_call_handler(n) \
@@ -164,7 +94,3 @@ if (Motate::ServiceCall< n >::interrupt && Motate::_internal_pendsv_handler_numb
 #undef _temp_call_handler
 
 }
-
-#endif // if 0 .. else
-
-#endif

@@ -714,6 +714,7 @@
 		D48992C51965B460004F73A6 /* uart_demo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = uart_demo.cpp; sourceTree = "<group>"; };
 		D49367D31B8638F0000BB759 /* MotateServiceCall.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotateServiceCall.h; sourceTree = "<group>"; };
 		D4A74B2119C15DB00019633A /* frdm-kl05z.cfg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "frdm-kl05z.cfg"; sourceTree = "<group>"; };
+		D4B74A071D4FB25500E0BFB6 /* Atmel_sam_common */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Atmel_sam_common; sourceTree = "<group>"; };
 		D4C77F6D1950912300A1BE28 /* Tools.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Tools.xcodeproj; path = ../Tools/Tools.xcodeproj; sourceTree = "<group>"; };
 		D4C78F63195201A900A1BE28 /* MotatePins.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = MotatePins.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		D4C78F64195201A900A1BE28 /* MotateSPI.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotateSPI.h; sourceTree = "<group>"; };
@@ -2085,6 +2086,7 @@
 				D4C79F20195BCC9A00A1BE28 /* main.cpp */,
 				D4C78F821957BF8400A1BE28 /* Motate.mk */,
 				D4C79F0F1957C9E700A1BE28 /* MotateUtilities.mk */,
+				D4B74A071D4FB25500E0BFB6 /* Atmel_sam_common */,
 				D423A30B1D07B16200575D2C /* Atmel_sam3x */,
 				D423A30C1D07B16F00575D2C /* Atmel_sam4e */,
 				D4C78F6E19538E6B00A1BE28 /* Freescale_klxx */,
