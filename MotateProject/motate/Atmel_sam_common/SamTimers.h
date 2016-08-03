@@ -33,6 +33,7 @@
 #include "sam.h"
 #include "SamCommon.h"
 #include <functional> // for std::function and related
+#include <type_traits> // for std::extent and std::alignment_of
 
 /* Sam hardware has two types of timer: "Timers" and "PWMTimers"
  *
@@ -67,6 +68,13 @@
 
 
 namespace Motate {
+#pragma mark Enums, typedefs, etc.
+    /**************************************************
+     *
+     * Enums and typedefs
+     *
+     **************************************************/
+
     enum TimerMode {
         /* InputCapture mode (WAVE = 0) */
         kTimerInputCapture         = 0,
@@ -89,6 +97,11 @@ namespace Motate {
         kTimerUpDownToMatch = TC_CMR_WAVE | TC_CMR_WAVSEL_UPDOWN_RC,
         /* For PWM, we'll alias kTimerUpDownToMatch as: */
         kPWMCenterAligned     = kTimerUpDownToMatch,
+    };
+
+    enum TimerSyncMode {
+        kTimerSyncManually = 0,
+        kTimerSyncDMA      = 1
     };
 
     /* We're trading acronyms for verbose CamelCase. Dubious. */
@@ -148,8 +161,23 @@ namespace Motate {
 
     typedef const uint8_t timer_number;
 
+
+#pragma mark Timer<n>
+    /**************************************************
+     *
+     * TIMERS: Timer<n>
+     *
+     **************************************************/
+
     template <uint8_t timerNum>
     struct Timer {
+        // For external inspection
+        static constexpr uint8_t peripheral_num = (timerNum < 3) ? 0 : (timerNum < 6) ? 1 : 2;
+        static constexpr uint8_t timer_num = timerNum;
+
+        // This type of timer can't sync
+        static constexpr uint8_t can_sync = false;
+        static constexpr uint8_t sync_master = false;
 
         // Try to catch invalid Timer usage ASAP
 #ifndef TC1
@@ -586,6 +614,12 @@ namespace Motate {
         static void interrupt();
     }; // Timer<>
     
+#pragma mark TimerChannel<n>
+    /**************************************************
+     *
+     * TIMERCHANNELSS: TimerChannel<n>
+     *
+     **************************************************/
 
     template<uint8_t timerNum, uint8_t channelNum>
     struct TimerChannel : Timer<timerNum> {
@@ -640,6 +674,12 @@ namespace Motate {
     };
 
 
+#pragma mark PWMTimer<n>
+    /**************************************************
+     *
+     * PWMTimer: PWMTimer<n>
+     *
+     **************************************************/
 
     extern uint32_t pwm_interrupt_cause_cached_1_;
     extern uint32_t pwm_interrupt_cause_cached_2_;
@@ -650,17 +690,48 @@ namespace Motate {
     template <uint8_t timerNum>
     struct PWMTimer {
 
+#if defined(PWM)
+        static_assert(timerNum>=0 && timerNum<8, "PWMTimer<n>: n must be within 0 through 7 on this processor.");
+
+        // For external inspection
+        static constexpr uint8_t peripheral_num = 0;
+        static constexpr uint8_t timer_num = timerNum;
+
         // NOTE: Notice! The *pointers* are const, not the *values*.
         static constexpr Pwm * const pwm() { return PWM; };
         static constexpr PwmCh_num * const pwmChan() { return PWM->PWM_CH_NUM + timerNum; };
         static constexpr const uint32_t peripheralId() { return ID_PWM; };
         static constexpr const IRQn_Type pwmIRQ() { return PWM_IRQn; };
 
-        /********************************************************************
-         **                          WARNING                                **
-         ** WARNING: Sam channels (tcChan) DO NOT map to Motate Channels!?! **
-         **                          WARNING           (u been warned)      **
-         *********************************************************************/
+#elif defined(PWM1)
+        static_assert(timerNum>0 && timerNum<16, "PWMTimer<n>: n must be within 0 through 16 on this processor.");
+
+        // For external inspection
+        static constexpr uint8_t peripheral_num = (timerNum<8)?0:1;
+        static constexpr uint8_t timer_num = (timerNum<8) ? timerNum : (timerNum-8);
+
+        // NOTE: Notice! The *pointers* are const, not the *values*.
+        static constexpr Pwm * const pwm()
+        {
+            if (timerNum < 8) { return PWM0; }
+            else              { return PWM1; }
+        };
+        static constexpr PwmCh_num * const pwmChan()
+        {
+            if (timerNum < 8) { return PWM0->PWM_CH_NUM + timerNum; }
+            else              { return PWM1->PWM_CH_NUM + (timerNum-8); }
+        };
+        static constexpr const uint32_t peripheralId()
+        {
+            if (timerNum < 8) { return ID_PWM0; }
+            else              { return ID_PWM1; }
+        };
+        static constexpr const IRQn_Type pwmIRQ()
+        {
+            if (timerNum < 8) { return PWM0_IRQn; }
+            else              { return PWM1_IRQn; }
+        };
+#endif
 
         PWMTimer() { init(); };
         PWMTimer(const TimerMode mode, const uint32_t freq) {
@@ -671,6 +742,59 @@ namespace Motate {
         void init() {
             /* Unlock this thing */
             unlock();
+        }
+
+
+        static constexpr uint8_t can_sync = true;
+        static constexpr uint8_t sync_master = (timer_num == 0);
+
+        void setSync(const bool is_sync) {
+            if (is_sync) {
+                pwm()->PWM_SCM |=   PWM_SCM_SYNC0 << timer_num;
+            } else {
+                pwm()->PWM_SCM &= ~(PWM_SCM_SYNC0 << timer_num);
+            }
+        };
+
+        void setSyncMode(const TimerSyncMode m, uint32_t periods = 1) {
+            pwm()->PWM_SCM = (pwm()->PWM_SCM & ~(PWM_SCM_UPDM_Msk | PWM_SCM_PTRM | PWM_SCM_PTRCS_Msk)) |
+              ((m == kTimerSyncManually) ?
+                PWM_SCM_UPDM_MODE1 :
+//               (PWM_SCM_UPDM_MODE2 | PWM_SCM_PTRM | PWM_SCM_PTRCS(2)) // set the update to occur int he middle of the period
+               (PWM_SCM_UPDM_MODE2)
+              );
+
+            if (periods < 1) { periods = 1; } // minimum of 1
+            if (periods > 0xF) { periods = 0xF; } // maximum of 0xF
+            pwm()->PWM_SCUPUPD = PWM_SCUPUPD_UPRUPD(periods - 1);
+            pwm()->PWM_SCUC = PWM_SCUC_UPDULOCK;
+        };
+
+        bool startTransfer(uint8_t * const buffer, const uint16_t length) {
+            if (pwm()->PWM_TCR == 0) {
+//                stop();
+//                pwm()->PWM_PTCR = PWM_PTCR_TXTDIS;
+                pwm()->PWM_TPR = (uint32_t)buffer;
+                pwm()->PWM_TCR = length;
+            } else if (pwm()->PWM_TNCR == 0) {
+                pwm()->PWM_TNPR = (uint32_t)buffer;
+                pwm()->PWM_TNCR = length;
+            } else {
+                return false; // was unable to start a transfer
+            }
+            pwm()->PWM_PTCR = PWM_PTCR_TXTEN;
+            start();
+            return true;
+        }
+        // This form allows passing a single-dimensional array by reference, and deduces the full length
+        template<typename T>
+        bool startTransfer(T const &buffer) {
+            static_assert(std::alignment_of<T>::value == 2, "startTransfer(buffer): buffer must be an array of two-byte values");
+            return startTransfer((uint8_t *)(&buffer), std::extent<T>::value);
+        }
+
+        bool isTransferDone() {
+            return ((pwm()->PWM_TCR == 0) && (pwm()->PWM_TNCR == 0));
         }
 
 #ifndef YOU_REALLY_WANT_PWM_LOCK_AND_UNLOCK
@@ -958,33 +1082,15 @@ namespace Motate {
         //Intentionally empty
     };
 
-    template<uint8_t timerNum>
-    struct PWMTimerChannel<timerNum, 0> : PWMTimer<timerNum> {
-        PWMTimerChannel() : PWMTimer<timerNum>() {};
-
-        /* Redundant:
-         void setDutyCycle(const float ratio) {
-         PWMTimer<timerNum>::setDutyCycle(ratio);
-         };
-
-         void setExactDutyCycle(const uint32_t absolute) {
-         PWMTimer<timerNum>::setExactDutyCycle(absolute);
-         };
-
-         void setOutputOptions(const uint32_t options) {
-         PWMTimer<timerNum>::setOutputOptions(options);
-         };
-
-         void startPWMOutput() {
-         PWMTimer<timerNum>::startPWMOutput();
-         };
-
-         void stopPWMOutput() {
-         PWMTimer<timerNum>::stopPWMOutput();
-         }
-         */
-    };
-
+#pragma mark SysTickEvent, Timer<SysTickTimerNum> SysTickTimer
+    /**************************************************
+     *
+     * SysTickTimer and related:
+     *  Timer<SysTickTimerNum> is the special Timer for Systick.
+     *  SysTickTimer is the global singleton to access it.
+     *  SysTickEvent is the class to use to register a new event to occur every Tick.
+     *
+     **************************************************/
     struct SysTickEvent {
         const std::function<void(void)> callback;
         SysTickEvent *next;
@@ -1044,6 +1150,16 @@ namespace Motate {
     };
     extern Timer<SysTickTimerNum> SysTickTimer;
 
+#pragma mark WatchDogTimer, Timer<WatchDogTimerNum>
+    /**************************************************
+     *
+     * Timer<WatchDogTimerNum> and related:
+     *  Timer<WatchDogTimerNum> is the special Timer for the hardware watchdog timer.
+     *  WatchDogTimer is the global singleton to access it.
+     *  Currently only supported is to call WatchDogTimer.disable(0 immediately.
+     *
+     **************************************************/
+
     static const timer_number WatchDogTimerNum = 0xFE;
     template <>
     struct Timer<WatchDogTimerNum> {
@@ -1070,7 +1186,13 @@ namespace Motate {
     };
     extern Timer<WatchDogTimerNum> WatchDogTimer;
 
-    // Provide a Arduino-compatible blocking-delay function
+#pragma mark delay()
+    /**************************************************
+     *
+     * delay(): Arduino-compatible blocking-delay function
+     *
+     **************************************************/
+
     inline void delay( uint32_t microseconds )
     {
         uint32_t doneTime = SysTickTimer.getValue() + microseconds;
@@ -1081,6 +1203,13 @@ namespace Motate {
         } while ( SysTickTimer.getValue() < doneTime );
     }
 
+
+#pragma mark Timeout
+    /**************************************************
+     *
+     * Timeout: Simple non-blocking (polling) timeout class.
+     *
+     **************************************************/
     struct Timeout {
         uint32_t start_, delay_;
         Timeout() : start_ {0}, delay_ {0} {};
@@ -1109,8 +1238,22 @@ namespace Motate {
 
 } // namespace Motate
 
+#pragma mark MOTATE_TIMER_INTERRUPT, MOTATE_TIMER_CHANNEL_INTERRUPT
+/**************************************************
+ *
+ * #defines that allow simple definition of interrupt functions
+ *
+ **************************************************/
+
 #define MOTATE_TIMER_INTERRUPT(number) template<> void Motate::Timer<number>::interrupt()
 #define MOTATE_TIMER_CHANNEL_INTERRUPT(t, ch) template<> void Motate::TimerChannel<t, ch>::interrupt()
+
+
+
+
+
+
+
 
 /** THIS IS OLD INFO, AND NO LONGER RELEVANT TO THIS PROJECT, BUT IT WAS HARD TO COME BY: **/
 
