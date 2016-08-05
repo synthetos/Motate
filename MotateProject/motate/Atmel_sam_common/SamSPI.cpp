@@ -32,7 +32,9 @@
 
 namespace Motate {
     template<> std::function<void(uint16_t)> _SPIHardware<0>::_spiInterruptHandler {};
-
+#if defined(HAS_SPI1)
+    template<> std::function<void(uint16_t)> _SPIHardware<1>::_spiInterruptHandler {};
+#endif // HAS_SPI1
 }
 
 extern "C" void SPI0_Handler(void)  {

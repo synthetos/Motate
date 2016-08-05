@@ -37,90 +37,10 @@
 #include <algorithm> // for std::max, etc.
 #include <functional>
 
-#include "sam.h"
-
-// Damn C defines. UART is a DEFINE, so we can't use it as an object type.
-// We will undefine it here.
-// Damn defines anyway
-//#define UART0_DONT_CONFLICT UART0
-//#undef UART0
-//#ifdef UART1
-//#define UART1_DONT_CONFLICT UART1
-//#undef UART1
-//#endif
-
-//extern typename decltype(UART_DONT_CONFLICT) UART;
+#include "SamCommon.h" // pull in defines and fix them
+#include "SamDMA.h" // pull in defines and fix them
 
 namespace Motate {
-
-
-/* HERE we do a stupid anti-#define dance, since these defines screw EVERYTHING up */
-
-#ifdef UART0
-    // This is for the Sam4e
-    constexpr Uart * const UART0_DONT_CONFLICT = UART0;
-    #undef UART0
-    constexpr Uart * const UART0 = UART0_DONT_CONFLICT;
-    #define HAS_UART0
-
-    constexpr uint16_t const ID_UART0_DONT_CONFLICT = ID_UART0;
-    #undef ID_UART0
-    constexpr uint16_t const ID_UART0 = ID_UART0_DONT_CONFLICT;
-
-#else
-#ifdef UART
-
-    // This is for the Sam3x
-    constexpr Uart * const UART0_DONT_CONFLICT = UART;
-    #undef UART
-    constexpr Uart * const UART0 = UART0_DONT_CONFLICT;
-    #define HAS_UART0
-
-    constexpr Uart * const UART1 = nullptr;
-    constexpr uint32_t ID_UART0 = ID_UART;
-    #undef ID_UART
-    constexpr uint32_t ID_UART1 = 0;
-
-    constexpr IRQn_Type UART0_IRQn = UART_IRQn;
-    constexpr IRQn_Type UART1_IRQn = (IRQn_Type)0u;
-#endif
-#endif
-
-#ifdef UART1
-    Uart * const UART1_DONT_CONFLICT = UART1;
-    #undef UART1
-    Uart * const UART1 = UART1_DONT_CONFLICT;
-    #define HAS_UART1
-
-    constexpr uint32_t const ID_UART1_DONT_CONFLICT = ID_UART1;
-    #undef ID_UART1
-    constexpr uint32_t const ID_UART1 = ID_UART1_DONT_CONFLICT;
-#endif
-
-#ifdef USART0
-    // Thi isn't strictly necessary, but preventative and for consistency.
-    Usart * const USART0_DONT_CONFLICT = USART0;
-    #undef USART0
-    Usart * const USART0 = USART0_DONT_CONFLICT;
-    #define HAS_USART0
-
-    constexpr uint32_t const ID_USART0_DONT_CONFLICT = ID_USART0;
-    #undef ID_USART0
-//    constexpr uint32_t const ID_USART0 = ID_USART0_DONT_CONFLICT;
-#endif
-
-#ifdef USART1
-    // Thi isn't strictly necessary, but preventative and for consistency.
-    Usart * const USART1_DONT_CONFLICT = USART1;
-    #undef USART1
-    Usart * const USART1 = USART1_DONT_CONFLICT;
-    #define HAS_USART1
-
-    constexpr uint32_t const ID_USART1_DONT_CONFLICT = ID_USART1;
-    #undef ID_USART1
-//    constexpr uint32_t const ID_USART1 = ID_USART1_DONT_CONFLICT;
-#endif
-
     struct UARTMode {
 
         static constexpr uint16_t NoParity           =      0; // Default
@@ -251,7 +171,7 @@ namespace Motate {
 
         static constexpr const uint8_t uartPeripheralNum=uartPeripheralNumber;
 
-        DMA<decltype(usart())> dma {usart()};
+        DMA<Usart *, uartPeripheralNumber> dma;
 
         typedef _USARTHardware<uartPeripheralNumber> this_type_t;
 
@@ -269,7 +189,7 @@ namespace Motate {
 
             // reset PCR to zero
             usart()->US_IDR = 0xffffffff; // disable all the things
-            dma().reset();
+            dma.reset();
         };
 
         _USARTHardware() {
@@ -526,7 +446,7 @@ namespace Motate {
 
         static constexpr const uint8_t uartPeripheralNum=uartPeripheralNumber;
 
-        DMA<decltype(uart())> dma {uart()};
+        DMA<Uart *, uartPeripheralNumber> dma;
 
         typedef _UARTHardware<uartPeripheralNumber> this_type_t;
 
