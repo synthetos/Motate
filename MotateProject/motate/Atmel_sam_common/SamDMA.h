@@ -30,13 +30,13 @@
 #ifndef SAMDMA_H_ONCE
 #define SAMDMA_H_ONCE
 
-#include "sam.h"
+#include "SamCommon.h" // pull in defines and fix them
 
 namespace Motate {
 
 
     // DMA template - MUST be specialized
-    template<typename periph_t>
+    template<typename periph_t, uint8_t periph_num>
     struct DMA {
         DMA() = delete; // this prevents accidental direct instantiation
     };
@@ -50,7 +50,7 @@ namespace Motate {
 
 
 // PDC peripherals -- if we have a PDC (deduced using PERIPH_PTSR_RXTEN)
-#if defined(PERIPH_PTSR_RXTEN)
+#ifdef HAS_PDC
 
 #pragma mark DMA_PDC implementation
 
@@ -64,17 +64,16 @@ namespace Motate {
     // generic DMA_PDC object.
     template<typename periph_t, uint8_t periph_num>
     struct DMA_PDC : DMA_PDC_hardware<periph_t, periph_num> {
-        using DMA_PDC_hardware<periph_t>::pdc;
-        using DMA_PDC_hardware<periph_t>::startRxDoneInterrupts;
-        using DMA_PDC_hardware<periph_t>::stopRxDoneInterrupts;
-        using DMA_PDC_hardware<periph_t>::startTxDoneInterrupts;
-        using DMA_PDC_hardware<periph_t>::stopTxDoneInterrupts;
-        using DMA_PDC_hardware<periph_t>::inTxBufferEmptyInterrupt;
-        using DMA_PDC_hardware<periph_t>::inRxBufferEmptyInterrupt;
+        typedef DMA_PDC_hardware<periph_t, periph_num> _hw;
+        using _hw::pdc;
+        using _hw::startRxDoneInterrupts;
+        using _hw::stopRxDoneInterrupts;
+        using _hw::startTxDoneInterrupts;
+        using _hw::stopTxDoneInterrupts;
+        using _hw::inTxBufferEmptyInterrupt;
+        using _hw::inRxBufferEmptyInterrupt;
 
-        typedef typename DMA_PDC_hardware<periph_t>::buffer_t buffer_t;
-
-        DMA_PDC(periph_t p) : DMA_PDC_hardware<periph_t>{p} {};
+        typedef typename _hw::buffer_t buffer_t;
 
         void reset() {
             pdc()->PERIPH_PTCR = PERIPH_PTCR_RXTDIS | PERIPH_PTCR_TXTDIS; // disable all the things
@@ -201,140 +200,103 @@ namespace Motate {
 
 
 // We're deducing if there's a USART and it has a PDC
-// Notice that this is BEFORE SamUART.h has fixed the UART/USART defines
-#if (defined(USART) || defined(USART0) || defined(USART1) || defined(USART2)) && defined(US_RPR_RXPTR_Pos)
+// Notice that this relies on defines set up in SamCommon.h
+#ifdef HAS_PDC_USART0
 
 #pragma mark DMA_PDC Usart implementation
 
-    template<>
-    struct DMA_PDC_hardware<Usart*, uint8_t periph_num> {
-        Usart * const usart;
-        DMA_PDC_hardware(Usart *u) : usart{u} {};
+    template<uint8_t uartPeripheralNumber>
+    struct DMA_PDC_hardware<Usart*, uartPeripheralNumber> {
+        // this is identical to in SamUART
+        static constexpr Usart * const usart() {
+            return (uartPeripheralNumber == 0) ? USART0 : USART1;
+        };
+
+        static constexpr Pdc * const pdc()
+        {
+            return (uartPeripheralNumber == 0) ? PDC_USART0 : PDC_USART1;
+        };
 
         typedef char* buffer_t ;
 
-        constexpr Pdc * const pdc()
-        {
-#if defined(USART)
-            if (usart == USART) {
-                return PDC_USART;
-            }
-#endif
-#if defined(USART0)
-            if (usart == USART0) {
-                return PDC_USART0;
-            }
-#endif
-#if defined(USART1)
-            if (usart == USART1) {
-                return PDC_USART1;
-            }
-#endif
-#if defined(USART2)
-            if (usart == USART2) {
-                return PDC_USART2;
-            }
-#endif
-            return nullptr;
-        };
-
-        void startRxDoneInterrupts() { usart->US_IER = US_IER_RXBUFF; };
-        void stopRxDoneInterrupts() { usart->US_IDR = US_IDR_RXBUFF; };
-        void startTxDoneInterrupts() { usart->US_IER = US_IER_TXBUFE; };
-        void stopTxDoneInterrupts() { usart->US_IDR = US_IDR_TXBUFE; };
+        void startRxDoneInterrupts() { usart()->US_IER = US_IER_RXBUFF; };
+        void stopRxDoneInterrupts() { usart()->US_IDR = US_IDR_RXBUFF; };
+        void startTxDoneInterrupts() { usart()->US_IER = US_IER_TXBUFE; };
+        void stopTxDoneInterrupts() { usart()->US_IDR = US_IDR_TXBUFE; };
 
         bool inRxBufferEmptyInterrupt() {
             // we check if the interupt is enabled
-            if (usart->US_IMR & US_IMR_RXBUFF) {
+            if (usart()->US_IMR & US_IMR_RXBUFF) {
                 // then we read the status register
-                return (usart->US_CSR & US_CSR_RXBUFF);
+                return (usart()->US_CSR & US_CSR_RXBUFF);
             }
             return false;
         }
 
         bool inTxBufferEmptyInterrupt() {
             // we check if the interupt is enabled
-            if (usart->US_IMR & US_IMR_TXBUFE) {
+            if (usart()->US_IMR & US_IMR_TXBUFE) {
                 // then we read the status register
-                return (usart->US_CSR & US_CSR_TXBUFE);
+                return (usart()->US_CSR & US_CSR_TXBUFE);
             }
             return false;
         }
     };
 
     // Construct a DMA specialization that uses the PDC
-    template<>
-    struct DMA<Usart*> : DMA_PDC<Usart*> {
-        DMA(Usart *u) : DMA_PDC<Usart*>{u} {};
+    template<uint8_t periph_num>
+    struct DMA<Usart*, periph_num> : DMA_PDC<Usart*, periph_num> {
+        // nothing to do here.
     };
 #endif // USART + PDC
 
 // We're deducing if there's a UART and it has a PDC
-    // Notice that this is BEFORE SamUART.h has fixed the UART/USART defines
-#if (defined(UART) || defined(UART0) || defined(UART1) || defined(UART2))
+// Notice that this relies on defines set up in SamCommon.h
+#ifdef HAS_PDC_UART0
 
 #pragma mark DMA_PDC Usart implementation
 
-    template<>
-    struct DMA_PDC_hardware<Uart*> {
-        Uart * const uart;
-        DMA_PDC_hardware(Uart *u) : uart{u} {};
+    template<uint8_t uartPeripheralNumber>
+    struct DMA_PDC_hardware<Uart*, uartPeripheralNumber> {
+        static constexpr Uart * const uart() {
+            return (uartPeripheralNumber == 0) ? UART0 : UART1;
+        };
 
         typedef char* buffer_t ;
 
         Pdc * const pdc()
         {
-#if defined(UART)
-            if (uart == UART) {
-                return PDC_UART;
-            }
-#endif
-#if defined(UART0)
-            if (uart == UART0) {
-                return PDC_UART0;
-            }
-#endif
-#if defined(UART1)
-            if (uart == UART1) {
-                return PDC_UART1;
-            }
-#endif
-#if defined(UART2)
-            if (uart == UART2) {
-                return PDC_UART2;
-            }
-#endif
-            return nullptr;
+            return (uartPeripheralNumber == 0) ? PDC_UART0 : PDC_UART1;
         };
 
-        void startRxDoneInterrupts() { uart->UART_IER = UART_IER_RXBUFF; };
-        void stopRxDoneInterrupts() { uart->UART_IDR = UART_IDR_RXBUFF; };
-        void startTxDoneInterrupts() { uart->UART_IER = UART_IER_TXBUFE; };
-        void stopTxDoneInterrupts() { uart->UART_IDR = UART_IDR_TXBUFE; };
+        void startRxDoneInterrupts() { uart()->UART_IER = UART_IER_RXBUFF; };
+        void stopRxDoneInterrupts() { uart()->UART_IDR = UART_IDR_RXBUFF; };
+        void startTxDoneInterrupts() { uart()->UART_IER = UART_IER_TXBUFE; };
+        void stopTxDoneInterrupts() { uart()->UART_IDR = UART_IDR_TXBUFE; };
 
         bool inRxBufferEmptyInterrupt() {
             // we check if the interupt is enabled
-            if (uart->UART_IMR & UART_IMR_RXBUFF) {
+            if (uart()->UART_IMR & UART_IMR_RXBUFF) {
                 // then we read the status register
-                return (uart->UART_SR & UART_SR_RXBUFF);
+                return (uart()->UART_SR & UART_SR_RXBUFF);
             }
             return false;
         }
 
         bool inTxBufferEmptyInterrupt() {
             // we check if the interupt is enabled
-            if (uart->UART_IMR & UART_IMR_TXBUFE) {
+            if (uart()->UART_IMR & UART_IMR_TXBUFE) {
                 // then we read the status register
-                return (uart->UART_SR & UART_SR_TXBUFE);
+                return (uart()->UART_SR & UART_SR_TXBUFE);
             }
             return false;
         }
     };
 
     // Construct a DMA specialization that uses the PDC
-    template<>
-    struct DMA<Uart*> : DMA_PDC<Uart*> {
-        DMA(Uart *u) : DMA_PDC<Uart*>{u} {};
+    template<uint8_t periph_num>
+    struct DMA<Uart*, periph_num> : DMA_PDC<Uart*, periph_num> {
+        // nothing to do here.
     };
 #endif // UART + PDC
 
@@ -344,65 +306,65 @@ namespace Motate {
 #if defined(XDMAC)
 
     // DMA_XDMAC_hardware template - - MUST be specialized
-    template<typename periph_t>
+    template<typename periph_t, uint8_t periph_num>
     struct DMA_XDMAC_hardware {
         DMA_XDMAC_hardware() = delete;
     };
 
 
     // generic DMA_XDMAC object.
-    template<typename periph_t>
-    struct DMA_XDMAC : DMA_XDMAC_hardware<periph_t> {
-        using DMA_PDC_hardware<periph_t>::pdc;
-        using DMA_PDC_hardware<periph_t>::startRxDoneInterrupts;
-        using DMA_PDC_hardware<periph_t>::stopRxDoneInterrupts;
-        using DMA_PDC_hardware<periph_t>::startTxDoneInterrupts;
-        using DMA_PDC_hardware<periph_t>::stopTxDoneInterrupts;
-        using DMA_PDC_hardware<periph_t>::inTxBufferEmptyInterrupt;
-        using DMA_PDC_hardware<periph_t>::inRxBufferEmptyInterrupt;
+    template<typename periph_t, uint8_t periph_num>
+    struct DMA_XDMAC : DMA_XDMAC_hardware<periph_t, periph_num> {
+        typedef DMA_XDMAC_hardware<periph_t, periph_num> _hw;
+        using _hw::startRxDoneInterrupts;
+        using _hw::stopRxDoneInterrupts;
+        using _hw::startTxDoneInterrupts;
+        using _hw::stopTxDoneInterrupts;
+        using _hw::inTxBufferEmptyInterrupt;
+        using _hw::inRxBufferEmptyInterrupt;
 
-        typedef typename DMA_PDC_hardware<periph_t>::buffer_t buffer_t;
-
-        DMA_PDC(periph_t p) : DMA_PDC_hardware<periph_t>{p} {};
+        typedef typename _hw::buffer_t buffer_t;
 
         void reset() {
-            pdc()->PERIPH_PTCR = PERIPH_PTCR_RXTDIS | PERIPH_PTCR_TXTDIS; // disable all the things
-            pdc()->PERIPH_RPR = 0;
-            pdc()->PERIPH_RNPR = 0;
-            pdc()->PERIPH_RCR = 0;
-            pdc()->PERIPH_RNCR = 0;
-            pdc()->PERIPH_TPR = 0;
-            pdc()->PERIPH_TNPR = 0;
-            pdc()->PERIPH_TCR = 0;
-            pdc()->PERIPH_TNCR = 0;
+//            pdc()->PERIPH_PTCR = PERIPH_PTCR_RXTDIS | PERIPH_PTCR_TXTDIS; // disable all the things
+//            pdc()->PERIPH_RPR = 0;
+//            pdc()->PERIPH_RNPR = 0;
+//            pdc()->PERIPH_RCR = 0;
+//            pdc()->PERIPH_RNCR = 0;
+//            pdc()->PERIPH_TPR = 0;
+//            pdc()->PERIPH_TNPR = 0;
+//            pdc()->PERIPH_TCR = 0;
+//            pdc()->PERIPH_TNCR = 0;
         };
 
         void disableRx() {
-            pdc()->PERIPH_PTCR = PERIPH_PTCR_RXTDIS; // disable for setup
+//            pdc()->PERIPH_PTCR = PERIPH_PTCR_RXTDIS; // disable for setup
         };
         void enableRx() {
-            pdc()->PERIPH_PTCR = PERIPH_PTCR_RXTEN;  // enable again
+//            pdc()->PERIPH_PTCR = PERIPH_PTCR_RXTEN;  // enable again
         };
         void setRx(void * const buffer, const uint32_t length) {
-            pdc()->PERIPH_RPR = (uint32_t)buffer;
-            pdc()->PERIPH_RCR = length;
+//            pdc()->PERIPH_RPR = (uint32_t)buffer;
+//            pdc()->PERIPH_RCR = length;
         };
         void setNextRx(void * const buffer, const uint32_t length) {
-            pdc()->PERIPH_RNPR = (uint32_t)buffer;
-            pdc()->PERIPH_RNCR = length;
+//            pdc()->PERIPH_RNPR = (uint32_t)buffer;
+//            pdc()->PERIPH_RNCR = length;
         };
         void flushRead() {
-            pdc()->PERIPH_RNCR = 0;
-            pdc()->PERIPH_RCR = 0;
+//            pdc()->PERIPH_RNCR = 0;
+//            pdc()->PERIPH_RCR = 0;
         };
         uint32_t leftToRead(bool include_next = false) {
+            return 0;
             if (include_next) {
-                return pdc()->PERIPH_RCR + pdc()->PERIPH_RNCR;
+//                return pdc()->PERIPH_RCR + pdc()->PERIPH_RNCR;
             }
-            return pdc()->PERIPH_RCR;
+//            return pdc()->PERIPH_RCR;
         };
         uint32_t leftToReadNext() {
-            return pdc()->PERIPH_RNCR;
+            return 0;
+//            return pdc()->PERIPH_RNCR;
         };
         bool doneReading(bool include_next = false) {
             return leftToRead(include_next) == 0;
@@ -411,7 +373,8 @@ namespace Motate {
             return leftToReadNext() == 0;
         };
         buffer_t getRXTransferPosition() {
-            return (buffer_t)pdc()->PERIPH_RPR;
+            return nullptr;
+//            return (buffer_t)pdc()->PERIPH_RPR;
         };
 
         // Bundle it all up
@@ -435,27 +398,29 @@ namespace Motate {
 
 
         void disableTx() {
-            pdc()->PERIPH_PTCR = PERIPH_PTCR_TXTDIS; // disable for setup
+//            pdc()->PERIPH_PTCR = PERIPH_PTCR_TXTDIS; // disable for setup
         };
         void enableTx() {
-            pdc()->PERIPH_PTCR = PERIPH_PTCR_TXTEN;  // enable again
+//            pdc()->PERIPH_PTCR = PERIPH_PTCR_TXTEN;  // enable again
         };
         void setTx(void * const buffer, const uint32_t length) {
-            pdc()->PERIPH_TPR = (uint32_t)buffer;
-            pdc()->PERIPH_TCR = length;
+//            pdc()->PERIPH_TPR = (uint32_t)buffer;
+//            pdc()->PERIPH_TCR = length;
         };
         void setNextTx(void * const buffer, const uint32_t length) {
-            pdc()->PERIPH_TNPR = (uint32_t)buffer;
-            pdc()->PERIPH_TNCR = length;
+//            pdc()->PERIPH_TNPR = (uint32_t)buffer;
+//            pdc()->PERIPH_TNCR = length;
         };
         uint32_t leftToWrite(bool include_next = false) {
+            return 0;
             if (include_next) {
-                return pdc()->PERIPH_TCR + pdc()->PERIPH_TNCR;
+//                return pdc()->PERIPH_TCR + pdc()->PERIPH_TNCR;
             }
-            return pdc()->PERIPH_TCR;
+//            return pdc()->PERIPH_TCR;
         };
         uint32_t leftToWriteNext() {
-            return pdc()->PERIPH_TNCR;
+            return 0;
+//            return pdc()->PERIPH_TNCR;
         };
         bool doneWriting(bool include_next = false) {
             return leftToWrite(include_next) == 0;
@@ -464,7 +429,8 @@ namespace Motate {
             return leftToWriteNext() == 0;
         };
         buffer_t getTXTransferPosition() {
-            return (buffer_t)pdc()->PERIPH_TPR;
+            return nullptr;
+//            return (buffer_t)pdc()->PERIPH_TPR;
         };
 
 
@@ -492,143 +458,96 @@ namespace Motate {
     // only want to DMC all of these peripherals.
     // So we don't need the XDMAC deduction -- it's already done.
 
-    // We're deducing if there's a USART
-    // Notice that this is BEFORE SamUART.h has fixed the UART/USART defines
-#if (defined(USART) || defined(USART0) || defined(USART1) || defined(USART2))
+    // We're deducing if there's a USART and it has a PDC
+    // Notice that this relies on defines set up in SamCommon.h
+#ifdef HAS_USART0
 
 #pragma mark DMA_XDMAC Usart implementation
 
-    template<>
-    struct DMA_XDMAC_hardware<Usart*> {
-        Usart * const usart;
-        DMA_XDMAC_hardware(Usart *u) : usart{u} {};
+    template<uint8_t uartPeripheralNumber>
+    struct DMA_XDMAC_hardware<Usart*, uartPeripheralNumber> {
+        // this is identical to in SamUART
+        static constexpr Usart * const usart() {
+            return (uartPeripheralNumber == 0) ? USART0 : USART1;
+        };
 
         typedef char* buffer_t ;
 
-        uint32_t const rx_interface_num()
-        {
-#if defined(USART)
-            if (usart == USART) {
-                return PDC_USART;
-            }
-#endif
-#if defined(USART0)
-            if (usart == USART0) {
-                return PDC_USART0;
-            }
-#endif
-#if defined(USART1)
-            if (usart == USART1) {
-                return PDC_USART1;
-            }
-#endif
-#if defined(USART2)
-            if (usart == USART2) {
-                return PDC_USART2;
-            }
-#endif
-            return nullptr;
-        };
-
-        void startRxDoneInterrupts() { usart->US_IER = US_IER_RXBUFF; };
-        void stopRxDoneInterrupts() { usart->US_IDR = US_IDR_RXBUFF; };
-        void startTxDoneInterrupts() { usart->US_IER = US_IER_TXBUFE; };
-        void stopTxDoneInterrupts() { usart->US_IDR = US_IDR_TXBUFE; };
+        void startRxDoneInterrupts() { /*usart()->US_IER = US_IER_RXBUFF;*/ };
+        void stopRxDoneInterrupts() { /*usart()->US_IDR = US_IDR_RXBUFF;*/ };
+        void startTxDoneInterrupts() { /*usart()->US_IER = US_IER_TXBUFE;*/ };
+        void stopTxDoneInterrupts() { /*usart()->US_IDR = US_IDR_TXBUFE;*/ };
 
         bool inRxBufferEmptyInterrupt() {
             // we check if the interupt is enabled
-            if (usart->US_IMR & US_IMR_RXBUFF) {
-                // then we read the status register
-                return (usart->US_CSR & US_CSR_RXBUFF);
-            }
+//            if (usart()->US_IMR & US_IMR_RXBUFF) {
+//                // then we read the status register
+//                return (usart()->US_CSR & US_CSR_RXBUFF);
+//            }
             return false;
         }
 
         bool inTxBufferEmptyInterrupt() {
             // we check if the interupt is enabled
-            if (usart->US_IMR & US_IMR_TXBUFE) {
-                // then we read the status register
-                return (usart->US_CSR & US_CSR_TXBUFE);
-            }
+//            if (usart()->US_IMR & US_IMR_TXBUFE) {
+//                // then we read the status register
+//                return (usart()->US_CSR & US_CSR_TXBUFE);
+//            }
             return false;
         }
     };
 
     // Construct a DMA specialization that uses the PDC
-    template<>
-    struct DMA<Usart*> : DMA_XDMAC<Usart*> {
-        DMA(Usart *u) : DMA_XDMAC<Usart*>{u} {};
+    template<uint8_t periph_num>
+    struct DMA<Usart*, periph_num> : DMA_XDMAC<Usart*, periph_num> {
+        // nothing to do here.
     };
-#endif // USART (+ XDMAC)
+#endif // USART + XDMAC
 
     // We're deducing if there's a UART and it has a PDC
-    // Notice that this is BEFORE SamUART.h has fixed the UART/USART defines
-#if (defined(UART) || defined(UART0) || defined(UART1) || defined(UART2))
+    // Notice that this relies on defines set up in SamCommon.h
+#ifdef HAS_UART0
 
 #pragma mark DMA_XDMAC Usart implementation
 
-    template<>
-    struct DMA_XDMAC_hardware<Uart*> {
-        Uart * const uart;
-        DMA_XDMAC_hardware(Uart *u) : uart{u} {};
+    template<uint8_t uartPeripheralNumber>
+    struct DMA_XDMAC_hardware<Uart*, uartPeripheralNumber> {
+        static constexpr Uart * const uart() {
+            return (uartPeripheralNumber == 0) ? UART0 : UART1;
+        };
 
         typedef char* buffer_t ;
 
-        Pdc * const pdc()
-        {
-#if defined(UART)
-            if (uart == UART) {
-                return PDC_UART;
-            }
-#endif
-#if defined(UART0)
-            if (uart == UART0) {
-                return PDC_UART0;
-            }
-#endif
-#if defined(UART1)
-            if (uart == UART1) {
-                return PDC_UART1;
-            }
-#endif
-#if defined(UART2)
-            if (uart == UART2) {
-                return PDC_UART2;
-            }
-#endif
-            return nullptr;
-        };
-
-        void startRxDoneInterrupts() { uart->UART_IER = UART_IER_RXBUFF; };
-        void stopRxDoneInterrupts() { uart->UART_IDR = UART_IDR_RXBUFF; };
-        void startTxDoneInterrupts() { uart->UART_IER = UART_IER_TXBUFE; };
-        void stopTxDoneInterrupts() { uart->UART_IDR = UART_IDR_TXBUFE; };
+        void startRxDoneInterrupts() { /*usart()->US_IER = US_IER_RXBUFF;*/ };
+        void stopRxDoneInterrupts() { /*usart()->US_IDR = US_IDR_RXBUFF;*/ };
+        void startTxDoneInterrupts() { /*usart()->US_IER = US_IER_TXBUFE;*/ };
+        void stopTxDoneInterrupts() { /*usart()->US_IDR = US_IDR_TXBUFE;*/ };
 
         bool inRxBufferEmptyInterrupt() {
             // we check if the interupt is enabled
-            if (uart->UART_IMR & UART_IMR_RXBUFF) {
-                // then we read the status register
-                return (uart->UART_SR & UART_SR_RXBUFF);
-            }
+//            if (uart()->UART_IMR & UART_IMR_RXBUFF) {
+//                // then we read the status register
+//                return (uart()->UART_SR & UART_SR_RXBUFF);
+//            }
             return false;
         }
 
         bool inTxBufferEmptyInterrupt() {
             // we check if the interupt is enabled
-            if (uart->UART_IMR & UART_IMR_TXBUFE) {
-                // then we read the status register
-                return (uart->UART_SR & UART_SR_TXBUFE);
-            }
+//            if (uart()->UART_IMR & UART_IMR_TXBUFE) {
+//                // then we read the status register
+//                return (uart()->UART_SR & UART_SR_TXBUFE);
+//            }
             return false;
         }
     };
 
     // Construct a DMA specialization that uses the PDC
-    template<>
-    struct DMA<Uart*> : DMA_XDMAC<Uart*> {
-        DMA(Uart *u) : DMA_XDMAC<Uart*>{u} {};
+    template<uint8_t periph_num>
+    struct DMA<Uart*, periph_num> : DMA_XDMAC<Uart*, periph_num> {
+        // nothing to do here.
     };
-#endif // UART (+ XDMAC)
+#endif // UART + XDMAC
 
 #endif // does not have XDMAC
 
