@@ -68,6 +68,10 @@ namespace Motate {
 #include <SamUART.h>
 #endif
 
+#if defined(__SAMS70N19__) || defined(__SAMS70N20__) || defined(__SAMS70N21__)
+#include <SamUART.h>
+#endif
+
 #if defined(__KL05Z__)
 #include <Freescale_klxx/KL05ZUART.h>
 #endif
@@ -251,7 +255,7 @@ namespace Motate {
 
         char* _manual_rx_position = nullptr;
         bool startRXTransfer(char *&buffer, uint16_t length) {
-            hardware._setInterruptRxReady(false);
+            hardware.setInterruptRxReady(false);
 
             int16_t overflow;
             while (((overflow = overflowBuffer.read()) > 0) && (length > 0)) {
@@ -277,7 +281,7 @@ namespace Motate {
                 rtsPin = true; // active low
             }
 
-            hardware._setInterruptRxReady(true);
+            hardware.setInterruptRxReady(true);
             return false;
         };
 
@@ -322,7 +326,7 @@ namespace Motate {
 
             if (interruptCause & UARTInterrupt::OnTxTransferDone) {
                 if (transfer_tx_done_callback) {
-                    hardware._setInterruptTxTransferDone(false);
+                    hardware.setInterruptTxTransferDone(false);
                     transfer_tx_done_callback();
                 }
             }
@@ -332,8 +336,8 @@ namespace Motate {
                     rtsPin = true; // active low
                 }
                 if (transfer_rx_done_callback) {
-                    hardware._setInterruptRxTransferDone(false);
-                    hardware._setInterruptRxReady(true);
+                    hardware.setInterruptRxTransferDone(false);
+                    hardware.setInterruptRxReady(true);
                     transfer_rx_done_callback();
                 }
             }

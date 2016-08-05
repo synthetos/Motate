@@ -251,8 +251,12 @@ namespace Motate {
 
         static constexpr const uint8_t uartPeripheralNum=uartPeripheralNumber;
 
+        DMA<decltype(usart())> dma {usart()};
+
         typedef _USARTHardware<uartPeripheralNumber> this_type_t;
-        
+
+        // Make a singleton for the interrupt handlers to use
+        static this_type_t *_singleton;
 
         static std::function<void(uint16_t)> _uartInterruptHandler;
 
@@ -265,18 +269,11 @@ namespace Motate {
 
             // reset PCR to zero
             usart()->US_IDR = 0xffffffff; // disable all the things
-            usart()->US_PTCR = UART_PTCR_RXTDIS | UART_PTCR_TXTDIS; // disable all the things
-            usart()->US_RPR = 0;
-            usart()->US_RNPR = 0;
-            usart()->US_RCR = 0;
-            usart()->US_RNCR = 0;
-            usart()->US_TPR = 0;
-            usart()->US_TNPR = 0;
-            usart()->US_TCR = 0;
-            usart()->US_TNCR = 0;
+            dma().reset();
         };
 
         _USARTHardware() {
+            _singleton = this;
             // We DON'T init here, because the optimizer is fickle, and will remove this whole area.
             // Instead, we call init from UART<>::init(), so that the optimizer will keep it.
         };
@@ -341,14 +338,14 @@ namespace Motate {
                 }
 
                 if (interrupts & UARTInterrupt::OnRxTransferDone) {
-                    usart()->US_IER = US_IER_RXBUFF;
+                    dma.startRxDoneInterrupts();
                 } else {
-                    usart()->US_IDR = US_IDR_RXBUFF;
+                    dma.stopRxDoneInterrupts();
                 }
                 if (interrupts & UARTInterrupt::OnTxTransferDone) {
-                    usart()->US_IER = US_IER_TXBUFE;
+                    dma.startTxDoneInterrupts();
                 } else {
-                    usart()->US_IDR = US_IDR_TXBUFE;
+                    dma.stopTxDoneInterrupts();
                 }
 
 
@@ -388,7 +385,7 @@ namespace Motate {
             }
         };
 
-        void _setInterruptRxReady(bool value) {
+        void setInterruptRxReady(bool value) {
             if (value) {
                 usart()->US_IER = US_IER_RXRDY;
             } else {
@@ -404,23 +401,23 @@ namespace Motate {
             }
         };
 
-        void _setInterruptTxTransferDone(bool value) {
+        void setInterruptTxTransferDone(bool value) {
             if (value) {
-                usart()->US_IER = US_IER_TXBUFE;
+                dma.startTxDoneInterrupts();
             } else {
-                usart()->US_IDR = US_IDR_TXBUFE;
+                dma.stopTxDoneInterrupts();
             }
         };
 
-        void _setInterruptRxTransferDone(bool value) {
+        void setInterruptRxTransferDone(bool value) {
             if (value) {
-                usart()->US_IER = US_IER_RXBUFF;
+                dma.startRxDoneInterrupts();
             } else {
-                usart()->US_IDR = US_IDR_RXBUFF;
+                dma.stopRxDoneInterrupts();
             }
         };
 
-        static uint16_t getInterruptCause() { // __attribute__ (( noinline ))
+        uint16_t getInterruptCause() { // __attribute__ (( noinline ))
             uint16_t status = UARTInterrupt::Unknown;
 
             // Notes from experience:
@@ -437,7 +434,7 @@ namespace Motate {
             {
                 status |= UARTInterrupt::OnTxReady;
             }
-            if ((US_IMR_hold & US_IMR_TXBUFE) && (US_CSR_hold & US_CSR_TXBUFE))
+            if (dma.inTxBufferEmptyInterrupt())
             {
                 status |= UARTInterrupt::OnTxTransferDone;
             }
@@ -445,7 +442,7 @@ namespace Motate {
             {
                 status |= UARTInterrupt::OnRxReady;
             }
-            if ((US_IMR_hold & US_IMR_RXBUFF) && (US_CSR_hold & US_CSR_RXBUFF))
+            if (dma.inRxBufferEmptyInterrupt())
             {
                 status |= UARTInterrupt::OnRxTransferDone;
             }
@@ -479,8 +476,7 @@ namespace Motate {
 
         void flushRead() {
             // kill any incoming transfers
-            usart()->US_RNCR = 0;
-            usart()->US_RCR = 0;
+            dma().flushRead();
         };
 
 
@@ -496,49 +492,19 @@ namespace Motate {
 
         // ***** Handle Tranfers
         bool startRXTransfer(char *buffer, const uint16_t length) {
-            if (usart()->US_RCR == 0) {
-                _setInterruptRxTransferDone(false);
-                usart()->US_PTCR = UART_PTCR_RXTDIS; // disable for setup
-                usart()->US_RPR = (uint32_t)buffer;
-                usart()->US_RCR = length;
-                usart()->US_PTCR = UART_PTCR_RXTEN;  // enable again
-                _setInterruptRxTransferDone(true);
-                return true;
-            }
-//            else if (usart()->US_RNCR == 0) {
-//                usart()->US_RNPR = (uint32_t)buffer;
-//                usart()->US_RNCR = length;
-//                _setInterruptRxTransferDone(true);
-//                return true;
-//            }
-            return (usart()->US_RPR == (uint32_t)buffer);
+            return dma().startRXTransfer(buffer, length, true);
         };
 
         char* getRXTransferPosition() {
-            return (char*)usart()->US_RPR;
+            return dma().getRXTransferPosition();
         };
 
         bool startTXTransfer(char *buffer, const uint16_t length) {
-            if (usart()->US_TCR == 0) {
-                _setInterruptTxTransferDone(false);
-                usart()->US_PTCR = UART_PTCR_TXTDIS; // disable for setup
-                usart()->US_TPR = (uint32_t)buffer;
-                usart()->US_TCR = length;
-                usart()->US_PTCR = US_PTCR_TXTEN;  // enable again
-                _setInterruptTxTransferDone(true);
-                return true;
-            }
-//            else if (usart()->US_TNCR == 0) {
-//                usart()->US_TNPR = (uint32_t)buffer;
-//                usart()->US_TNCR = length;
-//                _setInterruptTxTransferDone(true);
-//                return true;
-//            }
-            return (usart()->US_TPR == (uint32_t)buffer);;
+            return dma().startTXTransfer(buffer, length, true);
         };
 
         char* getTXTransferPosition() {
-            return (char*)usart()->US_TPR;
+            return dma().getTXTransferPosition();
         };
 
     };
@@ -560,8 +526,12 @@ namespace Motate {
 
         static constexpr const uint8_t uartPeripheralNum=uartPeripheralNumber;
 
+        DMA<decltype(uart())> dma {uart()};
+
         typedef _UARTHardware<uartPeripheralNumber> this_type_t;
-        
+
+        // Make a singleton for the interrupt handlers to use
+        static this_type_t * _singleton;
 
         static std::function<void(uint16_t)> _uartInterruptHandler;
 
@@ -574,18 +544,11 @@ namespace Motate {
 
             // reset PCR to zero
             //uart()->UART_IDR = 0xffffffff; // disable all the things
-            uart()->UART_PTCR = UART_PTCR_RXTDIS | UART_PTCR_TXTDIS; // disable all the things
-            uart()->UART_RPR = 0;
-            uart()->UART_RNPR = 0;
-            uart()->UART_RCR = 0;
-            uart()->UART_RNCR = 0;
-            uart()->UART_TPR = 0;
-            uart()->UART_TNPR = 0;
-            uart()->UART_TCR = 0;
-            uart()->UART_TNCR = 0;
+            dma.reset();
         };
 
         _UARTHardware() {
+            _singleton = this;
             // We DON'T init here, because the optimizer is fickle, and will remove this whole area.
             // Instead, we call init from UART<>::init(), so that the optimizer will keep it.
         };
@@ -644,14 +607,14 @@ namespace Motate {
                 }
 
                 if (interrupts & UARTInterrupt::OnRxTransferDone) {
-                    uart()->UART_IER = UART_IER_RXBUFF;
+                    dma.startRxDoneInterrupts();
                 } else {
-                    uart()->UART_IDR = UART_IDR_RXBUFF;
+                    dma.stopRxDoneInterrupts();
                 }
                 if (interrupts & UARTInterrupt::OnTxTransferDone) {
-                    uart()->UART_IER = UART_IER_TXBUFE;
+                    dma.startTxDoneInterrupts();
                 } else {
-                    uart()->UART_IDR = UART_IDR_TXBUFE;
+                    dma.stopTxDoneInterrupts();
                 }
 
 
@@ -691,7 +654,7 @@ namespace Motate {
             }
         };
 
-        void _setInterruptRxReady(bool value) {
+        void setInterruptRxReady(bool value) {
             if (value) {
                 uart()->UART_IER = UART_IER_RXRDY;
             } else {
@@ -705,23 +668,23 @@ namespace Motate {
             }
         };
 
-        void _setInterruptTxTransferDone(bool value) {
+        void setInterruptTxTransferDone(bool value) {
             if (value) {
-                uart()->UART_IER = UART_IER_TXBUFE;
+                dma.startTxDoneInterrupts();
             } else {
-                uart()->UART_IDR = UART_IDR_TXBUFE;
+                dma.stopTxDoneInterrupts();
             }
         };
 
-        void _setInterruptRxTransferDone(bool value) {
+        void setInterruptRxTransferDone(bool value) {
             if (value) {
-                uart()->UART_IER = UART_IER_RXBUFF;
+                dma.startRxDoneInterrupts();
             } else {
-                uart()->UART_IDR = UART_IDR_RXBUFF;
+                dma.stopRxDoneInterrupts();
             }
         };
 
-        static uint16_t getInterruptCause() { // __attribute__ (( noinline ))
+        uint16_t getInterruptCause() { // __attribute__ (( noinline ))
             uint16_t status = UARTInterrupt::Unknown;
 
             // Notes from experience:
@@ -738,7 +701,7 @@ namespace Motate {
             {
                 status |= UARTInterrupt::OnTxReady;
             }
-            if ((UART_IMR_hold & UART_IMR_TXBUFE) && (UART_SR_hold & UART_SR_TXBUFE))
+            if (dma.inTxBufferEmptyInterrupt())
             {
                 status |= UARTInterrupt::OnTxTransferDone;
             }
@@ -746,7 +709,7 @@ namespace Motate {
             {
                 status |= UARTInterrupt::OnRxReady;
             }
-            if ((UART_IMR_hold & UART_IMR_RXBUFF) && (UART_SR_hold & UART_SR_RXBUFF))
+            if (dma.inRxBufferEmptyInterrupt())
             {
                 status |= UARTInterrupt::OnRxTransferDone;
             }
@@ -773,8 +736,7 @@ namespace Motate {
 
         void flushRead() {
             // kill any incoming transfers
-            uart()->UART_RNCR = 0;
-            uart()->UART_RCR = 0;
+            dma.flushRead();
         };
 
 
@@ -790,60 +752,21 @@ namespace Motate {
 
         // ***** Handle Tranfers
         bool startRXTransfer(char *buffer, const uint16_t length) {
-            if (uart()->UART_RCR == 0) {
-                _setInterruptRxTransferDone(false);
-                uart()->UART_PTCR = UART_PTCR_RXTDIS; // disable for setup
-                uart()->UART_RPR = (uint32_t)buffer;
-                uart()->UART_RCR = length;
-                if (length != 0) {
-                    _setInterruptRxTransferDone(true);
-                    uart()->UART_PTCR = UART_PTCR_RXTEN;  // enable again
-                    return true;
-                }
-//                __asm__("BKPT"); // ("length was zero in startRXTransfer");
-                return false;
-            }
-//            else if (uart()->UART_RNCR == 0) {
-//                uart()->UART_RNPR = (uint32_t)buffer;
-//                uart()->UART_RNCR = length;
-//                _setInterruptRxTransferDone(true);
-//                return true;
-//            }
-            // return true is this same transaction has already been setup
-
-//            __asm__("BKPT"); // ("UART_RCR wasn't zero when startRXTransfer called");
-            return (uart()->UART_RPR == (uint32_t)buffer);
+            return dma.startRXTransfer(buffer, length, true);
         };
 
         char* getRXTransferPosition() {
-            return (char*)uart()->UART_RPR;
+            return dma.getRXTransferPosition();
         };
 
         bool startTXTransfer(char *buffer, const uint16_t length) {
-            if (uart()->UART_TCR == 0) {
-                _setInterruptTxTransferDone(false);
-                uart()->UART_PTCR = UART_PTCR_TXTDIS; // disable for setup
-                uart()->UART_TPR = (uint32_t)buffer;
-                uart()->UART_TCR = length;
-                _setInterruptTxTransferDone(true);
-                uart()->UART_PTCR = UART_PTCR_TXTEN;  // enable again
-                return true;
-            }
-//            else if (uart()->UART_TNCR == 0) {
-//                uart()->UART_TNPR = (uint32_t)buffer;
-//                uart()->UART_TNCR = length;
-//                _setInterruptTxTransferDone(true);
-//                return true;
-//            }
+            return dma.startTXTransfer(buffer, length, true);
+        };
 
-//            __asm__("BKPT"); // ("UART_TCR wasn't zero when startTXTransfer called");
-            return (uart()->UART_TPR == (uint32_t)buffer);
-        };
-        
         char* getTXTransferPosition() {
-            return (char*)uart()->UART_TPR;
+            return dma.getTXTransferPosition();
         };
-        
+
     };
 
     template<uint8_t uartPeripheralNumber>

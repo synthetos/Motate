@@ -156,6 +156,9 @@ namespace Motate {
 #include <SamSPI.h>
 #endif
 
+#if defined(__SAMS70N19__) || defined(__SAMS70N20__) || defined(__SAMS70N21__)
+#include <SamSPI.h>
+#endif
 
 #if defined(__KL05Z__)
 #include <Freescale_klxx/KL05ZSPI.h>

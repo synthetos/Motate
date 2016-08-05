@@ -73,7 +73,11 @@ namespace Motate {
             }
 
             // BANZAIIIIIII!!!
-            RSTC->RSTC_CR = RSTC_CR_KEY_PASSWD | RSTC_CR_PROCRST | RSTC_CR_PERRST;
+#ifdef RSTC_CR_PERRST
+            RSTC->RSTC_CR = RSTC_CR_KEY_PASSWD | RSTC_CR_PROCRST | RSTC_CR_PERRST; // reset the processor and the peripherals
+#else
+            RSTC->RSTC_CR = RSTC_CR_KEY_PASSWD | RSTC_CR_PROCRST; // reset everything
+#endif
             while (true);
         }
     }

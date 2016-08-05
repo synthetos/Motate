@@ -51,10 +51,8 @@ namespace Motate {
         // end-user (sketch) code.
         kPeripheralA    = 3,
         kPeripheralB    = 4,
-#if defined(__SAM4E8E__) || defined(__SAM4E16E__) || defined(__SAM4E8C__) || defined(__SAM4E16C__)
         kPeripheralC    = 5,
         kPeripheralD    = 6,
-#endif
     };
 
     // Numbering is arbitrary, but bit unique for bitwise operations (unlike other architectures):
@@ -768,41 +766,41 @@ namespace Motate {
      **************************************************/
 
 
-    #define _MAKE_MOTATE_SPI_CS_PIN(registerChar, registerPin, peripheralAorB, csNum) \
+    #define _MAKE_MOTATE_SPI_CS_PIN(registerChar, registerPin, spiNumber, peripheralAorB, csNum) \
         template<> \
         struct SPIChipSelectPin< ReversePinLookup<registerChar, registerPin>::number > : ReversePinLookup<registerChar, registerPin> { \
             SPIChipSelectPin() : ReversePinLookup<registerChar, registerPin>(kPeripheral ## peripheralAorB) {}; \
             static constexpr bool is_real = true; \
-            static constexpr uint8_t spiNum = 0; /* There is only one*/ \
+            static constexpr uint8_t spiNum = spiNumber; \
             static constexpr uint8_t csNumber =  csNum; \
             static constexpr uint8_t csValue  = ~csNum; \
             static constexpr bool usesDecoder = false; \
         };
 
-    #define _MAKE_MOTATE_SPI_MISO_PIN(registerChar, registerPin, peripheralAorB)\
+    #define _MAKE_MOTATE_SPI_MISO_PIN(registerChar, registerPin, spiNumber, peripheralAorB)\
         template<>\
         struct SPIMISOPin< ReversePinLookup<registerChar, registerPin>::number > : ReversePinLookup<registerChar, registerPin> {\
             SPIMISOPin() : ReversePinLookup<registerChar, registerPin>{kPeripheral ## peripheralAorB} {};\
             static constexpr bool is_real = true; \
-            static constexpr uint8_t spiNum = 0; /* There is only one*/ \
+            static constexpr uint8_t spiNum = spiNumber; \
         };
 
 
-    #define _MAKE_MOTATE_SPI_MOSI_PIN(registerChar, registerPin, peripheralAorB)\
+    #define _MAKE_MOTATE_SPI_MOSI_PIN(registerChar, registerPin, spiNumber, peripheralAorB)\
         template<>\
         struct SPIMOSIPin< ReversePinLookup<registerChar, registerPin>::number > : ReversePinLookup<registerChar, registerPin> {\
             SPIMOSIPin() : ReversePinLookup<registerChar, registerPin>{kPeripheral ## peripheralAorB} {};\
             static constexpr bool is_real = true; \
-            static constexpr uint8_t spiNum = 0; /* There is only one*/ \
+            static constexpr uint8_t spiNum = spiNumber; \
         };
 
 
-    #define _MAKE_MOTATE_SPI_SCK_PIN(registerChar, registerPin, peripheralAorB)\
+    #define _MAKE_MOTATE_SPI_SCK_PIN(registerChar, registerPin, spiNumber, peripheralAorB)\
         template<>\
         struct SPISCKPin< ReversePinLookup<registerChar, registerPin>::number > : ReversePinLookup<registerChar, registerPin> {\
             SPISCKPin() : ReversePinLookup<registerChar, registerPin> { kPeripheral ## peripheralAorB } {};\
             static constexpr bool is_real = true; \
-            static constexpr uint8_t spiNum = 0; /* There is only one*/ \
+            static constexpr uint8_t spiNum = spiNumber; \
         };
 
 

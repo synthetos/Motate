@@ -704,7 +704,7 @@ namespace Motate {
         static constexpr const IRQn_Type pwmIRQ() { return PWM_IRQn; };
 
 #elif defined(PWM1)
-        static_assert(timerNum>0 && timerNum<16, "PWMTimer<n>: n must be within 0 through 16 on this processor.");
+        static_assert(timerNum>=0 && timerNum<16, "PWMTimer<n>: n must be within 0 through 16 on this processor.");
 
         // For external inspection
         static constexpr uint8_t peripheral_num = (timerNum<8)?0:1;
@@ -771,6 +771,7 @@ namespace Motate {
         };
 
         bool startTransfer(uint8_t * const buffer, const uint16_t length) {
+#ifdef PWM_PTCR_TXTEN
             if (pwm()->PWM_TCR == 0) {
 //                stop();
 //                pwm()->PWM_PTCR = PWM_PTCR_TXTDIS;
@@ -785,6 +786,9 @@ namespace Motate {
             pwm()->PWM_PTCR = PWM_PTCR_TXTEN;
             start();
             return true;
+#else
+            return false;
+#endif
         }
         // This form allows passing a single-dimensional array by reference, and deduces the full length
         template<typename T>
@@ -870,7 +874,7 @@ namespace Motate {
                 if (clock == kPWMClockPrescaleAndDivA) {
                     // Setup divisor A
 
-                    PWM->PWM_CLK = (PWM->PWM_CLK & ~PWM_CLK_DIVA_Msk) | prescaler | (divisors[divisor_index] << 8);
+                    pwm()->PWM_CLK = (pwm()->PWM_CLK & ~PWM_CLK_DIVA_Msk) | prescaler | (divisors[divisor_index] << 8);
 
                     int32_t newTop = masterClock/(divisors[divisor_index] * prescaler * frequency);
                     setTop(newTop, /*setOnNext=*/false);

@@ -112,16 +112,28 @@ namespace Motate {
     uint32_t pwm_interrupt_cause_cached_1_ = 0;
     uint32_t pwm_interrupt_cause_cached_2_ = 0;
 
-    template<> void PWMTimer< 0>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt")));
-    template<> void PWMTimer< 1>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt")));
-    template<> void PWMTimer< 2>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt")));
-    template<> void PWMTimer< 3>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt")));
-    template<> void PWMTimer< 4>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt")));
-    template<> void PWMTimer< 5>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt")));
-    template<> void PWMTimer< 6>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt")));
-    template<> void PWMTimer< 7>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt")));
+    template<> void PWMTimer<  0>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt")));
+    template<> void PWMTimer<  1>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt")));
+    template<> void PWMTimer<  2>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt")));
+    template<> void PWMTimer<  3>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt")));
+    template<> void PWMTimer<  4>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt")));
+    template<> void PWMTimer<  5>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt")));
+    template<> void PWMTimer<  6>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt")));
+    template<> void PWMTimer<  7>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt")));
+
+#if defined(PWM1)
+    template<> void PWMTimer<8+0>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt")));
+    template<> void PWMTimer<8+1>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt")));
+    template<> void PWMTimer<8+2>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt")));
+    template<> void PWMTimer<8+3>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt")));
+    template<> void PWMTimer<8+4>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt")));
+    template<> void PWMTimer<8+5>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt")));
+    template<> void PWMTimer<8+6>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt")));
+    template<> void PWMTimer<8+7>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt")));
+#endif
 }
 
+#if defined(PWM)
 void PWM_Handler(void) {
     Motate::pwm_interrupt_cause_cached_1_ = PWM->PWM_ISR1 & 0x00ff;
     Motate::pwm_interrupt_cause_cached_2_ = PWM->PWM_ISR2 & 0xff00;
@@ -153,3 +165,68 @@ void PWM_Handler(void) {
         Motate::PWMTimer< 7>::interrupt();
     };
 }
+#elif defined(PWM1)
+void PWM0_Handler(void) {
+    Motate::pwm_interrupt_cause_cached_1_ = PWM0->PWM_ISR1 & 0x00ff;
+    Motate::pwm_interrupt_cause_cached_2_ = PWM0->PWM_ISR2 & 0xff00;
+
+    uint32_t pwm_interrupt_cause_ = Motate::pwm_interrupt_cause_cached_1_ | (Motate::pwm_interrupt_cause_cached_2_>>8);
+
+    if (Motate::PWMTimer<  0>::interrupt && (pwm_interrupt_cause_ & (1<<  0))) {
+        Motate::PWMTimer<  0>::interrupt();
+    };
+    if (Motate::PWMTimer<  1>::interrupt && (pwm_interrupt_cause_ & (1<<  1))) {
+        Motate::PWMTimer<  1>::interrupt();
+    };
+    if (Motate::PWMTimer<  2>::interrupt && (pwm_interrupt_cause_ & (1<<  2))) {
+        Motate::PWMTimer<  2>::interrupt();
+    };
+    if (Motate::PWMTimer<  3>::interrupt && (pwm_interrupt_cause_ & (1<<  3))) {
+        Motate::PWMTimer<  3>::interrupt();
+    };
+    if (Motate::PWMTimer<  4>::interrupt && (pwm_interrupt_cause_ & (1<<  4))) {
+        Motate::PWMTimer<  4>::interrupt();
+    };
+    if (Motate::PWMTimer<  5>::interrupt && (pwm_interrupt_cause_ & (1<<  5))) {
+        Motate::PWMTimer<  5>::interrupt();
+    };
+    if (Motate::PWMTimer<  6>::interrupt && (pwm_interrupt_cause_ & (1<<  6))) {
+        Motate::PWMTimer<  6>::interrupt();
+    };
+    if (Motate::PWMTimer<  7>::interrupt && (pwm_interrupt_cause_ & (1<<  7))) {
+        Motate::PWMTimer<  7>::interrupt();
+    };
+}
+void PWM1_Handler(void) {
+    Motate::pwm_interrupt_cause_cached_1_ = PWM1->PWM_ISR1 & 0x00ff;
+    Motate::pwm_interrupt_cause_cached_2_ = PWM1->PWM_ISR2 & 0xff00;
+
+    uint32_t pwm_interrupt_cause_ = Motate::pwm_interrupt_cause_cached_1_ | (Motate::pwm_interrupt_cause_cached_2_>>8);
+
+    if (Motate::PWMTimer<8+0>::interrupt && (pwm_interrupt_cause_ & (1<<  0))) {
+        Motate::PWMTimer<8+0>::interrupt();
+    };
+    if (Motate::PWMTimer<8+1>::interrupt && (pwm_interrupt_cause_ & (1<<  1))) {
+        Motate::PWMTimer<8+1>::interrupt();
+    };
+    if (Motate::PWMTimer<8+2>::interrupt && (pwm_interrupt_cause_ & (1<<  2))) {
+        Motate::PWMTimer<8+2>::interrupt();
+    };
+    if (Motate::PWMTimer<8+3>::interrupt && (pwm_interrupt_cause_ & (1<<  3))) {
+        Motate::PWMTimer<8+3>::interrupt();
+    };
+    if (Motate::PWMTimer<8+4>::interrupt && (pwm_interrupt_cause_ & (1<<  4))) {
+        Motate::PWMTimer<8+4>::interrupt();
+    };
+    if (Motate::PWMTimer<8+5>::interrupt && (pwm_interrupt_cause_ & (1<<  5))) {
+        Motate::PWMTimer<8+5>::interrupt();
+    };
+    if (Motate::PWMTimer<8+6>::interrupt && (pwm_interrupt_cause_ & (1<<  6))) {
+        Motate::PWMTimer<8+6>::interrupt();
+    };
+    if (Motate::PWMTimer<8+7>::interrupt && (pwm_interrupt_cause_ & (1<<  7))) {
+        Motate::PWMTimer<8+7>::interrupt();
+    };
+}
+
+#endif

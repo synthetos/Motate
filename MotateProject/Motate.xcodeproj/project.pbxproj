@@ -590,13 +590,6 @@
 		D4C7A19E19630FA000A1BE28 /* stm32f30x_syscfg.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79AF11957C0AD00A1BE28 /* stm32f30x_syscfg.c */; };
 		D4C7A1AA19638D7500A1BE28 /* KL05ZUART.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D4C7A1A819638D7500A1BE28 /* KL05ZUART.cpp */; };
 		D4D62A6D1D07B5D30098C632 /* Atmel_sam3x in Sources */ = {isa = PBXBuildFile; fileRef = D423A30B1D07B16200575D2C /* Atmel_sam3x */; };
-		D4D62A6E1D07B60E0098C632 /* core_cm0.h in Sources */ = {isa = PBXBuildFile; fileRef = D4C78F851957C0AA00A1BE28 /* core_cm0.h */; };
-		D4D62A6F1D07B60E0098C632 /* core_cm0plus.h in Sources */ = {isa = PBXBuildFile; fileRef = D4C78F861957C0AA00A1BE28 /* core_cm0plus.h */; };
-		D4D62A701D07B60E0098C632 /* core_cm3.h in Sources */ = {isa = PBXBuildFile; fileRef = D4C78F871957C0AA00A1BE28 /* core_cm3.h */; };
-		D4D62A711D07B60E0098C632 /* core_cm4.h in Sources */ = {isa = PBXBuildFile; fileRef = D4C78F881957C0AA00A1BE28 /* core_cm4.h */; };
-		D4D62A721D07B60E0098C632 /* core_cm4_simd.h in Sources */ = {isa = PBXBuildFile; fileRef = D4C78F891957C0AA00A1BE28 /* core_cm4_simd.h */; };
-		D4D62A731D07B60E0098C632 /* core_cmFunc.h in Sources */ = {isa = PBXBuildFile; fileRef = D4C78F8A1957C0AA00A1BE28 /* core_cmFunc.h */; };
-		D4D62A741D07B60E0098C632 /* core_cmInstr.h in Sources */ = {isa = PBXBuildFile; fileRef = D4C78F8B1957C0AA00A1BE28 /* core_cmInstr.h */; };
 		D4D62A771D07B6380098C632 /* cortex_handlers.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79EE81957C0B700A1BE28 /* cortex_handlers.c */; };
 		D4D62A781D07B6380098C632 /* hooks.c in Sources */ = {isa = PBXBuildFile; fileRef = D4C79EEB1957C0B700A1BE28 /* hooks.c */; };
 		D4D62A791D07B6380098C632 /* syscalls.h in Sources */ = {isa = PBXBuildFile; fileRef = D4C79EEF1957C0B700A1BE28 /* syscalls.h */; };
@@ -698,6 +691,21 @@
 		D423A30C1D07B16F00575D2C /* Atmel_sam4e */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Atmel_sam4e; sourceTree = "<group>"; };
 		D43970391C0CB79A005CE6A2 /* arm.gdb */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = arm.gdb; sourceTree = "<group>"; };
 		D43C7AEA1B15689A007440D6 /* MotatePower.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotatePower.h; sourceTree = "<group>"; };
+		D43FF7051D52D52D00FB5B53 /* arm_common_tables.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = arm_common_tables.h; sourceTree = "<group>"; };
+		D43FF7061D52D52D00FB5B53 /* arm_const_structs.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = arm_const_structs.h; sourceTree = "<group>"; };
+		D43FF7071D52D52D00FB5B53 /* arm_math.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = arm_math.h; sourceTree = "<group>"; };
+		D43FF7081D52D52D00FB5B53 /* core_cm0.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = core_cm0.h; sourceTree = "<group>"; };
+		D43FF7091D52D52D00FB5B53 /* core_cm0plus.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = core_cm0plus.h; sourceTree = "<group>"; };
+		D43FF70A1D52D52D00FB5B53 /* core_cm3.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = core_cm3.h; sourceTree = "<group>"; };
+		D43FF70B1D52D52D00FB5B53 /* core_cm4_simd.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = core_cm4_simd.h; sourceTree = "<group>"; };
+		D43FF70C1D52D52D00FB5B53 /* core_cm4.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = core_cm4.h; sourceTree = "<group>"; };
+		D43FF70D1D52D52D00FB5B53 /* core_cm7.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = core_cm7.h; sourceTree = "<group>"; };
+		D43FF70E1D52D52D00FB5B53 /* core_cmFunc.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = core_cmFunc.h; sourceTree = "<group>"; };
+		D43FF70F1D52D52D00FB5B53 /* core_cmInstr.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = core_cmInstr.h; sourceTree = "<group>"; };
+		D43FF7101D52D52D00FB5B53 /* core_cmSimd.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = core_cmSimd.h; sourceTree = "<group>"; };
+		D43FF7111D52D52D00FB5B53 /* core_sc000.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = core_sc000.h; sourceTree = "<group>"; };
+		D43FF7121D52D52D00FB5B53 /* core_sc300.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = core_sc300.h; sourceTree = "<group>"; };
+		D43FF7131D536B7300FB5B53 /* Atmel_sams70 */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Atmel_sams70; sourceTree = "<group>"; };
 		D443391B196BB69B004A48F9 /* buffered_uart_demo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = buffered_uart_demo.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		D443391C196BB69B004A48F9 /* Makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
 		D449BC59197AC3E3000C0C3C /* MotateSerial.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotateSerial.h; sourceTree = "<group>"; };
@@ -727,13 +735,6 @@
 		D4C78F7F19553EF700A1BE28 /* KL05ZTimers.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = KL05ZTimers.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		D4C78F8019553EF700A1BE28 /* KL05ZTimers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = KL05ZTimers.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		D4C78F821957BF8400A1BE28 /* Motate.mk */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; fileEncoding = 4; path = Motate.mk; sourceTree = "<group>"; usesTabs = 1; };
-		D4C78F851957C0AA00A1BE28 /* core_cm0.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = core_cm0.h; sourceTree = "<group>"; };
-		D4C78F861957C0AA00A1BE28 /* core_cm0plus.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = core_cm0plus.h; sourceTree = "<group>"; };
-		D4C78F871957C0AA00A1BE28 /* core_cm3.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = core_cm3.h; sourceTree = "<group>"; };
-		D4C78F881957C0AA00A1BE28 /* core_cm4.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = core_cm4.h; sourceTree = "<group>"; };
-		D4C78F891957C0AA00A1BE28 /* core_cm4_simd.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = core_cm4_simd.h; sourceTree = "<group>"; };
-		D4C78F8A1957C0AA00A1BE28 /* core_cmFunc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = core_cmFunc.h; sourceTree = "<group>"; };
-		D4C78F8B1957C0AA00A1BE28 /* core_cmInstr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = core_cmInstr.h; sourceTree = "<group>"; };
 		D4C797681957C0AC00A1BE28 /* cmsis.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = cmsis.h; sourceTree = "<group>"; };
 		D4C797691957C0AC00A1BE28 /* cmsis_nvic.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cmsis_nvic.c; sourceTree = "<group>"; };
 		D4C7976A1957C0AC00A1BE28 /* cmsis_nvic.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = cmsis_nvic.h; sourceTree = "<group>"; };
@@ -2089,6 +2090,7 @@
 				D4B74A071D4FB25500E0BFB6 /* Atmel_sam_common */,
 				D423A30B1D07B16200575D2C /* Atmel_sam3x */,
 				D423A30C1D07B16F00575D2C /* Atmel_sam4e */,
+				D43FF7131D536B7300FB5B53 /* Atmel_sams70 */,
 				D4C78F6E19538E6B00A1BE28 /* Freescale_klxx */,
 				D4E90E271ABB54D40042A16C /* Atmel_XMega */,
 				D48992C01965B118004F73A6 /* MotateBuffer.h */,
@@ -2130,13 +2132,20 @@
 		D4C78F841957C0AA00A1BE28 /* cmsis */ = {
 			isa = PBXGroup;
 			children = (
-				D4C78F851957C0AA00A1BE28 /* core_cm0.h */,
-				D4C78F861957C0AA00A1BE28 /* core_cm0plus.h */,
-				D4C78F871957C0AA00A1BE28 /* core_cm3.h */,
-				D4C78F881957C0AA00A1BE28 /* core_cm4.h */,
-				D4C78F891957C0AA00A1BE28 /* core_cm4_simd.h */,
-				D4C78F8A1957C0AA00A1BE28 /* core_cmFunc.h */,
-				D4C78F8B1957C0AA00A1BE28 /* core_cmInstr.h */,
+				D43FF7051D52D52D00FB5B53 /* arm_common_tables.h */,
+				D43FF7061D52D52D00FB5B53 /* arm_const_structs.h */,
+				D43FF7071D52D52D00FB5B53 /* arm_math.h */,
+				D43FF7081D52D52D00FB5B53 /* core_cm0.h */,
+				D43FF7091D52D52D00FB5B53 /* core_cm0plus.h */,
+				D43FF70A1D52D52D00FB5B53 /* core_cm3.h */,
+				D43FF70B1D52D52D00FB5B53 /* core_cm4_simd.h */,
+				D43FF70C1D52D52D00FB5B53 /* core_cm4.h */,
+				D43FF70D1D52D52D00FB5B53 /* core_cm7.h */,
+				D43FF70E1D52D52D00FB5B53 /* core_cmFunc.h */,
+				D43FF70F1D52D52D00FB5B53 /* core_cmInstr.h */,
+				D43FF7101D52D52D00FB5B53 /* core_cmSimd.h */,
+				D43FF7111D52D52D00FB5B53 /* core_sc000.h */,
+				D43FF7121D52D52D00FB5B53 /* core_sc300.h */,
 				D423A30A1D07930600575D2C /* TARGET_Atmel */,
 				D4C797661957C0AC00A1BE28 /* TARGET_Freescale */,
 				D4C797A91957C0AC00A1BE28 /* TARGET_NORDIC */,
@@ -5450,13 +5459,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				D4D62A6D1D07B5D30098C632 /* Atmel_sam3x in Sources */,
-				D4D62A6E1D07B60E0098C632 /* core_cm0.h in Sources */,
-				D4D62A6F1D07B60E0098C632 /* core_cm0plus.h in Sources */,
-				D4D62A701D07B60E0098C632 /* core_cm3.h in Sources */,
-				D4D62A711D07B60E0098C632 /* core_cm4.h in Sources */,
-				D4D62A721D07B60E0098C632 /* core_cm4_simd.h in Sources */,
-				D4D62A731D07B60E0098C632 /* core_cmFunc.h in Sources */,
-				D4D62A741D07B60E0098C632 /* core_cmInstr.h in Sources */,
 				D4D62A7C1D07B6510098C632 /* main.cpp in Sources */,
 				D4D62A7D1D07B6510098C632 /* MotateBuffer.h in Sources */,
 				D4D62A7E1D07B6510098C632 /* MotatePins.h in Sources */,

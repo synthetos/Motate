@@ -84,8 +84,7 @@ CPU_DEV = cortex-m4
 
 else ifeq ($(CHIP),$(findstring $(CHIP), $(SAM4E)))
 
-#BOARD:=SAM4S_EK
-CHIP_SERIES:=sam4e
+    CHIP_SERIES:=sam4e
 
     ifeq ($(CHIP),$(findstring $(CHIP), $(SAM4E8)))
         CHIP_SUBSERIES:=sam4e8
@@ -93,8 +92,25 @@ CHIP_SERIES:=sam4e
         CHIP_SUBSERIES:=sam4e16
     endif
 
-CPU_DEV = cortex-m4
-#FLOAT_OPTIONS = -mfloat-abi=hard -mfpu=fpv4-sp-d16
+    CPU_DEV = cortex-m4
+    #FLOAT_OPTIONS = -mfloat-abi=hard -mfpu=fpv4-sp-d16
+
+else ifeq ($(CHIP),$(findstring $(CHIP), $(SAMS70)))
+
+    CHIP_SERIES:=sams70
+
+    ifeq ($(CHIP),$(findstring $(CHIP), SAMS70N19))
+        CHIP_SUBSERIES:=sams70n19
+    else ifeq ($(CHIP),$(findstring $(CHIP), SAMS70N20)
+        CHIP_SUBSERIES:=sams70n20
+    else ifeq ($(CHIP),$(findstring $(CHIP), SAMS70N21)
+        CHIP_SUBSERIES:=sams70n21
+    else
+        $(error $(CHIP) is not in a known Atmel subseries (incomplete makefile, most likely).)
+    endif
+
+    CPU_DEV = cortex-m7
+    #FLOAT_OPTIONS = -mfloat-abi=hard -mfpu=fpv4-sp-d16
 
 else
 

@@ -114,25 +114,25 @@ namespace Motate {
 #undef _MOTATE_TEMP_TC//(t,c)
 
 //    // SPI Pin assignements
-    _MAKE_MOTATE_SPI_CS_PIN('A',  3, /* Peripheral:*/ B, /* CS Index:*/ 3);
-    _MAKE_MOTATE_SPI_CS_PIN('A',  5, /* Peripheral:*/ B, /* CS Index:*/ 3);
-    _MAKE_MOTATE_SPI_CS_PIN('A',  9, /* Peripheral:*/ B, /* CS Index:*/ 1);
-    _MAKE_MOTATE_SPI_CS_PIN('A', 10, /* Peripheral:*/ B, /* CS Index:*/ 2);
-    _MAKE_MOTATE_SPI_CS_PIN('A', 11, /* Peripheral:*/ A, /* CS Index:*/ 0);
-    _MAKE_MOTATE_SPI_CS_PIN('A', 22, /* Peripheral:*/ B, /* CS Index:*/ 3);
-    _MAKE_MOTATE_SPI_CS_PIN('A', 30, /* Peripheral:*/ B, /* CS Index:*/ 2);
-    _MAKE_MOTATE_SPI_CS_PIN('A', 31, /* Peripheral:*/ A, /* CS Index:*/ 1);
+    _MAKE_MOTATE_SPI_CS_PIN('A',  3, /* SPINum:*/ 0, /* Peripheral:*/ B, /* CS Index:*/ 3);
+    _MAKE_MOTATE_SPI_CS_PIN('A',  5, /* SPINum:*/ 0, /* Peripheral:*/ B, /* CS Index:*/ 3);
+    _MAKE_MOTATE_SPI_CS_PIN('A',  9, /* SPINum:*/ 0, /* Peripheral:*/ B, /* CS Index:*/ 1);
+    _MAKE_MOTATE_SPI_CS_PIN('A', 10, /* SPINum:*/ 0, /* Peripheral:*/ B, /* CS Index:*/ 2);
+    _MAKE_MOTATE_SPI_CS_PIN('A', 11, /* SPINum:*/ 0, /* Peripheral:*/ A, /* CS Index:*/ 0);
+    _MAKE_MOTATE_SPI_CS_PIN('A', 22, /* SPINum:*/ 0, /* Peripheral:*/ B, /* CS Index:*/ 3);
+    _MAKE_MOTATE_SPI_CS_PIN('A', 30, /* SPINum:*/ 0, /* Peripheral:*/ B, /* CS Index:*/ 2);
+    _MAKE_MOTATE_SPI_CS_PIN('A', 31, /* SPINum:*/ 0, /* Peripheral:*/ A, /* CS Index:*/ 1);
 #ifdef PIOB
-    _MAKE_MOTATE_SPI_CS_PIN('B',  2, /* Peripheral:*/ B, /* CS Index:*/ 2);
-    _MAKE_MOTATE_SPI_CS_PIN('B', 14, /* Peripheral:*/ A, /* CS Index:*/ 1);
+    _MAKE_MOTATE_SPI_CS_PIN('B',  2, /* SPINum:*/ 0, /* Peripheral:*/ B, /* CS Index:*/ 2);
+    _MAKE_MOTATE_SPI_CS_PIN('B', 14, /* SPINum:*/ 0, /* Peripheral:*/ A, /* CS Index:*/ 1);
 #endif
 #ifdef PIOC
-    _MAKE_MOTATE_SPI_CS_PIN('C',  4, /* Peripheral:*/ B, /* CS Index:*/ 1);
+    _MAKE_MOTATE_SPI_CS_PIN('C',  4, /* SPINum:*/ 0, /* Peripheral:*/ B, /* CS Index:*/ 1);
 #endif
 
-    _MAKE_MOTATE_SPI_MISO_PIN('A', 12, /* Peripheral */ A);
-    _MAKE_MOTATE_SPI_MOSI_PIN('A', 13, /* Peripheral */ A);
-    _MAKE_MOTATE_SPI_SCK_PIN ('A', 14, /* Peripheral */ A);
+    _MAKE_MOTATE_SPI_MISO_PIN('A', 12, /* SPINum:*/ 0, /* Peripheral */ A);
+    _MAKE_MOTATE_SPI_MOSI_PIN('A', 13, /* SPINum:*/ 0, /* Peripheral */ A);
+    _MAKE_MOTATE_SPI_SCK_PIN ('A', 14, /* SPINum:*/ 0, /* Peripheral */ A);
 
 //
     // UART Pin Assignments
@@ -163,7 +163,7 @@ namespace Motate {
 //    _MAKE_MOTATE_UART_RI_PIN ( 'A',  29, /* UART number: */ 1, /* Peripheral */ A);
 //    _MAKE_MOTATE_UART_SCK_PIN( 'A',  23, /* UART number: */ 1, /* Peripheral */ A);
 
-    
+
     // ADC Pin assignments
 //    _MAKE_MOTATE_ADC_PIN('A',  2, /* ADC number:*/  0);
 //    _MAKE_MOTATE_ADC_PIN('A',  3, /* ADC number:*/  1);

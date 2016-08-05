@@ -33,21 +33,25 @@
 
 namespace Motate {
     template<> std::function<void(uint16_t)> _USARTHardware<0>::_uartInterruptHandler {};
+    template<> _USARTHardware<0> *_USARTHardware<0>::_singleton {nullptr};
 
 #ifdef HAS_USART1
     template<> std::function<void(uint16_t)> _USARTHardware<1>::_uartInterruptHandler {};
+    template<> _USARTHardware<1> *_USARTHardware<1>::_singleton {nullptr};
 #endif
 
     template<> std::function<void(uint16_t)> _UARTHardware<0>::_uartInterruptHandler {};
+    template<> _UARTHardware<0> *_UARTHardware<0>::_singleton {nullptr};
 
 #ifdef HAS_UART1
     template<> std::function<void(uint16_t)> _UARTHardware<1>::_uartInterruptHandler {};
+    template<> _UARTHardware<1> *_UARTHardware<1>::_singleton {nullptr};
 #endif
 }
 
 extern "C" void USART0_Handler(void)  {
     if (Motate::_USARTHardware<0u>::_uartInterruptHandler) {
-        Motate::_USARTHardware<0u>::_uartInterruptHandler(Motate::_USARTHardware<0u>::getInterruptCause());
+        Motate::_USARTHardware<0u>::_uartInterruptHandler(Motate::_USARTHardware<0u>::_singleton->getInterruptCause());
         return;
     }
     __asm__("BKPT");
@@ -57,7 +61,7 @@ extern "C" void USART0_Handler(void)  {
 #ifdef HAS_USART1
 extern "C" void USART1_Handler(void)  {
     if (Motate::_USARTHardware<1u>::_uartInterruptHandler) {
-        Motate::_USARTHardware<1u>::_uartInterruptHandler(Motate::_USARTHardware<1u>::getInterruptCause());
+        Motate::_USARTHardware<1u>::_uartInterruptHandler(Motate::_USARTHardware<1u>::_singleton->getInterruptCause());
         return;
     }
     __asm__("BKPT");
@@ -68,7 +72,7 @@ extern "C" void USART1_Handler(void)  {
 
 extern "C" void UART0_Handler(void)  {
     if (Motate::_UARTHardware<0>::_uartInterruptHandler) {
-        Motate::_UARTHardware<0>::_uartInterruptHandler(Motate::_UARTHardware<0>::getInterruptCause());
+        Motate::_UARTHardware<0>::_uartInterruptHandler(Motate::_UARTHardware<0>::_singleton->getInterruptCause());
         return;
     }
     __asm__("BKPT");
@@ -78,7 +82,7 @@ extern "C" void UART0_Handler(void)  {
 #ifdef HAS_UART1
 extern "C" void UART1_Handler(void)  {
     if (Motate::_UARTHardware<1>::_uartInterruptHandler) {
-        Motate::_UARTHardware<1>::_uartInterruptHandler(Motate::_UARTHardware<1>::getInterruptCause());
+        Motate::_UARTHardware<1>::_uartInterruptHandler(Motate::_UARTHardware<1>::_singleton->getInterruptCause());
         return;
     }
     __asm__("BKPT");
@@ -88,7 +92,7 @@ extern "C" void UART1_Handler(void)  {
 
 extern "C" void UART_Handler(void)  {
     if (Motate::_UARTHardware<0u>::_uartInterruptHandler) {
-        Motate::_UARTHardware<0u>::_uartInterruptHandler(Motate::_UARTHardware<0u>::getInterruptCause());
+        Motate::_UARTHardware<0u>::_uartInterruptHandler(Motate::_UARTHardware<0u>::_singleton->getInterruptCause());
         return;
     }
     __asm__("BKPT");

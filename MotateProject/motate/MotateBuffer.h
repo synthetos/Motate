@@ -230,7 +230,7 @@ namespace Motate {
                     _getWriteOffset(); // cache the write position
 
                     int16_t transfer_size = 0;
-                    char *_write_pos = _data + _last_known_write_offset;
+                    base_type *_write_pos = _data + _last_known_write_offset;
 
                     if (isFull()) {
                         break;
@@ -412,7 +412,7 @@ namespace Motate {
                 _getReadOffset(); // cache the read position
 
                 int16_t transfer_size = 0;
-                char *_read_pos = _data + _last_known_read_offset;
+                base_type *_read_pos = _data + _last_known_read_offset;
 
                 // Possible cases:
                 // [0] _read_pos == _write_pos
