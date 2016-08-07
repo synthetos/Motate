@@ -421,7 +421,7 @@ namespace Motate {
 //        RealPWMOutputPin(const PinMode pinMode, const uint32_t freq) : Pin<pinNum>(pinMode, kNormal), timerOrPWM(kTimerUpToMatch, freq) {};
         bool canPWM() { return true; };
 
-        void pwmpin_init(const PinOptions_t options) {
+        void pwmpin_init(const TimerChannelOutputOptions options) {
             timerOrPWM::setOutputOptions(options);
             timerOrPWM::start();
         };
