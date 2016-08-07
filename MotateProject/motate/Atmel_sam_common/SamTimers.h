@@ -914,7 +914,7 @@ namespace Motate {
 
         // Set the TOP value for modes that use it.
         // WARNING: No sanity checking is done to verify that you are, indeed, in a mode that uses it.
-        void setTop(const uint32_t topValue, bool setOnNext = true) {
+        void setTop(const uint32_t topValue, bool setOnNext = false) {
             if (setOnNext)
                 pwmChan()->PWM_CPRDUPD = topValue;
             else
@@ -942,10 +942,10 @@ namespace Motate {
         // Channel-specific functions. These are Motate channels, but they happen to line-up.
 
         // Specify the duty cycle as a value from 0.0 .. 1.0;
-        void setDutyCycleForChannel(const uint8_t channel, const float ratio, bool setOnNext = true) {
+        void setDutyCycleForChannel(const uint8_t channel, const float ratio, bool setOnNext = false) {
             setExactDutyCycle(ratio, setOnNext);
         };
-        void setDutyCycle(const float ratio, bool setOnNext = true) {
+        void setDutyCycle(const float ratio, bool setOnNext = false) {
             if (setOnNext)
                 pwmChan()->PWM_CDTYUPD = getTopValue() * ratio;
             else
@@ -964,10 +964,10 @@ namespace Motate {
 
         // Specify channel A/B duty cycle as a integer value from 0 .. TOP.
         // TOP in this case is either RC_RC or 0xFFFF.
-        void setExactDutyCycleForChannel(const uint8_t channel, const uint32_t absolute, bool setOnNext = true) {
+        void setExactDutyCycleForChannel(const uint8_t channel, const uint32_t absolute, bool setOnNext = false) {
             setExactDutyCycle(absolute, setOnNext);
         };
-        void setExactDutyCycle(const uint32_t absolute, bool setOnNext = true) {
+        void setExactDutyCycle(const uint32_t absolute, bool setOnNext = false) {
             if (setOnNext)
                 pwmChan()->PWM_CDTYUPD = absolute;
             else
