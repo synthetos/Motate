@@ -61,12 +61,12 @@ namespace Motate {
 #else
 #ifdef UART
     // NOTE: We homogenize, and move the names UART -> UART0
-
     // This is for the Sam3x
     constexpr Uart * const UART0_DONT_CONFLICT = UART;
     #undef UART
     constexpr Uart * const UART0 = UART0_DONT_CONFLICT;
     #define HAS_UART0
+    #define HAD_UART
 
     constexpr Uart * const UART1 = nullptr;
     constexpr uint32_t ID_UART0 = ID_UART;

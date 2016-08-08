@@ -171,12 +171,10 @@ namespace Motate {
 
         static constexpr const uint8_t uartPeripheralNum=uartPeripheralNumber;
 
-        DMA<Usart *, uartPeripheralNumber> dma;
+        static constexpr DMA<Usart *, uartPeripheralNumber> dma_ {};
+        static constexpr const DMA<Usart *, uartPeripheralNumber> *dma() { return &dma_; };
 
         typedef _USARTHardware<uartPeripheralNumber> this_type_t;
-
-        // Make a singleton for the interrupt handlers to use
-        static this_type_t *_singleton;
 
         static std::function<void(uint16_t)> _uartInterruptHandler;
 
@@ -189,11 +187,10 @@ namespace Motate {
 
             // reset PCR to zero
             usart()->US_IDR = 0xffffffff; // disable all the things
-            dma.reset();
+            dma()->reset();
         };
 
         _USARTHardware() {
-            _singleton = this;
             // We DON'T init here, because the optimizer is fickle, and will remove this whole area.
             // Instead, we call init from UART<>::init(), so that the optimizer will keep it.
         };
@@ -258,14 +255,14 @@ namespace Motate {
                 }
 
                 if (interrupts & UARTInterrupt::OnRxTransferDone) {
-                    dma.startRxDoneInterrupts();
+                    dma()->startRxDoneInterrupts();
                 } else {
-                    dma.stopRxDoneInterrupts();
+                    dma()->stopRxDoneInterrupts();
                 }
                 if (interrupts & UARTInterrupt::OnTxTransferDone) {
-                    dma.startTxDoneInterrupts();
+                    dma()->startTxDoneInterrupts();
                 } else {
-                    dma.stopTxDoneInterrupts();
+                    dma()->stopTxDoneInterrupts();
                 }
 
 
@@ -323,21 +320,21 @@ namespace Motate {
 
         void setInterruptTxTransferDone(bool value) {
             if (value) {
-                dma.startTxDoneInterrupts();
+                dma()->startTxDoneInterrupts();
             } else {
-                dma.stopTxDoneInterrupts();
+                dma()->stopTxDoneInterrupts();
             }
         };
 
         void setInterruptRxTransferDone(bool value) {
             if (value) {
-                dma.startRxDoneInterrupts();
+                dma()->startRxDoneInterrupts();
             } else {
-                dma.stopRxDoneInterrupts();
+                dma()->stopRxDoneInterrupts();
             }
         };
 
-        uint16_t getInterruptCause() { // __attribute__ (( noinline ))
+        static uint16_t getInterruptCause() { // __attribute__ (( noinline ))
             uint16_t status = UARTInterrupt::Unknown;
 
             // Notes from experience:
@@ -354,7 +351,7 @@ namespace Motate {
             {
                 status |= UARTInterrupt::OnTxReady;
             }
-            if (dma.inTxBufferEmptyInterrupt())
+            if (dma()->inTxBufferEmptyInterrupt())
             {
                 status |= UARTInterrupt::OnTxTransferDone;
             }
@@ -362,7 +359,7 @@ namespace Motate {
             {
                 status |= UARTInterrupt::OnRxReady;
             }
-            if (dma.inRxBufferEmptyInterrupt())
+            if (dma()->inRxBufferEmptyInterrupt())
             {
                 status |= UARTInterrupt::OnRxTransferDone;
             }
@@ -396,7 +393,7 @@ namespace Motate {
 
         void flushRead() {
             // kill any incoming transfers
-            dma().flushRead();
+            dma()->flushRead();
         };
 
 
@@ -412,19 +409,19 @@ namespace Motate {
 
         // ***** Handle Tranfers
         bool startRXTransfer(char *buffer, const uint16_t length) {
-            return dma().startRXTransfer(buffer, length, true);
+            return dma()->startRXTransfer(buffer, length, true);
         };
 
         char* getRXTransferPosition() {
-            return dma().getRXTransferPosition();
+            return dma()->getRXTransferPosition();
         };
 
         bool startTXTransfer(char *buffer, const uint16_t length) {
-            return dma().startTXTransfer(buffer, length, true);
+            return dma()->startTXTransfer(buffer, length, true);
         };
 
         char* getTXTransferPosition() {
-            return dma().getTXTransferPosition();
+            return dma()->getTXTransferPosition();
         };
 
     };
@@ -446,12 +443,10 @@ namespace Motate {
 
         static constexpr const uint8_t uartPeripheralNum=uartPeripheralNumber;
 
-        DMA<Uart *, uartPeripheralNumber> dma;
+        static constexpr DMA<Uart *, uartPeripheralNumber> dma_ {};
+        static constexpr const DMA<Uart *, uartPeripheralNumber> *dma() { return &dma_; };
 
         typedef _UARTHardware<uartPeripheralNumber> this_type_t;
-
-        // Make a singleton for the interrupt handlers to use
-        static this_type_t * _singleton;
 
         static std::function<void(uint16_t)> _uartInterruptHandler;
 
@@ -464,11 +459,10 @@ namespace Motate {
 
             // reset PCR to zero
             //uart()->UART_IDR = 0xffffffff; // disable all the things
-            dma.reset();
+            dma()->reset();
         };
 
         _UARTHardware() {
-            _singleton = this;
             // We DON'T init here, because the optimizer is fickle, and will remove this whole area.
             // Instead, we call init from UART<>::init(), so that the optimizer will keep it.
         };
@@ -527,14 +521,14 @@ namespace Motate {
                 }
 
                 if (interrupts & UARTInterrupt::OnRxTransferDone) {
-                    dma.startRxDoneInterrupts();
+                    dma()->startRxDoneInterrupts();
                 } else {
-                    dma.stopRxDoneInterrupts();
+                    dma()->stopRxDoneInterrupts();
                 }
                 if (interrupts & UARTInterrupt::OnTxTransferDone) {
-                    dma.startTxDoneInterrupts();
+                    dma()->startTxDoneInterrupts();
                 } else {
-                    dma.stopTxDoneInterrupts();
+                    dma()->stopTxDoneInterrupts();
                 }
 
 
@@ -590,21 +584,21 @@ namespace Motate {
 
         void setInterruptTxTransferDone(bool value) {
             if (value) {
-                dma.startTxDoneInterrupts();
+                dma()->startTxDoneInterrupts();
             } else {
-                dma.stopTxDoneInterrupts();
+                dma()->stopTxDoneInterrupts();
             }
         };
 
         void setInterruptRxTransferDone(bool value) {
             if (value) {
-                dma.startRxDoneInterrupts();
+                dma()->startRxDoneInterrupts();
             } else {
-                dma.stopRxDoneInterrupts();
+                dma()->stopRxDoneInterrupts();
             }
         };
 
-        uint16_t getInterruptCause() { // __attribute__ (( noinline ))
+        static uint16_t getInterruptCause() { // __attribute__ (( noinline ))
             uint16_t status = UARTInterrupt::Unknown;
 
             // Notes from experience:
@@ -621,7 +615,7 @@ namespace Motate {
             {
                 status |= UARTInterrupt::OnTxReady;
             }
-            if (dma.inTxBufferEmptyInterrupt())
+            if (dma()->inTxBufferEmptyInterrupt())
             {
                 status |= UARTInterrupt::OnTxTransferDone;
             }
@@ -629,7 +623,7 @@ namespace Motate {
             {
                 status |= UARTInterrupt::OnRxReady;
             }
-            if (dma.inRxBufferEmptyInterrupt())
+            if (dma()->inRxBufferEmptyInterrupt())
             {
                 status |= UARTInterrupt::OnRxTransferDone;
             }
@@ -656,7 +650,7 @@ namespace Motate {
 
         void flushRead() {
             // kill any incoming transfers
-            dma.flushRead();
+            dma()->flushRead();
         };
 
 
@@ -672,19 +666,19 @@ namespace Motate {
 
         // ***** Handle Tranfers
         bool startRXTransfer(char *buffer, const uint16_t length) {
-            return dma.startRXTransfer(buffer, length, true);
+            return dma()->startRXTransfer(buffer, length, true);
         };
 
         char* getRXTransferPosition() {
-            return dma.getRXTransferPosition();
+            return dma()->getRXTransferPosition();
         };
 
         bool startTXTransfer(char *buffer, const uint16_t length) {
-            return dma.startTXTransfer(buffer, length, true);
+            return dma()->startTXTransfer(buffer, length, true);
         };
 
         char* getTXTransferPosition() {
-            return dma.getTXTransferPosition();
+            return dma()->getTXTransferPosition();
         };
 
     };
