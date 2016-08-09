@@ -68,12 +68,8 @@ namespace Motate {
     #define HAS_UART0
     #define HAD_UART
 
-    constexpr Uart * const UART1 = nullptr;
     constexpr uint32_t ID_UART0 = ID_UART;
     #undef ID_UART
-
-    // BONUS, make fake ID_UART1 to save ifdefs
-    constexpr uint32_t ID_UART1 = 0;
 
 #ifdef PDC_UART
     constexpr Pdc * const PDC_UART0_DONT_CONFLICT = PDC_UART;
@@ -87,7 +83,6 @@ namespace Motate {
 #endif // PDC_UART
 
     constexpr IRQn_Type UART0_IRQn = UART_IRQn;
-    constexpr IRQn_Type UART1_IRQn = (IRQn_Type)0u;
 #endif // ifdef UART
 #endif // ifdef UART0
 
@@ -109,7 +104,84 @@ namespace Motate {
     #define HAS_PDC_UART1
 #endif // PDC_UART1
 
+#else // no UART1
+    constexpr Uart * const UART1 = nullptr;
+    constexpr uint32_t ID_UART1 = 0;
+    constexpr IRQn_Type UART1_IRQn = (IRQn_Type)0u;
 #endif
+
+#ifdef UART2
+    constexpr Uart * const UART2_DONT_CONFLICT = UART2;
+    #undef UART2
+    constexpr Uart * const UART2 = UART2_DONT_CONFLICT;
+    #define HAS_UART2
+
+    constexpr uint32_t const ID_UART2_DONT_CONFLICT = ID_UART2;
+    #undef ID_UART2
+    constexpr uint32_t const ID_UART2 = ID_UART2_DONT_CONFLICT;
+
+#ifdef PDC_UART2
+    constexpr Pdc * const PDC_UART2_DONT_CONFLICT = PDC_UART2;
+    #undef PDC_UART2
+    constexpr Pdc * const PDC_UART2 = PDC_UART2_DONT_CONFLICT;
+    #define HAS_PDC
+    #define HAS_PDC_UART2
+#endif // PDC_UART1
+
+#else // no UART2
+    constexpr Uart * const UART2 = nullptr;
+    constexpr uint32_t ID_UART2 = 0;
+    constexpr IRQn_Type UART2_IRQn = (IRQn_Type)0u;
+#endif
+
+#ifdef UART3
+    constexpr Uart * const UART3_DONT_CONFLICT = UART3;
+    #undef UART3
+    constexpr Uart * const UART3 = UART3_DONT_CONFLICT;
+    #define HAS_UART3
+
+    constexpr uint32_t const ID_UART3_DONT_CONFLICT = ID_UART3;
+    #undef ID_UART3
+    constexpr uint32_t const ID_UART3 = ID_UART3_DONT_CONFLICT;
+
+#ifdef PDC_UART3
+    constexpr Pdc * const PDC_UART3_DONT_CONFLICT = PDC_UART3;
+    #undef PDC_UART3
+    constexpr Pdc * const PDC_UART3 = PDC_UART3_DONT_CONFLICT;
+    #define HAS_PDC
+    #define HAS_PDC_UART3
+#endif // PDC_UART1
+
+#else // no UART3
+    constexpr Uart * const UART3 = nullptr;
+    constexpr uint32_t ID_UART3 = 0;
+    constexpr IRQn_Type UART3_IRQn = (IRQn_Type)0u;
+#endif
+
+#ifdef UART4
+    constexpr Uart * const UART4_DONT_CONFLICT = UART4;
+    #undef UART4
+    constexpr Uart * const UART4 = UART4_DONT_CONFLICT;
+    #define HAS_UART4
+
+    constexpr uint32_t const ID_UART4_DONT_CONFLICT = ID_UART4;
+    #undef ID_UART4
+    constexpr uint32_t const ID_UART4 = ID_UART4_DONT_CONFLICT;
+
+#ifdef PDC_UART4
+    constexpr Pdc * const PDC_UART4_DONT_CONFLICT = PDC_UART4;
+    #undef PDC_UART4
+    constexpr Pdc * const PDC_UART4 = PDC_UART4_DONT_CONFLICT;
+    #define HAS_PDC
+    #define HAS_PDC_UART4
+#endif // PDC_UART1
+
+#else // no UART4
+    constexpr Uart * const UART4 = nullptr;
+    constexpr uint32_t ID_UART4 = 0;
+    constexpr IRQn_Type UART4_IRQn = (IRQn_Type)0u;
+#endif
+
 
 #ifdef USART0
     // Thi isn't strictly necessary, but preventative and for consistency.
@@ -154,12 +226,9 @@ namespace Motate {
 #endif // PDC_UART1
 #endif // ifdef USART1
 
-// Enable -Wunused warning again
-#pragma GCC diagnostic pop
-    
+
     struct SamCommon {
 
-        // ToDo: Make this inherited! It's repeated in timer, pins, USB, and SPI.
         static void enablePeripheralClock(uint32_t peripheralId) {
             if (peripheralId < 32) {
                 uint32_t id_mask = 1u << ( peripheralId );
@@ -190,6 +259,11 @@ namespace Motate {
                 }
 #endif
             }
+        };
+
+        static uint32_t getPeripheralClockFreq()
+        {
+            return SystemCoreClock >> ((PMC->PMC_MCKR & PMC_MCKR_PRES_Msk) >> PMC_MCKR_PRES_Pos);
         };
     };
 

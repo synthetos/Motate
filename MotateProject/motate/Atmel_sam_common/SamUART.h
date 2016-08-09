@@ -31,7 +31,7 @@
 #ifndef SAM4XUART_H_ONCE
 #define SAM4XUART_H_ONCE
 
-#include <MotatePins.h>
+#include <MotateUART.h>
 #include <MotateBuffer.h>
 #include <type_traits>
 #include <algorithm> // for std::max, etc.
@@ -41,59 +41,6 @@
 #include "SamDMA.h" // pull in defines and fix them
 
 namespace Motate {
-    struct UARTMode {
-
-        static constexpr uint16_t NoParity           =      0; // Default
-        static constexpr uint16_t EvenParity         = 1 << 0;
-        static constexpr uint16_t OddParity          = 1 << 1;
-
-        static constexpr uint16_t OneStopBit         =      0; // Default
-        static constexpr uint16_t TwoStopBits        = 1 << 2;
-
-        static constexpr uint16_t As8Bit             =      0; // Default
-        static constexpr uint16_t As9Bit             = 1 << 3;
-//        static constexpr uint16_t As10Bit            = 1 << 4;
-
-        // Some careful hand math will show that 8N1 == 0
-        static constexpr uint16_t As8N1              = As8Bit | NoParity | OneStopBit;
-
-        static constexpr uint16_t RTSCTSFlowControl  = 1 << 5;
-        static constexpr uint16_t XonXoffFlowControl = 1 << 6;
-
-        // TODO: Add polarity inversion and bit reversal options
-    };
-
-    struct UARTInterrupt {
-        static constexpr uint16_t Off              = 0;
-        /* Alias for "off" to make more sense
-         when returned from setInterruptPending(). */
-        static constexpr uint16_t Unknown           = 0;
-
-        static constexpr uint16_t OnTxReady         = 1<<1;
-        static constexpr uint16_t OnTransmitReady   = 1<<1;
-        static constexpr uint16_t OnTxDone          = 1<<1;
-        static constexpr uint16_t OnTransmitDone    = 1<<1;
-
-        static constexpr uint16_t OnRxReady         = 1<<2;
-        static constexpr uint16_t OnReceiveReady    = 1<<2;
-        static constexpr uint16_t OnRxDone          = 1<<2;
-        static constexpr uint16_t OnReceiveDone     = 1<<2;
-
-        static constexpr uint16_t OnTxTransferDone  = 1<<3;
-        static constexpr uint16_t OnRxTransferDone  = 1<<4;
-
-        /* Set priority levels here as well: */
-        static constexpr uint16_t PriorityHighest   = 1<<5;
-        static constexpr uint16_t PriorityHigh      = 1<<6;
-        static constexpr uint16_t PriorityMedium    = 1<<7;
-        static constexpr uint16_t PriorityLow       = 1<<8;
-        static constexpr uint16_t PriorityLowest    = 1<<9;
-
-        /* These are for internal use only: */
-        static constexpr uint16_t OnCTSChanged      = 1<<10;
-
-    };
-
     // Convenience template classes for specialization:
 
     template<pin_number rxPinNumber, pin_number txPinNumber>
@@ -160,23 +107,51 @@ namespace Motate {
     struct _USARTHardware {
 
         static constexpr Usart * const usart() {
-            return (uartPeripheralNumber == 0) ? USART0 : USART1;
+            switch (uartPeripheralNumber) {
+                case (0): return USART0;
+                case (1): return USART1;
+                case (2): return USART2;
+            };
         };
         static constexpr uint32_t peripheralId() {
-            return (uartPeripheralNumber == 0) ? ID_USART0_DONT_CONFLICT : ID_USART1_DONT_CONFLICT;
+            switch (uartPeripheralNumber) {
+                case (0): return ID_USART0;
+                case (1): return ID_USART1;
+                case (2): return ID_USART2;
+            };
+            //return (uartPeripheralNumber == 0) ? ID_USART0_DONT_CONFLICT : ID_USART1_DONT_CONFLICT;
         };
         static constexpr IRQn_Type usartIRQ() {
-            return (uartPeripheralNumber == 0) ? USART0_IRQn : USART1_IRQn;
+            switch (uartPeripheralNumber) {
+                case (0): return USART0_IRQn;
+                case (1): return USART1_IRQn;
+                case (2): return USART2_IRQn;
+            };
+//            return (uartPeripheralNumber == 0) ? USART0_IRQn : USART1_IRQn;
         };
 
         static constexpr const uint8_t uartPeripheralNum=uartPeripheralNumber;
 
-        static constexpr DMA<Usart *, uartPeripheralNumber> dma_ {};
-        static constexpr const DMA<Usart *, uartPeripheralNumber> *dma() { return &dma_; };
+        std::function<void(uint16_t)> _uartInterruptHandler;
+
+        DMA<Usart *, uartPeripheralNumber> dma_ {_uartInterruptHandler};
+        constexpr const DMA<Usart *, uartPeripheralNumber> *dma() { return &dma_; };
 
         typedef _USARTHardware<uartPeripheralNumber> this_type_t;
 
-        static std::function<void(uint16_t)> _uartInterruptHandler;
+        static std::function<void()> _uartInterruptHandlerJumper;
+        _USARTHardware()
+        {
+            // We DON'T init here, because the optimizer is fickle, and will remove this whole area.
+            // Instead, we call init from UART<>::init(), so that the optimizer will keep it.
+            _uartInterruptHandlerJumper = [&]() {
+                if (_uartInterruptHandler) {
+                    _uartInterruptHandler(getInterruptCause());
+                }
+            };
+        };
+
+
 
         void init() {
             // init is called once after reset, so clean up after a reset
@@ -190,11 +165,6 @@ namespace Motate {
             dma()->reset();
         };
 
-        _USARTHardware() {
-            // We DON'T init here, because the optimizer is fickle, and will remove this whole area.
-            // Instead, we call init from UART<>::init(), so that the optimizer will keep it.
-        };
-
         void enable() { usart()->US_CR = US_CR_TXEN | US_CR_RXEN; };
         void disable () { usart()->US_CR = US_CR_TXDIS | US_CR_RXDIS; };
 
@@ -206,7 +176,7 @@ namespace Motate {
 
             // For all of the speeds up to and including 230400, 16x multiplier worked fine in testing.
             // All yielded a <1% error in final baud.
-            usart()->US_BRGR = US_BRGR_CD((((SystemCoreClock * 10) / (16 * baud)) + 5)/10) | US_BRGR_FP(0);
+            usart()->US_BRGR = US_BRGR_CD((((SamCommon::getPeripheralClockFreq() * 10) / (16 * baud)) + 5)/10) | US_BRGR_FP(0);
             usart()->US_MR &= ~US_MR_OVER;
 
 
@@ -432,23 +402,56 @@ namespace Motate {
     struct _UARTHardware {
 
         static constexpr Uart * const uart() {
-            return (uartPeripheralNumber == 0) ? UART0 : UART1;
+            switch (uartPeripheralNumber) {
+                case (0): return UART0;
+                case (1): return UART1;
+                case (2): return UART2;
+                case (3): return UART3;
+                case (4): return UART4;
+            };
         };
         static constexpr uint32_t peripheralId() {
-            return (uartPeripheralNumber == 0) ? ID_UART0 : ID_UART1;
+            switch (uartPeripheralNumber) {
+                case (0): return ID_UART0;
+                case (1): return ID_UART1;
+                case (2): return ID_UART2;
+                case (3): return ID_UART3;
+                case (4): return ID_UART4;
+            };
         };
         static constexpr IRQn_Type uartIRQ() {
-            return (uartPeripheralNumber == 0) ? UART0_IRQn : UART1_IRQn;
+            switch (uartPeripheralNumber) {
+                case (0): return UART0_IRQn;
+                case (1): return UART1_IRQn;
+                case (2): return UART2_IRQn;
+                case (3): return UART3_IRQn;
+                case (4): return UART4_IRQn;
+            };
         };
 
         static constexpr const uint8_t uartPeripheralNum=uartPeripheralNumber;
 
-        static constexpr DMA<Uart *, uartPeripheralNumber> dma_ {};
-        static constexpr const DMA<Uart *, uartPeripheralNumber> *dma() { return &dma_; };
+        std::function<void(uint16_t)> _uartInterruptHandler;
+
+        DMA<Uart *, uartPeripheralNumber> dma_ {_uartInterruptHandler};
+        constexpr const DMA<Uart *, uartPeripheralNumber> *dma() { return &dma_; };
 
         typedef _UARTHardware<uartPeripheralNumber> this_type_t;
 
-        static std::function<void(uint16_t)> _uartInterruptHandler;
+        static std::function<void()> _uartInterruptHandlerJumper;
+
+
+        _UARTHardware()
+        {
+            // We DON'T init here, because the optimizer is fickle, and will remove this whole area.
+            // Instead, we call init from UART<>::init(), so that the optimizer will keep it.
+            _uartInterruptHandlerJumper = [&]() {
+                if (_uartInterruptHandler) {
+                    _uartInterruptHandler(getInterruptCause());
+                }
+            };
+        };
+
 
         void init() {
             // init is called once after reset, so clean up after a reset
@@ -462,11 +465,6 @@ namespace Motate {
             dma()->reset();
         };
 
-        _UARTHardware() {
-            // We DON'T init here, because the optimizer is fickle, and will remove this whole area.
-            // Instead, we call init from UART<>::init(), so that the optimizer will keep it.
-        };
-
         void enable() { uart()->UART_CR = UART_CR_TXEN | UART_CR_RXEN; };
         void disable () { uart()->UART_CR = UART_CR_TXDIS | UART_CR_RXDIS; };
 
@@ -476,7 +474,7 @@ namespace Motate {
             // Oversampling is either 8 or 16. Depending on the baud, we may need to select 8x in
             // order to get the error low.
 
-            uart()->UART_BRGR = UART_BRGR_CD(SystemCoreClock / (16 * baud));
+            uart()->UART_BRGR = UART_BRGR_CD(SamCommon::getPeripheralClockFreq() / (16 * baud));
 
             // No hardware flow control
             // if (options & UARTMode::RTSCTSFlowControl) {
@@ -520,17 +518,7 @@ namespace Motate {
                     uart()->UART_IDR = UART_IDR_TXRDY;
                 }
 
-                if (interrupts & UARTInterrupt::OnRxTransferDone) {
-                    dma()->startRxDoneInterrupts();
-                } else {
-                    dma()->stopRxDoneInterrupts();
-                }
-                if (interrupts & UARTInterrupt::OnTxTransferDone) {
-                    dma()->startTxDoneInterrupts();
-                } else {
-                    dma()->stopTxDoneInterrupts();
-                }
-
+                dma()->setInterrupts(interrupts);
 
                 /* Set interrupt priority */
                 if (interrupts & UARTInterrupt::PriorityHighest) {
@@ -598,7 +586,7 @@ namespace Motate {
             }
         };
 
-        static uint16_t getInterruptCause() { // __attribute__ (( noinline ))
+        uint16_t getInterruptCause() { // __attribute__ (( noinline ))
             uint16_t status = UARTInterrupt::Unknown;
 
             // Notes from experience:
@@ -684,7 +672,7 @@ namespace Motate {
     };
 
     template<uint8_t uartPeripheralNumber>
-    using _USART_Or_UART = typename std::conditional<uartPeripheralNumber < 4, _USARTHardware<uartPeripheralNumber>, _UARTHardware<uartPeripheralNumber-4>>::type;
+    using _USART_Or_UART = typename std::conditional< (uartPeripheralNumber < 4), _USARTHardware<uartPeripheralNumber>, _UARTHardware<uartPeripheralNumber-4>>::type;
 
     template<pin_number rxPinNumber, pin_number txPinNumber>
     using UARTGetHardware = typename std::conditional<

@@ -27,10 +27,16 @@
  OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+// These two go outside the guard, so they can happen even though they
+// (eventually) include this file.
+#include "MotateUART.h" // pull in definitions of UART enums
+#include "SamCommon.h" // pull in defines and fix them
+
+
 #ifndef SAMDMA_H_ONCE
 #define SAMDMA_H_ONCE
 
-#include "SamCommon.h" // pull in defines and fix them
+#include <functional>  // for std::function
 #include <type_traits> // for std::alignment_of and std::remove_pointer
 
 namespace Motate {
@@ -75,6 +81,9 @@ namespace Motate {
         using _hw::inRxBufferEmptyInterrupt;
 
         typedef typename _hw::buffer_t buffer_t;
+
+        // We don't handle interrupts here, but this is part of the interface, so we silently deal with it
+        void setInterrupts(const uint16_t interrupts) const {};
 
         void reset() const
         {
@@ -271,7 +280,10 @@ namespace Motate {
     // Construct a DMA specialization that uses the PDC
     template<uint8_t periph_num>
     struct DMA<Usart*, periph_num> : DMA_PDC<Usart*, periph_num> {
-        // nothing to do here.
+        // nothing to do here, except for a constxpr constructor
+        // we take the handler, but we don't actually handle interrupts for the peripheral
+        // so we ignore it
+        constexpr DMA(const std::function<void(uint16_t)> &handler) : DMA_PDC<Usart*, periph_num>{} {};
     };
 #endif // USART + PDC
 
@@ -324,19 +336,27 @@ namespace Motate {
     // Construct a DMA specialization that uses the PDC
     template<uint8_t periph_num>
     struct DMA<Uart*, periph_num> : DMA_PDC<Uart*, periph_num> {
-        // nothing to do here.
+        // nothing to do here, except for a constxpr constructor
+        // we take the handler, but we don't actually handle interrupts for the peripheral
+        // so we ignore it
+        constexpr DMA(const std::function<void(uint16_t)> &handler) : DMA_PDC<Uart*, periph_num>{} {};
     };
 #endif // UART + PDC
 
 #endif // if has PDC
 
 
-
+} // end namespace Motate
 
 
 
 // Now if we have an XDMAC, we use it
 #if defined(XDMAC)
+
+    // Since we handle the inetrrupts here, we'll need some definitnons for MotateUART.h
+//#include "MotateUART.h"
+
+namespace Motate {
 
     // DMA_XDMAC_hardware template - - MUST be specialized
     template<typename periph_t, uint8_t periph_num>
@@ -344,6 +364,33 @@ namespace Motate {
         DMA_XDMAC_hardware() = delete;
     };
 
+    struct _XDMAInterrupt {
+        const uint32_t channel_mask; // Pin uses "mask" so we use a different name. "pc" for pinChange
+        const std::function<void(void)> interrupt_handler;
+        _XDMAInterrupt *next;
+
+        _XDMAInterrupt(const _XDMAInterrupt &) = delete; // delete the copy constructor, we only allow moves
+        _XDMAInterrupt &operator=(const _XDMAInterrupt &) = delete; // delete the assigment operator, we only allow moves
+
+        // Note we MOVE this interrupt function...
+        _XDMAInterrupt(const uint32_t _channel_num, const std::function<void(void)> &&_interrupt, _XDMAInterrupt *&_first) : channel_mask{(uint32_t)(1<<_channel_num)}, interrupt_handler{std::move(_interrupt)}, next{nullptr}
+        {
+            if (interrupt_handler) { // std::function returns false if the function isn't valid
+                if (_first == nullptr) {
+                    _first = this;
+                    return;
+                }
+
+                _XDMAInterrupt *i = _first;
+                while (i->next != nullptr) {
+                    i = i->next;
+                }
+                i->next = this;
+            }
+        };
+    };
+
+    extern _XDMAInterrupt *_first_xdmac_interrupt;
 
     // NOTE, we have 23 channels, and less than 23 peripheral types using this,
     // so we'll assign channels uniquely, but otherwise arbitrarily from lowest
@@ -365,6 +412,7 @@ namespace Motate {
         static constexpr uint32_t buffer_width = std::alignment_of< std::remove_pointer<buffer_t> >::value;
 
         static constexpr Xdmac * const xdma() { return XDMAC; };
+        static constexpr IRQn_Type xdmaIRQ() { return XDMAC_IRQn; };
         static constexpr XdmacChid * const xdmaRxChannel()
         {
             return xdma()->XDMAC_CHID + xdmaRxChannelNumber();
@@ -374,8 +422,68 @@ namespace Motate {
             return xdma()->XDMAC_CHID + xdmaTxChannelNumber();
         };
 
+        static constexpr uint32_t peripheralId() { return ID_XDMAC; };
+        
+        const std::function<void(uint16_t)> &_xdmaInterruptHandler;
+
+        _XDMAInterrupt _tx_interrupt {xdmaTxChannelNumber(), [&](){
+            if (_xdmaInterruptHandler) {
+                _xdmaInterruptHandler(UARTInterrupt::OnTxTransferDone);
+            }
+        }, _first_xdmac_interrupt};
+        _XDMAInterrupt _rx_interrupt {xdmaRxChannelNumber(), [&](){
+            if (_xdmaInterruptHandler) {
+                _xdmaInterruptHandler(UARTInterrupt::OnRxTransferDone);
+            }
+        }, _first_xdmac_interrupt};
+
+        // we'll hold a reference to the handler, the peripheral owns the one it's passing
+        constexpr DMA_XDMAC(const std::function<void(uint16_t)> &handler) : _xdmaInterruptHandler{handler} {};
+
+        void setInterrupts(const uint16_t interrupts) const
+        {
+            if (interrupts != UARTInterrupt::Off) {
+                if (interrupts & UARTInterrupt::OnRxTransferDone) {
+                    startRxDoneInterrupts();
+                } else {
+                    stopRxDoneInterrupts();
+                }
+                if (interrupts & UARTInterrupt::OnTxTransferDone) {
+                    startTxDoneInterrupts();
+                } else {
+                    stopTxDoneInterrupts();
+                }
+
+
+                /* Set interrupt priority */
+                if (interrupts & UARTInterrupt::PriorityHighest) {
+                    NVIC_SetPriority(xdmaIRQ(), 0);
+                }
+                else if (interrupts & UARTInterrupt::PriorityHigh) {
+                    NVIC_SetPriority(xdmaIRQ(), 3);
+                }
+                else if (interrupts & UARTInterrupt::PriorityMedium) {
+                    NVIC_SetPriority(xdmaIRQ(), 7);
+                }
+                else if (interrupts & UARTInterrupt::PriorityLow) {
+                    NVIC_SetPriority(xdmaIRQ(), 11);
+                }
+                else if (interrupts & kInterruptPriorityLowest) {
+                    NVIC_SetPriority(xdmaIRQ(), 15);
+                }
+
+                NVIC_EnableIRQ(xdmaIRQ());
+            } else {
+                
+                NVIC_DisableIRQ(xdmaIRQ());
+            }
+        };
+
         void reset() const
         {
+            // init is called once after reset, so clean up after a reset
+            SamCommon::enablePeripheralClock(peripheralId());
+
             // disable the channels
             disableRx();
             disableTx();
@@ -391,6 +499,7 @@ namespace Motate {
 
             // Configure Rx channel
             xdmaRxChannel()->XDMAC_CSA = (uint32_t)xdmaPeripheralRxAddress();
+            xdmaRxChannel()->XDMAC_CDA = 0;
             xdmaRxChannel()->XDMAC_CC =
                 XDMAC_CC_TYPE_PER_TRAN | // between memory and a peripheral
                 XDMAC_CC_MBSIZE_SINGLE | // burst size of one "unit" at a time
@@ -404,14 +513,15 @@ namespace Motate {
                 XDMAC_CC_PERID(xdmaRxPeripheralId()) // and finally, set the peripheral identifier
             ;
             // Datasheep says to clear these out explicitly:
-            xdmaRxChannel()->XDMAC_CNDC = 0; // no "next descriptor"
-            xdmaRxChannel()->XDMAC_CBC = 0;  // ???
-            xdmaRxChannel()->XDMAC_CDS_MSP = 0; // striding is disabled
-            xdmaRxChannel()->XDMAC_CSUS = 0;
-            xdmaRxChannel()->XDMAC_CDUS = 0;
-            xdmaRxChannel()->XDMAC_CUBC = 0;
+//            xdmaRxChannel()->XDMAC_CNDC = 0; // no "next descriptor"
+//            xdmaRxChannel()->XDMAC_CBC = 0;  // ???
+//            xdmaRxChannel()->XDMAC_CDS_MSP = 0; // striding is disabled
+//            xdmaRxChannel()->XDMAC_CSUS = 0;
+//            xdmaRxChannel()->XDMAC_CDUS = 0;
+//            xdmaRxChannel()->XDMAC_CUBC = 0;
 
             // Configure Tx channel
+            xdmaTxChannel()->XDMAC_CSA = 0;
             xdmaTxChannel()->XDMAC_CDA = (uint32_t)xdmaPeripheralTxAddress();
             xdmaTxChannel()->XDMAC_CC =
                 XDMAC_CC_TYPE_PER_TRAN | // between memory and a peripheral
@@ -419,20 +529,22 @@ namespace Motate {
                 XDMAC_CC_DSYNC_MEM2PER | // memory->peripheral
                 XDMAC_CC_CSIZE_CHK_1   | // chunk size of one "unit" at a time
                 XDMAC_CC_DWIDTH( (buffer_width >> 4) ) | // data width (based on alignment size of base type of buffer_t)
-                XDMAC_CC_DIF_AHB_IF1   | // destination is peripheral (info cryptically extracted from Table 18-3 of the datasheep)
                 XDMAC_CC_SIF_AHB_IF0   | // source is RAM   (info cryptically extracted from Table 18-3 of the datasheep)
+                XDMAC_CC_DIF_AHB_IF1   | // destination is peripheral (info cryptically extracted from Table 18-3 of the datasheep)
                 XDMAC_CC_SAM_INCREMENTED_AM  | // the source address increments as written
-                XDMAC_CC_DAM_FIXED_AM | // destination address doesn't change (FIFO)
+                XDMAC_CC_DAM_FIXED_AM        | // destination address doesn't change (FIFO)
                 XDMAC_CC_PERID(xdmaTxPeripheralId()) // and finally, set the peripheral identifier
             ;
             // Datasheep says to clear these out explicitly:
-            xdmaTxChannel()->XDMAC_CNDC = 0; // no "next descriptor"
-            xdmaTxChannel()->XDMAC_CBC = 0;  // ???
-            xdmaTxChannel()->XDMAC_CDS_MSP = 0; // striding is disabled
-            xdmaTxChannel()->XDMAC_CSUS = 0;
-            xdmaTxChannel()->XDMAC_CDUS = 0;
-            xdmaTxChannel()->XDMAC_CUBC = 0;
+//            xdmaTxChannel()->XDMAC_CNDC = 0; // no "next descriptor"
+//            xdmaTxChannel()->XDMAC_CBC = 0;  // ???
+//            xdmaTxChannel()->XDMAC_CDS_MSP = 0; // striding is disabled
+//            xdmaTxChannel()->XDMAC_CSUS = 0;
+//            xdmaTxChannel()->XDMAC_CDUS = 0;
+//            xdmaTxChannel()->XDMAC_CUBC = 0;
 
+            // enable interrupts for these channels (must still be masked individually
+            xdma()->XDMAC_GIE |= (1<<xdmaRxChannelNumber()) | (1<<xdmaTxChannelNumber());
         };
 
         void disableRx() const
@@ -478,6 +590,8 @@ namespace Motate {
         };
         buffer_t getRXTransferPosition() const
         {
+            // we'll request a flush, but NOT wait for it
+            xdma()->XDMAC_GSWF = (1<<xdmaRxChannelNumber());
             return (buffer_t)xdmaRxChannel()->XDMAC_CDA;
         };
 
@@ -485,6 +599,7 @@ namespace Motate {
         bool startRXTransfer(void * const buffer, const uint32_t length, bool handle_interrupts = true, bool include_next = false) const
         {
             if (doneReading()) {
+                disableRx();
                 if (handle_interrupts) { stopRxDoneInterrupts(); }
                 setRx(buffer, length);
                 if (length != 0) {
@@ -499,7 +614,7 @@ namespace Motate {
                 return true;
             }
             return false;
-        }
+        };
 
 
         void disableTx() const
@@ -541,7 +656,7 @@ namespace Motate {
         };
         buffer_t getTXTransferPosition() const
         {
-            return (buffer_t)xdmaTxChannel()->XDMAC_CDA;
+            return (buffer_t)xdmaTxChannel()->XDMAC_CSA;
         };
 
 
@@ -549,6 +664,7 @@ namespace Motate {
         bool startTXTransfer(void * const buffer, const uint32_t length, bool handle_interrupts = true, bool include_next = false) const
         {
             if (doneWriting()) {
+                disableTx();
                 if (handle_interrupts) { stopTxDoneInterrupts(); }
                 setTx(buffer, length);
                 if (length != 0) {
@@ -563,33 +679,23 @@ namespace Motate {
                 return true;
             }
             return false;
-        }
+        };
 
 
-        void startRxDoneInterrupts() const { /*usart()->US_IER = US_IER_RXBUFF;*/ };
-        void stopRxDoneInterrupts() const { /*usart()->US_IDR = US_IDR_RXBUFF;*/ };
-        void startTxDoneInterrupts() const { /*usart()->US_IER = US_IER_TXBUFE;*/ };
-        void stopTxDoneInterrupts() const { /*usart()->US_IDR = US_IDR_TXBUFE;*/ };
+        void startRxDoneInterrupts() const { xdmaRxChannel()->XDMAC_CIE = XDMAC_CIE_BIE; };
+        void stopRxDoneInterrupts() const { xdmaRxChannel()->XDMAC_CID = XDMAC_CID_BID; };
+        void startTxDoneInterrupts() const { xdmaTxChannel()->XDMAC_CIE = XDMAC_CIE_BIE; };
+        void stopTxDoneInterrupts() const { xdmaTxChannel()->XDMAC_CID = XDMAC_CID_BID; };
 
-        bool inRxBufferEmptyInterrupt() const
-        {
-            // we check if the interupt is enabled
-            //            if (uart()->UART_IMR & UART_IMR_RXBUFF) {
-            //                // then we read the status register
-            //                return (uart()->UART_SR & UART_SR_RXBUFF);
-            //            }
-            return false;
-        }
+        // XDMAC_Handler is handled with _tx_interrupt and _rx_interupt. They use
+        // the std::function _xdmaInterruptHandler, which get's set by the peripheral
+        // in the constexpr constructor.
 
-        bool inTxBufferEmptyInterrupt() const
-        {
-            // we check if the interupt is enabled
-            //            if (uart()->UART_IMR & UART_IMR_TXBUFE) {
-            //                // then we read the status register
-            //                return (uart()->UART_SR & UART_SR_TXBUFE);
-            //            }
-            return false;
-        }
+
+        // These two get called from the peripheral interrupt handler,
+        // and must always return false
+        constexpr bool inRxBufferEmptyInterrupt() const { return false; };
+        constexpr bool inTxBufferEmptyInterrupt() const { return false; };
     };
 
     // NOTE: If we have an XDMAC peripheral, we don't have PDC, and it's the
@@ -604,6 +710,8 @@ namespace Motate {
 
     template<uint8_t uartPeripheralNumber>
     struct DMA_XDMAC_hardware<Usart*, uartPeripheralNumber> {
+        constexpr DMA_XDMAC_hardware() {};
+
         // this is identical to in SamUART
         static constexpr Usart * const usart()
         {
@@ -665,8 +773,10 @@ namespace Motate {
     // Construct a DMA specialization that uses the PDC
     template<uint8_t periph_num>
     struct DMA<Usart*, periph_num> : DMA_XDMAC<Usart*, periph_num> {
-        // nothing to do here.
+        // nothing to do here, except for a constxpr constructor
+        constexpr DMA(const std::function<void(uint16_t)> &handler) : DMA_XDMAC<Usart*, periph_num>{handler} {};
     };
+
 #endif // USART + XDMAC
 
     // We're deducing if there's a UART and it has a PDC
@@ -741,18 +851,19 @@ namespace Motate {
             return &uart()->UART_RHR;
         };
 
-        typedef char* buffer_t ;
+        typedef char* buffer_t;
     };
 
     // Construct a DMA specialization that uses the PDC
     template<uint8_t periph_num>
     struct DMA<Uart*, periph_num> : DMA_XDMAC<Uart*, periph_num> {
-        // nothing to do here.
+        // nothing to do here, except for a constxpr constructor
+        constexpr DMA(const std::function<void(uint16_t)> &handler) : DMA_XDMAC<Uart*, periph_num>{handler} {};
     };
 #endif // UART + XDMAC
 
-#endif // does not have XDMAC
-
 } // namespace Motate
+
+#endif // does not have XDMAC
 
 #endif /* end of include guard: SAMDMA_H_ONCE */

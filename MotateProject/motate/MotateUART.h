@@ -27,6 +27,8 @@
 	OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+#include "MotatePins.h"
+
 #ifndef MOTATEUART_H_ONCE
 #define MOTATEUART_H_ONCE
 
@@ -45,7 +47,58 @@
  * template<pin_number ctsPinNumber, pin_number rxPinNumber> constexpr const bool isRealAndCorrectCTSPin()
  */
 
-namespace Motate {	
+namespace Motate {
+    struct UARTMode {
+        static constexpr uint16_t NoParity           =      0; // Default
+        static constexpr uint16_t EvenParity         = 1 << 0;
+        static constexpr uint16_t OddParity          = 1 << 1;
+
+        static constexpr uint16_t OneStopBit         =      0; // Default
+        static constexpr uint16_t TwoStopBits        = 1 << 2;
+
+        static constexpr uint16_t As8Bit             =      0; // Default
+        static constexpr uint16_t As9Bit             = 1 << 3;
+        //        static constexpr uint16_t As10Bit            = 1 << 4;
+
+        // Some careful hand math will show that 8N1 == 0
+        static constexpr uint16_t As8N1              = As8Bit | NoParity | OneStopBit;
+
+        static constexpr uint16_t RTSCTSFlowControl  = 1 << 5;
+        static constexpr uint16_t XonXoffFlowControl = 1 << 6;
+
+        // TODO: Add polarity inversion and bit reversal options
+    };
+
+    struct UARTInterrupt {
+        static constexpr uint16_t Off              = 0;
+        /* Alias for "off" to make more sense
+         when returned from setInterruptPending(). */
+        static constexpr uint16_t Unknown           = 0;
+
+        static constexpr uint16_t OnTxReady         = 1<<1;
+        static constexpr uint16_t OnTransmitReady   = 1<<1;
+        static constexpr uint16_t OnTxDone          = 1<<1;
+        static constexpr uint16_t OnTransmitDone    = 1<<1;
+
+        static constexpr uint16_t OnRxReady         = 1<<2;
+        static constexpr uint16_t OnReceiveReady    = 1<<2;
+        static constexpr uint16_t OnRxDone          = 1<<2;
+        static constexpr uint16_t OnReceiveDone     = 1<<2;
+
+        static constexpr uint16_t OnTxTransferDone  = 1<<3;
+        static constexpr uint16_t OnRxTransferDone  = 1<<4;
+
+        /* Set priority levels here as well: */
+        static constexpr uint16_t PriorityHighest   = 1<<5;
+        static constexpr uint16_t PriorityHigh      = 1<<6;
+        static constexpr uint16_t PriorityMedium    = 1<<7;
+        static constexpr uint16_t PriorityLow       = 1<<8;
+        static constexpr uint16_t PriorityLowest    = 1<<9;
+
+        /* These are for internal use only: */
+        static constexpr uint16_t OnCTSChanged      = 1<<10;
+        
+    };
 } // namespace Motate
 
 #ifdef __AVR_XMEGA__

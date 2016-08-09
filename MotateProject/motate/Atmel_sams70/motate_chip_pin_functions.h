@@ -41,8 +41,8 @@ namespace Motate {
     _MAKE_MOTATE_PWM_PIN('A',  0, Motate::PWMTimer<0>,        /*Peripheral:*/ A,  /*Inverted:*/ true);
 //    _MAKE_MOTATE_PWM_PIN('A',  0, _MOTATE_TEMP_TC(/*0*/0,0),  /*Peripheral:*/ B,  /*Inverted:*/ false);
 
-    _MAKE_MOTATE_PWM_PIN('A',  1, Motate::PWMTimer<1>,        /*Peripheral:*/ A,  /*Inverted:*/ false);
-//    _MAKE_MOTATE_PWM_PIN('A',  1, _MOTATE_TEMP_TC(/*0*/0,1),  /*Peripheral:*/ B,  /*Inverted:*/ false);
+//    _MAKE_MOTATE_PWM_PIN('A',  1, Motate::PWMTimer<1>,        /*Peripheral:*/ A,  /*Inverted:*/ false);
+    _MAKE_MOTATE_PWM_PIN('A',  1, _MOTATE_TEMP_TC(/*0*/0,1),  /*Peripheral:*/ B,  /*Inverted:*/ false);
 
     _MAKE_MOTATE_PWM_PIN('A',  2, Motate::PWMTimer<1>,        /*Peripheral:*/ A,  /*Inverted:*/ true);
     _MAKE_MOTATE_PWM_PIN('A',  5, Motate::PWMTimer<8+3>,      /*Peripheral:*/ A,  /*Inverted:*/ false);

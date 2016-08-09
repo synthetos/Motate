@@ -306,20 +306,25 @@ namespace Motate {
             /* For now, we don't support TC5. */
 
             // Grab the SystemCoreClock value, in case it's volatile.
-            uint32_t masterClock = SystemCoreClock;
+            uint32_t masterClock = SamCommon::getPeripheralClockFreq();
 
             // Store the divisor temporarily, to avoid looking it up again...
             uint32_t divisor = 2; // sane default of 2
 
+#if (SAMV71 || SAMV70 || SAME70 || SAMS70)
+            // The SAM*70 chips have the first prescaler option set to PCK6
+#else
             // TC1 = MCK/2
             if (freq > ((masterClock / 2) / 0x10000) && freq < (masterClock / 2)) {
                 /*  Set mode */
                 tcChan()->TC_CMR = (tcChan()->TC_CMR & ~(TC_CMR_WAVSEL_Msk | TC_CMR_TCCLKS_Msk)) |
                 mode | TC_CMR_TCCLKS_TIMER_CLOCK1;
                 divisor = 2;
+            } else
+#endif
 
                 // TC2 = MCK/8
-            } else if (freq > ((masterClock / 8) / 0x10000) && freq < (masterClock / 8)) {
+            if (freq > ((masterClock / 8) / 0x10000) && freq < (masterClock / 8)) {
                 /*  Set mode */
                 tcChan()->TC_CMR = (tcChan()->TC_CMR & ~(TC_CMR_WAVSEL_Msk | TC_CMR_TCCLKS_Msk)) |
                 mode | TC_CMR_TCCLKS_TIMER_CLOCK2;
@@ -343,9 +348,13 @@ namespace Motate {
             } else {
                 // PUNT! For now, just guess TC1.
                 /*  Set mode */
+#if (SAMV71 || SAMV70 || SAME70 || SAMS70)
+                tcChan()->TC_CMR = (tcChan()->TC_CMR & ~(TC_CMR_WAVSEL_Msk | TC_CMR_TCCLKS_Msk)) |
+                mode | TC_CMR_TCCLKS_TIMER_CLOCK2;
+#else
                 tcChan()->TC_CMR = (tcChan()->TC_CMR & ~(TC_CMR_WAVSEL_Msk | TC_CMR_TCCLKS_Msk)) |
                 mode | TC_CMR_TCCLKS_TIMER_CLOCK1;
-
+#endif
                 return kFrequencyUnattainable;
             }
 
@@ -852,7 +861,7 @@ namespace Motate {
             /* Divisors: 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024 */
 
             // Grab the SystemCoreClock value, in case it's volatile.
-            uint32_t masterClock = SystemCoreClock;
+            uint32_t masterClock = SamCommon::getPeripheralClockFreq();
 
             // Store the divisor temporarily, to avoid looking it up again...
             uint8_t divisor_index = 0;
@@ -1115,7 +1124,7 @@ namespace Motate {
             _motateTickCount = 0;
 
             // Set Systick to 1ms interval, common to all SAM3 variants
-            if (SysTick_Config(SystemCoreClock / 1000))
+            if (SysTick_Config(SamCommon::getPeripheralClockFreq() / 1000))
             {
                 // Capture error
                 while (true);

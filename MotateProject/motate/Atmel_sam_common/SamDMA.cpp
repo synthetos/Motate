@@ -32,20 +32,21 @@
 using namespace Motate;
 
 #ifdef XDMAC
+_XDMAInterrupt *Motate::_first_xdmac_interrupt = nullptr;
 
-//template<> _pinChangeInterrupt * PortHardware<'A'>::_firstInterrupt = nullptr;
-//extern "C" void PIOA_Handler(void) {
-//    uint32_t isr = PIOA->PIO_ISR;
-//
-//    _pinChangeInterrupt *current = PortHardware<'A'>::_firstInterrupt;
-//    while (current != nullptr) {
-//        if (isr & current->pc_mask) {
-//            current->interrupt_handler();
-//        }
-//        current = current->next;
-//    }
-//
-//    NVIC_ClearPendingIRQ(PIOA_IRQn);
-//}
+extern "C" void XDMAC_Handler(void)
+{
+    _XDMAInterrupt *current = Motate::_first_xdmac_interrupt;
+    uint32_t isr = XDMAC->XDMAC_GIS;
+    uint32_t imr = XDMAC->XDMAC_GIM;
+    while (current != nullptr) {
+        if ((imr & current->channel_mask) && (isr & current->channel_mask)) {
+            current->interrupt_handler();
+        }
+        current = current->next;
+    }
+
+    NVIC_ClearPendingIRQ(XDMAC_IRQn);
+}
 
 #endif // XDMAC

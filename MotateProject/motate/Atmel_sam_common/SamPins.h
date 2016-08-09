@@ -35,8 +35,8 @@
 #include "sam.h"
 #include "SamCommon.h"
 #include "MotateTimers.h"
-#include "functional"
 
+#include <functional>   // for std::function
 #include <type_traits>
 
 namespace Motate {
@@ -113,6 +113,9 @@ namespace Motate {
         _pinChangeInterrupt *next;
 
         _pinChangeInterrupt(const _pinChangeInterrupt &) = delete; // delete the copy constructor, we only allow moves
+        _pinChangeInterrupt &operator=(const _pinChangeInterrupt &) = delete; // delete the assigment operator, we only allow moves
+        _pinChangeInterrupt &operator=(const _pinChangeInterrupt &&) = delete; // delete the move assigment operator, we only allow moves
+
 
         _pinChangeInterrupt(const uint32_t _mask, const std::function<void(void)> &&_interrupt, _pinChangeInterrupt *&_first) : pc_mask{_mask}, interrupt_handler{_interrupt}, next{nullptr} {
             if (interrupt_handler) { // std::function returns false if the function isn't valid
