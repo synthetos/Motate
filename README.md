@@ -16,7 +16,6 @@ Since Motate is often used as a sumbodule, use this incantation in order to inst
   - On OSX or linx with a BASH-like shell:
   ```bash
   ln -s ${PWD}/git-hooks/pre-commit `git rev-parse --git-dir`/hooks/pre-commit
-  chmod +ux `git rev-parse --git-dir`/hooks/pre-commit
   ```
 
 # Status
