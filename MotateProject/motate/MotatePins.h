@@ -314,7 +314,7 @@ namespace Motate {
         IRQPin() : Pin<pinNum>(kInput) {};
         IRQPin(const PinOptions_t options) : Pin<pinNum>(kInput, options) {};
         IRQPin(const std::function<void(void)> &&_interrupt) : Pin<pinNum>(kInput) {};
-        IRQPin(const PinOptions_t options, const std::function<void(void)> &&_interrupt) : Pin<pinNum>(kInput, options) {};
+        IRQPin(const PinOptions_t options, const std::function<void(void)> &&_interrupt, const uint32_t interrupt_settings = kPinInterruptOnChange|kPinInterruptPriorityMedium) : Pin<pinNum>(kInput, options) {};
 
         void init(const PinOptions_t options = kNormal  ) {Pin<pinNum>::init(kInput, options);};
 
