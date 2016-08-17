@@ -33,6 +33,8 @@ printf "git clang-format --style=file\n\n"
 printf "The use git to see what was fixed, git add ... the fixes, and resume the commit.\n"
 printf "Or, run the following command to interactively select changes:\n"
 printf "git clang-format --style=file --patch\n\n"
+printf "Or, you can reformat all cached files (whole!) with:\n"
+printf "clang-format --style=file -i -- `git diff --cached --name-only`\n\n"
 printf "Aborting commit. Apply changes and commit again or skip checking with"
 printf " --no-verify (not recommended).\n"
 

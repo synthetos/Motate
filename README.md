@@ -18,6 +18,24 @@ Since Motate is often used as a sumbodule, use this incantation in order to inst
   ln -s ${PWD}/git-hooks/pre-commit `git rev-parse --git-dir`/hooks/pre-commit
   ```
 
+*Note:* To prevent a section of code from being reformattted (say, you have some fancy ASCII art), then you can wrap it in `clang-format off` ... `clang-format on` comments, like so:
+```c++
+// clang-format off
+/*  It's a goose!
+ *            __
+ *          >(' )
+ *            )/
+ *           /(
+ *          /  `----/
+ *     jgs  \  ~=- /
+ *     ~^~^~^~^~^~^~^
+ *
+ */
+// clang-format on
+```
+
+*Goose art found [here](http://www.chris.com/ascii/index.php) with thanks!*
+
 # Status
 
 Motate is shaping up quickly, but is still in heavy development. It is currently being developed and tested inside the [Synthetos G2 project](https://github.com/synthetos/g2/).
