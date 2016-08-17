@@ -38,8 +38,8 @@ namespace Motate {
     // Stupid preprocessor! Workaround for the comma in the TimerChannel name:
 #define _MOTATE_TEMP_TC(t,c) Motate::TimerChannel<t,c>
 #ifdef PIOA
-    _MAKE_MOTATE_PWM_PIN('A',  0, Motate::PWMTimer<0>,        /*Peripheral:*/ A,  /*Inverted:*/ true);
-//    _MAKE_MOTATE_PWM_PIN('A',  0, _MOTATE_TEMP_TC(/*0*/0,0),  /*Peripheral:*/ B,  /*Inverted:*/ false);
+//    _MAKE_MOTATE_PWM_PIN('A',  0, Motate::PWMTimer<0>,        /*Peripheral:*/ A,  /*Inverted:*/ true);
+    _MAKE_MOTATE_PWM_PIN('A',  0, _MOTATE_TEMP_TC(/*0*/0,0),  /*Peripheral:*/ B,  /*Inverted:*/ false);
 
 //    _MAKE_MOTATE_PWM_PIN('A',  1, Motate::PWMTimer<1>,        /*Peripheral:*/ A,  /*Inverted:*/ false);
     _MAKE_MOTATE_PWM_PIN('A',  1, _MOTATE_TEMP_TC(/*0*/0,1),  /*Peripheral:*/ B,  /*Inverted:*/ false);
