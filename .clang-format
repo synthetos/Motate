@@ -1,0 +1,19 @@
+# This is supposed to be conservative.
+# To use manually: clang-format --style=file -- filename
+# That will dump the results to STDOUT. To change the file in place, add -i.
+---
+Language:        Cpp
+BasedOnStyle:  Chromium
+AlignConsecutiveAssignments: true
+AlignConsecutiveDeclarations: true
+AllowShortBlocksOnASingleLine: true
+AllowShortCaseLabelsOnASingleLine: true
+AllowShortFunctionsOnASingleLine: All
+AllowShortLoopsOnASingleLine: true
+BinPackArguments: true
+ColumnLimit:     120
+IndentWidth:     4
+MaxEmptyLinesToKeep: 3
+PenaltyBreakComment: 1000
+ReflowComments:  true
+...
