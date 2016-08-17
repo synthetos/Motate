@@ -106,12 +106,12 @@ namespace Motate {
 
             // reduce extra characters
             while (*(b_-1) == '0' && length_>1) {
-                *(b_--) = 0;
+                b_--; *b_ = 0;
                 length_--;
             }
 
             if (*(b_-1) == '.') {
-                *(b_--) = 0;
+                b_--; *b_ = 0;
                 length_--;
             }
 
