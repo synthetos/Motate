@@ -15,9 +15,23 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "D457112317053BFB00EA19A8"
+               BuildableName = "index_sam"
+               BlueprintName = "index_sam"
+               ReferencedContainer = "container:Motate.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "D457112317053BFB00EA19A8"
                BuildableName = "index"
                BlueprintName = "index"
-               ReferencedContainer = "container:TinyG2.xcodeproj">
+               ReferencedContainer = "container:../../g2core/g2core.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -33,9 +47,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "D457112317053BFB00EA19A8"
-            BuildableName = "index"
-            BlueprintName = "index"
-            ReferencedContainer = "container:TinyG2.xcodeproj">
+            BuildableName = "index_sam"
+            BlueprintName = "index_sam"
+            ReferencedContainer = "container:Motate.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
       <AdditionalOptions>
@@ -51,16 +65,15 @@
       debugDocumentVersioning = "YES"
       debugServiceExtension = "internal"
       allowLocationSimulation = "YES">
-      <BuildableProductRunnable
-         runnableDebuggingMode = "0">
+      <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "D457112317053BFB00EA19A8"
-            BuildableName = "index"
-            BlueprintName = "index"
-            ReferencedContainer = "container:TinyG2.xcodeproj">
+            BuildableName = "index_sam"
+            BlueprintName = "index_sam"
+            ReferencedContainer = "container:Motate.xcodeproj">
          </BuildableReference>
-      </BuildableProductRunnable>
+      </MacroExpansion>
       <AdditionalOptions>
       </AdditionalOptions>
    </LaunchAction>
@@ -70,16 +83,15 @@
       savedToolIdentifier = ""
       useCustomWorkingDirectory = "NO"
       debugDocumentVersioning = "YES">
-      <BuildableProductRunnable
-         runnableDebuggingMode = "0">
+      <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "D457112317053BFB00EA19A8"
-            BuildableName = "index"
-            BlueprintName = "index"
-            ReferencedContainer = "container:TinyG2.xcodeproj">
+            BuildableName = "index_sam"
+            BlueprintName = "index_sam"
+            ReferencedContainer = "container:Motate.xcodeproj">
          </BuildableReference>
-      </BuildableProductRunnable>
+      </MacroExpansion>
    </ProfileAction>
    <AnalyzeAction
       buildConfiguration = "Debug">
