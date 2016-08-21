@@ -110,7 +110,22 @@
     <Compile Include="MotateProject\motate\Atmel_sam4e\SamUSB.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="MotateProject\motate\Atmel_sams70\motate_chip_pin_functions.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\Atmel_sams70\SamUSB.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\Atmel_sams70\SamUSB.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="MotateProject\motate\Atmel_sam_common\SamCommon.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\Atmel_sam_common\SamDMA.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="MotateProject\motate\Atmel_sam_common\SamDMA.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="MotateProject\motate\Atmel_sam_common\SamPins.cpp">
@@ -1300,6 +1315,7 @@
     <Folder Include="MotateProject\motate\cmsis\TARGET_Atmel\sams70\source\templates\gcc\" />
     <Folder Include="MotateProject\motate\cmsis\TARGET_Atmel\sams70\source\templates\iar\" />
     <Folder Include="MotateProject\motate\Freescale_klxx" />
+    <Folder Include="MotateProject\motate\Atmel_sams70" />
     <Folder Include="MotateProject\motate\platform" />
     <Folder Include="MotateProject\motate\platform\atmel_sam" />
     <Folder Include="MotateProject\motate\platform\atmel_xmega" />
@@ -1521,6 +1537,9 @@
       <SubType>compile</SubType>
     </None>
     <None Include="Tools\Makefile">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="Tools\program-sam.sh">
       <SubType>compile</SubType>
     </None>
   </ItemGroup>
