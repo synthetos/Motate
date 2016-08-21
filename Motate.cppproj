@@ -200,12 +200,6 @@
     <Compile Include="MotateProject\motate\board\FRDM-KLxx\motate_pin_assignments.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="MotateProject\motate\board\g2ref\g2Ref-pinout.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="MotateProject\motate\board\g2ref\motate_pin_assignments.h">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="MotateProject\motate\board\TinyGv8\motate_pin_assignments.h">
       <SubType>compile</SubType>
     </Compile>
@@ -1242,7 +1236,6 @@
     <Folder Include="MotateProject\motate\board" />
     <Folder Include="MotateProject\motate\board\ArduinoDue" />
     <Folder Include="MotateProject\motate\board\FRDM-KLxx" />
-    <Folder Include="MotateProject\motate\board\g2ref" />
     <Folder Include="MotateProject\motate\board\TinyGv8" />
     <Folder Include="MotateProject\motate\cmsis" />
     <Folder Include="MotateProject\motate\cmsis\TARGET_Atmel\" />
@@ -1351,12 +1344,6 @@
       <SubType>compile</SubType>
     </None>
     <None Include="MotateProject\motate\board\FRDM-KLxx.mk">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="MotateProject\motate\board\g2Ref.gdb">
-      <SubType>compile</SubType>
-    </None>
-    <None Include="MotateProject\motate\board\g2Ref.mk">
       <SubType>compile</SubType>
     </None>
     <None Include="MotateProject\motate\board\TinyGv8.mk">
