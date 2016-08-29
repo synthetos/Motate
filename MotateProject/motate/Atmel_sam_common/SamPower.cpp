@@ -37,7 +37,7 @@
 #endif
 
 #if !defined(RSTC_CR_KEY_PASSWD)
-#define RSTC_CR_KEY_PASSWD RSTC_CR_KEY(0x5A)
+#define RSTC_CR_KEY_PASSWD RSTC_CR_KEY(0xA5)
 #endif
 
 #ifndef EEFC_FCR_FCMD_CGPB
