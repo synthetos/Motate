@@ -57,10 +57,6 @@ namespace Motate {
     // We'll define an "abstract" base class for USBDevice<...> so we can have a type for a pointer
     // to a USBDevice<...>.
 
-    // NOTICE: We should check periodically to ensure there's not actually a vtable generated for USBDevice<...>!!
-    // If there IS, we need to remove the "= 0" from these functions and provide stubs.
-    // Tested to ensure there's not vtable at the moment, and so far so good. --Rob Aug 29, 2016
-
     struct USBDevice_t
     {
         virtual bool sendDescriptorOrConfig(const Setup_t &setup) const = 0;
