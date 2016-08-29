@@ -66,13 +66,12 @@ namespace Motate {
                 // From here flash memory is no longer available.
 
                 // Memory swap needs some time to stabilize
-                for (uint32_t i=0; i<1000000; i++) {
-                    // force compiler to not optimize this -- NOPs don't work!
-                    __asm__ __volatile__("");
-                }
+//                for (uint32_t i=0; i<1000000; i++) {
+//                    // force compiler to not optimize this -- NOPs don't work!
+//                    __asm__ __volatile__("");
+//                }
             }
 
-            // BANZAIIIIIII!!!
 #ifdef RSTC_CR_PERRST
             RSTC->RSTC_CR = RSTC_CR_KEY_PASSWD | RSTC_CR_PROCRST | RSTC_CR_PERRST; // reset the processor and the peripherals
 #else

@@ -28,6 +28,10 @@
 
  */
 
+// This goes outside the guard! We need to ensure this happens first.
+#include "MotateUSB.h"
+
+
 #ifndef SAMUSB_ONCE
 #define SAMUSB_ONCE
 
@@ -42,8 +46,6 @@
 
 namespace Motate {
     /*** ENDPOINT CONFIGURATION ***/
-
-    typedef uint32_t EndpointBufferSettings_t;
 
     enum USBEndpointBufferSettingsFlags_t {
         // null endpoint is all zeros
@@ -111,17 +113,17 @@ namespace Motate {
 
     /*** PROXY ***/
 
-    struct USBProxy_t {
-        bool (*sendDescriptorOrConfig)(Setup_t &setup);
-        bool (*handleNonstandardRequest)(Setup_t &setup);
-        const uint8_t (*getEndpointCount)(uint8_t &firstEnpointNum);
-        uint16_t (*getEndpointSize)(const uint8_t &endpointNum, const bool otherSpeed);
-        const EndpointBufferSettings_t (*getEndpointConfig)(const uint8_t endpoint, const bool otherSpeed);
-        //std::function<const EndpointBufferSettings_t (const uint8_t endpoint, const bool otherSpeed)> getEndpointConfig;
-        bool (*handleDataAvailable)(const uint8_t &endpointNum, const size_t &length);
-        bool (*handleTransferDone)(const uint8_t &endpointNum);
-    };
-    extern USBProxy_t USBProxy;
+//    struct USBProxy_t {
+//        bool (*sendDescriptorOrConfig)(Setup_t &setup);
+//        bool (*handleNonstandardRequest)(Setup_t &setup);
+//        const uint8_t (*getEndpointCount)(uint8_t &firstEnpointNum);
+//        uint16_t (*getEndpointSize)(const uint8_t &endpointNum, const bool otherSpeed);
+//        const EndpointBufferSettings_t (*getEndpointConfig)(const uint8_t endpoint, const bool otherSpeed);
+//        //std::function<const EndpointBufferSettings_t (const uint8_t endpoint, const bool otherSpeed)> getEndpointConfig;
+//        bool (*handleDataAvailable)(const uint8_t &endpointNum, const size_t &length);
+//        bool (*handleTransferDone)(const uint8_t &endpointNum);
+//    };
+    extern USBDevice_t *USBProxy;
 
 
 
@@ -373,13 +375,15 @@ const uint16_t *Motate::getUSBSerialNumberString(int16_t &length) { \
         // Init
         USBDeviceHardware() : parent_this(static_cast< parent* >(this))
         {
-            USBProxy.sendDescriptorOrConfig   = parent::sendDescriptorOrConfig;
-            USBProxy.handleNonstandardRequest = parent::handleNonstandardRequest;
-            USBProxy.getEndpointConfig        = parent::getEndpointConfig;
-            USBProxy.getEndpointCount         = parent::getEndpointCount;
-            USBProxy.getEndpointSize          = parent::getEndpointSize;
-            USBProxy.handleDataAvailable      = parent::handleDataAvailable;
-            USBProxy.handleTransferDone       = parent::handleTransferDone;
+//            USBProxy.sendDescriptorOrConfig   = parent::sendDescriptorOrConfig;
+//            USBProxy.handleNonstandardRequest = parent::handleNonstandardRequest;
+//            USBProxy.getEndpointConfig        = parent::getEndpointConfig;
+//            USBProxy.getEndpointCount         = parent::getEndpointCount;
+//            USBProxy.getEndpointSize          = parent::getEndpointSize;
+//            USBProxy.handleDataAvailable      = parent::handleDataAvailable;
+//            USBProxy.handleTransferDone       = parent::handleTransferDone;
+
+            USBProxy = parent_this;
 
             USBDeviceHardware::_init();
             _inited = 1UL;

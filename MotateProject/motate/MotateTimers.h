@@ -30,7 +30,7 @@
 #ifndef MOTATETIMERS_H_ONCE
 #define MOTATETIMERS_H_ONCE
 
-#include <inttypes.h>
+#include <cinttypes>
 
 /************************************************
  *

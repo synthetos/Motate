@@ -30,7 +30,7 @@
 #ifndef MOTATESERIAL_H_ONCE
 #define MOTATESERIAL_H_ONCE
 
-#include <inttypes.h>
+#include <cinttypes>
 
 #if defined(__SAM3X8E__) || defined(__SAM3X8C__)
 #include "MotateUSB.h"

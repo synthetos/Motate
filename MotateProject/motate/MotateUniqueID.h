@@ -30,7 +30,7 @@
 #ifndef MOTATECHIPID_H_ONCE
 #define MOTATECHIPID_H_ONCE
 
-#include <inttypes.h>
+#include <cinttypes>
 
 namespace Motate {
 

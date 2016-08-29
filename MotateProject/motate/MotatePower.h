@@ -30,7 +30,7 @@
 #ifndef MOTATEPOWER_H_ONCE
 #define MOTATEPOWER_H_ONCE
 
-#include <inttypes.h>
+#include <cinttypes>
 
 namespace Motate {
 

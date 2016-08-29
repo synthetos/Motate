@@ -33,6 +33,58 @@
 
 #include "MotateUSBHelpers.h"
 #include <type_traits>
+#include <cinttypes>
+#include <cstring> // for size_t
+
+namespace Motate {
+
+#pragma mark struct USBSettings_t
+
+    struct USBSettings_t {
+        const uint16_t vendorID;
+        const uint16_t productID;
+        const float productVersion;
+        const uint8_t  attributes;
+        const uint16_t powerConsumption;
+    };
+
+    extern const USBSettings_t USBSettings;
+
+    typedef uint32_t EndpointBufferSettings_t;
+
+#pragma mark struct USBDevice_t
+
+    // We'll define an "abstract" base class for USBDevice<...> so we can have a type for a pointer
+    // to a USBDevice<...>.
+
+    // NOTICE: We should check periodically to ensure there's not actually a vtable generated for USBDevice<...>!!
+    // If there IS, we need to remove the "= 0" from these functions and provide stubs.
+    // Tested to ensure there's not vtable at the moment, and so far so good. --Rob Aug 29, 2016
+
+    struct USBDevice_t
+    {
+        virtual bool sendDescriptorOrConfig(const Setup_t &setup) const = 0;
+
+        virtual void sendDescriptor(const int16_t maxLength) const = 0;
+
+        virtual void sendQualifierDescriptor(const int16_t maxLength) const = 0;
+
+        virtual void sendConfig(const int16_t maxLength, const bool other) const = 0;
+
+        virtual bool handleNonstandardRequest(const Setup_t &setup) = 0;
+
+        virtual bool handleDataAvailable(const uint8_t &endpointNum, const size_t &length) = 0;
+
+        virtual bool handleTransferDone(const uint8_t &endpointNum) = 0;
+
+        virtual const EndpointBufferSettings_t getEndpointConfig(const uint8_t endpoint, const bool otherSpeed) const = 0;
+
+        virtual const uint8_t getEndpointCount(uint8_t &firstEnpointNum) const = 0;
+
+        virtual uint16_t getEndpointSize(const uint8_t &endpointNum, const bool otherSpeed) const = 0;
+    }; // USBDevice_t
+
+}; // end Motate
 
 #ifdef __AVR_XMEGA__
 
@@ -60,22 +112,6 @@
 
 namespace Motate {
 
-    /* ############################################ */
-    /* #                                          # */
-    /* #             USB Device (etc.)            # */
-    /* #                                          # */
-    /* ############################################ */
-
-    struct USBSettings_t {
-        const uint16_t vendorID;
-        const uint16_t productID;
-        const float productVersion;
-        const uint8_t  attributes;
-        const uint16_t powerConsumption;
-    };
-
-    extern const USBSettings_t USBSettings;
-
 #pragma mark struct USBDevice<interfaceTypes...>
 
     // You will need to have something like this in your project (in a .cpp file):
@@ -93,6 +129,7 @@ namespace Motate {
     // There should only be one USBDevice per hardware USB device -- there will almost always be just one.
     template<typename... interfaceTypes>
     struct USBDevice :
+        USBDevice_t,
         USBDeviceHardware< USBDevice<interfaceTypes...> >,
         USBMixins<USBDevice<interfaceTypes...>, interfaceTypes...>
     {
@@ -117,11 +154,9 @@ namespace Motate {
             _hardware_type{},
             _mixins_type{*this, _interface_0_first_endpoint, _interface_0_first_interface}
         {
-            // USBDeviceHardware should handle all of the rest of the init
-            _singleton = this;
         };
 
-        static bool sendDescriptorOrConfig(Setup_t &setup) {
+        bool sendDescriptorOrConfig(const Setup_t &setup) const override {
             const uint8_t type = setup.valueHigh();
             if (type == kConfigurationDescriptor) {
                 sendConfig(setup.length(), /*other = */ setup.valueLow() == 2);
@@ -150,7 +185,7 @@ namespace Motate {
             return false;
         };
 
-        static void sendDescriptor(int16_t maxLength) {
+        void sendDescriptor(const int16_t maxLength) const override {
             const _descriptor_type descriptor(USBSettings.vendorID, USBSettings.productID, USBFloatToBCD(USBSettings.productVersion), _hardware_type::getDeviceSpeed());
             int16_t length = sizeof(_descriptor_type);
             int16_t to_send = maxLength < length ? maxLength : length;
@@ -158,7 +193,7 @@ namespace Motate {
             _this_type::writeToControl(0, buffer, to_send);
         };
 
-        static void sendQualifierDescriptor(int16_t maxLength) {
+        void sendQualifierDescriptor(const int16_t maxLength) const override {
             const _qualifier_type qualifier;
             int16_t length = sizeof(_qualifier_type);
             int16_t to_send = maxLength < length ? maxLength : length;
@@ -166,7 +201,7 @@ namespace Motate {
             _this_type::writeToControl(0, buffer, to_send);
         };
 
-        static void sendConfig(int16_t maxLength, const bool other) {
+        void sendConfig(const int16_t maxLength, const bool other) const override {
             const _config_type config(USBSettings.attributes, USBSettings.powerConsumption, _hardware_type::getDeviceSpeed(), other);
             int16_t length = sizeof(_config_type);
             int16_t to_send = maxLength < length ? maxLength : length;
@@ -174,19 +209,19 @@ namespace Motate {
             _this_type::writeToControl(0, buffer, to_send);
         };
 
-        static bool handleNonstandardRequest(Setup_t &setup) {
+        bool handleNonstandardRequest(const Setup_t &setup) override {
             return _mixins_type::handleNonstandardRequestInMixin(setup);
         };
 
-        static bool handleDataAvailable(const uint8_t &endpointNum, const size_t &length) {
+        bool handleDataAvailable(const uint8_t &endpointNum, const size_t &length) override {
             return _mixins_type::handleDataAvailableInMixin(endpointNum, length);
         };
 
-        static bool handleTransferDone(const uint8_t &endpointNum) {
+        bool handleTransferDone(const uint8_t &endpointNum) override {
             return _mixins_type::handleTransferDoneInMixin(endpointNum);
         };
 
-        static const EndpointBufferSettings_t getEndpointConfig(const uint8_t endpoint, const bool otherSpeed) {
+        const EndpointBufferSettings_t getEndpointConfig(const uint8_t endpoint, const bool otherSpeed) const override {
             EndpointBufferSettings_t ebs = _hardware_type::getEndpointConfigFromHardware(endpoint);
 
             if (ebs == kEndpointBufferNull) {
@@ -195,33 +230,25 @@ namespace Motate {
             return ebs;
         };
 
-        static const uint8_t getEndpointCount(uint8_t &firstEnpointNum) {
+        const uint8_t getEndpointCount(uint8_t &firstEnpointNum) const override {
             firstEnpointNum = _interface_0_first_endpoint;
             return _total_endpoints_used + _interface_0_first_endpoint;
         };
 
-        static uint16_t getEndpointSize(const uint8_t &endpointNum, const bool otherSpeed) {
+        uint16_t getEndpointSize(const uint8_t &endpointNum, const bool otherSpeed) const override {
             uint16_t size = _hardware_type::getEndpointSizeFromHardware(endpointNum, otherSpeed);
             if (size == 0) {
                 size = _mixins_type::getEndpointSizeFromMixin(endpointNum, _hardware_type::getDeviceSpeed(), otherSpeed);
             }
             return size;
         };
-
-
-        // This could be abused...
-        static _this_type *_singleton;
-    }; // USBDevice
+    }; // USBDevice<...>
 
 
     template<>
     struct USBDevice <> {
 
     };
-
-
-    template<typename... interfaceOtherTypes>
-    ATTR_WEAK USBDevice<interfaceOtherTypes...> *USBDevice<interfaceOtherTypes...>::_singleton;
 
 
 #pragma mark struct USBMixin<>
@@ -244,18 +271,45 @@ namespace Motate {
         USBMixin (USBMixin&&) = delete;
 
         static bool isNull() { return true; };
-        static const EndpointBufferSettings_t getEndpointConfigFromMixin(const uint8_t endpoint, const USBDeviceSpeed_t deviceSpeed, const bool other_speed) {
+        const EndpointBufferSettings_t getEndpointConfigFromMixin(const uint8_t endpoint, const USBDeviceSpeed_t deviceSpeed, const bool other_speed) const {
             return kEndpointBufferNull;
         };
-        static bool handleNonstandardRequestInMixin(Setup_t &setup) { return false; };
-        static bool sendSpecialDescriptorOrConfig(Setup_t &setup) { return false; };
-        static uint16_t getEndpointSizeFromMixin(const uint8_t &endpointNum, const USBDeviceSpeed_t deviceSpeed, const bool otherSpeed) { return 8; };
+        bool handleNonstandardRequestInMixin(Setup_t &setup) { return false; };
+        bool sendSpecialDescriptorOrConfig(Setup_t &setup) const { return false; };
+        uint16_t getEndpointSizeFromMixin(const uint8_t &endpointNum, const USBDeviceSpeed_t deviceSpeed, const bool otherSpeed) const { return 8; };
     };
 
 #pragma mark struct USBMixinWrapper : USBMixin<usb_parent_type, position, firstInterfaceType>, USBMixinWrapper<usb_parent_type, position+1, interfaceTypes...>
     // We need to be able to distinguish the first interface from the second, etc.
     // For example, two USBCDC interfaces will add two Serial objects to the USBDevice<>,
     // and we need a way to request the first vs the second.
+
+    // In short, USBMixinWrapper is a compile-time array, and you use mixin<n> to retrieve the nth element.
+
+    // The way this works is that you use the USBMixins type, which is the "container" and interface. It is also the
+    // child of a chain of USBMixinWrappers.
+
+    // Each USBMixinWrapper is the child of the USBMixin that it "contains", which is of type first_mixin. To call
+    // functions of that we use first_mixin::function(...).
+
+    // Each USBMixinWrapper is also the child of the next one in line, which is the type other_mixins. To call a function
+    // down the chain, we use other_mixins::function(...). The last one in line is specialized to not call other_mixins
+    // since it doesn't have one; it is the parent of the whole chain. Each parent up the chain is given a position of
+    // position+1, with the first one (the direct parent USBMixins) being position=0.
+
+    // Then we have the mixin<n> alias to the mixin_internal<n>::type. We use that to get a specific mixin in the
+    // array, which works by ascending the inheritance tree until it finds a parent whose position == n. So, externally,
+    // we can call (assuomg an USB object called usb): usb.mixins<1>.blah(...) to get the blah function of the second
+    // mxin.
+
+    // Most of the functions in these objects follow the pattern of:
+    // return_type function (...) { return first_mixin::function(...) || other_mixins::function(...); }
+
+    // This isolation of the array containment and the Mixins themselves allows us to have generic mixins that don't
+    // have to handle all of this positional business. It also allows all of this code to be optimized away, and most
+    // of this will be inlined and what we will end up with is the same as if we hand-crafted an unrolled loop of all
+    // of the mixins in every function.
+
     template <typename usb_parent_type, uint8_t position, typename firstInterfaceType, typename... interfaceTypes>
     struct USBMixinWrapper :
         USBMixin<usb_parent_type, position, firstInterfaceType>,
@@ -279,7 +333,7 @@ namespace Motate {
 
         template <const uint8_t n>
         struct mixin_internal {
-            // The use of "typename" and "Tempalte" here are because the compiler cannot deduce that until after it has deduced it...
+            // The use of "typename" and "template" here are because the compiler cannot deduce that until after it has deduced it...
             // They are described nicely here: http://stackoverflow.com/a/613132/5293860
 
             typedef typename other_mixins::template mixin_internal<n>::type parent_mixin;
@@ -293,7 +347,7 @@ namespace Motate {
         USBMixinWrapper (const USBMixinWrapper&) = delete;
         USBMixinWrapper (USBMixinWrapper&&) = delete;
 
-        static const EndpointBufferSettings_t getEndpointConfigFromMixin(const uint8_t endpoint, const USBDeviceSpeed_t deviceSpeed, const bool other_speed) {
+        const EndpointBufferSettings_t getEndpointConfigFromMixin(const uint8_t endpoint, const USBDeviceSpeed_t deviceSpeed, const bool other_speed) const {
             EndpointBufferSettings_t ebs = first_mixin::getEndpointConfigFromMixin(endpoint, deviceSpeed, other_speed);
 
             if (ebs == kEndpointBufferNull) {
@@ -302,19 +356,19 @@ namespace Motate {
 
             return ebs;
         };
-        static bool handleNonstandardRequestInMixin(Setup_t &setup) {
+        bool handleNonstandardRequestInMixin(const Setup_t &setup) {
             return first_mixin::handleNonstandardRequestInMixin(setup) || other_mixins::handleNonstandardRequestInMixin(setup);
         };
-        static bool handleTransferDoneInMixin(const uint8_t &endpointNum) {
+        bool handleTransferDoneInMixin(const uint8_t &endpointNum) {
             return first_mixin::handleTransferDoneInMixin(endpointNum) || other_mixins::handleTransferDoneInMixin(endpointNum);
         }
-        static bool handleDataAvailableInMixin(const uint8_t &endpointNum, const size_t &length) {
+        bool handleDataAvailableInMixin(const uint8_t &endpointNum, const size_t &length) {
             return first_mixin::handleDataAvailableInMixin(endpointNum, length) || other_mixins::handleDataAvailableInMixin(endpointNum, length);
         }
-        static bool sendSpecialDescriptorOrConfig(Setup_t &setup) {
+        bool sendSpecialDescriptorOrConfig(const Setup_t &setup) const {
             return first_mixin::sendSpecialDescriptorOrConfig(setup) || other_mixins::sendSpecialDescriptorOrConfig(setup);
         };
-        static uint16_t getEndpointSizeFromMixin(const uint8_t &endpointNum, const USBDeviceSpeed_t deviceSpeed, const bool otherSpeed) {
+        uint16_t getEndpointSizeFromMixin(const uint8_t &endpointNum, const USBDeviceSpeed_t deviceSpeed, const bool otherSpeed) const {
             uint16_t size = first_mixin::getEndpointSizeFromMixin(endpointNum, deviceSpeed, otherSpeed);
             if (size == 0) {
                 size = other_mixins::getEndpointSizeFromMixin(endpointNum, deviceSpeed, otherSpeed);
@@ -352,22 +406,22 @@ namespace Motate {
         USBMixinWrapper (USBMixinWrapper&&) = delete;
 
 
-        static const EndpointBufferSettings_t getEndpointConfigFromMixin(const uint8_t endpoint, const USBDeviceSpeed_t deviceSpeed, const bool other_speed) {
+        const EndpointBufferSettings_t getEndpointConfigFromMixin(const uint8_t endpoint, const USBDeviceSpeed_t deviceSpeed, const bool other_speed) const {
             return first_mixin::getEndpointConfigFromMixin(endpoint, deviceSpeed, other_speed);
         };
-        static bool handleNonstandardRequestInMixin(Setup_t &setup) {
+        bool handleNonstandardRequestInMixin(const Setup_t &setup) {
             return first_mixin::handleNonstandardRequestInMixin(setup);
         };
-        static bool handleTransferDoneInMixin(const uint8_t &endpointNum) {
+        bool handleTransferDoneInMixin(const uint8_t &endpointNum) {
             return first_mixin::handleTransferDoneInMixin(endpointNum);
         }
-        static bool handleDataAvailableInMixin(const uint8_t &endpointNum, const size_t &length) {
+        bool handleDataAvailableInMixin(const uint8_t &endpointNum, const size_t &length) {
             return first_mixin::handleDataAvailableInMixin(endpointNum, length);
         }
-        static bool sendSpecialDescriptorOrConfig(Setup_t &setup) {
+        bool sendSpecialDescriptorOrConfig(const Setup_t &setup) const {
             return first_mixin::sendSpecialDescriptorOrConfig(setup);
         };
-        static uint16_t getEndpointSizeFromMixin(const uint8_t &endpointNum, const USBDeviceSpeed_t deviceSpeed, const bool otherSpeed) {
+        uint16_t getEndpointSizeFromMixin(const uint8_t &endpointNum, const USBDeviceSpeed_t deviceSpeed, const bool otherSpeed) const {
             return first_mixin::getEndpointSizeFromMixin(endpointNum, deviceSpeed, otherSpeed);
         };
     };
@@ -389,22 +443,22 @@ namespace Motate {
         USBMixins (const USBMixins&) = delete;
         USBMixins (USBMixins&&) = delete;
 
-        static const EndpointBufferSettings_t getEndpointConfigFromMixin(const uint8_t endpoint, const USBDeviceSpeed_t deviceSpeed, const bool other_speed) {
+        const EndpointBufferSettings_t getEndpointConfigFromMixin(const uint8_t endpoint, const USBDeviceSpeed_t deviceSpeed, const bool other_speed) const {
             return other_mixins::getEndpointConfigFromMixin(endpoint, deviceSpeed, other_speed);
         };
-        static bool handleNonstandardRequestInMixin(Setup_t &setup) {
+        bool handleNonstandardRequestInMixin(const Setup_t &setup) {
             return other_mixins::handleNonstandardRequestInMixin(setup);
         };
-        static bool handleTransferDoneInMixin(const uint8_t &endpointNum) {
+        bool handleTransferDoneInMixin(const uint8_t &endpointNum) {
             return other_mixins::handleTransferDoneInMixin(endpointNum);
         }
-        static bool handleDataAvailableInMixin(const uint8_t &endpointNum, const size_t &length) {
+        bool handleDataAvailableInMixin(const uint8_t &endpointNum, const size_t &length) {
             return other_mixins::handleDataAvailableInMixin(endpointNum, length);
         }
-        static bool sendSpecialDescriptorOrConfig(Setup_t &setup) {
+        bool sendSpecialDescriptorOrConfig(const Setup_t &setup) const {
             return other_mixins::sendSpecialDescriptorOrConfig(setup);
         };
-        static uint16_t getEndpointSizeFromMixin(const uint8_t &endpointNum, const USBDeviceSpeed_t deviceSpeed, const bool otherSpeed) {
+        uint16_t getEndpointSizeFromMixin(const uint8_t &endpointNum, const USBDeviceSpeed_t deviceSpeed, const bool otherSpeed) const {
             return other_mixins::getEndpointSizeFromMixin(endpointNum, deviceSpeed, otherSpeed);
         };
     };

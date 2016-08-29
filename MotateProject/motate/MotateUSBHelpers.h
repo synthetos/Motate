@@ -32,7 +32,7 @@
 #ifndef MOTATEUSBHELPERS_ONCE
 #define MOTATEUSBHELPERS_ONCE
  
-#include <inttypes.h>
+#include <cinttypes>
  
 namespace Motate {
  
@@ -472,7 +472,7 @@ namespace Motate {
     // Declare the base (Null) USBConfigMixins object
     // We use template specialization to expose different content into the USBDevice.
     // We then use USBConfigMixinWrapper<> objects to dole out the USBConfigMixin<> objects.
-    // This is the same emchanism as USBMixins<>, with the exception that we don't just care about
+    // This is the same mechanism as USBMixins<>, with the exception that we don't just care about
     // position in the interfaces, but we also care about the total number of interfaces being used.
     // Note that these object don't DO anything other than fill in their structure, which is packed and
     // sent off tot he USB HOST as-is.
@@ -983,23 +983,23 @@ namespace Motate {
             return _bRequest == testRequest;
         };
  
-        const _setupValues_t featureToSetOrClear() {
+        const _setupValues_t featureToSetOrClear() const {
             return (_setupValues_t) _wValueL;
         };
          
-        const uint8_t valueLow() {
+        const uint8_t valueLow() const {
             return _wValueL;
         }
  
-        const uint8_t valueHigh() {
+        const uint8_t valueHigh() const {
             return _wValueH;
         }
  
-        const uint16_t index() {
+        const uint16_t index() const {
             return _wIndex;
         }
  
-        const uint16_t length() {
+        const uint16_t length() const {
             return _wLength;
         }
     } ATTR_PACKED; // Setup_t

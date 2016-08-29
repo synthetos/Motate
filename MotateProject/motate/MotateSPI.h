@@ -30,7 +30,7 @@
 #ifndef MOTATESPI_H_ONCE
 #define MOTATESPI_H_ONCE
 
-#include <inttypes.h>
+#include <cinttypes>
 
 
 /* After some setup, we call the processor-specific bits, then we have the

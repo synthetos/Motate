@@ -30,7 +30,7 @@
 #ifndef MOTATEPINS_H_ONCE
 #define MOTATEPINS_H_ONCE
 
-#include <inttypes.h>
+#include <cinttypes>
 #include <algorithm> // for std::conditional
 
 /* After some setup, we call the processor-specific bits, then we have the

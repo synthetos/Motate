@@ -50,7 +50,7 @@ namespace Motate {
     uint8_t  _halted = 0; // Make this into a generic _flags?? -rg
     uint8_t  _remoteWakeupEnabled = 0;
 
-    USBProxy_t USBProxy;
+    USBDevice_t *USBProxy;
 
     /* ############################################# */
     /* #                                           # */
@@ -738,8 +738,8 @@ namespace Motate {
             _setUSBAddress(0);
 
             // Configure EP 0 -- there's no opportunity to have a second configuration
-            _initEndpoint(0, USBProxy.getEndpointConfig(0, /* otherSpeed = */ false));
-            endpointSizes[0] = USBProxy.getEndpointSize(0, /* otherSpeed = */ false);
+            _initEndpoint(0, USBProxy->getEndpointConfig(0, /* otherSpeed = */ false));
+            endpointSizes[0] = USBProxy->getEndpointSize(0, /* otherSpeed = */ false);
 
             _enableReceivedSetupInterrupt(0);
             _enableEndpointInterrupt(0);
@@ -883,7 +883,7 @@ namespace Motate {
                 else if (setup.isAGetDescriptorRequest())
                 {
                     TRACE_CORE(puts(">>> EP0 Int: kGetDescriptor\r\n");)
-                    ok = USBProxy.sendDescriptorOrConfig(setup);
+                    ok = USBProxy->sendDescriptorOrConfig(setup);
                 }
                 else if (setup.isASetDescriptorRequest())
                 {
@@ -905,10 +905,10 @@ namespace Motate {
                         _configuration = setup.valueLow();
 
                         uint8_t first_endpoint, total_endpoints;
-                        total_endpoints = USBProxy.getEndpointCount(first_endpoint);
+                        total_endpoints = USBProxy->getEndpointCount(first_endpoint);
                         for (uint8_t ep = first_endpoint; ep < total_endpoints; ep++) {
-                            _initEndpoint(ep, USBProxy.getEndpointConfig(ep, /* otherSpeed = */ _configuration == 2));
-                            endpointSizes[ep] = USBProxy.getEndpointSize(ep, /* otherSpeed = */ _configuration == 2);
+                            _initEndpoint(ep, USBProxy->getEndpointConfig(ep, /* otherSpeed = */ _configuration == 2));
+                            endpointSizes[ep] = USBProxy->getEndpointSize(ep, /* otherSpeed = */ _configuration == 2);
                         }
                         ok = true;
 
@@ -943,7 +943,7 @@ namespace Motate {
                 _waitForTransmitINAvailable(0); // Old Arduino Workaround: need tempo here, else CDC serial won't open correctly
 
                 // Note: setup.length() holds the max length of transfer
-                ok = USBProxy.handleNonstandardRequest(setup);
+                ok = USBProxy->handleNonstandardRequest(setup);
             }
 
             if (ok)
@@ -982,7 +982,7 @@ namespace Motate {
                     if (_isReceiveOUTAvailable(endpoint) || _isShortpacketSet(endpoint)) {
                         if (_getDMABufferCount(endpoint) == 0) {
                             _DMA_Used_By_Endpoint &= ~(1<<endpoint);
-                            USBProxy.handleTransferDone(endpoint);
+                            USBProxy->handleTransferDone(endpoint);
                         }
                         if (!_isReadWriteAllowed(endpoint)) { // If not RWALL, then the buffer is full (TX IN) or empty (RX OUT)
                             _clearShortpacket(endpoint);
@@ -995,12 +995,12 @@ namespace Motate {
 
             // check for read available
             if (_isReceiveOUTAvailable(endpoint) && !(_DMA_Used_By_Endpoint & (1<<endpoint))) {
-                USBProxy.handleDataAvailable(endpoint, _getEndpointBufferCount(endpoint));
+                USBProxy->handleDataAvailable(endpoint, _getEndpointBufferCount(endpoint));
             }
 
             // check for write available
             if (_isTransmitINAvailable(endpoint) && !(_DMA_Used_By_Endpoint & (1<<endpoint))) {
-                //USBProxy.handleDataAvailable(endpoint, _getEndpointBufferCount(endpoint));
+                //USBProxy->handleDataAvailable(endpoint, _getEndpointBufferCount(endpoint));
             }
             
             // check for overflow
@@ -1022,7 +1022,7 @@ namespace Motate {
             if ((_DMA_Used_By_Endpoint & (1<<endpoint)) && _isDMADone(endpoint)) {
                 _DMA_Used_By_Endpoint &= ~(1<<endpoint);
                 _disableTransmitInterrupt(endpoint);
-                USBProxy.handleTransferDone(endpoint);
+                USBProxy->handleTransferDone(endpoint);
             }
         }
     }

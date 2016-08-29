@@ -1278,7 +1278,7 @@ namespace Motate {
  So, to get the mangled names (which will only for for GCC, btw), I do this in a bash shell (ignore any errors after the g++ line):
 
  cat <<END >> temp.cpp
- #include <inttypes.h>
+ #include <cinttypes>
  namespace Motate {
  template <uint8_t timerNum>
  struct Timer {
