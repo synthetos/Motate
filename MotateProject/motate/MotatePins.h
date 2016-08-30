@@ -331,12 +331,13 @@ namespace Motate {
         static_assert(!Pin<pinNum>::isNull(), "Cannot have a null pin be an IRQ");
 
         IRQPin(const IRQPin&) = delete; // delete copy
+        IRQPin(IRQPin&&) = delete; // delete move
 
-        IRQPin(const uint32_t interrupt_settings = kPinInterruptOnChange|kPinInterruptPriorityMedium)
+        IRQPin()
         : Pin<pinNum>(kInput),
         _pinChangeInterrupt(Pin<pinNum>::mask, interrupt, PortHardware<Pin<pinNum>::portLetter>::_firstInterrupt)
         {
-            setInterrupts(interrupt_settings);
+            setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
         };
 
         IRQPin(const PinOptions_t options,
@@ -348,7 +349,7 @@ namespace Motate {
             setInterrupts(interrupt_settings);
         };
 
-        IRQPin(const std::function<void(void)> &&_interrupt,
+        IRQPin(std::function<void(void)> &&_interrupt,
                const uint32_t interrupt_settings = kPinInterruptOnChange|kPinInterruptPriorityMedium
                )
         : Pin<pinNum>(kInput),
@@ -358,7 +359,7 @@ namespace Motate {
         };
 
         IRQPin(const PinOptions_t options,
-               const std::function<void(void)> &&_interrupt,
+               std::function<void(void)> &&_interrupt,
                const uint32_t interrupt_settings = kPinInterruptOnChange|kPinInterruptPriorityMedium
                )
         : Pin<pinNum>(kInput, options),
@@ -386,8 +387,10 @@ namespace Motate {
 
         // Inferface option 2: call this function with your closure or function pointer
         void setInterruptHandler(std::function<void(void)> &&handler) {
-
-            //Pin<pinNum>.setInterrupts(kInterruptPriorityLowest); // enable interrupts and set the priority
+            _pinChangeInterrupt::setInterrupt(std::move(handler)); // enable interrupts and set the priority
+        };
+        void setInterruptHandler(const std::function<void(void)> &handler) {
+            _pinChangeInterrupt::setInterrupt(handler); // enable interrupts and set the priority
         };
     };
 

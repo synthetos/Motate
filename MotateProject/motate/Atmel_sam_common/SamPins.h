@@ -109,7 +109,7 @@ namespace Motate {
 
     struct _pinChangeInterrupt {
         const uint32_t pc_mask; // Pin uses "mask" so we use a different name. "pc" for pinChange
-        const std::function<void(void)> interrupt_handler;
+        std::function<void(void)> interrupt_handler;
         _pinChangeInterrupt *next;
 
         _pinChangeInterrupt(const _pinChangeInterrupt &) = delete; // delete the copy constructor, we only allow moves
@@ -117,8 +117,10 @@ namespace Motate {
         _pinChangeInterrupt &operator=(const _pinChangeInterrupt &&) = delete; // delete the move assigment operator, we only allow moves
 
 
-        _pinChangeInterrupt(const uint32_t _mask, const std::function<void(void)> &&_interrupt, _pinChangeInterrupt *&_first) : pc_mask{_mask}, interrupt_handler{_interrupt}, next{nullptr} {
-            if (interrupt_handler) { // std::function returns false if the function isn't valid
+        _pinChangeInterrupt(const uint32_t _mask, std::function<void(void)> &&_interrupt, _pinChangeInterrupt *&_first)
+            : pc_mask{_mask}, interrupt_handler{std::move(_interrupt)}, next{nullptr}
+        {
+//            if (interrupt_handler) { // std::function returns false if the function isn't valid
                 if (_first == nullptr) {
                     _first = this;
                     return;
@@ -129,7 +131,17 @@ namespace Motate {
                     i = i->next;
                 }
                 i->next = this;
-            }
+//            }
+        };
+
+        void setInterrupt(std::function<void(void)> &&_interrupt)
+        {
+            interrupt_handler = std::move(_interrupt);
+        };
+
+        void setInterrupt(const std::function<void(void)> &_interrupt)
+        {
+            interrupt_handler = _interrupt;
         };
     };
 

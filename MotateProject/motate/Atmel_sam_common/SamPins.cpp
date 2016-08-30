@@ -37,7 +37,7 @@ extern "C" void PIOA_Handler(void) {
 
     _pinChangeInterrupt *current = PortHardware<'A'>::_firstInterrupt;
     while (current != nullptr) {
-        if (isr & current->pc_mask) {
+        if ((isr & current->pc_mask) && (current->interrupt_handler)) {
             current->interrupt_handler();
         }
         current = current->next;
@@ -53,7 +53,7 @@ extern "C" void PIOB_Handler(void) {
 
     _pinChangeInterrupt *current = PortHardware<'B'>::_firstInterrupt;
     while (current != nullptr) {
-        if (isr & current->pc_mask) {
+        if ((isr & current->pc_mask) && (current->interrupt_handler)) {
             current->interrupt_handler();
         }
         current = current->next;
@@ -70,7 +70,7 @@ extern "C" void PIOC_Handler(void) {
 
     _pinChangeInterrupt *current = PortHardware<'C'>::_firstInterrupt;
     while (current != nullptr) {
-        if (isr & current->pc_mask) {
+        if ((isr & current->pc_mask) && (current->interrupt_handler)) {
             current->interrupt_handler();
         }
         current = current->next;
@@ -87,7 +87,7 @@ extern "C" void PIOD_Handler(void) {
 
     _pinChangeInterrupt *current = PortHardware<'D'>::_firstInterrupt;
     while (current != nullptr) {
-        if (isr & current->pc_mask) {
+        if ((isr & current->pc_mask) && (current->interrupt_handler)) {
             current->interrupt_handler();
         }
         current = current->next;
