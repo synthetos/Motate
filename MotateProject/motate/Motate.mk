@@ -224,32 +224,38 @@ SHELL = bash
 SPECIAL_ATMEL_STUDIO_DEFAULT_TARGETS =
 
 # Here we use some heuristics to find the OS.
-ifneq (,$(findstring /cygdrive/,$(PATH)))
-OS := WIN32
-TOOLS_SUBPATH := win32/gcc-$(CROSS_COMPILE)
-PATH := $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin;c:\Program Files\Git\bin;c:\Program Files\Git\cmd;c:\Program Files\Git\mingw32\bin;c:\Program Files\Git\mingw64\bin;$(PATH)
-else
-ifneq (,$(findstring WINDOWS,$(PATH)))
-OS := WIN32
-TOOLS_SUBPATH := win32/gcc-$(CROSS_COMPILE)
-PATH := $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin;c:\Program Files\Git\bin;c:\Program Files\Git\cmd;c:\Program Files\Git\mingw32\bin;c:\Program Files\Git\mingw64\bin;$(PATH)
-else
 ifneq (,$(findstring Atmel,$(PATH)))
+$(info "Found that we're in Atmel Studio")
 OS := WIN32
 TOOLS_SUBPATH := win32/gcc-$(CROSS_COMPILE)
 PATH := $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin;c:\Program Files\Git\bin;c:\Program Files\Git\cmd;c:\Program Files\Git\mingw32\bin;c:\Program Files\Git\mingw64\bin;$(PATH)
 MKDIR   = gmkdir
 SPECIAL_ATMEL_STUDIO_DEFAULT_TARGETS = $(PROJECT).elf $(PROJECT).map
 else
+ifneq (,$(findstring /cygdrive/,$(PATH)))
+$(info "Found that we're in Windows Cygwin")
+OS := WIN32
+TOOLS_SUBPATH := win32/gcc-$(CROSS_COMPILE)
+PATH := $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin;c:\Program Files\Git\bin;c:\Program Files\Git\cmd;c:\Program Files\Git\mingw32\bin;c:\Program Files\Git\mingw64\bin;$(PATH)
+else
+ifneq (,$(findstring WINDOWS,$(PATH)))
+$(info "Found that we're in WINDOWS")
+OS := WIN32
+TOOLS_SUBPATH := win32/gcc-$(CROSS_COMPILE)
+PATH := $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin;c:\Program Files\Git\bin;c:\Program Files\Git\cmd;c:\Program Files\Git\mingw32\bin;c:\Program Files\Git\mingw64\bin;$(PATH)
+else
+
 
 # Unix/Linux section:
 UNAME := $(shell uname -s)
 
 ifeq (Darwin,${UNAME})
+$(info "Found that we're in OS X")
 OS = OSX
 TOOLS_SUBPATH := osx/gcc-$(CROSS_COMPILE)
 else
 ifeq (Linux,${UNAME})
+$(info "Found that we're in Linux")
 OS = LINUX
 TOOLS_SUBPATH := linux/gcc-$(CROSS_COMPILE)
 endif #LINUX
@@ -259,9 +265,9 @@ endif #Darwin
 PATH := $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin:$(PATH)
 
 # end Unix/linux section
-endif #Atmel Studio else
-endif #cygdrive
 endif #WINDOWS
+endif #cygdrive
+endif #Atmel Studio
 
 export PATH
 export MOTATE_PATH
