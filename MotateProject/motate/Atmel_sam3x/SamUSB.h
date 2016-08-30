@@ -113,18 +113,7 @@ namespace Motate {
 
     /*** PROXY ***/
 
-//    struct USBProxy_t {
-//        bool (*sendDescriptorOrConfig)(Setup_t &setup);
-//        bool (*handleNonstandardRequest)(Setup_t &setup);
-//        const uint8_t (*getEndpointCount)(uint8_t &firstEnpointNum);
-//        uint16_t (*getEndpointSize)(const uint8_t &endpointNum, const bool otherSpeed);
-//        const EndpointBufferSettings_t (*getEndpointConfig)(const uint8_t endpoint, const bool otherSpeed);
-//        //std::function<const EndpointBufferSettings_t (const uint8_t endpoint, const bool otherSpeed)> getEndpointConfig;
-//        bool (*handleDataAvailable)(const uint8_t &endpointNum, const size_t &length);
-//        bool (*handleTransferDone)(const uint8_t &endpointNum);
-//    };
     extern USBDevice_t *USBProxy;
-
 
 
     /*** STRINGS ***/
@@ -138,22 +127,22 @@ namespace Motate {
 #define MOTATE_SET_USB_VENDOR_STRING(...)\
 const uint16_t MOTATE_USBVendorString[] = __VA_ARGS__;\
 const uint16_t *Motate::getUSBVendorString(int16_t &length) {\
-length = sizeof(MOTATE_USBVendorString);\
-return MOTATE_USBVendorString;\
+    length = sizeof(MOTATE_USBVendorString);\
+    return MOTATE_USBVendorString;\
 }
 
 #define MOTATE_SET_USB_PRODUCT_STRING(...)\
 const uint16_t MOTATE_USBProductString[] = __VA_ARGS__;\
 const uint16_t *Motate::getUSBProductString(int16_t &length) {\
-length = sizeof(MOTATE_USBProductString);\
-return MOTATE_USBProductString;\
+    length = sizeof(MOTATE_USBProductString);\
+    return MOTATE_USBProductString;\
 }
 
 #define MOTATE_SET_USB_SERIAL_NUMBER_STRING(...)\
 const uint16_t MOTATE_USBSerialNumberString[] = __VA_ARGS__;\
 const uint16_t *Motate::getUSBSerialNumberString(int16_t &length) {\
-length = sizeof(MOTATE_USBSerialNumberString);\
-return MOTATE_USBSerialNumberString;\
+    length = sizeof(MOTATE_USBSerialNumberString);\
+    return MOTATE_USBSerialNumberString;\
 }
 
 #define MOTATE_SET_USB_SERIAL_NUMBER_STRING_FROM_CHIPID() \
@@ -204,7 +193,7 @@ const uint16_t *Motate::getUSBSerialNumberString(int16_t &length) { \
         } controlData;
 
 
-        // FUNCTIONS -- these take no space, and don't have a vtabe since there's nothing 'virtual'.
+        // FUNCTIONS -- these take no space, and don't have a vtable since there's nothing 'virtual'.
 
 
         void setBuffer(char* data, uint16_t len) {
