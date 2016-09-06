@@ -293,7 +293,11 @@ struct SamCommon {
     };
 
     static uint32_t getPeripheralClockFreq() {
+#if (SAM4E || SAMV71 || SAMV70 || SAME70 || SAMS70)
         return SystemCoreClock >> ((PMC->PMC_MCKR & PMC_MCKR_PRES_Msk) >> PMC_MCKR_PRES_Pos);
+#else
+        return SystemCoreClock;
+#endif
     };
 };
 

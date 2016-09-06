@@ -861,11 +861,7 @@ namespace Motate {
             /* Divisors: 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024 */
 
             // Grab the master clock value.
-#if (SAM4E || SAMV71 || SAMV70 || SAME70 || SAMS70)
             uint32_t masterClock = SamCommon::getPeripheralClockFreq();
-#else
-            uint32_t masterClock = SystemCoreClock;
-#endif
 
             // Store the divisor temporarily, to avoid looking it up again...
             uint8_t divisor_index = 0;

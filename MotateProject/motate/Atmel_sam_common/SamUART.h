@@ -144,11 +144,6 @@ namespace Motate {
         {
             // We DON'T init here, because the optimizer is fickle, and will remove this whole area.
             // Instead, we call init from UART<>::init(), so that the optimizer will keep it.
-            _uartInterruptHandlerJumper = [&]() {
-                if (_uartInterruptHandler) {
-                    _uartInterruptHandler(getInterruptCause());
-                }
-            };
         };
 
 
@@ -163,6 +158,12 @@ namespace Motate {
             // reset PCR to zero
             usart()->US_IDR = 0xffffffff; // disable all the things
             dma()->reset();
+
+            _uartInterruptHandlerJumper = [&]() {
+                if (_uartInterruptHandler) {
+                    _uartInterruptHandler(getInterruptCause());
+                }
+            };
         };
 
         void enable() { usart()->US_CR = US_CR_TXEN | US_CR_RXEN; };

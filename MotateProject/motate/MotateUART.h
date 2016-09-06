@@ -388,9 +388,9 @@ namespace Motate {
                 if (!isRealAndCorrectRTSPin<rtsPinNumber, rxPinNumber>()) {
                     rtsPin = true; // active low
                 }
+                hardware.setInterruptRxTransferDone(false);
+                hardware.setInterruptRxReady(true);
                 if (transfer_rx_done_callback) {
-                    hardware.setInterruptRxTransferDone(false);
-                    hardware.setInterruptRxReady(true);
                     transfer_rx_done_callback();
                 }
             }
