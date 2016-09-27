@@ -211,21 +211,11 @@ endif
 # Output file basename
 OUTPUT_BIN = $(BIN)/$(PROJECT)
 
-# Compilation tools
-CC      = $(CROSS_COMPILE)-gcc
-CXX     = $(CROSS_COMPILE)-g++
-LD      = $(CROSS_COMPILE)-ld
-AR      = $(CROSS_COMPILE)-ar
-SIZE    = $(CROSS_COMPILE)-size
-STRIP   = $(CROSS_COMPILE)-strip
-OBJCOPY = $(CROSS_COMPILE)-objcopy
-GDB     = $(CROSS_COMPILE)-gdb
-GDB_PY  = $(CROSS_COMPILE)-gdb-py
-NM      = $(CROSS_COMPILE)-nm
+# Some basical (external) utility paths
 RM      = rm
 CP      = cp
-# NOTE: Atmel Studio 6.1 will default to the wrong mkdir that doesn't understand -p.
-#       So, in AS6.1, we have to pass MKDIR=gmkdir in the command line.
+# NOTE: Atmel Studio will default to the wrong mkdir that doesn't understand -p.
+#       So, in windows we set MKDIR=gmkdir below.
 MKDIR   = mkdir
 GIT     = git
 
@@ -234,32 +224,38 @@ SHELL = bash
 SPECIAL_ATMEL_STUDIO_DEFAULT_TARGETS =
 
 # Here we use some heuristics to find the OS.
-ifneq (,$(findstring /cygdrive/,$(PATH)))
+ifneq (,$(findstring Atmel,$(PATH)))
+$(info "Found that we're in Atmel Studio")
 OS := WIN32
 TOOLS_SUBPATH := win32/gcc-$(CROSS_COMPILE)
-PATH := $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin;$(PATH);c:\Program Files\Git\bin;c:\Program Files\Git\cmd;c:\Program Files\Git\mingw32\bin;c:\Program Files\Git\mingw64\bin
+PATH := $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin;c:\Program Files\Git\bin;c:\Program Files\Git\cmd;c:\Program Files\Git\mingw32\bin;c:\Program Files\Git\mingw64\bin;$(PATH)
+MKDIR   = gmkdir
+SPECIAL_ATMEL_STUDIO_DEFAULT_TARGETS = $(PROJECT).elf $(PROJECT).map
+else
+ifneq (,$(findstring /cygdrive/,$(PATH)))
+$(info "Found that we're in Windows Cygwin")
+OS := WIN32
+TOOLS_SUBPATH := win32/gcc-$(CROSS_COMPILE)
+PATH := $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin;c:\Program Files\Git\bin;c:\Program Files\Git\cmd;c:\Program Files\Git\mingw32\bin;c:\Program Files\Git\mingw64\bin;$(PATH)
 else
 ifneq (,$(findstring WINDOWS,$(PATH)))
+$(info "Found that we're in WINDOWS")
 OS := WIN32
 TOOLS_SUBPATH := win32/gcc-$(CROSS_COMPILE)
-PATH := $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin;$(PATH);c:\Program Files\Git\bin;c:\Program Files\Git\cmd;c:\Program Files\Git\mingw32\bin;c:\Program Files\Git\mingw64\bin
+PATH := $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin;c:\Program Files\Git\bin;c:\Program Files\Git\cmd;c:\Program Files\Git\mingw32\bin;c:\Program Files\Git\mingw64\bin;$(PATH)
 else
-ifneq (,$(findstring Atmel Studio,$(PATH)))
-OS := WIN32
-TOOLS_SUBPATH := win32/gcc-$(CROSS_COMPILE)
-PATH := $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin;$(PATH);c:\Program Files\Git\bin;c:\Program Files\Git\cmd;c:\Program Files\Git\mingw32\bin;c:\Program Files\Git\mingw64\bin
-MKDIR   = gmkdir
-SPECIAL_ATMEL_STUDIO_DEFAULT_TARGETS = TinyG2.elf TinyG2.map
-else
+
 
 # Unix/Linux section:
 UNAME := $(shell uname -s)
 
 ifeq (Darwin,${UNAME})
+$(info "Found that we're in OS X")
 OS = OSX
 TOOLS_SUBPATH := osx/gcc-$(CROSS_COMPILE)
 else
 ifeq (Linux,${UNAME})
+$(info "Found that we're in Linux")
 OS = LINUX
 TOOLS_SUBPATH := linux/gcc-$(CROSS_COMPILE)
 endif #LINUX
@@ -269,12 +265,27 @@ endif #Darwin
 PATH := $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin:$(PATH)
 
 # end Unix/linux section
-endif #Atmel Studio else
-endif #cygdrive
 endif #WINDOWS
+endif #cygdrive
+endif #Atmel Studio
 
 export PATH
 export MOTATE_PATH
+
+
+# Compilation tools - hardcode the full path to the ones we provide
+TOOLS_FULLPATH = $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin
+CC      = $(TOOLS_FULLPATH)/$(CROSS_COMPILE)-gcc
+CXX     = $(TOOLS_FULLPATH)/$(CROSS_COMPILE)-g++
+LD      = $(TOOLS_FULLPATH)/$(CROSS_COMPILE)-ld
+AR      = $(TOOLS_FULLPATH)/$(CROSS_COMPILE)-ar
+SIZE    = $(TOOLS_FULLPATH)/$(CROSS_COMPILE)-size
+STRIP   = $(TOOLS_FULLPATH)/$(CROSS_COMPILE)-strip
+OBJCOPY = $(TOOLS_FULLPATH)/$(CROSS_COMPILE)-objcopy
+GDB     = $(TOOLS_FULLPATH)/$(CROSS_COMPILE)-gdb
+GDB_PY  = $(TOOLS_FULLPATH)/$(CROSS_COMPILE)-gdb-py
+NM      = $(TOOLS_FULLPATH)/$(CROSS_COMPILE)-nm
+
 
 ifneq ($(NOT_IN_GIT),1)
 	GIT_LOCATED := $(GIT)
@@ -337,9 +348,9 @@ LDFLAGS += $(LIBS) $(USER_LIBS) $(DEBUG_SYMBOLS) -O$(OPTIMIZATION) -Wl,--cref -W
 
 # Directories where source files can be found
 
-C_SOURCES   = $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/$(STAR).c) )
-CXX_SOURCES = $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/$(STAR).cpp) )
-ASM_SOURCES = $(foreach dir,$(SOURCE_DIRS),$(wildcard $(dir)/$(STAR).s $(dir)/$(STAR).S) )
+C_SOURCES   = $(foreach dir,$(SOURCE_DIRS),$(sort $(wildcard $(dir)/$(STAR).c)) )
+CXX_SOURCES = $(foreach dir,$(SOURCE_DIRS),$(sort $(wildcard $(dir)/$(STAR).cpp)) )
+ASM_SOURCES = $(foreach dir,$(SOURCE_DIRS),$(sort $(wildcard $(dir)/$(STAR).s $(dir)/$(STAR).S)) )
 
 C_OBJECTS   := $(addsuffix .o,$(basename $(C_SOURCES)))
 CXX_OBJECTS := $(addsuffix .o,$(basename $(CXX_SOURCES)))
@@ -424,7 +435,7 @@ DEPFLAGS = -MMD -MF $(OBJ)/dep/$(@F).d -MT $(subst $(OUTDIR),$(OBJ),$@)
 $(OUTPUT_BIN).elf: $(ALL_C_OBJECTS) $(ALL_CXX_OBJECTS) $(ALL_ASM_OBJECTS) $(LINKER_SCRIPT)
 	@echo $(START_BOLD)"Linking $(OUTPUT_BIN).elf" $(END_BOLD)
 	@echo $(START_BOLD)"Using linker script: $(LINKER_SCRIPT)" $(END_BOLD)
-	$(QUIET)$(CXX) $(LIB_PATH) $(LINKER_SCRIPT_OPTION) $(LIBDIR) -Wl,-Map,"$(OUTPUT_BIN).map" -o ${filter-out tools,$@} $(LDFLAGS) $(LD_OPTIONAL) $(LIBS) -Wl,--start-group $(FIRST_LINK_OBJECTS_PATHS) $(filter-out $(FIRST_LINK_OBJECTS_PATHS) $(LINKER_SCRIPT) tools,$+) -Wl,--end-group
+	$(QUIET)$(CXX) $(LIB_PATH) $(LINKER_SCRIPT_OPTION) $(LIBDIR) -Wl,-Map,"$(OUTPUT_BIN).map" -o ${filter-out tools,$@} $(LDFLAGS) $(LD_OPTIONAL) -Wl,--start-group $(FIRST_LINK_OBJECTS_PATHS) $(filter-out $(FIRST_LINK_OBJECTS_PATHS) $(LINKER_SCRIPT) tools,$+) $(LIBS) -Wl,--end-group
 	@echo $(START_BOLD)"Exporting symbols $(OUTPUT_BIN).elf.txt" $(END_BOLD)
 	$(QUIET)$(NM) "$(OUTPUT_BIN).elf" >"$(OUTPUT_BIN).elf.txt"
 	@echo $(START_BOLD)"Making binary $(OUTPUT_BIN).bin" $(END_BOLD)
@@ -508,7 +519,9 @@ $(PROJECT).bin: $(OUTPUT_BIN).elf
 	$(QUIET)$(OBJCOPY) -O binary $< $@
 
 clean:
-	-$(RM) -fR $(OBJ) $(BIN) $(BOARD).elf $(BOARD).map $(BOARD).hex $(BOARD).bin
+	-$(RM) -fR $(OBJ)
+	-$(RM) -fR $(BIN)
+	-$(RM) -fR $(BOARD).elf $(BOARD).map $(BOARD).hex $(BOARD).bin
 
 
 #

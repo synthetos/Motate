@@ -64,12 +64,53 @@ CHIP_SERIES:=sam3u
 else ifeq ($(CHIP),$(findstring $(CHIP), $(SAM3XA)))
 
 #BOARD:=SAM3X_EK
-CHIP_SERIES:=sam3xa
+CHIP_SERIES:=sam3x
+
+    ifeq ($(CHIP),$(findstring $(CHIP), $(SAM3X8)))
+        CHIP_SUBSERIES:=sam3x8
+    else
+        CHIP_SUBSERIES:=sam3x4
+    endif
+
+CPU_DEV = cortex-m3
 
 else ifeq ($(CHIP),$(findstring $(CHIP), $(SAM4S)))
 
 #BOARD:=SAM4S_EK
 CHIP_SERIES:=sam4s
+
+CPU_DEV = cortex-m4
+#FLOAT_OPTIONS = -mfloat-abi=hard -mfpu=fpv4-sp-d16
+
+else ifeq ($(CHIP),$(findstring $(CHIP), $(SAM4E)))
+
+    CHIP_SERIES:=sam4e
+
+    ifeq ($(CHIP),$(findstring $(CHIP), $(SAM4E8)))
+        CHIP_SUBSERIES:=sam4e8
+    else
+        CHIP_SUBSERIES:=sam4e16
+    endif
+
+    CPU_DEV = cortex-m4
+    #FLOAT_OPTIONS = -mfloat-abi=hard -mfpu=fpv4-sp-d16
+
+else ifeq ($(CHIP),$(findstring $(CHIP), $(SAMS70)))
+
+    CHIP_SERIES:=sams70
+
+    ifeq ($(CHIP),$(findstring $(CHIP), SAMS70N19))
+        CHIP_SUBSERIES:=sams70n19
+    else ifeq ($(CHIP),$(findstring $(CHIP), SAMS70N20)
+        CHIP_SUBSERIES:=sams70n20
+    else ifeq ($(CHIP),$(findstring $(CHIP), SAMS70N21)
+        CHIP_SUBSERIES:=sams70n21
+    else
+        $(error $(CHIP) is not in a known Atmel subseries (incomplete makefile, most likely).)
+    endif
+
+    CPU_DEV = cortex-m7
+    #FLOAT_OPTIONS = -mfloat-abi=hard -mfpu=fpv4-sp-d16
 
 else
 
@@ -80,7 +121,7 @@ endif
 
 
 # GCC toolchain provider
-GCC_TOOLCHAIN = as_gcc
+GCC_TOOLCHAIN = gcc
 
 # Toolchain prefix when cross-compiling
 CROSS_COMPILE = arm-none-eabi
@@ -88,11 +129,12 @@ CROSS_COMPILE = arm-none-eabi
 SAM_PATH    = $(CMSIS_ROOT)/TARGET_Atmel
 DEVICE_PATH = $(SAM_PATH)/$(CHIP_SERIES)
 
+SAM_SOURCE_DIRS += $(MOTATE_PATH)/Atmel_sam_common
 SAM_SOURCE_DIRS += $(MOTATE_PATH)/Atmel_$(CHIP_SERIES)
-SAM_SOURCE_DIRS += $(DEVICE_PATH)/source
-SAM_SOURCE_DIRS += $(DEVICE_PATH)/source/$(GCC_TOOLCHAIN)
+SAM_SOURCE_DIRS += $(DEVICE_PATH)/source/templates
+SAM_SOURCE_DIRS += $(DEVICE_PATH)/source/templates/$(GCC_TOOLCHAIN)
 SAM_SOURCE_DIRS += $(MOTATE_PATH)/platform/atmel_sam
-FIRST_LINK_SOURCES += $(MOTATE_PATH)/platform/atmel_sam/syscalls_sam3.cpp
+FIRST_LINK_SOURCES += $(MOTATE_PATH)/platform/atmel_sam/syscalls.cpp
 
 DEVICE_RULES = $(call CREATE_DEVICE_LIBRARY,SAM,cmsis_sam)
 
@@ -100,16 +142,18 @@ DEVICE_RULES = $(call CREATE_DEVICE_LIBRARY,SAM,cmsis_sam)
 DEVICE_INCLUDE_DIRS += $(CMSIS_ROOT)
 DEVICE_INCLUDE_DIRS += $(DEVICE_PATH)/include
 DEVICE_INCLUDE_DIRS += $(SAM_PATH)
-DEVICE_INCLUDE_DIRS += $(SAM_PATH)/$(SERIES)/include
-DEVICE_INCLUDE_DIRS += $(MOTATE_PATH)/$(CHIP_SERIES)
+DEVICE_INCLUDE_DIRS += $(SAM_PATH)/preprocessor
+DEVICE_INCLUDE_DIRS += $(SAM_PATH)/$(CHIP_SERIES)/include
+DEVICE_INCLUDE_DIRS += $(SAM_PATH)/$(CHIP_SERIES)/source/templates
+DEVICE_INCLUDE_DIRS += $(MOTATE_PATH)/Atmel_sam_common
+DEVICE_INCLUDE_DIRS += $(MOTATE_PATH)/Atmel_$(CHIP_SERIES)
 DEVICE_INCLUDE_DIRS += $(MOTATE_PATH)/platform/atmel_sam
 
 # Add this to search for the additional .ld script
 DEVICE_LIB_DIRS     += $(MOTATE_PATH)/platform/atmel_sam
 
 
-CPU_DEV = cortex-m3
-DEVICE_LINKER_SCRIPT = $(DEVICE_PATH)/source/$(GCC_TOOLCHAIN)/$(CHIP_LOWERCASE)_flash.ld
+DEVICE_LINKER_SCRIPT = $(SAM_PATH)/linker_scripts/$(CHIP_SERIES)/$(CHIP_SUBSERIES)/$(GCC_TOOLCHAIN)/flash.ld
 DEVICE_LINKER_SCRIPT_PATH = $(DEVICE_PATH)/source/$(GCC_TOOLCHAIN)/
 
 

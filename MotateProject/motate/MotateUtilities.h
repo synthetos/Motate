@@ -312,6 +312,42 @@ namespace Motate {
 
     float atof(char *&buffer);
 
+    // These convert to local byte order from the stated order
+    static inline uint32_t fromBigEndian(volatile const uint32_t x) {
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+//        return ((x & 0xff) << 24) | ((x & 0xff00) << 8) | ((x & 0xff0000) >> 8) | ((x & 0xff000000) >> 24);
+        return __builtin_bswap32 (x);
+#else
+        return x;
+#endif
+    };
+    static inline uint32_t fromLittleEndian(volatile const uint32_t x) {
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+        return x;
+#else
+//        return ((x & 0xff) << 24) | ((x & 0xff00) << 8) | ((x & 0xff0000) >> 8) | ((x & 0xff000000) >> 24);
+        return __builtin_bswap32 (x);
+#endif
+    };
+
+    // These convert to the stated order from local byte order
+    static inline uint32_t toBigEndian(volatile const uint32_t x) {
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+//        return ((x & 0xff) << 24) | ((x & 0xff00) << 8) | ((x & 0xff0000) >> 8) | ((x & 0xff000000) >> 24);
+        return __builtin_bswap32 (x);
+#else
+        return x;
+#endif
+    };
+    static inline uint32_t toLittleEndian(volatile const uint32_t x) {
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+        return x;
+#else
+//        return ((x & 0xff) << 24) | ((x & 0xff00) << 8) | ((x & 0xff0000) >> 8) | ((x & 0xff000000) >> 24);
+        return __builtin_bswap32 (x);
+#endif
+    };
+
 #pragma GCC diagnostic pop
 } // namespace Motate
 

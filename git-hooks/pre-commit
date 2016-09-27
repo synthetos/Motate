@@ -1,0 +1,43 @@
+#!/bin/bash -l
+
+set DELETE_OLD_PATCHES 1
+
+prefix="pre-commit-clang-format"
+suffix="$(date +%s)"
+patch="/tmp/${prefix}-${suffix}.patch"
+
+# clean up any older clang-format patches
+$DELETE_OLD_PATCHES && rm -f /tmp/${prefix}*.patch
+
+git clang-format --style=file --diff -- `git diff --cached --name-only` > ${patch}
+
+result=`cat "${patch}"`
+
+if [[ "${result}" == "clang-format did not modify any files" ]] ; then
+    printf "Files in this commit comply with the clang-format rules.\n"
+    rm -f "${patch}"
+    exit 0
+fi
+
+if [[ "${result}" == "no modified files to format" ]] ; then
+    printf "Files in this commit comply with the clang-format rules.\n"
+    rm -f "${patch}"
+    exit 0
+fi
+
+
+# a patch has been created, notify the user and exit
+printf "\nThe code to commit does not adhere to the the clang-format rules.\n\n"
+printf "Please run the following command to make the file conformant:\n"
+printf "git clang-format --style=file\n\n"
+printf "The use git to see what was fixed, git add ... the fixes, and resume the commit.\n"
+printf "Or, run the following command to interactively select changes:\n"
+printf "git clang-format --style=file --patch\n\n"
+printf "Or, you can reformat all cached files (whole!) with:\n"
+printf "clang-format --style=file -i -- `git diff --cached --name-only`\n\n"
+printf "Aborting commit. Apply changes and commit again or skip checking with"
+printf " --no-verify (not recommended).\n"
+
+rm -f "${patch}"
+
+exit 1

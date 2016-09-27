@@ -1,9 +1,9 @@
-# 
+#
 # Makefile
-# 
+#
 # Copyright (c) 2012 - 2014 Robert Giseburt
 # Copyright (c) 2013 - 2014 Alden S. Hart Jr.
-# 
+#
 #	This file is part of the Motate Library.
 #
 #	This file ("the software") is free software: you can redistribute it and/or modify
@@ -38,5 +38,9 @@ all: ${PROJECTS}
 
 clean: ${PROJECTS}
 	for project_name in $^; do { make -C "$$project_name" clean; } ; done
+
+PHONY: none
+
+none:
 
 # *** EOF ***

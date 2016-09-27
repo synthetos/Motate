@@ -1,31 +1,46 @@
-/* ---------------------------------------------------------------------------- */
-/*                  Atmel Microcontroller Software Support                      */
-/*                       SAM Software Package License                           */
-/* ---------------------------------------------------------------------------- */
-/* Copyright (c) 2015, Atmel Corporation                                        */
-/*                                                                              */
-/* All rights reserved.                                                         */
-/*                                                                              */
-/* Redistribution and use in source and binary forms, with or without           */
-/* modification, are permitted provided that the following condition is met:    */
-/*                                                                              */
-/* - Redistributions of source code must retain the above copyright notice,     */
-/* this list of conditions and the disclaimer below.                            */
-/*                                                                              */
-/* Atmel's name may not be used to endorse or promote products derived from     */
-/* this software without specific prior written permission.                     */
-/*                                                                              */
-/* DISCLAIMER:  THIS SOFTWARE IS PROVIDED BY ATMEL "AS IS" AND ANY EXPRESS OR   */
-/* IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF */
-/* MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT ARE   */
-/* DISCLAIMED. IN NO EVENT SHALL ATMEL BE LIABLE FOR ANY DIRECT, INDIRECT,      */
-/* INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT */
-/* LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,  */
-/* OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF    */
-/* LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING         */
-/* NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, */
-/* EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.                           */
-/* ---------------------------------------------------------------------------- */
+/**
+ * \file
+ *
+ * Copyright (c) 2014-2015 Atmel Corporation. All rights reserved.
+ *
+ * \asf_license_start
+ *
+ * \page License
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ *
+ * 3. The name of Atmel may not be used to endorse or promote products derived
+ *    from this software without specific prior written permission.
+ *
+ * 4. This software may only be redistributed and used in connection with an
+ *    Atmel microcontroller product.
+ *
+ * THIS SOFTWARE IS PROVIDED BY ATMEL "AS IS" AND ANY EXPRESS OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT ARE
+ * EXPRESSLY AND SPECIFICALLY DISCLAIMED. IN NO EVENT SHALL ATMEL BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+ * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * \asf_license_stop
+ *
+ */
+/*
+ * Support and FAQ: visit <a href="http://www.atmel.com/design-support/">Atmel Support</a>
+ */
 
 #ifndef _SAM4N8A_
 #define _SAM4N8A_
@@ -41,10 +56,17 @@
 
 #ifdef __cplusplus
  extern "C" {
-#endif 
+#endif
 
 #if !(defined(__ASSEMBLY__) || defined(__IAR_SYSTEMS_ASM__))
 #include <stdint.h>
+#ifndef __cplusplus
+typedef volatile const uint32_t RoReg; /**< Read only 32-bit register (volatile const unsigned int) */
+#else
+typedef volatile       uint32_t RoReg; /**< Read only 32-bit register (volatile const unsigned int) */
+#endif
+typedef volatile       uint32_t WoReg; /**< Write only 32-bit register (volatile unsigned int) */
+typedef volatile       uint32_t RwReg; /**< Read-Write 32-bit register (volatile unsigned int) */
 #endif
 
 /* ************************************************************************** */
@@ -66,7 +88,7 @@ typedef enum IRQn
   PendSV_IRQn           = -2,  /**< 14 Cortex-M4 Pend SV Interrupt           */
   SysTick_IRQn          = -1,  /**< 15 Cortex-M4 System Tick Interrupt       */
 /******  SAM4N8A specific Interrupt Numbers *********************************/
-  
+
   SUPC_IRQn            =  0, /**<  0 SAM4N8A Supply Controller (SUPC) */
   RSTC_IRQn            =  1, /**<  1 SAM4N8A Reset Controller (RSTC) */
   RTC_IRQn             =  2, /**<  2 SAM4N8A Real Time Clock (RTC) */
@@ -80,7 +102,7 @@ typedef enum IRQn
   PIOA_IRQn            = 11, /**< 11 SAM4N8A Parallel I/O Controller A (PIOA) */
   PIOB_IRQn            = 12, /**< 12 SAM4N8A Parallel I/O Controller B (PIOB) */
   USART0_IRQn          = 14, /**< 14 SAM4N8A USART 0 (USART0) */
-  UART3_IRQn           = 16, /**< 16 SAM4N8A UART 3 (UART3) */
+  UART3_IRQn           = 16, /**< 16 SAM4N8A UARG 3 (UART3) */
   TWI0_IRQn            = 19, /**< 19 SAM4N8A Two Wire Interface 0 (TWI0) */
   TWI1_IRQn            = 20, /**< 20 SAM4N8A Two Wire Interface 1 (TWI1) */
   SPI_IRQn             = 21, /**< 21 SAM4N8A Serial Peripheral Interface (SPI) */
@@ -98,7 +120,7 @@ typedef struct _DeviceVectors
 {
   /* Stack pointer */
   void* pvStack;
-  
+
   /* Cortex-M handlers */
   void* pfnReset_Handler;
   void* pfnNMI_Handler;
@@ -133,7 +155,7 @@ typedef struct _DeviceVectors
   void* pvReserved13;
   void* pfnUSART0_Handler; /* 14 USART 0 */
   void* pvReserved15;
-  void* pfnUART3_Handler;  /* 16 UART 3 */
+  void* pfnUART3_Handler;  /* 16 UARG 3 */
   void* pvReserved17;
   void* pvReserved18;
   void* pfnTWI0_Handler;   /* 19 Two Wire Interface 0 */
@@ -189,10 +211,10 @@ void USART0_Handler     ( void );
 void WDT_Handler        ( void );
 
 /**
- * \brief Configuration of the Cortex-M4 Processor and Core Peripherals 
+ * \brief Configuration of the Cortex-M4 Processor and Core Peripherals
  */
 
-#define __CM4_REV              0x0001 /**< SAM4N8A core revision number ([15:8] revision number, [7:0] patch number) */
+#define __CM4_REV              0x0000 /**< SAM4N8A core revision number ([15:8] revision number, [7:0] patch number) */
 #define __MPU_PRESENT          1      /**< SAM4N8A does provide a MPU */
 #define __FPU_PRESENT          0      /**< SAM4N8A does not provide a FPU */
 #define __NVIC_PRIO_BITS       4      /**< SAM4N8A uses 4 Bits for the Priority Levels */
@@ -215,25 +237,25 @@ void WDT_Handler        ( void );
 /** \addtogroup SAM4N8A_api Peripheral Software API */
 /*@{*/
 
-#include "component/adc.h"
-#include "component/chipid.h"
-#include "component/efc.h"
-#include "component/gpbr.h"
-#include "component/matrix.h"
-#include "component/pdc.h"
-#include "component/pio.h"
-#include "component/pmc.h"
-#include "component/pwm.h"
-#include "component/rstc.h"
-#include "component/rtc.h"
-#include "component/rtt.h"
-#include "component/spi.h"
-#include "component/supc.h"
-#include "component/tc.h"
-#include "component/twi.h"
-#include "component/uart.h"
-#include "component/usart.h"
-#include "component/wdt.h"
+#include "component/component_adc.h"
+#include "component/component_chipid.h"
+#include "component/component_efc.h"
+#include "component/component_gpbr.h"
+#include "component/component_matrix.h"
+#include "component/component_pdc.h"
+#include "component/component_pio.h"
+#include "component/component_pmc.h"
+#include "component/component_pwm.h"
+#include "component/component_rstc.h"
+#include "component/component_rtc.h"
+#include "component/component_rtt.h"
+#include "component/component_spi.h"
+#include "component/component_supc.h"
+#include "component/component_tc.h"
+#include "component/component_twi.h"
+#include "component/component_uart.h"
+#include "component/component_usart.h"
+#include "component/component_wdt.h"
 /*@}*/
 
 /* ************************************************************************** */
@@ -242,30 +264,30 @@ void WDT_Handler        ( void );
 /** \addtogroup SAM4N8A_reg Registers Access Definitions */
 /*@{*/
 
-#include "instance/spi.h"
-#include "instance/tc0.h"
-#include "instance/twi0.h"
-#include "instance/twi1.h"
-#include "instance/pwm.h"
-#include "instance/usart0.h"
-#include "instance/adc.h"
-#include "instance/twi2.h"
-#include "instance/uart2.h"
-#include "instance/uart3.h"
-#include "instance/matrix.h"
-#include "instance/pmc.h"
-#include "instance/uart0.h"
-#include "instance/chipid.h"
-#include "instance/uart1.h"
-#include "instance/efc.h"
-#include "instance/pioa.h"
-#include "instance/piob.h"
-#include "instance/rstc.h"
-#include "instance/supc.h"
-#include "instance/rtt.h"
-#include "instance/wdt.h"
-#include "instance/rtc.h"
-#include "instance/gpbr.h"
+#include "instance/instance_spi.h"
+#include "instance/instance_tc0.h"
+#include "instance/instance_twi0.h"
+#include "instance/instance_twi1.h"
+#include "instance/instance_pwm.h"
+#include "instance/instance_usart0.h"
+#include "instance/instance_adc.h"
+#include "instance/instance_twi2.h"
+#include "instance/instance_uart2.h"
+#include "instance/instance_uart3.h"
+#include "instance/instance_matrix.h"
+#include "instance/instance_pmc.h"
+#include "instance/instance_uart0.h"
+#include "instance/instance_chipid.h"
+#include "instance/instance_uart1.h"
+#include "instance/instance_efc.h"
+#include "instance/instance_pioa.h"
+#include "instance/instance_piob.h"
+#include "instance/instance_rstc.h"
+#include "instance/instance_supc.h"
+#include "instance/instance_rtt.h"
+#include "instance/instance_wdt.h"
+#include "instance/instance_rtc.h"
+#include "instance/instance_gpbr.h"
 /*@}*/
 
 /* ************************************************************************** */
@@ -287,7 +309,7 @@ void WDT_Handler        ( void );
 #define ID_PIOA   (11) /**< \brief Parallel I/O Controller A (PIOA) */
 #define ID_PIOB   (12) /**< \brief Parallel I/O Controller B (PIOB) */
 #define ID_USART0 (14) /**< \brief USART 0 (USART0) */
-#define ID_UART3  (16) /**< \brief UART 3 (UART3) */
+#define ID_UART3  (16) /**< \brief UARG 3 (UART3) */
 #define ID_TWI0   (19) /**< \brief Two Wire Interface 0 (TWI0) */
 #define ID_TWI1   (20) /**< \brief Two Wire Interface 1 (TWI1) */
 #define ID_SPI    (21) /**< \brief Serial Peripheral Interface (SPI) */
@@ -386,7 +408,7 @@ void WDT_Handler        ( void );
 /** \addtogroup SAM4N8A_pio Peripheral Pio Definitions */
 /*@{*/
 
-#include "pio/sam4n8a.h"
+#include "pio/pio_sam4n8a.h"
 /*@}*/
 
 /* ************************************************************************** */

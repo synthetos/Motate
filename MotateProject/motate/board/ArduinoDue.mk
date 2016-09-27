@@ -10,7 +10,7 @@ endif
 ifeq ("$(BASE_BOARD)","due")
     _BOARD_FOUND = 1
 
-    FIRST_LINK_SOURCES += $(wildcard ${MOTATE_PATH}/Atmel_sam3xa/*.cpp)
+    FIRST_LINK_SOURCES += $(wildcard ${MOTATE_PATH}/Atmel_sam3x/*.cpp)
 
     CHIP = SAM3X8E
     export CHIP

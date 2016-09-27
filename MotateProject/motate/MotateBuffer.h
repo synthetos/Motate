@@ -39,56 +39,35 @@ namespace Motate {
     // Implement a simple circular buffer, with a compile-time size
     template <uint16_t _size, typename base_type = char>
     struct Buffer {
+        static_assert(((_size-1)&_size)==0, "Buffer size must be 2^N");
+
         // Internal properties!
-        base_type _data[_size];
+        base_type _data[_size+1];
 
-        const base_type* const _end_pos = _data+_size; // NOTE: _end_pos is one *past* the end of the buffer.
-        volatile base_type* _read_pos = _data;
-        volatile base_type* _write_pos = _data;
-        volatile int16_t _available = _size;
-        volatile bool _write_locked = true;
+        volatile uint16_t _read_offset;              // The offset into the buffer of our next read
+        volatile uint16_t _write_offset;             // The offset into the buffer of our next write
 
-        struct _mutex {
-            volatile bool &_mutex_lock;
-            _mutex(volatile bool& _lockVar) : _mutex_lock {_lockVar} {
-                _mutex_lock = true;
-            };
+        Buffer() { _data[_size] = 0; };
 
-            ~_mutex() {
-                _mutex_lock = false;
-            }
+        uint16_t _nextReadOffset() {
+            return (_read_offset + 1)&(_size-1);
+        };
+
+        uint16_t _nextWriteOffset() {
+            return (_write_offset + 1)&(_size-1);
         };
 
         constexpr int16_t size() { return _size; };
 
-        // Default constructors will work fine.
-
-        volatile base_type *nextReadPos() {
-            volatile base_type *ret = _read_pos+1;
-            if (ret == _end_pos) {
-                ret = _data;
-            }
-            return ret;
-        };
-
-        volatile base_type *nextWritePos() {
-            volatile base_type *ret = _write_pos+1;
-            if (ret == _end_pos) {
-                ret = _data;
-            }
-            return ret;
-        };
-
-        bool isEmpty() { return _available == _size; }
-        bool isFull() { return _available == 0; }
-        bool isLocked() { return _write_locked; }
-        //	bool isEmpty() { return _read_pos == _write_pos; }
-        //	bool isFull() { return nextReadPos() == _write_pos; }
+        bool isEmpty() { return _read_offset == _write_offset; }
+        bool isFull() { return ((_write_offset+1)&(_size-1)) == _read_offset; }
+        bool isLocked() { return false; }
 
         int16_t peek() {
             if (isEmpty())
                 return -1;
-            int16_t ret = *_read_pos;
+
+            int16_t ret = _data[_read_offset];
             return ret;
         };
 
@@ -96,44 +75,39 @@ namespace Motate {
             if (isEmpty())
                 return; // Ignore pop on an empty buffer
 
-            _read_pos = nextReadPos();
-            _available++;
+            _read_offset = _nextReadOffset();
             return;
         };
 
         int16_t read() {
-            if (isEmpty() || isLocked())
+            if (isEmpty()) {
                 return -1;
+            }
 
-            int16_t ret = *_read_pos;
-            _read_pos = nextReadPos();
+            int16_t ret = _data[_read_offset];
+            _read_offset = _nextReadOffset();
 
-            _available++;
             return ret;
         };
-        
+
         int16_t write(const base_type newValue) {
             if (isFull())
                 return -1;
             
-            _mutex write_lock(_write_locked);
-            
-            // as quickly as possible we'll change the availability
-            _available--;
-            
-            *_write_pos = newValue;
-            _write_pos = nextWritePos();
-            
+            _data[_write_offset] = newValue;
+            _write_offset = _nextWriteOffset();
+
             return 1;
         };
-        
+
         int16_t available() {
-            return _available;
-            //	    if (_read_pos <= _write_pos) {
-            //		return _write_pos - _read_pos;
-            //	    } else {
-            //		return (_write_pos - _data) + (_end_pos - _read_pos);
-            //	    }
+            if (_write_offset == _read_offset) {
+                return _size;
+            } else if (_write_offset < _read_offset) {
+                return _size  - (_read_offset - _write_offset);
+            } else {
+                return (_read_offset) + (_size - _write_offset);
+            }
         };
     };
 
@@ -146,16 +120,19 @@ namespace Motate {
         owner_type _owner;
 
         // Internal properties!
-        base_type _data[_size];
+        base_type _data[_size+1];
 
-        uint16_t _read_offset;              // The offset into the buffer we of our next read
-        uint16_t _last_known_write_offset;  // The offset into the buffer we of the last known write (cached)
+        uint32_t _data_end_guard = 0xBEEF;
 
-        uint16_t _transfer_requested = 0; // keep track of how much we have requested. Non-zero means a request is active.
+        volatile uint16_t _read_offset;              // The offset into the buffer of our next read
+        volatile uint16_t _last_known_write_offset;  // The offset into the buffer of the last known write (cached)
+
+        volatile uint16_t _transfer_requested = 0; // keep track of how much we have requested. Non-zero means a request is active.
+        volatile uint16_t _requested_check = 0;
 
         constexpr int16_t size() { return _size; };
 
-        RXBuffer(owner_type owner) : _owner(owner) { };
+        RXBuffer(owner_type owner) : _owner(owner) { _data[_size] = 0; };
 
         void init() {
             _owner->setRXTransferDoneCallback([&]() { // use a closure
@@ -169,13 +146,13 @@ namespace Motate {
         };
 
         bool _canBeRead(uint16_t pos) {
-            if (pos == _last_known_write_offset) {
+//            if (pos == _last_known_write_offset) {
                 _getWriteOffset();
                 if (pos == _last_known_write_offset) {
                     _restartTransfer();
                     return false;
                 }
-            }
+//            }
             return true;
         };
 
@@ -244,38 +221,68 @@ namespace Motate {
         };
 
         void _restartTransfer() {
-            if ((_transfer_requested == 0) && !isFull()) {
-                // We can only request contiguous chunks. Let's see what the next one is.
-                _getWriteOffset(); // cache the write position
+            if ((_transfer_requested == 0)) {
+                // We use a do..while here to repeat until the transfer "takes".
+                // The transfer can only fail if the startRXTransfer immediately loaded data into
+                // the buffer.
+                do {
+                    // We can only request contiguous chunks. Let's see what the next one is.
+                    _getWriteOffset(); // cache the write position
 
-                int16_t transfer_size = 0;
-                char *_write_pos = _data + _last_known_write_offset;
+                    int16_t transfer_size = 0;
+                    base_type *_write_pos = _data + _last_known_write_offset;
 
-                // Possible cases:
-                // [1] _read_pos > _write_pos
-                //     IOW: We read to some position in the middle, and _write_pos is before it
-                //          The unread data is between read->end, then 0->write.
-                //          So, we transfer from _write_pos to the _read_pos position.
-                // [2] _read_pos <= _write_pos
-                //     IOW: We read to some position in the middle, and _read_pos is in the range 0 through _write_pos.
-                //          So, we can transfer from _write_pos to the end of the buffer.
+                    if (isFull()) {
+                        break;
+                    }
 
-                // Case [1]
-                if (_read_offset > _last_known_write_offset) {
-                    transfer_size = _read_offset - _last_known_write_offset;
+                    // Possible cases:
+                    // We must keep in mind we don't want to read _size bytes, but _size-1.
+                    // [0] _write_pos+1 = _read_pos
+                    //     We just eliminated that.
+                    // [1] _read_pos > _write_pos
+                    //     IOW: We read to some position in the middle, and _write_pos is before it
+                    //          The unread data is between read->end, then 0->write.
+                    //          So, we transfer from _write_pos to the _read_pos position - 1.
+                    // [2] _read_pos <= _write_pos
+                    //     IOW: We read to some position in the middle, and _read_pos is in the range 0 through _write_pos.
+                    //          So, we can transfer from _write_pos to the end of the buffer.
+                    // [2a] _read_pos <= _write_pos && _read_pos == 0
+                    //     IOW: If we read to the end, we will read _size bytes, and our "full" will look like "empty".
+                    //          So, we read to the end of the buffer - 1.
 
-                // Case [2]
-                } else {
-                    transfer_size = _size - _last_known_write_offset;
-                }
+                    // Additional note: SOME DMA systems transfer is 4-byte words, and so a non-4-byte transfer will
+                    // drop 3 NULLS (or other garbage) into the area past what we requested. So, we are using
+                    // transfer_size - 4 for case [1] to work around that.
 
-                // We set _transfer_requested BEFORE startRXTransfer, in case an interrupt fires before we exit startRXTransfer
-                //   (which should only happen if it started succesfully).
-                // startRXTransfer will return false if it couldn't start the transfer.
-                _transfer_requested = transfer_size;
-                if (!_owner->startRXTransfer(_write_pos, transfer_size)) {
+                    // Case [1]
+                    if (_read_offset > _last_known_write_offset) {
+                        transfer_size = (_read_offset - _last_known_write_offset) - 4;
+                        if (transfer_size < 1) {
+                            return;
+                        }
+                    // Case [2a]
+                    } else if (_read_offset == 0) {
+                        transfer_size = (_size - _last_known_write_offset) - 1;
+
+                    // Case [2]
+                    } else {
+                        transfer_size = (_size - _last_known_write_offset);
+                    }
+
+                    _transfer_requested = transfer_size;
+
+                    _requested_check = (_last_known_write_offset+_transfer_requested) & (_size-1);
+
+                    // startRXTransfer will return false if it couldn't start the transfer.
+                    if (_owner->startRXTransfer(_write_pos, transfer_size)) {
+                        break;
+                    }
+
+                    // If we're here, startRXTransfer loaded some data into the buffer and ran out of room.
+                    // Note that _getWriteOffset() must return the new position
                     _transfer_requested = 0;
-                }
+                } while (1);
             }
         };
 
@@ -319,16 +326,16 @@ namespace Motate {
         owner_type _owner;
 
         // Internal properties!
-        base_type _data[_size];
+        base_type _data[_size+1];
 
-        uint16_t _write_offset;             // The offset into the buffer we of our next write
-        uint16_t _last_known_read_offset;   // The offset into the buffer we of the last known read (cached)
+        uint16_t _write_offset;             // The offset into the buffer of our next write
+        uint16_t _last_known_read_offset;   // The offset into the buffer of the last known read (cached)
 
         uint16_t _transfer_requested = 0;   // keep track of how much we have requested. Non-zero means a request is active.
 
         constexpr int16_t size() { return _size; };
 
-        TXBuffer(owner_type owner) : _owner(owner) {};
+        TXBuffer(owner_type owner) : _owner(owner) { _data[_size] = 0; };
 
         void init() {
             _owner->setTXTransferDoneCallback([&]() { // use a closure
@@ -405,7 +412,7 @@ namespace Motate {
                 _getReadOffset(); // cache the read position
 
                 int16_t transfer_size = 0;
-                char *_read_pos = _data + _last_known_read_offset;
+                base_type *_read_pos = _data + _last_known_read_offset;
 
                 // Possible cases:
                 // [0] _read_pos == _write_pos

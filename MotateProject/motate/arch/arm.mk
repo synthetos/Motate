@@ -50,23 +50,23 @@ endif
 # ---------------------------------------------------------------------------------------
 # C Flags (NOT CPP flags)
 
-DEVICE_CFLAGS := -D__$(CHIP)__ -D__$(CHIP_SERIES)__ -D__ARM__  -mcpu=$(CPU_DEV) -mthumb -ffunction-sections -fdata-sections -std=gnu99
+DEVICE_CFLAGS := -D__$(CHIP)__ -D__$(CHIP_SERIES)__ -D__ARM__  -mcpu=$(CPU_DEV) -mthumb -ffunction-sections -fdata-sections -std=gnu99 $(FLOAT_OPTIONS)
 
 #--param max-inline-insns-single=500 -mlong-calls
 
 # ---------------------------------------------------------------------------------------
 # CPP Flags
 
-DEVICE_CPPFLAGS := -D__$(CHIP)__ -D__$(CHIP_SERIES)__ -D__ARM__ -mcpu=$(CPU_DEV) -mthumb -ffunction-sections -fdata-sections -std=gnu++14 -fno-rtti -fno-exceptions -fstrict-volatile-bitfields -fdiagnostics-show-option
+DEVICE_CPPFLAGS := -D__$(CHIP)__ -D__$(CHIP_SERIES)__ -D__ARM__ -mcpu=$(CPU_DEV) -mthumb -ffunction-sections -fdata-sections -std=gnu++14 -fno-rtti -fno-exceptions -fstrict-volatile-bitfields -fdiagnostics-show-option $(FLOAT_OPTIONS)
 # --param max-inline-insns-single=500 -mlong-calls
 
 # ---------------------------------------------------------------------------------------
 # Assembly Flags
 
-DEVICE_ASFLAGS  := -D__$(CHIP)__ -D__$(CHIP_SERIES)__ -D__ARM__ -mcpu=$(CPU_DEV) -mthumb
+DEVICE_ASFLAGS  := -D__$(CHIP)__ -D__$(CHIP_SERIES)__ -D__ARM__ -mcpu=$(CPU_DEV) -mthumb $(FLOAT_OPTIONS)
 
 # ---------------------------------------------------------------------------------------
 # Linker Flags
 
-DEVICE_LDFLAGS :=  -Wl,--entry=Reset_Handler -nostartfiles -mcpu=$(CPU_DEV) --specs=nano.specs ${PRINTF_FLOAT_FLAGS} -mthumb -L$(DEVICE_LINKER_SCRIPT_PATH)
+DEVICE_LDFLAGS :=  -Wl,--entry=Reset_Handler -nostartfiles -mcpu=$(CPU_DEV) --specs=nano.specs ${PRINTF_FLOAT_FLAGS} -mthumb -L$(DEVICE_LINKER_SCRIPT_PATH) $(FLOAT_OPTIONS)
 

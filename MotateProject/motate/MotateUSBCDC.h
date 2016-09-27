@@ -478,7 +478,7 @@ namespace Motate {
             return false;
         }
 
-        bool handleNonstandardRequest(Setup_t &setup) {
+        bool handleNonstandardRequest(const Setup_t &setup) {
             if (setup.index() != interface_number)
                 return false;
  
@@ -534,7 +534,7 @@ namespace Motate {
         void begin(uint32_t baud_count) {};
         void end(void){};
  
-        const EndpointBufferSettings_t getEndpointSettings(const uint8_t endpoint, const USBDeviceSpeed_t deviceSpeed, const bool otherSpeed, const bool limitedSize) {
+        const EndpointBufferSettings_t getEndpointSettings(const uint8_t endpoint, const USBDeviceSpeed_t deviceSpeed, const bool otherSpeed, const bool limitedSize) const {
             if (endpoint == control_endpoint)
             {
                 uint16_t ep_size = Motate::getEndpointSize(control_endpoint, kEndpointTypeInterrupt, deviceSpeed, otherSpeed);
@@ -556,7 +556,7 @@ namespace Motate {
             return kEndpointBufferNull;
         };
  
-        uint16_t getEndpointSize(const uint8_t &endpoint, const USBDeviceSpeed_t deviceSpeed, const bool otherSpeed, const bool limitedSize) {
+        uint16_t getEndpointSize(const uint8_t &endpoint, const USBDeviceSpeed_t deviceSpeed, const bool otherSpeed, const bool limitedSize) const {
             if (endpoint == control_endpoint)
             {
                 return Motate::getEndpointSize(control_endpoint, kEndpointTypeInterrupt, deviceSpeed, otherSpeed, limitedSize);
@@ -592,22 +592,22 @@ namespace Motate {
         : Serial(usb_parent, new_endpoint_offset, first_interface_number)
         {};
 
-        static const EndpointBufferSettings_t getEndpointConfigFromMixin(const uint8_t endpoint, const USBDeviceSpeed_t deviceSpeed, const bool other_speed) {
-            return usb_parent_type::_singleton->this_type::Serial.getEndpointSettings(endpoint, deviceSpeed, other_speed, /*limitedSize*/ false);
+        const EndpointBufferSettings_t getEndpointConfigFromMixin(const uint8_t endpoint, const USBDeviceSpeed_t deviceSpeed, const bool other_speed) const {
+            return Serial.getEndpointSettings(endpoint, deviceSpeed, other_speed, /*limitedSize*/ false);
         };
-        static bool handleNonstandardRequestInMixin(Setup_t &setup) {
-            return usb_parent_type::_singleton->this_type::Serial.handleNonstandardRequest(setup);
+        bool handleNonstandardRequestInMixin(const Setup_t &setup) {
+            return Serial.handleNonstandardRequest(setup);
         };
-        static bool handleTransferDoneInMixin(const uint8_t &endpointNum) {
-            return usb_parent_type::_singleton->this_type::Serial.handleTransferDone(endpointNum);
+        bool handleTransferDoneInMixin(const uint8_t &endpointNum) {
+            return Serial.handleTransferDone(endpointNum);
         }
-        static bool handleDataAvailableInMixin(const uint8_t &endpointNum, const size_t &length) {
-            return usb_parent_type::_singleton->this_type::Serial.handleDataAvailable(endpointNum, length);
+        bool handleDataAvailableInMixin(const uint8_t &endpointNum, const size_t &length) {
+            return Serial.handleDataAvailable(endpointNum, length);
         }
-        static uint16_t getEndpointSizeFromMixin(const uint8_t endpoint, const USBDeviceSpeed_t deviceSpeed, const bool otherSpeed) {
-            return usb_parent_type::_singleton->this_type::Serial.getEndpointSize(endpoint, deviceSpeed, otherSpeed, /*limitedSize*/ false);
+        uint16_t getEndpointSizeFromMixin(const uint8_t endpoint, const USBDeviceSpeed_t deviceSpeed, const bool otherSpeed) const {
+            return Serial.getEndpointSize(endpoint, deviceSpeed, otherSpeed, /*limitedSize*/ false);
         };
-        static bool sendSpecialDescriptorOrConfig(Setup_t &setup) { return false; };
+        bool sendSpecialDescriptorOrConfig(const Setup_t &setup) const { return false; };
     };
 
 #pragma mark USBDefaultDescriptor < USBCDC >

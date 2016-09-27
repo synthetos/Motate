@@ -30,7 +30,7 @@
 #ifndef MOTATECHIPID_H_ONCE
 #define MOTATECHIPID_H_ONCE
 
-#include <inttypes.h>
+#include <cinttypes>
 
 namespace Motate {
 
@@ -51,7 +51,15 @@ namespace Motate {
 #endif
 
 #if defined(__SAM3X8E__) || defined(__SAM3X8C__)
-#include <Atmel_sam3xa/SamUniqueID.h>
+#include <SamUniqueID.h>
+#endif
+
+#if defined(__SAM4E8E__) || defined(__SAM4E16E__) || defined(__SAM4E8C__) || defined(__SAM4E16C__)
+#include <SamUniqueID.h>
+#endif
+
+#if defined(__SAMS70N19__) || defined(__SAMS70N20__) || defined(__SAMS70N21__)
+#include <SamUniqueID.h>
 #endif
 
 #if defined(__KL05Z__)
