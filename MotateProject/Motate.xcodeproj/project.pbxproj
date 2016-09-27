@@ -1961,6 +1961,7 @@
 		D4E913361ABBB2370042A16C /* index_xmega */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = index_xmega; sourceTree = BUILT_PRODUCTS_DIR; };
 		D4E913561ABCB58F0042A16C /* xmega_interrupts.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = xmega_interrupts.cpp; sourceTree = "<group>"; };
 		D4E913571ABCB58F0042A16C /* xmega_interrupts.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = xmega_interrupts.h; sourceTree = "<group>"; };
+		D4E9E43B1D99B28A00B4226F /* MotateDebug.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotateDebug.h; sourceTree = "<group>"; };
 		D4F22B771B73DC4900C0DDFD /* g2Ref-pinout.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "g2Ref-pinout.h"; sourceTree = "<group>"; };
 		D4F22B781B73DC4900C0DDFD /* motate_pin_assignments.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = motate_pin_assignments.h; sourceTree = "<group>"; };
 		D4F22B791B73DC4900C0DDFD /* g2Ref.gdb */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = g2Ref.gdb; sourceTree = "<group>"; };
@@ -2094,6 +2095,7 @@
 				D4C78F6E19538E6B00A1BE28 /* Freescale_klxx */,
 				D4E90E271ABB54D40042A16C /* Atmel_XMega */,
 				D48992C01965B118004F73A6 /* MotateBuffer.h */,
+				D4E9E43B1D99B28A00B4226F /* MotateDebug.h */,
 				D4C78F63195201A900A1BE28 /* MotatePins.h */,
 				D449BC59197AC3E3000C0C3C /* MotateSerial.h */,
 				D49367D31B8638F0000BB759 /* MotateServiceCall.h */,

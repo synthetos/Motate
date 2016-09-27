@@ -4,3 +4,4 @@ xcuserdata
 Scratch/**
 **/*.xccheckout
 Motate.componentinfo.xml
+MotateProject/motate/compile_commands.json

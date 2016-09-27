@@ -1002,7 +1002,7 @@ namespace Motate {
             if (_isTransmitINAvailable(endpoint) && !(_DMA_Used_By_Endpoint & (1<<endpoint))) {
                 //USBProxy->handleDataAvailable(endpoint, _getEndpointBufferCount(endpoint));
             }
-            
+
             // check for overflow
             if ( _inAnOverflowInterrupt(endpoint) )
             {
@@ -1011,11 +1011,11 @@ namespace Motate {
                 }
             }
         }
-        
+
         if ( _inADMAInterrupt() )
         {
             //            __asm__("BKPT"); // DMA DAM
-            
+
             // test for interrupts in endpoints
             // Datasheet says: This bit is cleared when the interrupt source is serviced.
             uint8_t endpoint = _firstDMAOfInterrupt();
@@ -1026,7 +1026,7 @@ namespace Motate {
             }
         }
     }
-    
+
 } // Motate
 
 #endif

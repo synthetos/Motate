@@ -121,6 +121,7 @@ CPPFLAGS += -Wno-format-nonliteral -Wno-format-security
 # To show actual commands: make [options] VERBOSE=1
 VERBOSE ?= 0
 COLOR ?= 1
+RECORD ?= 0
 
 ifeq ($(VERBOSE),0)
 QUIET := @
@@ -147,6 +148,12 @@ define NEWLINE_TAB
 
 
 endef
+endif
+
+ifeq ($(RECORD),0)
+REC := true #
+else
+REC := $(realpath ${MOTATE_PATH}/compile_recorder.js)
 endif
 
 #
@@ -272,6 +279,7 @@ endif #Atmel Studio
 export PATH
 export MOTATE_PATH
 
+CWD = $(realpath .)
 
 # Compilation tools - hardcode the full path to the ones we provide
 TOOLS_FULLPATH = $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin
@@ -446,36 +454,42 @@ $(OUTPUT_BIN).elf: $(ALL_C_OBJECTS) $(ALL_CXX_OBJECTS) $(ALL_ASM_OBJECTS) $(LINK
 $(OUTPUT_BIN).hex: $(OUTPUT_BIN).elf
 	$(QUIET)$(OBJCOPY) -O ihex $(DEVICE_HEX_FLAGS) $< $@
 
-## Note: The motate paths are seperated do to MOTATE_PATH having multple ../ in it.
+## Note: The motate paths are seperated due to MOTATE_PATH having multple ../ in it.
 
 $(MOTATE_CXX_OBJECTS): | tools $(sort $(dir $(MOTATE_CXX_OBJECTS))) $(DEPDIR) $(BIN)
 $(MOTATE_CXX_OBJECTS): $(OUTDIR)/motate/%.o: $(MOTATE_PATH)/%.cpp
 	@echo $(START_BOLD)"Compiling cpp $<"; echo "    -> $@" $(END_BOLD)
+	@cd $(MOTATE_PATH) && $(REC) $(CWD) $(realpath $<) $(realpath $(CXX)) $(subst $(MOTATE_PATH),$(realpath $(MOTATE_PATH)),$(INCLUDES) $(patsubst %,-D%,$(DEVICE_DEFINES) $(USER_DEFINES))) -xc++ -c -o $(realpath $@) $(realpath $<)
 	$(QUIET)$(CXX) $(CPPFLAGS) $(DEPFLAGS) -xc++ -c -o $@ $<
 
 $(ALL_OTHER_CXX_OBJECTS): | tools $(sort $(dir $(ALL_OTHER_CXX_OBJECTS))) $(DEPDIR) $(BIN)
 $(ALL_OTHER_CXX_OBJECTS): $(OUTDIR)/%.o: %.cpp
 	@echo $(START_BOLD)"Compiling cpp $<"; echo "    -> $@" $(END_BOLD)
+	@$(REC) $(CWD) $(realpath $<) $(realpath $(CXX)) $(INCLUDES) $(patsubst %,-D%,$(DEVICE_DEFINES) $(USER_DEFINES)) -xc++ -c -o $@ $<
 	$(QUIET)$(CXX) $(CPPFLAGS) $(DEPFLAGS) -xc++ -c -o $@ $<
 
 $(MOTATE_C_OBJECTS): | tools $(sort $(dir $(MOTATE_C_OBJECTS))) $(DEPDIR) $(BIN)
 $(MOTATE_C_OBJECTS): $(OUTDIR)/motate/%.o: $(MOTATE_PATH)/%.c
 	@echo $(START_BOLD)"Compiling c $<"; echo "    -> $@" $(END_BOLD)
+	@cd $(MOTATE_PATH) && $(REC) $(CWD) $(realpath $<) $(realpath $(CC)) $(subst $(MOTATE_PATH),$(realpath $(MOTATE_PATH)),$(INCLUDES) $(patsubst %,-D%,$(DEVICE_DEFINES) $(USER_DEFINES))) -c -o $(realpath $@) $(realpath $<)
 	$(QUIET)$(CC) $(CFLAGS) $(DEPFLAGS) -c -o $@ $<
 
 $(ALL_OTHER_C_OBJECTS): | tools $(sort $(dir $(ALL_OTHER_C_OBJECTS))) $(DEPDIR) $(BIN)
 $(ALL_OTHER_C_OBJECTS): $(OUTDIR)/%.o: %.c
 	@echo $(START_BOLD)"Compiling c $<"; echo "    -> $@" $(END_BOLD)
+	@$(REC) $(CWD) $(realpath $<) $(realpath $(CC)) $(INCLUDES) $(patsubst %,-D%,$(DEVICE_DEFINES) $(USER_DEFINES)) -c -o $@ $<
 	$(QUIET)$(CC) $(CFLAGS) $(DEPFLAGS) -c -o $@ $<
 
 $(MOTATE_ASM_OBJECTS): | tools $(sort $(dir $(MOTATE_ASM_OBJECTS))) $(DEPDIR) $(BIN)
 $(MOTATE_ASM_OBJECTS): $(OUTDIR)/motate/%.o: $(MOTATE_PATH)/%.s
 	@echo $(START_BOLD)"Compiling $<"; echo "    -> $@"  $(END_BOLD)
+	@cd $(MOTATE_PATH) && $(REC) $(CWD) $(realpath $<) $(realpath $(CC)) $(subst $(MOTATE_PATH),$(realpath $(MOTATE_PATH)),$(INCLUDES) $(patsubst %,-D%,$(DEVICE_DEFINES) $(USER_DEFINES))) -c -o $(realpath $@) $(realpath $<)
 	$(QUIET)$(CC) $(ASFLAGS) $(DEPFLAGS) -c -o $@ $<
 
 $(ALL_OTHER_ASM_OBJECTS): | tools $(sort $(dir $(ALL_OTHER_ASM_OBJECTS))) $(DEPDIR) $(BIN)
 $(ALL_OTHER_ASM_OBJECTS): $(OUTDIR)/%.o: %.s
 	@echo $(START_BOLD)"Compiling $<"; echo "    -> $@"  $(END_BOLD)
+	@$(REC) $(CWD) $(realpath $<) $(realpath $(CC)) $(INCLUDES) $(patsubst %,-D%,$(DEVICE_DEFINES) $(USER_DEFINES)) -c -o $(realpath $@) $(realpath $<)
 	$(QUIET)$(CC) $(ASFLAGS) $(DEPFLAGS) -c -o $@ $<
 
 
@@ -522,6 +536,7 @@ clean:
 	-$(RM) -fR $(OBJ)
 	-$(RM) -fR $(BIN)
 	-$(RM) -fR $(BOARD).elf $(BOARD).map $(BOARD).hex $(BOARD).bin
+	-$(RM) -fR compile_commands.json $(MOTATE_PATH)/compile_commands.json
 
 
 #

@@ -28,5 +28,58 @@
 
 */
 
-#if 0
-#endif // 0
+#include "SamUSB.h"
+
+namespace Motate {
+
+    USBDeviceHardware *USBDeviceHardware::hw = nullptr;
+
+    uint8_t USBControlBuffer[512];
+
+    const char16_t MOTATE_USBLanguageString[] = {0x0409}; // English
+    const char16_t *getUSBLanguageString(int8_t &length) {
+        //      length = sizeof(MOTATE_USBLanguageString);
+        length = 2;
+        return MOTATE_USBLanguageString;
+    }
+
+    uint16_t checkEndpointSizeHardwareLimits(const uint16_t inSize, const uint8_t endpointNumber, const USBEndpointType_t endpointType, const bool otherSpeed) {
+        uint16_t tempSize = inSize;
+
+        if (endpointNumber == 0) {
+            if (tempSize > 64)
+                tempSize = 64;
+        } else if (tempSize > 1024) {
+            tempSize = 1024;
+        }
+
+        return tempSize;
+    }
+
+    extern "C"
+    void USBHS_Handler() {
+        USBDeviceHardware *hw = USBDeviceHardware::hw;
+        //USBDevice_t *proxy = USBDeviceHardware::hw->proxy;
+
+        // Check for and handle SOF and MSOF
+        if (hw->checkAndHandleSOF()) { return; }
+
+        // Check for and handle Control (ep == 0) interrupts
+        if (hw->checkAndHandleControl()) { return; }
+
+        // Check for and handle endpoint interrupts (including DMA)
+        if (hw->checkAndHandleEndpoint()) { return; }
+
+        // Check for and handle reset
+        if (hw->checkAndHandleReset()) { return; }
+
+        // Check for and handle wakeup/suspend
+        if (hw->checkAndHandleWakeupSuspend()) { return; }
+
+        // if (!hw->_is_wake_up()) {
+        //     __asm__("BKPT"); // USBHS_Handler was not handled
+        // }
+
+    }
+
+}; // namespace Motate

@@ -2,7 +2,7 @@
  MotateUtilities.h - Library for the Motate system
  http://github.com/synthetos/motate/
 
- Copyright (c) 2015 Robert Giseburt
+ Copyright (c) 2015-2016 Robert Giseburt
 
 	This file is part of the Motate Library.
 
@@ -301,6 +301,42 @@ namespace Motate {
             : (c_atof_int_(p_, 0));
         }
 
+
+        namespace BitManipulation {
+
+        // **** Bit manipulation ****
+            /* Counts the trailing zero bits of the given value considered as a 32-bit integer. */
+        constexpr uint32_t ctz(const uint32_t u) { return __builtin_ctz(u); };
+            /* Counts the leading zero bits of the given value considered as a 32-bit integer. */
+        constexpr uint32_t clz(const uint32_t u) { return __builtin_clz(u); };
+
+        inline uint32_t Rd_bits(volatile const uint32_t &value, uint32_t mask) {
+            return ((value) & (mask));
+        };
+        inline uint32_t Wr_bits(volatile uint32_t &lvalue, uint32_t mask, uint32_t bits) {
+            return ((lvalue) = ((lvalue) & ~(mask)) | ((bits  ) &  (mask)));
+        };
+        inline bool Tst_bits(volatile const uint32_t &value, uint32_t mask) {
+            return (Rd_bits(value, mask) != 0);
+        };
+        inline uint32_t Clr_bits(volatile uint32_t &lvalue, uint32_t mask) {
+            return ((lvalue) &= ~(mask));
+        };
+        inline uint32_t Set_bits(volatile uint32_t &lvalue, uint32_t mask) {
+            return ((lvalue) |=  (mask));
+        };
+        inline uint32_t Tgl_bits(volatile uint32_t &lvalue, uint32_t mask) {
+            return ((lvalue) ^=  (mask));
+        };
+        inline uint32_t Rd_bitfield(volatile const uint32_t &value, uint32_t mask) {
+            return (Rd_bits( value, mask) >> ctz(mask));
+        };
+        inline uint32_t Wr_bitfield(volatile uint32_t &lvalue, uint32_t mask, uint32_t bitfield) {
+            return (Wr_bits(lvalue, mask, (uint32_t)(bitfield) << ctz(mask)));
+        };
+
+    }; // namespace BitManipulation
+
     } // Namespace Private
 
     // Non-constexpr version of strlen
@@ -327,6 +363,14 @@ namespace Motate {
 #else
 //        return ((x & 0xff) << 24) | ((x & 0xff00) << 8) | ((x & 0xff0000) >> 8) | ((x & 0xff000000) >> 24);
         return __builtin_bswap32 (x);
+#endif
+    };
+
+    static inline uint16_t fromLittleEndian(volatile const uint16_t x) {
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+        return x;
+#else
+        return __builtin_bswap16 (x);
 #endif
     };
 

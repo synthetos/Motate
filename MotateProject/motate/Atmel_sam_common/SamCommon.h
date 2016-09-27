@@ -299,6 +299,18 @@ struct SamCommon {
         return SystemCoreClock;
 #endif
     };
+
+    struct InterruptDisabler {
+        volatile uint32_t flags;
+        InterruptDisabler() : flags{__get_PRIMASK()} {
+            __disable_irq();
+            __DMB();
+        };
+        ~InterruptDisabler() {
+            __DMB();
+            __enable_irq();
+         };
+    };
 };
 
 }  // namespace Motate
