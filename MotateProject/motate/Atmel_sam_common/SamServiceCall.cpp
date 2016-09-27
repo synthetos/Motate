@@ -36,7 +36,7 @@ extern "C" {
 }
 
 namespace Motate {
-    uint32_t _internal_pendsv_handler_number = 0;
+    volatile uint32_t _internal_pendsv_handler_number = 0;
 
     // We'll support just ten for now. These take up space when not using LTO.
     template<> void ServiceCall<  0 >::interrupt() __attribute__ ((weak, alias("_null_svc_call_interrupt")));

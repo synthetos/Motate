@@ -34,11 +34,11 @@
 #include "MotateTimers.h" // for the interrupt definitions
 
 namespace Motate {
-    extern uint32_t _internal_pendsv_handler_number;
+    extern volatile uint32_t _internal_pendsv_handler_number;
 
     template <uint8_t svcNumber>
     struct ServiceCall {
-        static uint32_t _interrupt_level;
+        static  uint32_t _interrupt_level;
 
         // Interface that makes sense for this object...
         static void call() {
@@ -61,6 +61,7 @@ namespace Motate {
 
             _internal_pendsv_handler_number = svcNumber;
 
+            __DMB();
             SCB->ICSR |= SCB_ICSR_PENDSVSET_Msk;
         };
 
@@ -75,6 +76,9 @@ namespace Motate {
 
         // Stub to match the interface of Timer
         uint16_t getInterruptCause() {
+            SCB->ICSR |= SCB_ICSR_PENDSVCLR_Msk;
+            __DMB();
+
             return 0;
         }
 
