@@ -190,6 +190,11 @@ namespace Motate {
         static_assert(timerNum!=7, "Timer<7> cannot be used on this processor.");
         static_assert(timerNum!=8, "Timer<8> cannot be used on this processor.");
 #endif
+#ifndef TC3
+        static_assert(timerNum!=9, "Timer<9> cannot be used on this processor.");
+        static_assert(timerNum!=10, "Timer<10> cannot be used on this processor.");
+        static_assert(timerNum!=11, "Timer<11> cannot be used on this processor.");
+#endif
 
         // NOTE: Notice! The *pointers* are const, not the *values*.
         static constexpr Tc * const tc()
@@ -200,7 +205,11 @@ namespace Motate {
             if (timerNum < 6) { return TC1; }
 #endif
 #ifdef TC2
-            else { return TC2; }
+            else
+            if (timerNum < 9) { return TC2; }
+#endif
+#ifdef TC3
+            else { return TC3; }
 #endif
         };
         static constexpr TcChannel * const tcChan()
@@ -211,7 +220,11 @@ namespace Motate {
             if (timerNum < 6) { return TC1->TC_CHANNEL + (timerNum - 3); }
 #endif
 #ifdef TC2
-            else { return TC2->TC_CHANNEL + (timerNum - 6); }
+            else
+            if (timerNum < 9) { return TC2->TC_CHANNEL + (timerNum - 6); }
+#endif
+#ifdef TC3
+            else { return TC3->TC_CHANNEL + (timerNum - 9); }
 #endif
         };
         static constexpr const uint32_t peripheralId()
@@ -230,6 +243,11 @@ namespace Motate {
                 case 7: return ID_TC7;
                 case 8: return ID_TC8;
 #endif
+#ifdef TC3
+                case 9: return ID_TC9;
+                case 10: return ID_TC10;
+                case 11: return ID_TC11;
+#endif
             }
         };
         static constexpr const IRQn_Type tcIRQ()
@@ -247,6 +265,11 @@ namespace Motate {
                 case 6: return TC6_IRQn;
                 case 7: return TC7_IRQn;
                 case 8: return TC8_IRQn;
+#endif
+#ifdef TC3
+                case 9: return TC9_IRQn;
+                case 10: return TC10_IRQn;
+                case 11: return TC11_IRQn;
 #endif
             }
         };
@@ -622,7 +645,7 @@ namespace Motate {
         // Placeholder for user code.
         static void interrupt();
     }; // Timer<>
-    
+
 #pragma mark TimerChannel<n>
     /**************************************************
      *
@@ -1298,10 +1321,10 @@ namespace Motate {
  arm-none-eabi-g++ temp.cpp -o temp.o -mthumb -nostartfiles -mcpu=cortex-m3
  arm-none-eabi-nm temp.o | grep Motate
  rm temp.o temp.cpp
- 
- 
+
+
  You should get output like this:
- 
+
  00008000 T _ZN6Motate5TimerILh0EE9interruptEv
  0000800c T _ZN6Motate5TimerILh1EE9interruptEv
  00008018 T _ZN6Motate5TimerILh2EE9interruptEv
@@ -1311,7 +1334,7 @@ namespace Motate {
  00008048 T _ZN6Motate5TimerILh6EE9interruptEv
  00008054 T _ZN6Motate5TimerILh7EE9interruptEv
  00008060 T _ZN6Motate5TimerILh8EE9interruptEv
- 
+
  Ignore the hex number and T at the beginning, and the rest is the mangled names you need for below.
  I broke the string into three parts to clearly show the part that is changing.
  */

@@ -105,6 +105,11 @@ extern "C" void SysTick_Handler(void)
     _MAKE_TCx_Handler(7)
     _MAKE_TCx_Handler(8)
 #endif
+#ifdef TC3
+    _MAKE_TCx_Handler(9)
+    _MAKE_TCx_Handler(10)
+    _MAKE_TCx_Handler(11)
+#endif
 
 #undef _MAKE_TCx_Handler
 
