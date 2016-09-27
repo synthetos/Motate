@@ -47,6 +47,7 @@
 
 #include "system_sam3x.h"
 #include "sam3xa.h"
+#include "compiler.h"
 
 /* @cond 0 */
 /**INDENT-OFF**/

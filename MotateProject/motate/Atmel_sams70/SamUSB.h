@@ -135,8 +135,6 @@ namespace Motate {
     const char16_t *getUSBProductString(int8_t &length) ATTR_WEAK;
     const char16_t *getUSBSerialNumberString(int8_t &length) ATTR_WEAK;
 
-    extern
-
     // We break the rules here, sortof, by providing a macro shortcut that gets used in userland.
     // I apologize, but this also opens it up to later optimization without changing user code.
 #define MOTATE_SET_USB_VENDOR_STRING(...)\
@@ -179,69 +177,6 @@ namespace Motate {
 
 
     /*** USBDeviceHardware ***/
-
-//     // Structure for DMA control register
-//     struct _dma_control_t {
-//         uint32_t CHANN_ENB:1,
-//         LDNXT_DSC:1,
-//         END_TR_EN:1,
-//         END_B_EN:1,
-//         END_TR_IT:1,
-//         END_BUFFIT:1,
-//         DESC_LD_IT:1,
-//         BUST_LCK:1,
-//         reserved:8,
-//         BUFF_LENGTH:16;
-//     };
-//
-//     // Structure for DMA status register
-//     struct _dma_status_t {
-//         uint32_t CHANN_ENB:1,
-//         CHANN_ACT:1,
-//         reserved0:2,
-//         END_TR_ST:1,
-//         END_BF_ST:1,
-//         DESC_LDST:1,
-//         reserved1:9,
-//         BUFF_COUNT:16;
-//     };
-//
-//     // Structure for DMA descriptor
-//     struct _dmadesc_t {
-//         union {
-//             uint32_t next_description_v;
-//             _dmadesc_t *NXT_DSC_ADD;
-//         };
-//         union {
-//             uint32_t addr_v;
-//             void *BUFF_ADD;
-//         };
-//         union {
-//             uint32_t control_v;
-//             _dma_control_t CONTROL;
-//         };
-//         uint32_t reserved;
-//     };
-//
-//     // ** Structure for DMA registers in a channel
-//     struct _dmach_t {
-//         union {
-//             uint32_t next_description_v;
-//             _dmadesc_t *NXT_DSC_ADD;
-//         };
-//         union {
-//             uint32_t addr_v;
-//             void *BUFF_ADD;
-//         };
-//         union {
-//             uint32_t control_v;
-//             _dma_control_t CONTROL;
-//         };
-//         union {
-//             uint32_t status_v; // +++ was unsigned long
-//             _dma_status_t STATUS;
-//         };
-//     };
 
     struct alignas(16) USB_DMA_Descriptor {
         enum _commands {  // This enum declaration takes up no space, but is in here for name scoping.
@@ -532,16 +467,16 @@ namespace Motate {
         #endif
 
         // Configures selected endpoint in one step
-        void _configure_endpoint(uint32_t ep, uint32_t type, uint32_t dir, uint32_t size, uint32_t bank) {
-            Wr_bits(USBHS->USBHS_DEVEPTCFG[ep], USBHS_DEVEPTCFG_EPTYPE_Msk |
-                    USBHS_DEVEPTCFG_EPDIR  |
-                    USBHS_DEVEPTCFG_EPSIZE_Msk |
-                    USBHS_DEVEPTCFG_EPBK_Msk ,
-                    (((uint32_t)(type) << USBHS_DEVEPTCFG_EPTYPE_Pos) & USBHS_DEVEPTCFG_EPTYPE_Msk) |
-                    (((uint32_t)(dir ) << USBHS_DEVEPTCFG_EPDIR_Pos ) & USBHS_DEVEPTCFG_EPDIR) |
-                    ( (uint32_t)_format_endpoint_size(size) << USBHS_DEVEPTCFG_EPSIZE_Pos) |
-                    (((uint32_t)(bank) << USBHS_DEVEPTCFG_EPBK_Pos) & USBHS_DEVEPTCFG_EPBK_Msk));
-        };
+        // void _configure_endpoint(uint32_t ep, uint32_t type, uint32_t dir, uint32_t size, uint32_t bank) {
+        //     Wr_bits(USBHS->USBHS_DEVEPTCFG[ep], USBHS_DEVEPTCFG_EPTYPE_Msk |
+        //             USBHS_DEVEPTCFG_EPDIR  |
+        //             USBHS_DEVEPTCFG_EPSIZE_Msk |
+        //             USBHS_DEVEPTCFG_EPBK_Msk ,
+        //             (((uint32_t)(type) << USBHS_DEVEPTCFG_EPTYPE_Pos) & USBHS_DEVEPTCFG_EPTYPE_Msk) |
+        //             (((uint32_t)(dir ) << USBHS_DEVEPTCFG_EPDIR_Pos ) & USBHS_DEVEPTCFG_EPDIR) |
+        //             ( (uint32_t)_format_endpoint_size(size) << USBHS_DEVEPTCFG_EPSIZE_Pos) |
+        //             (((uint32_t)(bank) << USBHS_DEVEPTCFG_EPBK_Pos) & USBHS_DEVEPTCFG_EPBK_Msk));
+        // };
         void _configure_endpoint(uint32_t ep, uint32_t value) {
             Wr_bits(USBHS->USBHS_DEVEPTCFG[ep], USBHS_DEVEPTCFG_EPTYPE_Msk |
                     USBHS_DEVEPTCFG_EPDIR  |
@@ -559,15 +494,15 @@ namespace Motate {
         // };
 
         // Resets the data toggle sequence
-        void _reset_data_toggle(uint32_t ep)   { (USBHS->USBHS_DEVEPTIER[ep] = USBHS_DEVEPTIER_RSTDTS); };
-        // Tests if the data toggle sequence is being reset
-        bool _data_toggle_reset(uint32_t ep)   {
-            return (Tst_bits(USBHS->USBHS_DEVEPTIMR[ep], USBHS_DEVEPTIMR_RSTDT));
-        };
-        // Returns data toggle
-        void _data_toggle(uint32_t ep)         {
-            (Rd_bitfield(USBHS->USBHS_DEVEPTISR[ep], USBHS_DEVEPTISR_DTSEQ_Msk));
-        };
+        // void _reset_data_toggle(uint32_t ep)   { (USBHS->USBHS_DEVEPTIER[ep] = USBHS_DEVEPTIER_RSTDTS); };
+        // // Tests if the data toggle sequence is being reset
+        // bool _data_toggle_reset(uint32_t ep)   {
+        //     return (Tst_bits(USBHS->USBHS_DEVEPTIMR[ep], USBHS_DEVEPTIMR_RSTDT));
+        // };
+        // // Returns data toggle
+        // void _data_toggle(uint32_t ep)         {
+        //     (Rd_bitfield(USBHS->USBHS_DEVEPTISR[ep], USBHS_DEVEPTISR_DTSEQ_Msk));
+        // };
 
         // *** USBHS Device control endpoint
         //     These macros control the endpoints.
@@ -930,6 +865,9 @@ namespace Motate {
             // Disable interrupts until end-of-scope
             SamCommon::InterruptDisabler disabler;
 
+            // FORCE disable the USB hardware:
+            USBHS->USBHS_CTRL &= ~USBHS_CTRL_USBE;
+
             SamCommon::enablePeripheralClock(ID_USBHS);
 
             // ID pin not used then force device mode
@@ -1071,12 +1009,10 @@ namespace Motate {
                 }
             }
 
-            //config |= USBHS_DEVEPTCFG_ALLOC;
-
             return config;
         };
 
-        void _initEndpoint(uint32_t endpoint, const uint32_t configuration) {
+        void _init_endpoint(uint32_t endpoint, const uint32_t configuration) {
             endpoint = endpoint & 0xF; // EP range is 0..9, hence mask is 0xF.
 
             volatile uint32_t configuration_fixed = _enforce_enpoint_limits(endpoint, configuration);
@@ -1110,7 +1046,7 @@ namespace Motate {
             _enable_address();
             _address_available = false;
 
-            _initEndpoint(0, proxy->getEndpointConfig(0, /* otherSpeed = */ false));
+            _init_endpoint(0, proxy->getEndpointConfig(0, /* otherSpeed = */ false));
 
             _enable_setup_received_interrupt(0);
             _enable_out_received_interrupt(0);

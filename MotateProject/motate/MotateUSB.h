@@ -282,7 +282,7 @@ namespace Motate {
                     uint8_t first_endpoint, total_endpoints;
                     total_endpoints = getEndpointCount(first_endpoint);
                     for (uint8_t ep = first_endpoint; ep < total_endpoints; ep++) {
-                        _initEndpoint(ep, getEndpointConfig(ep, /* otherSpeed = */ config_number == 2));
+                        _init_endpoint(ep, getEndpointConfig(ep, /* otherSpeed = */ config_number == 2));
                         //endpointSizes[ep] = getEndpointSize(ep, /* otherSpeed = */ config_number == 2);
                     }
 
