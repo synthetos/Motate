@@ -295,7 +295,7 @@ namespace Motate {
     }
 
     static auto _devdma_address(const uint32_t ep) {
-        return ((USBHS->USBHS_DEVDMA + (ep-1))->USBHS_DEVDMAADDRESS);
+        return ((UOTGHS->UOTGHS_DEVDMA + (ep-1))->UOTGHS_DEVDMAADDRESS);
     }
 
     using namespace Private::BitManipulation;
