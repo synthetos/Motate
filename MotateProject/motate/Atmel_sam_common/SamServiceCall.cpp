@@ -29,6 +29,7 @@
 
 #include <sam.h>
 #include "SamServiceCall.h"
+#include "SamCommon.h"
 
 extern "C" {
     void _null_svc_call_interrupt() __attribute__ ((unused));
@@ -79,6 +80,7 @@ void PendSV_Handler() {
 if (Motate::ServiceCall< n >::interrupt && Motate::_internal_pendsv_handler_number == n) {\
     Motate::ServiceCall< n >::interrupt();\
 }
+    Motate::SamCommon::sync();
 
          _temp_call_handler( 0)
     else _temp_call_handler( 1)

@@ -273,7 +273,7 @@ namespace Motate {
 #endif
             }
         };
-        static uint32_t _interrupt_cause_cached;
+        static volatile uint32_t _interrupt_cause_cached;
 
         static const bool has_channel_interrupts = false;
 

@@ -29,6 +29,7 @@
 
 
 #include "SamTimers.h"
+#include "SamCommon.h"
 
 extern "C" {
     void _null_pwm_timer_interrupt() __attribute__ ((unused));
@@ -65,16 +66,19 @@ extern "C" void SysTick_Handler(void)
     Motate::SysTickTimer._handleEvents();
 }
 
+// , alias("_null_pwm_timer_interrupt")
+
 #define _MAKE_TCx_Handler(x) \
     namespace Motate { \
-        template<> void TimerChannel<x, 0>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt"))); \
-        template<> void TimerChannel<x, 1>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt"))); \
-        template<> void Timer<x>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt"))); \
-        template<> uint32_t Timer<x>::_interrupt_cause_cached = 0; \
+        template<> void TimerChannel<x, 0>::interrupt() __attribute__ ((weak)); \
+        template<> void TimerChannel<x, 1>::interrupt() __attribute__ ((weak)); \
+        template<> void Timer<x>::interrupt() __attribute__ ((weak)); \
+        template<> volatile uint32_t Timer<x>::_interrupt_cause_cached = 0; \
     } \
     extern "C" \
     void TC##x##_Handler(void) { /* delegate to the TimerChannels */ \
         Motate::Timer<x>::_interrupt_cause_cached = Motate::Timer<x>::tcChan()->TC_SR;\
+        Motate::SamCommon::sync();\
         int16_t ch_ = 0; \
         /*auto tcio =*/ Motate::Timer<x>::getInterruptCause(ch_); \
         if (  Motate::TimerChannel<x, 0>::interrupt && \
@@ -144,6 +148,7 @@ void PWM_Handler(void) {
     Motate::pwm_interrupt_cause_cached_2_ = PWM->PWM_ISR2 & 0xff00;
 
     uint32_t pwm_interrupt_cause_ = Motate::pwm_interrupt_cause_cached_1_ | (Motate::pwm_interrupt_cause_cached_2_>>8);
+    Motate::SamCommon::sync();
 
     if (Motate::PWMTimer< 0>::interrupt && (pwm_interrupt_cause_ & (1<<  0))) {
         Motate::PWMTimer< 0>::interrupt();
@@ -176,6 +181,7 @@ void PWM0_Handler(void) {
     Motate::pwm_interrupt_cause_cached_2_ = PWM0->PWM_ISR2 & 0xff00;
 
     uint32_t pwm_interrupt_cause_ = Motate::pwm_interrupt_cause_cached_1_ | (Motate::pwm_interrupt_cause_cached_2_>>8);
+    Motate::SamCommon::sync();
 
     if (Motate::PWMTimer<  0>::interrupt && (pwm_interrupt_cause_ & (1<<  0))) {
         Motate::PWMTimer<  0>::interrupt();
@@ -207,6 +213,7 @@ void PWM1_Handler(void) {
     Motate::pwm_interrupt_cause_cached_2_ = PWM1->PWM_ISR2 & 0xff00;
 
     uint32_t pwm_interrupt_cause_ = Motate::pwm_interrupt_cause_cached_1_ | (Motate::pwm_interrupt_cause_cached_2_>>8);
+    Motate::SamCommon::sync();
 
     if (Motate::PWMTimer<8+0>::interrupt && (pwm_interrupt_cause_ & (1<<  0))) {
         Motate::PWMTimer<8+0>::interrupt();

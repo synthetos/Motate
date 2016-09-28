@@ -294,6 +294,10 @@ namespace Motate {
         return ((UOTGHS->UOTGHS_DEVDMA + (ep-1))->UOTGHS_DEVDMASTATUS);
     }
 
+    static auto _devdma_address(const uint32_t ep) {
+        return ((USBHS->USBHS_DEVDMA + (ep-1))->USBHS_DEVDMAADDRESS);
+    }
+
     using namespace Private::BitManipulation;
 
 
@@ -1530,15 +1534,16 @@ namespace Motate {
         };
 
         char * getTransferPositon(const uint8_t endpoint) {
-            volatile auto dma = _devdma(endpoint);
-            if (nullptr == dma->bufferAddress) {
-                if (_is_endpoint_a_tx_in(endpoint)) {
-                    usb_debug("(tN)");
-                } else {
-                    usb_debug("(rN)");
-                }
-            }
-            return (char *)dma->bufferAddress;
+//            volatile auto dma = _devdma(endpoint);
+//            if (nullptr == dma->bufferAddress) {
+//                if (_is_endpoint_a_tx_in(endpoint)) {
+//                    usb_debug("(tN)");
+//                } else {
+//                    usb_debug("(rN)");
+//                }
+//            }
+//            return (char *)dma->bufferAddress;
+            return (char *)(_devdma_address(endpoint));
         }
 
         void flush(const uint8_t endpoint) {

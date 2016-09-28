@@ -260,6 +260,8 @@ constexpr IRQn_Type    USART2_IRQn = (IRQn_Type)0u;
 
 
 struct SamCommon {
+    static inline void sync() { __DMB(); };
+
     static void enablePeripheralClock(uint32_t peripheralId) {
         if (peripheralId < 32) {
             uint32_t id_mask = 1u << (peripheralId);
@@ -304,10 +306,10 @@ struct SamCommon {
         volatile uint32_t flags;
         InterruptDisabler() : flags{__get_PRIMASK()} {
             __disable_irq();
-            __DMB();
+            sync();
         };
         ~InterruptDisabler() {
-            __DMB();
+            sync();
             __enable_irq();
          };
     };

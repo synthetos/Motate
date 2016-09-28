@@ -253,6 +253,10 @@ namespace Motate {
         return ((USBHS->USBHS_DEVDMA + (ep-1))->USBHS_DEVDMASTATUS);
     }
 
+    static auto _devdma_address(const uint32_t ep) {
+        return ((USBHS->USBHS_DEVDMA + (ep-1))->USBHS_DEVDMAADDRESS);
+    }
+
     using namespace Private::BitManipulation;
 
     // USBDeviceHardware actually talks to the hardware, and marshalls data to/from the interfaces.
@@ -308,9 +312,10 @@ namespace Motate {
 
         // Freeze/unfreeze the clock
 
-        void _freeze_clock() {USBHS->USBHS_CTRL |= USBHS_CTRL_FRZCLK;};
+        void _freeze_clock() { USBHS->USBHS_CTRL |= USBHS_CTRL_FRZCLK; SamCommon::sync(); };
         void _unfreeze_clock() {
             USBHS->USBHS_CTRL &= ~USBHS_CTRL_FRZCLK;
+            SamCommon::sync();
             // Wait for usable clock
             while ((USBHS->USBHS_SR & USBHS_SR_CLKUSABLE) != USBHS_SR_CLKUSABLE) {;}
         };
@@ -867,6 +872,7 @@ namespace Motate {
 
             // FORCE disable the USB hardware:
             USBHS->USBHS_CTRL &= ~USBHS_CTRL_USBE;
+            SamCommon::sync();
 
             SamCommon::enablePeripheralClock(ID_USBHS);
 
@@ -947,7 +953,7 @@ namespace Motate {
             _raise_suspend();
 
             _ack_wake_up();
-            // _freeze_clock();
+             _freeze_clock();
         };
         bool attach() {
             if (_inited) {
@@ -1517,15 +1523,16 @@ namespace Motate {
         };
 
         char * getTransferPositon(const uint8_t endpoint) {
-            volatile auto dma = _devdma(endpoint);
-            if (nullptr == dma->bufferAddress) {
-                if (_is_endpoint_a_tx_in(endpoint)) {
-                    usb_debug("(tN)");
-                } else {
-                    usb_debug("(rN)");
-                }
-            }
-            return (char *)dma->bufferAddress;
+//            volatile auto dma = _devdma(endpoint);
+//            if (nullptr == dma->bufferAddress) {
+//                if (_is_endpoint_a_tx_in(endpoint)) {
+//                    usb_debug("(tN)");
+//                } else {
+//                    usb_debug("(rN)");
+//                }
+//            }
+//            return (char *)dma->bufferAddress;
+            return (char *)(_devdma_address(endpoint));
         }
 
         void flush(const uint8_t endpoint) {

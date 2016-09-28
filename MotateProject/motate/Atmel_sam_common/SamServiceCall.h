@@ -60,9 +60,9 @@ namespace Motate {
             }
 
             _internal_pendsv_handler_number = svcNumber;
-
-            __DMB();
+            //SamCommon::sync();
             SCB->ICSR |= SCB_ICSR_PENDSVSET_Msk;
+            SamCommon::sync();
         };
 
         // Interface for compatibility with Pins and Timers....
@@ -76,9 +76,8 @@ namespace Motate {
 
         // Stub to match the interface of Timer
         uint16_t getInterruptCause() {
-            SCB->ICSR |= SCB_ICSR_PENDSVCLR_Msk;
-            __DMB();
-
+//            SCB->ICSR |= SCB_ICSR_PENDSVCLR_Msk;
+//            SamCommon::sync();
             return 0;
         }
 
