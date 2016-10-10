@@ -32,6 +32,9 @@
 
 #include "sam.h"
 #include "SamCommon.h"
+#ifndef PWM_PTCR_TXTEN
+#include "SamDMA.h"
+#endif
 #include <functional> // for std::function and related
 #include <type_traits> // for std::extent and std::alignment_of
 
@@ -765,6 +768,11 @@ namespace Motate {
         };
 #endif
 
+#ifndef PWM_PTCR_TXTEN
+        DMA<Pwm *, peripheral_num> dma_ { nullptr }; // nullptr instead of the handler
+        constexpr const DMA<Pwm *, peripheral_num> *dma() { return &dma_; };
+#endif
+
         PWMTimer() { init(); };
         PWMTimer(const TimerMode mode, const uint32_t freq) {
             init();
@@ -774,6 +782,9 @@ namespace Motate {
         void init() {
             /* Unlock this thing */
             unlock();
+#ifndef PWM_PTCR_TXTEN
+            dma()->reset();
+#endif
         }
 
 
@@ -819,7 +830,9 @@ namespace Motate {
             start();
             return true;
 #else
-            return false;
+            dma()->startTXTransfer(buffer, length, false);
+            start();
+            return true;
 #endif
         }
         // This form allows passing a single-dimensional array by reference, and deduces the full length
@@ -830,7 +843,11 @@ namespace Motate {
         }
 
         bool isTransferDone() {
+#ifdef PWM_PTCR_TXTEN
             return ((pwm()->PWM_TCR == 0) && (pwm()->PWM_TNCR == 0));
+#else
+            return dma()->doneWriting();
+#endif
         }
 
 #ifndef YOU_REALLY_WANT_PWM_LOCK_AND_UNLOCK

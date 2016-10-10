@@ -28,6 +28,7 @@
 */
 
 #include "MotatePins.h"
+#include "MotateCommon.h"
 
 #ifndef MOTATEUART_H_ONCE
 #define MOTATEUART_H_ONCE
@@ -69,32 +70,7 @@ namespace Motate {
         // TODO: Add polarity inversion and bit reversal options
     };
 
-    struct UARTInterrupt {
-        static constexpr uint16_t Off              = 0;
-        /* Alias for "off" to make more sense
-         when returned from setInterruptPending(). */
-        static constexpr uint16_t Unknown           = 0;
-
-        static constexpr uint16_t OnTxReady         = 1<<1;
-        static constexpr uint16_t OnTransmitReady   = 1<<1;
-        static constexpr uint16_t OnTxDone          = 1<<1;
-        static constexpr uint16_t OnTransmitDone    = 1<<1;
-
-        static constexpr uint16_t OnRxReady         = 1<<2;
-        static constexpr uint16_t OnReceiveReady    = 1<<2;
-        static constexpr uint16_t OnRxDone          = 1<<2;
-        static constexpr uint16_t OnReceiveDone     = 1<<2;
-
-        static constexpr uint16_t OnTxTransferDone  = 1<<3;
-        static constexpr uint16_t OnRxTransferDone  = 1<<4;
-
-        /* Set priority levels here as well: */
-        static constexpr uint16_t PriorityHighest   = 1<<5;
-        static constexpr uint16_t PriorityHigh      = 1<<6;
-        static constexpr uint16_t PriorityMedium    = 1<<7;
-        static constexpr uint16_t PriorityLow       = 1<<8;
-        static constexpr uint16_t PriorityLowest    = 1<<9;
-
+    struct UARTInterrupt : Interrupt {
         /* These are for internal use only: */
         static constexpr uint16_t OnCTSChanged      = 1<<10;
         
@@ -170,12 +146,12 @@ namespace Motate {
             hardware.setInterruptHandler([&](uint16_t interruptCause) { // use a closure
                 this->uartInterruptHandler(interruptCause);
             });
-            hardware.setInterrupts(kInterruptPriorityHigh); // enable interrupts and set the priority
+            hardware.setInterrupts(Interrupt::PriorityHigh); // enable interrupts and set the priority
             if (!isRealAndCorrectRTSPin<rtsPinNumber, rxPinNumber>()) {
                 rtsPin = true; // active low
             }
             if (!isRealAndCorrectCTSPin<ctsPinNumber, rxPinNumber>()) {
-                ctsPin.setInterrupts(kInterruptPriorityHigh); // enable interrupts and set the priority
+                ctsPin.setInterrupts(Interrupt::PriorityHigh); // enable interrupts and set the priority
             }
         };
 

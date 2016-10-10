@@ -31,6 +31,7 @@
 #define MOTATESPI_H_ONCE
 
 #include <cinttypes>
+#include "MotateCommon.h"
 
 
 /* After some setup, we call the processor-specific bits, then we have the
@@ -106,31 +107,7 @@ namespace Motate {
 //    }; // SPIBusMode
 
 
-    struct SPIInterrupt {
-        static constexpr uint16_t Off               = 0<<0;
-        /* Alias for "off" to make more sense
-         when returned from setInterruptPending(). */
-        static constexpr uint16_t Unknown           = 0<<0;
-
-        static constexpr uint16_t OnTxReady         = 1<<0;
-        static constexpr uint16_t OnTransmitReady   = 1<<0;
-        static constexpr uint16_t OnTxDone          = 1<<0;
-        static constexpr uint16_t OnTransmitDone    = 1<<0;
-
-        static constexpr uint16_t OnRxReady         = 1<<1;
-        static constexpr uint16_t OnReceiveReady    = 1<<1;
-        static constexpr uint16_t OnRxDone          = 1<<1;
-        static constexpr uint16_t OnReceiveDone     = 1<<1;
-
-        static constexpr uint16_t OnTxTransferDone  = 1<<2;
-        static constexpr uint16_t OnRxTransferDone  = 1<<3;
-
-        /* Set priority levels here as well: */
-        static constexpr uint16_t PriorityHighest   = 1<<5;
-        static constexpr uint16_t PriorityHigh      = 1<<6;
-        static constexpr uint16_t PriorityMedium    = 1<<7;
-        static constexpr uint16_t PriorityLow       = 1<<8;
-        static constexpr uint16_t PriorityLowest    = 1<<9;
+    struct SPIInterrupt : Interrupt {
     };
 
 

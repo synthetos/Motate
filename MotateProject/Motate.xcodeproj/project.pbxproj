@@ -715,6 +715,7 @@
 		D46B98571B6AFE3F0088801D /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
 		D46B985C1B6AFE810088801D /* adc_demo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = adc_demo.cpp; sourceTree = "<group>"; };
 		D46B988B1B6AFE810088801D /* Makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
+		D4782ABA1DA44D8F00B32136 /* MotateCommon.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotateCommon.h; sourceTree = "<group>"; };
 		D47E9A921ACB2CFE00476AF2 /* xmega_stdcpp_stubs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = xmega_stdcpp_stubs.h; sourceTree = "<group>"; };
 		D47E9A941ACC532300476AF2 /* XMegaPins.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = XMegaPins.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		D48992C01965B118004F73A6 /* MotateBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MotateBuffer.h; path = motate/MotateBuffer.h; sourceTree = SOURCE_ROOT; };
@@ -2095,6 +2096,7 @@
 				D4C78F6E19538E6B00A1BE28 /* Freescale_klxx */,
 				D4E90E271ABB54D40042A16C /* Atmel_XMega */,
 				D48992C01965B118004F73A6 /* MotateBuffer.h */,
+				D4782ABA1DA44D8F00B32136 /* MotateCommon.h */,
 				D4E9E43B1D99B28A00B4226F /* MotateDebug.h */,
 				D4C78F63195201A900A1BE28 /* MotatePins.h */,
 				D449BC59197AC3E3000C0C3C /* MotateSerial.h */,

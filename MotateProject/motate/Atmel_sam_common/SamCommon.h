@@ -182,6 +182,17 @@ constexpr uint32_t     ID_UART4    = 0;
 constexpr IRQn_Type    UART4_IRQn  = (IRQn_Type)0u;
 #endif
 
+static constexpr Uart * const uart(uint8_t uartPeripheralNumber) {
+    switch (uartPeripheralNumber) {
+        case (0): return UART0;
+        case (1): return UART1;
+        case (2): return UART2;
+        case (3): return UART3;
+        case (4): return UART4;
+    };
+    return nullptr;
+};
+
 
 #ifdef USART0
 // Thi isn't strictly necessary, but preventative and for consistency.
@@ -257,6 +268,17 @@ constexpr Usart* const USART2      = nullptr;
 constexpr uint32_t     ID_USART2   = 0;
 constexpr IRQn_Type    USART2_IRQn = (IRQn_Type)0u;
 #endif  // ifdef USART2
+
+
+static constexpr Usart * const usart(const uint8_t uartPeripheralNumber)
+{
+    switch (uartPeripheralNumber) {
+        case (0): return USART0;
+        case (1): return USART1;
+        case (2): return USART2;
+    };
+    return nullptr;
+};
 
 
 struct SamCommon {
