@@ -925,7 +925,7 @@ namespace Motate {
 
             _freeze_clock();
 
-            _attach();
+//            _attach();
         };
 
         void _attach() {
@@ -950,15 +950,15 @@ namespace Motate {
 
             // The first suspend interrupt must be forced
             // The first suspend interrupt is not detected else raise it
-            _raise_suspend();
+//            _raise_suspend();
 
             _ack_wake_up();
-             _freeze_clock();
+            _freeze_clock();
         };
         bool attach() {
             if (_inited) {
-                // _attach();
-                // configuration = 0;
+                 _attach();
+//                 configuration = 0;
                 return true;
             }
             return false;
@@ -1175,18 +1175,19 @@ namespace Motate {
         };
 
         bool checkAndHandleWakeupSuspend() {
-            if (/*_is_wake_up_interrupt_enabled() && */_is_wake_up()) {
+            if (_is_wake_up_interrupt_enabled() && _is_wake_up()) {
                 _ack_wake_up();
                 _unfreeze_clock();
                 _disable_wake_up_interrupt();
                 _enable_suspend_interrupt();
                 return true;
             }
-            if (/*_is_suspend_interrupt_enabled() && */_is_suspend()) {
+            if (_is_suspend_interrupt_enabled() && _is_suspend()) {
                 _ack_suspend();
-                _enable_wake_up_interrupt();
+                _unfreeze_clock();
                 _disable_suspend_interrupt();
-                // _freeze_clock();
+                _enable_wake_up_interrupt();
+                _freeze_clock();
                 return true;
             }
 
