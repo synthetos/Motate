@@ -360,6 +360,7 @@ namespace Motate {
             while (!usart()->US_CSR & US_CSR_TXEMPTY) {
                 ;
             }
+            _tx_paused = false;
         };
 
         void flushRead() {
@@ -387,14 +388,25 @@ namespace Motate {
             return dma()->getRXTransferPosition();
         };
 
+        bool _tx_paused = false;
         bool startTXTransfer(char *buffer, const uint16_t length) {
             return dma()->startTXTransfer(buffer, length, true);
         };
 
         char* getTXTransferPosition() {
+            if (_tx_paused) { return false; }
             return dma()->getTXTransferPosition();
         };
 
+        void pauseTX() {
+            _tx_paused = true;
+            dma()->disableTx();
+        };
+
+        void resumeTX() {
+            _tx_paused = false;
+            dma()->enableTx();
+        };
     };
 
 
@@ -662,7 +674,9 @@ namespace Motate {
             return dma()->getRXTransferPosition();
         };
 
+        bool _tx_paused = false;
         bool startTXTransfer(char *buffer, const uint16_t length) {
+            if (_tx_paused) { return false; }
             return dma()->startTXTransfer(buffer, length, true);
         };
 
@@ -670,7 +684,16 @@ namespace Motate {
             return dma()->getTXTransferPosition();
         };
 
-    };
+        void pauseTX() {
+            _tx_paused = true;
+            dma()->disableTx();
+        };
+
+        void resumeTX() {
+            _tx_paused = false;
+            dma()->enableTx();
+        };
+};
 
     template<uint8_t uartPeripheralNumber>
     using _USART_Or_UART = typename std::conditional< (uartPeripheralNumber < 4), _USARTHardware<uartPeripheralNumber>, _UARTHardware<uartPeripheralNumber-4>>::type;
