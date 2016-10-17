@@ -372,6 +372,13 @@ namespace Motate {
             }
             
             if (interruptCause & UARTInterrupt::OnCTSChanged) {
+                if (!isRealAndCorrectCTSPin<ctsPinNumber, rxPinNumber>()) {
+                    if (isConnected()) {
+                        hardware.resumeTX();
+                    } else {
+                        hardware.pauseTX();
+                    }
+                }
                 if (connection_state_changed_callback && isConnected()) {
                     // We only report when it's connected, NOT disconnected
                     connection_state_changed_callback(isConnected());
