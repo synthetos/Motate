@@ -281,6 +281,59 @@ static constexpr Usart * const usart(const uint8_t uartPeripheralNumber)
 };
 
 
+#if defined(SPI)
+#define CAN_SPI_PDC_DMA 1
+    // This is for the Sam4e
+    constexpr Spi * const SPI0_DONT_CONFLICT = SPI;
+#undef SPI
+    constexpr Spi * const SPI0_Peripheral = SPI0_DONT_CONFLICT;
+
+    constexpr uint16_t const ID_SPI0_DONT_CONFLICT = ID_SPI;
+#undef ID_SPI
+    constexpr uint16_t const ID_SPI0 = ID_SPI0_DONT_CONFLICT;
+
+    constexpr IRQn_Type SPI0_IRQn = SPI_IRQn;
+
+#define HAS_SPI0
+#define SPI0_Handler SPI_Handler
+#elif defined(SPI0)
+
+    // This is for the Sam3x and SamS70
+    constexpr Spi * const SPI0_DONT_CONFLICT = SPI0;
+#undef SPI0
+    constexpr Spi * const SPI0_Peripheral = SPI0_DONT_CONFLICT;
+
+    constexpr uint16_t const ID_SPI0_DONT_CONFLICT = ID_SPI0;
+#undef ID_SPI0
+    constexpr uint16_t const ID_SPI0 = ID_SPI0_DONT_CONFLICT;
+
+#define HAS_SPI0
+#endif
+
+#if defined(SPI1)
+    // This is for the Sam3x and SamS70
+    constexpr Spi * const SPI1_DONT_CONFLICT = SPI1;
+#undef SPI1
+    constexpr Spi * const SPI1_Peripheral = SPI1_DONT_CONFLICT;
+
+    constexpr uint16_t const ID_SPI1_DONT_CONFLICT = ID_SPI1;
+#undef ID_SPI1
+    constexpr uint16_t const ID_SPI1 = ID_SPI1_DONT_CONFLICT;
+
+#define HAS_SPI1
+#endif
+    
+
+static constexpr Spi * const spi(const int8_t spiPeripheralNumber) {
+    switch (spiPeripheralNumber) {
+        case (0): return SPI0_Peripheral;
+#if defined(HAS_SPI1)
+        case (1): return SPI1_Peripheral;
+#endif
+    };
+    return nullptr;
+};
+
 struct SamCommon {
     static inline void sync() { __DMB(); };
 

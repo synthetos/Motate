@@ -33,7 +33,6 @@
 #define Motate_motate_chip_pin_functions_h
 
 namespace Motate {
-
     // PWM Pin assignments
     // Stupid preprocessor! Workaround for the comma in the TimerChannel name:
 #define _MOTATE_TEMP_TC(t,c) Motate::TimerChannel<t,c>

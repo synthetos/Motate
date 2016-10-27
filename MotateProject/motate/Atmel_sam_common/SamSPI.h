@@ -35,51 +35,10 @@
 
 #include "MotatePins.h"
 #include "SamCommon.h"
+#include "SamDMA.h"
 #include <type_traits>
 
 namespace Motate {
-
-    /* HERE we do a stupid anti-#define dance, since these defines screw EVERYTHING up */
-
-#if defined(SPI)
-#define CAN_SPI_PDC_DMA 1
-    // This is for the Sam4e
-    constexpr Spi * const SPI0_DONT_CONFLICT = SPI;
-#undef SPI
-    constexpr Spi * const SPI0_Peripheral = SPI0_DONT_CONFLICT;
-
-    constexpr uint16_t const ID_SPI0_DONT_CONFLICT = ID_SPI;
-#undef ID_SPI
-    constexpr uint16_t const ID_SPI0 = ID_SPI0_DONT_CONFLICT;
-
-    constexpr IRQn_Type SPI0_IRQn = SPI_IRQn;
-
-#define SPI0_Handler SPI_Handler
-#elif defined(SPI0)
-
-    // This is for the Sam3x and SamS70
-    constexpr Spi * const SPI0_DONT_CONFLICT = SPI0;
-#undef SPI0
-    constexpr Spi * const SPI0_Peripheral = SPI0_DONT_CONFLICT;
-
-    constexpr uint16_t const ID_SPI0_DONT_CONFLICT = ID_SPI0;
-#undef ID_SPI0
-    constexpr uint16_t const ID_SPI0 = ID_SPI0_DONT_CONFLICT;
-
-#endif
-
-#if defined(SPI1)
-    // This is for the Sam3x and SamS70
-    constexpr Spi * const SPI1_DONT_CONFLICT = SPI1;
-#undef SPI1
-    constexpr Spi * const SPI1_Peripheral = SPI1_DONT_CONFLICT;
-
-    constexpr uint16_t const ID_SPI1_DONT_CONFLICT = ID_SPI1;
-#undef ID_SPI1
-    constexpr uint16_t const ID_SPI1 = ID_SPI1_DONT_CONFLICT;
-
-#define HAS_SPI1
-#endif
 
     template<int8_t spiPeripheralNumber>
     struct _SPIHardware
@@ -87,9 +46,6 @@ namespace Motate {
 #if !defined(HAS_SPI1)
         static_assert(spiPeripheralNumber == 0,
                       "Only _SPIHardware<0> is valid on this processor.");
-        static constexpr Spi * const spi() {
-            return SPI0_Peripheral;
-        };
         static constexpr uint32_t peripheralId() {
             return ID_SPI0;
         };
@@ -100,17 +56,22 @@ namespace Motate {
         static_assert((spiPeripheralNumber == 0) || (spiPeripheralNumber == 1),
                       "Only _SPIHardware<0> or _SPIHardware<1> is valid on this processor.");
 
-        static constexpr Spi * const spi() {
-            return (spiPeripheralNumber == 0) ? SPI0_Peripheral : SPI1_Peripheral;
-        };
-        static constexpr uint32_t peripheralId() {
+        constexpr uint32_t peripheralId() {
             return (spiPeripheralNumber == 0) ? ID_SPI0 : ID_SPI1;
         };
-        static constexpr IRQn_Type spiIRQ() {
+        constexpr IRQn_Type spiIRQ() {
             return (spiPeripheralNumber == 0) ? SPI0_IRQn : SPI1_IRQn;
         };
 #endif
 
+        static constexpr Spi * const spi() {
+            return Motate::spi(spiPeripheralNumber);
+        };
+
+#ifndef CAN_SPI_PDC_DMA
+        DMA<Spi *, spiPeripheralNumber> dma_ { nullptr }; // nullptr instead of the handler
+        constexpr const DMA<Spi *, spiPeripheralNumber> *dma() { return &dma_; };
+#endif
         static const uint8_t spiPeripheralNum = spiPeripheralNumber;
 
         typedef _SPIHardware<spiPeripheralNumber> this_type_t;
@@ -155,6 +116,8 @@ namespace Motate {
             spi()->SPI_RNCR = 0;
             spi()->SPI_TNPR = 0;
             spi()->SPI_TNCR = 0;
+#else
+            dma()->reset();
 #endif
         };
 
@@ -388,17 +351,15 @@ namespace Motate {
             {
                 status |= SPIInterrupt::OnTxReady;
             }
-#ifdef CAN_SPI_PDC_DMA
-            if ((SPI_IMR_hold & SPI_IMR_TXBUFE) && (SPI_SR_hold & SPI_SR_TXBUFE))
-            {
-                status |= SPIInterrupt::OnTxTransferDone;
-            }
-#endif
             if ((SPI_IMR_hold & SPI_IMR_RDRF) && (SPI_SR_hold & SPI_SR_RDRF))
             {
                 status |= SPIInterrupt::OnRxReady;
             }
 #ifdef CAN_SPI_PDC_DMA
+            if ((SPI_IMR_hold & SPI_IMR_TXBUFE) && (SPI_SR_hold & SPI_SR_TXBUFE))
+            {
+                status |= SPIInterrupt::OnTxTransferDone;
+            }
             if ((SPI_IMR_hold & SPI_IMR_RXBUFF) && (SPI_SR_hold & SPI_SR_RXBUFF))
             {
                 status |= SPIInterrupt::OnRxTransferDone;
@@ -544,6 +505,47 @@ namespace Motate {
             // We didn't set anything up...
             return false;
         }
+#else
+        void _enableOnTXTransferDoneInterrupt() {
+            dma()->startTxDoneInterrupts();
+        };
+
+        void _disableOnTXTransferDoneInterrupt() {
+            dma()->stopTxDoneInterrupts();
+        };
+
+        void _enableOnRXTransferDoneInterrupt() {
+            dma()->startRxDoneInterrupts();
+        };
+
+        void _disableOnRXTransferDoneInterrupt() {
+            dma()->stopRxDoneInterrupts();
+        };
+
+        static uint8_t getMessageSlotsAvailable() {
+            uint8_t count = 0;
+            if (dma()->doneWriting()) { count++; }
+//            if (dma()->doneWritingNext()) { count++; }
+            return count;
+        };
+
+        // start transfer of message
+        bool startTransfer(uint8_t *tx_buffer, uint8_t *rx_buffer, uint16_t size) {
+            bool is_setup = false;
+            if (rx_buffer != nullptr) {
+                const bool handle_interrupts = true;
+                const bool include_next = false;
+                is_setup = dma()->startRXTransfer(tx_buffer, size, handle_interrupts, include_next);
+                if (!is_setup) { return false; } // fail early
+            }
+            if (tx_buffer != nullptr) {
+                const bool handle_interrupts = false;
+                const bool include_next = false;
+                is_setup = dma()->startTXTransfer(tx_buffer, size, handle_interrupts, include_next);
+            }
+            return false;
+        }
+//        dma()->startTXTransfer(buffer, length, false);
 #endif // CAN_SPI_PDC_DMA
         // abort transfer of message
 

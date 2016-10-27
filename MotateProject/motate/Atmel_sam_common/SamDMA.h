@@ -996,6 +996,114 @@ namespace Motate {
 
     // We're deducing if there's a UART and it has a PDC
     // Notice that this relies on defines set up in SamCommon.h
+#if defined(HAS_SPI0) && !defined(CAN_SPI_PDC_DMA)
+#pragma mark DMA_XDMAC SPI implementation
+
+    template<uint8_t spiPeripheralNumber>
+    struct DMA_XDMAC_hardware<Spi*, spiPeripheralNumber>
+    {
+        static constexpr Spi * const spi() {
+            return Motate::spi(spiPeripheralNumber);
+        };
+
+        typedef char* buffer_t;
+    };
+
+    template<uint8_t spiPeripheralNumber>
+    struct DMA_XDMAC_TX_hardware<Spi*, spiPeripheralNumber> : virtual DMA_XDMAC_hardware<Spi*, spiPeripheralNumber>, virtual DMA_XDMAC_common {
+        using DMA_XDMAC_hardware<Spi*, spiPeripheralNumber>::spi;
+
+        static constexpr uint8_t const xdmaTxPeripheralId()
+        {
+            switch (spiPeripheralNumber) {
+                case (0): return 1;
+                case (1): return 3;
+            };
+            return 0;
+        };
+        static constexpr uint8_t const xdmaTxChannelNumber()
+        {
+            switch (spiPeripheralNumber) {
+                case (0): return  18;
+                case (1): return  20;
+            };
+            return 0;
+        };
+        static constexpr XdmacChid * const xdmaTxChannel()
+        {
+            return xdma()->XDMAC_CHID + xdmaTxChannelNumber();
+        };
+        static constexpr volatile void * const xdmaPeripheralTxAddress()
+        {
+            return &spi()->SPI_TDR;
+        };
+    };
+
+    template<uint8_t uartPeripheralNumber>
+    struct DMA_XDMAC_RX_hardware<Spi*, uartPeripheralNumber> : virtual DMA_XDMAC_hardware<Spi*, uartPeripheralNumber>, virtual DMA_XDMAC_common {
+        using DMA_XDMAC_hardware<Spi*, uartPeripheralNumber>::spi;
+
+        static constexpr uint8_t const xdmaRxPeripheralId()
+        {
+            switch (uartPeripheralNumber) {
+                case (0): return 2;
+                case (1): return 4;
+            };
+            return 0;
+        };
+        static constexpr uint8_t const xdmaRxChannelNumber()
+        {
+            switch (uartPeripheralNumber) {
+                case (0): return 19;
+                case (1): return 21;
+            };
+            return 0;
+        };
+        static constexpr XdmacChid * const xdmaRxChannel()
+        {
+            return xdma()->XDMAC_CHID + xdmaRxChannelNumber();
+        };
+        static constexpr volatile void * const xdmaPeripheralRxAddress()
+        {
+            return &spi()->SPI_RDR;
+        };
+    };
+
+    // Construct a DMA specialization that uses the PDC
+    template<uint8_t periph_num>
+    struct DMA<Spi*, periph_num> : DMA_XDMAC_RX<Spi*, periph_num>, DMA_XDMAC_TX<Spi*, periph_num> {
+        // nothing to do here, except for a constxpr constructor
+        constexpr DMA(const std::function<void(uint16_t)> &handler) : DMA_XDMAC_RX<Spi*, periph_num>{handler}, DMA_XDMAC_TX<Spi*, periph_num>{handler} {};
+
+        void setInterrupts(const uint16_t interrupts) const
+        {
+            DMA_XDMAC_common::setInterrupts(interrupts);
+
+            if (interrupts != Interrupt::Off) {
+                if (interrupts & Interrupt::OnTxTransferDone) {
+                    DMA_XDMAC_TX<Uart*, periph_num>::startTxDoneInterrupts();
+                } else {
+                    DMA_XDMAC_TX<Uart*, periph_num>::stopTxDoneInterrupts();
+                }
+
+                if (interrupts & Interrupt::OnRxTransferDone) {
+                    DMA_XDMAC_RX<Uart*, periph_num>::startRxDoneInterrupts();
+                } else {
+                    DMA_XDMAC_RX<Uart*, periph_num>::stopRxDoneInterrupts();
+                }
+            }
+        };
+
+        void reset() const {
+            DMA_XDMAC_TX<Spi*, periph_num>::resetTX();
+            DMA_XDMAC_RX<Spi*, periph_num>::resetRX();
+        };
+    };
+#endif // SPI + XDMAC
+
+
+    // We're deducing if there's a UART and it has a PDC
+    // Notice that this relies on defines set up in SamCommon.h
 #if defined(PWM1)
 #pragma mark DMA_XDMAC PWM implementation
 
