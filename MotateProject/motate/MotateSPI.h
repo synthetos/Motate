@@ -247,7 +247,6 @@ namespace Motate {
         volatile bool sending = false; // as long as this is true, sendNextMessage() does nothing
 
         SPIBus() : hardware{} {
-            hardware.init();
         }
 
         void addDevice(SPIBusDeviceBase *new_next) {
@@ -294,6 +293,7 @@ namespace Motate {
         // WARNING!!
         // This must be called later, outside of the contructors, to ensure that all dependencies are contructed.
         void init() {
+            hardware.init();
             hardware.setInterruptHandler([&](uint16_t interruptCause) { // use a closure
                 this->spiInterruptHandler(interruptCause);
             });

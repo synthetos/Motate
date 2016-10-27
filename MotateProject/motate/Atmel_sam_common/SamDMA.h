@@ -1081,15 +1081,15 @@ namespace Motate {
 
             if (interrupts != Interrupt::Off) {
                 if (interrupts & Interrupt::OnTxTransferDone) {
-                    DMA_XDMAC_TX<Uart*, periph_num>::startTxDoneInterrupts();
+                    DMA_XDMAC_TX<Spi*, periph_num>::startTxDoneInterrupts();
                 } else {
-                    DMA_XDMAC_TX<Uart*, periph_num>::stopTxDoneInterrupts();
+                    DMA_XDMAC_TX<Spi*, periph_num>::stopTxDoneInterrupts();
                 }
 
                 if (interrupts & Interrupt::OnRxTransferDone) {
-                    DMA_XDMAC_RX<Uart*, periph_num>::startRxDoneInterrupts();
+                    DMA_XDMAC_RX<Spi*, periph_num>::startRxDoneInterrupts();
                 } else {
-                    DMA_XDMAC_RX<Uart*, periph_num>::stopRxDoneInterrupts();
+                    DMA_XDMAC_RX<Spi*, periph_num>::stopRxDoneInterrupts();
                 }
             }
         };

@@ -64,19 +64,23 @@ namespace Motate {
         };
 #endif
 
-        static constexpr Spi * const spi() {
+        constexpr Spi * const spi() {
             return Motate::spi(spiPeripheralNumber);
         };
-
-#ifndef CAN_SPI_PDC_DMA
-        DMA<Spi *, spiPeripheralNumber> dma_ { nullptr }; // nullptr instead of the handler
-        constexpr const DMA<Spi *, spiPeripheralNumber> *dma() { return &dma_; };
-#endif
-        static const uint8_t spiPeripheralNum = spiPeripheralNumber;
+        const uint8_t spiPeripheralNum = spiPeripheralNumber;
 
         typedef _SPIHardware<spiPeripheralNumber> this_type_t;
 
-        static std::function<void(uint16_t)> _spiInterruptHandler;
+        std::function<void(uint16_t)> _spiInterruptHandler;
+
+#ifndef CAN_SPI_PDC_DMA
+        DMA<Spi *, spiPeripheralNumber> dma_ {_spiInterruptHandler};
+        constexpr const DMA<Spi *, spiPeripheralNumber> *dma() { return &dma_; };
+#endif
+
+        static std::function<void()> _spiInterruptHandlerJumper;
+        _SPIHardware() {
+        };
 
         void init() {
 //            static bool inited = false;
@@ -119,13 +123,16 @@ namespace Motate {
 #else
             dma()->reset();
 #endif
-        };
 
-        _SPIHardware() {
+            _spiInterruptHandlerJumper = [&]() {
+                if (_spiInterruptHandler) {
+                    _spiInterruptHandler(getInterruptCause());
+                }
+            };
         };
 
         // This is to be called by the device, once it detects a "decoded" CS pin
-        static void setUsingCSDecoder(bool decoder) {
+        void setUsingCSDecoder(bool decoder) {
             if (decoder) {
                 spi()->SPI_MR |= SPI_MR_PCSDEC;
             } else {
@@ -133,19 +140,19 @@ namespace Motate {
             }
         }
 
-        static void enable() {
+        void enable() {
             spi()->SPI_CR = SPI_CR_SPIEN ;
         };
 
-        static void disable() {
+        void disable() {
             spi()->SPI_CR = SPI_CR_SPIDIS;
         };
 
-        static void deassert() {
+        void deassert() {
             disable();
         }
 
-        static bool setChannel(const uint8_t channel) {
+        bool setChannel(const uint8_t channel) {
             // if we are transmitting, we cannot switch
             while (!(spi()->SPI_SR & SPI_SR_TXEMPTY)) {
                 ;
@@ -165,7 +172,7 @@ namespace Motate {
             return true;
         }
 
-        static void setChannelOptions(const uint8_t channel, const uint32_t baud, const uint16_t options, uint32_t min_between_cs_delay_ns, uint32_t cs_to_sck_delay_ns, uint32_t between_word_delay_ns) {
+        void setChannelOptions(const uint8_t channel, const uint32_t baud, const uint16_t options, uint32_t min_between_cs_delay_ns, uint32_t cs_to_sck_delay_ns, uint32_t between_word_delay_ns) {
             // We derive the baud from the master clock with a divider.
             // We want the closest match *below* the value asked for. It's safer to bee too slow.
 
@@ -333,7 +340,7 @@ namespace Motate {
             _spiInterruptHandler = std::move(handler);
         }
 
-        static uint16_t getInterruptCause() {
+        uint16_t getInterruptCause() {
             uint16_t status = SPIInterrupt::Unknown;
 
             // Notes from experience:
@@ -361,6 +368,15 @@ namespace Motate {
                 status |= SPIInterrupt::OnTxTransferDone;
             }
             if ((SPI_IMR_hold & SPI_IMR_RXBUFF) && (SPI_SR_hold & SPI_SR_RXBUFF))
+            {
+                status |= SPIInterrupt::OnRxTransferDone;
+            }
+#else
+            if (dma()->inTxBufferEmptyInterrupt())
+            {
+                status |= SPIInterrupt::OnTxTransferDone;
+            }
+            if (dma()->inRxBufferEmptyInterrupt())
             {
                 status |= SPIInterrupt::OnRxTransferDone;
             }
@@ -392,6 +408,17 @@ namespace Motate {
                     spi()->SPI_IER = SPI_IER_RXBUFF;
                 } else {
                     spi()->SPI_IDR = SPI_IDR_RXBUFF;
+                }
+#else
+                if (interrupts & SPIInterrupt::OnRxTransferDone) {
+                    dma()->startRxDoneInterrupts();
+                } else {
+                    dma()->stopRxDoneInterrupts();
+                }
+                if (interrupts & SPIInterrupt::OnTxTransferDone) {
+                    dma()->startTxDoneInterrupts();
+                } else {
+                    dma()->stopTxDoneInterrupts();
                 }
 #endif
 
@@ -436,7 +463,7 @@ namespace Motate {
             spi()->SPI_IDR = SPI_IDR_RXBUFF;
         };
 
-        static uint8_t getMessageSlotsAvailable() {
+        uint8_t getMessageSlotsAvailable() {
             uint8_t count = 0;
             if (spi()->SPI_RCR > 0) { count++; }
             if (spi()->SPI_NRCR > 0) { count++; }
@@ -522,7 +549,7 @@ namespace Motate {
             dma()->stopRxDoneInterrupts();
         };
 
-        static uint8_t getMessageSlotsAvailable() {
+        uint8_t getMessageSlotsAvailable() {
             uint8_t count = 0;
             if (dma()->doneWriting()) { count++; }
 //            if (dma()->doneWritingNext()) { count++; }
