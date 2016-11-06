@@ -32,16 +32,65 @@
 
 #include <sys/types.h>
 #include "MotateTimers.h" // for the interrupt definitions
+#include <functional>
 
 namespace Motate {
-    extern volatile uint32_t _internal_pendsv_handler_number;
+    typedef const uint32_t service_call_number;
 
-    template <uint8_t svcNumber>
-    struct ServiceCall {
-        static  uint32_t _interrupt_level;
+    //extern volatile uint32_t _internal_pendsv_handler_number;
 
-        // Interface that makes sense for this object...
-        static void call() {
+    struct ServiceCallEvent {
+        std::function<void(void)> _callback {};
+        ServiceCallEvent * volatile _next = nullptr;
+        volatile bool _queued = false;
+        volatile bool _setup = false; // this means we've setup the interrupt and triggered the call
+
+        static ServiceCallEvent * volatile _first_service_call; // the pointer is volatile
+
+        uint32_t _interrupt_level = kInterruptPriorityLowest; // start at the lowest
+
+        //ServiceCallEvent(std::function<void(void)> e) : _callback{e} {};
+        //ServiceCallEvent(std::function<void(void)> &&e) : _callback{std::move(e)} {};
+
+        void _add_to_queue() {
+            if (_queued) { return; }
+
+            _queued = true;
+            _setup = false;
+            _next = nullptr;
+
+            if (_first_service_call == nullptr) {
+                _first_service_call = this;
+                _pend();
+                return;
+            }
+
+            // This happens when we are already in a pendSV context, and we are adding a second one.
+            // This can also happen if there was already a second one, and we just pre-empted it with a
+            // higher-priority one.
+            // IMPORTANT: HIGHER priority tasks have a LOWER number
+            if (_first_service_call->_interrupt_level > _interrupt_level) {
+                this->_next = _first_service_call;
+                _first_service_call = this;
+                _pend();
+                return;
+            }
+
+            ServiceCallEvent *walker = _first_service_call;
+            while (walker->_next != nullptr) {
+                // put this in front of lower priority tasks
+                // IMPORTANT: HIGHER priority tasks have a LOWER number
+                if (walker->_next->_interrupt_level > _interrupt_level) { break; }
+                walker = walker->_next;
+            }
+            _next = walker->_next; // in case we aren't putting it last in line
+            walker->_next = this;
+        };
+
+        // This is static, it doesn't use any local variables
+        static void _pend() {
+            uint32_t _interrupt_level = _first_service_call->_interrupt_level;
+
             /* Set interrupt priority */
             if (_interrupt_level & kInterruptPriorityHighest) {
                 NVIC_SetPriority(PendSV_IRQn, 0);
@@ -59,30 +108,82 @@ namespace Motate {
                 NVIC_SetPriority(PendSV_IRQn, 15);
             }
 
-            _internal_pendsv_handler_number = svcNumber;
-            //SamCommon::sync();
+            SamCommon::sync();
             SCB->ICSR |= SCB_ICSR_PENDSVSET_Msk;
             SamCommon::sync();
+        }
+
+        // We were queued and pended, then called.
+        void _call() {
+            // If we are here then we are in the interrupt context
+
+            // pop this call off the list
+            _first_service_call = _next;
+            _next = nullptr;
+
+            // Mark it as un-queued so it can be re-queued
+            _queued = false;
+
+            // ... and finally:
+            if (_callback) {
+                _callback();
+            } else {
+                interrupt();
+            }
+
+            if (_first_service_call != nullptr) {
+                _pend();
+            }
+        };
+
+        virtual void interrupt() {;};
+    };
+
+    template <service_call_number svcNumber>
+    struct ServiceCall final : ServiceCallEvent {
+        //std::function<void(void)> _altInterruptHandler;
+
+        ServiceCall() {
+            //_callback = [&](){
+            //    interrupt();
+            //};
+            _first_service_call = nullptr;
+        };
+
+        // Interface that makes sense for this object...
+        void call() {
+            _add_to_queue();
         };
 
         // Interface for compatibility with Pins and Timers....
-        static void setInterruptPending() {
+        void setInterruptPending() {
             call();
-        }
+        };
 
-        static void setInterrupts(const uint32_t interrupts) {
+        void setInterrupts(const uint32_t interrupts) {
             _interrupt_level = interrupts;
-        }
+        };
 
         // Stub to match the interface of Timer
         uint16_t getInterruptCause() {
 //            SCB->ICSR |= SCB_ICSR_PENDSVCLR_Msk;
 //            SamCommon::sync();
             return 0;
+        };
+
+        void setInterruptHandler(std::function<void(void)> &&handler) {
+            _callback = std::move(handler);
         }
 
+        // If the main interrupt isn't overidden, then we'll this one
+        //static void alternate_interrupt() {
+        //    if (_altInterruptHandler) {
+        //        _altInterruptHandler();
+        //    }
+        //};
+
         // Override this to implement this call
-        static void interrupt();
+        void interrupt() override;
     };
 }
 

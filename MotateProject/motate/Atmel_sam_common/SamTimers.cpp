@@ -32,8 +32,8 @@
 #include "SamCommon.h"
 
 extern "C" {
-    void _null_pwm_timer_interrupt() __attribute__ ((unused));
-    void _null_pwm_timer_interrupt() {};
+    // void _null_pwm_timer_interrupt() __attribute__ ((unused));
+    // void _null_pwm_timer_interrupt() {};
 }
 
 namespace Motate {
@@ -121,24 +121,24 @@ namespace Motate {
     uint32_t pwm_interrupt_cause_cached_1_ = 0;
     uint32_t pwm_interrupt_cause_cached_2_ = 0;
 
-    template<> void PWMTimer<  0>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt")));
-    template<> void PWMTimer<  1>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt")));
-    template<> void PWMTimer<  2>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt")));
-    template<> void PWMTimer<  3>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt")));
-    template<> void PWMTimer<  4>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt")));
-    template<> void PWMTimer<  5>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt")));
-    template<> void PWMTimer<  6>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt")));
-    template<> void PWMTimer<  7>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt")));
+    template<> void PWMTimer<  0>::interrupt() __attribute__ ((weak));
+    template<> void PWMTimer<  1>::interrupt() __attribute__ ((weak));
+    template<> void PWMTimer<  2>::interrupt() __attribute__ ((weak));
+    template<> void PWMTimer<  3>::interrupt() __attribute__ ((weak));
+    template<> void PWMTimer<  4>::interrupt() __attribute__ ((weak));
+    template<> void PWMTimer<  5>::interrupt() __attribute__ ((weak));
+    template<> void PWMTimer<  6>::interrupt() __attribute__ ((weak));
+    template<> void PWMTimer<  7>::interrupt() __attribute__ ((weak));
 
 #if defined(PWM1)
-    template<> void PWMTimer<8+0>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt")));
-    template<> void PWMTimer<8+1>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt")));
-    template<> void PWMTimer<8+2>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt")));
-    template<> void PWMTimer<8+3>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt")));
-    template<> void PWMTimer<8+4>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt")));
-    template<> void PWMTimer<8+5>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt")));
-    template<> void PWMTimer<8+6>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt")));
-    template<> void PWMTimer<8+7>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt")));
+    template<> void PWMTimer<8+0>::interrupt() __attribute__ ((weak));
+    template<> void PWMTimer<8+1>::interrupt() __attribute__ ((weak));
+    template<> void PWMTimer<8+2>::interrupt() __attribute__ ((weak));
+    template<> void PWMTimer<8+3>::interrupt() __attribute__ ((weak));
+    template<> void PWMTimer<8+4>::interrupt() __attribute__ ((weak));
+    template<> void PWMTimer<8+5>::interrupt() __attribute__ ((weak));
+    template<> void PWMTimer<8+6>::interrupt() __attribute__ ((weak));
+    template<> void PWMTimer<8+7>::interrupt() __attribute__ ((weak));
 #endif
 }
 

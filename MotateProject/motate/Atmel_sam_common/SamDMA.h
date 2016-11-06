@@ -467,7 +467,7 @@ namespace Motate {
         static constexpr uint32_t buffer_width = std::alignment_of< typename std::remove_pointer<buffer_t>::type >::value;
 
 
-        const std::function<void(uint16_t)> _xdmaInterruptHandler;
+        const std::function<void(uint16_t)> &_xdmaInterruptHandler;
 
         _XDMAInterrupt _tx_interrupt {xdmaTxChannelNumber(), [&](){
             if (_xdmaInterruptHandler) {
@@ -545,6 +545,7 @@ namespace Motate {
         {
             //            if (include_next) {
             //            }
+            SamCommon::sync();
             return xdmaTxChannel()->XDMAC_CUBC;
         };
         uint32_t leftToWriteNext() const
@@ -616,7 +617,7 @@ namespace Motate {
         typedef typename _hw::buffer_t buffer_t;
         static constexpr uint32_t buffer_width = std::alignment_of< typename std::remove_pointer<buffer_t>::type >::value;
 
-        const std::function<void(uint16_t)> _xdmaInterruptHandler;
+        const std::function<void(uint16_t)> &_xdmaInterruptHandler;
 
         _XDMAInterrupt _rx_interrupt {xdmaRxChannelNumber(), [&](){
             if (_xdmaInterruptHandler) {
@@ -691,11 +692,13 @@ namespace Motate {
         void flushRead() const
         {
             xdmaRxChannel()->XDMAC_CUBC = 0;
+            SamCommon::sync();
         };
         uint32_t leftToRead(bool include_next = false) const
         {
             //            if (include_next) {
             //            }
+            SamCommon::sync();
             return xdmaRxChannel()->XDMAC_CUBC;
         };
         uint32_t leftToReadNext() const
@@ -744,7 +747,7 @@ namespace Motate {
         void stopRxDoneInterrupts() const { xdmaRxChannel()->XDMAC_CID = XDMAC_CID_BID; };
 
         // XDMAC_Handler is handled with _tx_interrupt and _rx_interupt. They use
-        // the std::function _xdmaInterruptHandler, which get's set by the peripheral
+        // the std::function _xdmaInterruptHandler, which gets set by the peripheral
         // in the constexpr constructor.
         
         
@@ -1039,13 +1042,13 @@ namespace Motate {
         };
     };
 
-    template<uint8_t uartPeripheralNumber>
-    struct DMA_XDMAC_RX_hardware<Spi*, uartPeripheralNumber> : virtual DMA_XDMAC_hardware<Spi*, uartPeripheralNumber>, virtual DMA_XDMAC_common {
-        using DMA_XDMAC_hardware<Spi*, uartPeripheralNumber>::spi;
+    template<uint8_t spiPeripheralNumber>
+    struct DMA_XDMAC_RX_hardware<Spi*, spiPeripheralNumber> : virtual DMA_XDMAC_hardware<Spi*, spiPeripheralNumber>, virtual DMA_XDMAC_common {
+        using DMA_XDMAC_hardware<Spi*, spiPeripheralNumber>::spi;
 
         static constexpr uint8_t const xdmaRxPeripheralId()
         {
-            switch (uartPeripheralNumber) {
+            switch (spiPeripheralNumber) {
                 case (0): return 2;
                 case (1): return 4;
             };
@@ -1053,7 +1056,7 @@ namespace Motate {
         };
         static constexpr uint8_t const xdmaRxChannelNumber()
         {
-            switch (uartPeripheralNumber) {
+            switch (spiPeripheralNumber) {
                 case (0): return 19;
                 case (1): return 21;
             };

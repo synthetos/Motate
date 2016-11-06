@@ -80,6 +80,11 @@ namespace Motate {
 
         static std::function<void()> _spiInterruptHandlerJumper;
         _SPIHardware() {
+            SamCommon::enablePeripheralClock(peripheralId());
+
+            // Softare reset of SPI module
+            spi()->SPI_CR = SPI_CR_SWRST;
+            disable();
         };
 
         void init() {
@@ -87,12 +92,6 @@ namespace Motate {
 //            if (inited)
 //                return;
 //            inited = true;
-
-            SamCommon::enablePeripheralClock(peripheralId());
-            disable();
-
-            // Softare reset of SPI module
-            spi()->SPI_CR = SPI_CR_SWRST;
 
             // Set last transfer
             spi()->SPI_CR = SPI_CR_LASTXFER;
@@ -109,6 +108,15 @@ namespace Motate {
             // Disable all interrupts
             spi()->SPI_IDR = 0x7FF;
 
+            // setup interrupt handlers BEFORE setting up DMA, in case it causes an interrupt
+            _spiInterruptHandlerJumper = [&]() {
+                if (_spiInterruptHandler) {
+                    _spiInterruptHandler(getInterruptCause());
+                } else {
+                    __asm__("BKPT");
+                }
+            };
+
 #ifdef CAN_SPI_PDC_DMA
             // Reset the PDC
             spi()->SPI_PTCR = SPI_PTCR_RXTDIS | SPI_PTCR_TXTDIS;
@@ -123,12 +131,6 @@ namespace Motate {
 #else
             dma()->reset();
 #endif
-
-            _spiInterruptHandlerJumper = [&]() {
-                if (_spiInterruptHandler) {
-                    _spiInterruptHandler(getInterruptCause());
-                }
-            };
         };
 
         // This is to be called by the device, once it detects a "decoded" CS pin
@@ -175,7 +177,6 @@ namespace Motate {
         void setChannelOptions(const uint8_t channel, const uint32_t baud, const uint16_t options, uint32_t min_between_cs_delay_ns, uint32_t cs_to_sck_delay_ns, uint32_t between_word_delay_ns) {
             // We derive the baud from the master clock with a divider.
             // We want the closest match *below* the value asked for. It's safer to bee too slow.
-
             uint32_t new_otions = 0;
 
             uint16_t divider = SystemCoreClock / baud;
@@ -472,6 +473,7 @@ namespace Motate {
 
         // start transfer of message
         bool startTransfer(uint8_t *tx_buffer, uint8_t *rx_buffer, uint16_t size) {
+            // We need to clear the read buffer or it won't clock anything...
             if (spi()->SPI_SR & SPI_SR_RDRF) {
                 /*uint16_t dont_care =*/ spi()->SPI_RDR;
             }
@@ -551,9 +553,16 @@ namespace Motate {
 
         uint8_t getMessageSlotsAvailable() {
             uint8_t count = 0;
-            if (dma()->doneWriting()) { count++; }
+            if (dma()->doneWriting() && dma()->doneReading()) { count++; }
 //            if (dma()->doneWritingNext()) { count++; }
             return count;
+        };
+
+        bool doneWriting() {
+            return dma()->doneWriting();
+        };
+        bool doneReading() {
+            return dma()->doneReading();
         };
 
         // start transfer of message
@@ -562,22 +571,24 @@ namespace Motate {
             if (rx_buffer != nullptr) {
                 const bool handle_interrupts = true;
                 const bool include_next = false;
-                is_setup = dma()->startRXTransfer(tx_buffer, size, handle_interrupts, include_next);
+                is_setup = dma()->startRXTransfer(rx_buffer, size, handle_interrupts, include_next);
                 if (!is_setup) { return false; } // fail early
             }
             if (tx_buffer != nullptr) {
-                const bool handle_interrupts = false;
+                const bool handle_interrupts = true;
                 const bool include_next = false;
                 is_setup = dma()->startTXTransfer(tx_buffer, size, handle_interrupts, include_next);
             }
-            return false;
+            if (is_setup) { enable(); }
+            return is_setup;
         }
-//        dma()->startTXTransfer(buffer, length, false);
 #endif // CAN_SPI_PDC_DMA
+
         // abort transfer of message
+        // TODO
 
         // get transfer status
-
+        // TODO
     };
 
 #if 0
