@@ -50,14 +50,12 @@
 # error The current USBHS Device Driver supports only SAMV71, SAMV70, SAME70 and SAMS70.
 #endif
 
-#if 1
-#if IN_DEBUGGER == 1
+#if 0 && (IN_DEBUGGER == 1)
     template<int32_t len>
     void usb_debug(const char (&str)[len]) { Motate::debug.write(str); };
 #else
     template<int32_t len>
     void usb_debug(const char (&str)[len]) { ; };
-#endif
 #endif
 
 namespace Motate {
