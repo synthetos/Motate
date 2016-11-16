@@ -119,9 +119,6 @@ namespace Motate {
 
         owner_type _owner;
 
-        // Internal properties!
-        base_type _data[_size+1];
-
         uint32_t _data_end_guard = 0xBEEF;
 
         volatile uint16_t _read_offset;              // The offset into the buffer of our next read
@@ -130,6 +127,9 @@ namespace Motate {
         volatile uint16_t _transfer_requested = 0;   // keep track of how much we have requested. Non-zero means a request is active.
         volatile uint16_t _requested_check = 0;
 
+        // Internal properties!
+        base_type _data[_size+1];
+
         constexpr int16_t size() { return _size; };
 
         RXBuffer(owner_type owner) : _owner(owner) { _data[_size] = 0; };
@@ -137,7 +137,7 @@ namespace Motate {
         void init() {
             _owner->setRXTransferDoneCallback([&]() { // use a closure
                 _transfer_requested = 0;
-                _restartTransfer();
+                //_restartTransfer();
             });
         };
 
@@ -154,18 +154,6 @@ namespace Motate {
                 }
 //            }
 
-            // +++ remove this
-            // check to make sure that pos is read <= pos < write
-            if (_read_offset < _last_known_write_offset) {
-                if ((pos < _read_offset) || (pos >= _last_known_write_offset)) {
-                    __asm__("BKPT"); // _canBeRead would have return the wrong thing (1)
-                }
-            } else {
-                if ((pos < _read_offset) && (pos >= _last_known_write_offset)) {
-                    __asm__("BKPT"); // _canBeRead would have return the wrong thing (2)
-                }
-            }
-            // +++
             return true;
         };
 
@@ -186,9 +174,9 @@ namespace Motate {
 
         bool isEmpty() {
             // If we weren't empty last time we checked, we aren't empty now.
-            if (!_isEmptyCached()) {
-                return false;
-            }
+//            if (!_isEmptyCached()) {
+//                return false;
+//            }
 
             // Update the cache and check again
             _getWriteOffset();
@@ -197,9 +185,9 @@ namespace Motate {
 
         bool isFull() {
             // If we were full last time we checked, we are still full
-            if (_isFullCached()) {
-                return true;
-            }
+//            if (_isFullCached()) {
+//                return true;
+//            }
 
             // Update the cache and check again
             _getWriteOffset();
@@ -237,6 +225,11 @@ namespace Motate {
             if (_transfer_requested != 0) {
                 return;
             }
+//            static volatile bool _is_requesting = 0;
+//            if (_is_requesting) {
+//                return;
+//            }
+//            _is_requesting = true;
 
             // TODO: check _data + size + 1 to be 0
 
@@ -277,7 +270,7 @@ namespace Motate {
                 if (_read_offset > _last_known_write_offset) {
                     transfer_size = (_read_offset - _last_known_write_offset) - 4;
                     if (transfer_size < 1) {
-                        return;
+                        break;
                     }
                 // Case [2a]
                 } else if (_read_offset == 0) {
@@ -301,6 +294,8 @@ namespace Motate {
                 // Note that _getWriteOffset() must return the new position
                 _transfer_requested = 0;
             } while (1);
+
+            // _is_requesting = false;
         };
 
         int16_t read() {
