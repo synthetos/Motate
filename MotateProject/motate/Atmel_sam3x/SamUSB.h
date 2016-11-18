@@ -227,21 +227,24 @@ namespace Motate {
 
         USB_DMA_Descriptor *nextDescriptor;    // The address of the next Descriptor
         char *bufferAddress;                    // The address of the buffer to read/write
-        struct {                                // controlData is a bit field with the settings of the descriptor
-            // See SAMS70 datasheet for defintions.
-            // Names used there are in the comment.
-            _commands command : 2;
+        union {
+            struct {                                // controlData is a bit field with the settings of the descriptor
+                // See SAMS70 datasheet for defintions.
+                // Names used there are in the comment.
+                _commands command : 2;
 
-            bool end_transfer_enable : 1;                   // END_TR_EN
-            bool end_buffer_enable : 1;                     // END_B_EN
-            bool end_transfer_interrupt_enable : 1;         // END_TR_IT
-            bool end_buffer_interrupt_enable : 1;           // END_BUFFIT
-            bool descriptor_loaded_interrupt_enable : 1;    // DESC_LD_IT
-            bool bust_lock_enable : 1;                      // BURST_LCK
+                bool end_transfer_enable : 1;                   // END_TR_EN
+                bool end_buffer_enable : 1;                     // END_B_EN
+                bool end_transfer_interrupt_enable : 1;         // END_TR_IT
+                bool end_buffer_interrupt_enable : 1;           // END_BUFFIT
+                bool descriptor_loaded_interrupt_enable : 1;    // DESC_LD_IT
+                bool bust_lock_enable : 1;                      // BURST_LCK
 
-            uint8_t _unused_1 : 8;
+                uint8_t _unused_1 : 8;
 
-            uint16_t buffer_length : 16;                    // BUFF_LENGTH
+                uint16_t buffer_length : 16;                    // BUFF_LENGTH
+            };
+            uint32_t CONTROL;
         };
 
 
@@ -1392,11 +1395,11 @@ namespace Motate {
 
                     if (ep_status & UOTGHS_DEVDMASTATUS_CHANN_ENB) {
                         // original code say: "Ignore EOT_STA interrupt" ???
-                        usb_debug("dmaInt (ena)|\n");
+//                        usb_debug("dmaInt (ena)|\n");
                         return true;
                     }
                     _disable_endpoint_dma_interrupt(ep);
-                    usb_debug("dmaInt->");
+//                    usb_debug("dmaInt->");
                     // if (0 == ep_status.buffer_count)  { usb_debug("0"); }
 
                     // ep_status.buffer_count hold how many are left to transfer
@@ -1405,76 +1408,98 @@ namespace Motate {
                         if (_is_in_send(ep)) {
                             _ack_in_send(ep);
                             _ack_fifocon(ep);
-                            usb_debug(":");
+//                            usb_debug(":");
                         }
-                        usb_debug("tx ");
+//                        usb_debug("tx ");
                     } else {
                         usb_debug("rx ");
+                        // Disable then accept the rx packet interrupt.
                         _disable_out_received_interrupt(ep);
-                        // _ack_out_received(ep);
-                        // _ack_fifocon(ep);
+                        _ack_out_received(ep);
+                        // DON'T _ack_fifocon(ep) -- we don't want to toss the packet.
+
+                        // if we have no more bytes in this packet, then clear it out
+                        if (0 == get_byte_count(ep)) {
+                            usb_debug("ACK(0) ");
+//                            _ack_out_received(ep);
+                            _ack_fifocon(ep);
+                        }
+
+                        if (ep_status & UOTGHS_DEVDMASTATUS_END_TR_ST) {
+                            usb_debug("|ET|\n");
+                        }
+                        if (ep_status & UOTGHS_DEVDMASTATUS_END_BF_ST) {
+                            usb_debug("|EB|\n");
+                        }
                     }
 
-                    if (ep_status & UOTGHS_DEVDMASTATUS_END_TR_ST) {
-                        usb_debug("|ET");
-                    }
-                    if (ep_status & UOTGHS_DEVDMASTATUS_END_BF_ST) {
-                        usb_debug("|EB");
-                    }
 
                     _DMA_Used_By_Endpoint &= ~(1<<ep);
-                    usb_debug("|\n");
+//                    usb_debug("|\n");
                     proxy->handleTransferDone(ep);
 
                     return true;
                 }
                 if (_is_endpoint_interrupt_enabled(ep)) {
-                    usb_debug("epInt->");
+//                    usb_debug("epInt->");
                     if (_is_endpoint_a_tx_in(ep)) {
                         // check to see if we are done sending
-                        if (_is_in_send_interrupt_enabled(ep)) { usb_debug(":"); }
+//                        if (_is_in_send_interrupt_enabled(ep)) { usb_debug(":"); }
                         if (//_is_in_send_interrupt_enabled(ep) &&
                             _is_in_send(ep))
                         {
-                            if (_is_write_enabled(ep)) { usb_debug(">"); }
-                            if (0 == _devdma(ep)->status.buffer_count)  { usb_debug("0"); }
-                            usb_debug("TX ");
+//                            if (_is_write_enabled(ep)) { usb_debug(">"); }
+//                            if (0 == _devdma(ep)->status.buffer_count)  { usb_debug("dma_count_0(0)"); }
+//                            usb_debug("TX ");
 
                             _ack_in_send(ep);
                             _ack_fifocon(ep);
 
                             return true;
                         } else {
-                            usb_debug("!TX ");
+//                            usb_debug("!TX ");
                         }
-                    } else {
+                    } // is a tx in endpoint
+                    else {
                         // we received a packet
-                        if (_is_out_received_interrupt_enabled(ep)) { usb_debug(":"); }
+//                        if (_is_out_received_interrupt_enabled(ep)) { usb_debug(":"); }
                         if (//_is_out_received_interrupt_enabled(ep) &&
                             _is_out_received(ep))
                         {
                             // write is disabled when the buffer is full
+                            auto dma_buffer_count = _devdma(ep)->status.buffer_count;
 
                             if (_is_write_enabled(ep)) { usb_debug(">"); }
-                            if (0 == _devdma(ep)->status.buffer_count)  { usb_debug("0"); }
-                            usb_debug("RX ");
-
+//                            if (0 == dma_buffer_count)  { usb_debug("dma_count_1(0)"); }
+                            usb_debug("epRX ");
                             _ack_out_received(ep);
-                            _ack_fifocon(ep);
 
-                            // if (0 == _devdma(ep)->buffer_count) {
-                            //     _ack_out_received(ep);
-                            //     _ack_fifocon(ep);
-                            //     _disable_out_received_interrupt(ep);
-                            //     _disable_endpoint_dma_interrupt(ep); // just in case
-                            //     _DMA_Used_By_Endpoint &= ~(1<<ep);
-                            //     proxy->handleTransferDone(ep);
-                            // }
+                            // if we have more bytes in the packet, but the DMA request ran out
+//                            if (//_is_endpoint_dma_interrupt_enabled(ep) &&
+//                                (0 == dma_buffer_count)) {
+//
+//                                usb_debug("dma_count_2(0)");
+//                                //_ack_out_received(ep);
+//                                _disable_out_received_interrupt(ep);
+//                                _disable_endpoint_dma_interrupt(ep);
+//                                _DMA_Used_By_Endpoint &= ~(1<<ep);
+//                                usb_debug("|\n");
+//                                proxy->handleTransferDone(ep);
+//                            }
+
                             return true;
                         } else {
                             usb_debug("!RX ");
                         }
-                    }
+
+
+                        // if we have no more bytes in this packet, then clear it out
+                        if (0 == get_byte_count(ep)) {
+                            usb_debug("ep_count(0) ");
+                            //_ack_out_received(ep);
+                            _ack_fifocon(ep);
+                        }
+                    } // is a rx out endpoint
                 }
             }
 
@@ -1490,8 +1515,8 @@ namespace Motate {
             // DON'T interrupt when the descriptor is loaded
             desc.descriptor_loaded_interrupt_enable = false;
             if (_is_endpoint_a_tx_in(endpoint)) {
-                usb_debug("tr->TX ");
-                // if the endpoint is a TX in:
+//                usb_debug("tr->TX ");
+                // if the endpoint is a TX IN:
                 if (0 != (desc.buffer_length % _get_endpoint_size(endpoint)))
                 {
                     // validate the packet at DMA Buffer End (BUFF_COUNT reaches 0)
@@ -1502,13 +1527,13 @@ namespace Motate {
             } else {
                 usb_debug("tr->RX ");
                 // if the endpoint is an RX OUT:
-                if ((_get_endpoint_type(endpoint) != kEndpointBufferTypeIsochronous) ||
-                    (desc.buffer_length <= _get_endpoint_size(endpoint)))
+                if ((_get_endpoint_type(endpoint) != kEndpointBufferTypeIsochronous)) // ||
+//                    (desc.buffer_length <= _get_endpoint_size(endpoint)))
                 {
                     // interrupt when the DMA transfer ends because USB stopped it
-                    // desc.end_transfer_interrupt_enable = true;
+                    //desc.end_transfer_interrupt_enable = true;
                     // allow the DMA transfer to be stopped by USB (small packet, etc)
-                    // desc.end_transfer_enable = true;
+                    //desc.end_transfer_enable = true;
                 }
             }
             // interrupt when the DMA transfer ends because the buffer ran out

@@ -119,16 +119,20 @@ namespace Motate {
 
         owner_type _owner;
 
-        uint32_t _data_end_guard = 0xBEEF;
 
-        volatile uint16_t _read_offset;              // The offset into the buffer of our next read
-        volatile uint16_t _last_known_write_offset;  // The offset into the buffer of the last known write (cached)
+        volatile uint16_t _read_offset = 0;              // The offset into the buffer of our next read
+        volatile uint16_t _last_known_write_offset = 0;  // The offset into the buffer of the last known write (cached)
+        volatile uint16_t _last_requested_write_offset = 0;  // The offset into the buffer of the last requested write
 
         volatile uint16_t _transfer_requested = 0;   // keep track of how much we have requested. Non-zero means a request is active.
         volatile uint16_t _requested_check = 0;
 
         // Internal properties!
-        base_type _data[_size+1];
+        // Some devices write in whole-word (4-byte) chunks, even though the last bytes are garbage, and past what we requested.
+        // So, we add 4-bytes past what we need to allocate.
+        // We add one more to keep a null-termination, for various reasons, among them easier debugging.
+        base_type _data[_size+1+4];
+        uint32_t _data_end_guard = 0xBEEF;
 
         constexpr int16_t size() { return _size; };
 
@@ -149,7 +153,7 @@ namespace Motate {
 //            if (pos == _last_known_write_offset) {
                 _getWriteOffset();
                 if (pos == _last_known_write_offset) {
-                    _restartTransfer();
+                    //_restartTransfer();
                     return false;
                 }
 //            }
@@ -287,6 +291,7 @@ namespace Motate {
 
                 // startRXTransfer will return false if it couldn't start the transfer.
                 if (_owner->startRXTransfer(_write_pos, transfer_size)) {
+                    _last_requested_write_offset = (_last_known_write_offset + _transfer_requested) & (_size-1);
                     break;
                 }
 
