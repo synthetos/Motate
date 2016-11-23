@@ -896,7 +896,7 @@ namespace Motate {
             PMC->PMC_SCER = PMC_SCER_UOTGCLK;
 
             // Configure interrupts
-            NVIC_SetPriority((IRQn_Type) ID_UOTGHS, 1UL);
+            NVIC_SetPriority((IRQn_Type) ID_UOTGHS, kInterruptPriorityLow);
             NVIC_EnableIRQ((IRQn_Type) ID_UOTGHS);
 
             // Always authorize asynchrone USB interrupts to exit from sleep mode
@@ -1467,7 +1467,7 @@ namespace Motate {
                             _is_out_received(ep))
                         {
                             // write is disabled when the buffer is full
-                            auto dma_buffer_count = _devdma(ep)->status.buffer_count;
+                            // auto dma_buffer_count = _devdma(ep)->status.buffer_count;
 
                             if (_is_write_enabled(ep)) { usb_debug(">"); }
 //                            if (0 == dma_buffer_count)  { usb_debug("dma_count_1(0)"); }
@@ -1577,9 +1577,9 @@ namespace Motate {
 //            _flushReadEndpoint(endpoint);
         }
 
-        void enableRXInterrupt(const uint8_t endpoint) {
-            _enable_out_received_interrupt(endpoint);
-        };
+//        void enableRXInterrupt(const uint8_t endpoint) {
+//            _enable_out_received_interrupt(endpoint);
+//        };
 
         void disableRXInterrupt(const uint8_t endpoint) {
             _disable_out_received_interrupt(endpoint);
