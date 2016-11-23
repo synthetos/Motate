@@ -37,11 +37,17 @@
 #define IN_DEBUGGER 0
 #endif
 
+#define DEBUG_USE_SWI 1
+#define DEBUG_USE_ITM 0
+
+// ITM doesn't seem to work too well. Needs work.
+
 #if IN_DEBUGGER == 1
 #warning IN_DEBUGGER=1: DEEP DEBUGGING IS ON - this firmware must be used with a debugger attached!
 #endif
 namespace Motate {
 
+#if DEBUG_USE_SWI == 1
 struct Debug {
     int32_t STDOUT_fh = -1; // right now, we only support one filehandle -- STDOUT
 
@@ -130,6 +136,41 @@ struct Debug {
     }; // _swi
 #endif // IN_DEBUGGER == 1
 };
+#endif // DEBUG_USE_SWI == 1
+
+
+#if DEBUG_USE_ITM == 1
+    struct Debug {
+        Debug() {
+        };
+
+        // write to the debugger blindly
+        void open()
+        {
+        }; // open
+
+        // write to the debugger blindly
+        void write(const char* arg, int32_t length)
+        {
+#if IN_DEBUGGER == 1
+            int32_t delay = 100;
+            while (delay--) { __asm("NOP"); };
+            while (length--) {
+                ITM_SendChar(*arg++);
+            }
+#endif // IN_DEBUGGER == 1
+        }; // write
+
+        // using template size deduction to simplify the syntax.
+        // Note that the (&arg) part is vital. See:
+        //   https://theotherbranch.wordpress.com/2011/08/24/template-parameter-deduction-from-array-dimensions/
+        // This allows usage as debug.write("blah");
+        template <uint32_t length>
+        void write(const char (&arg)[length]) {
+            write(arg, length);
+        }
+    };
+#endif // DEBUG_USE_ITM == 1
 
 extern Debug debug;
 
