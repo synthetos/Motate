@@ -72,41 +72,53 @@ namespace Motate {
             _queued = true;
             _next = nullptr;
 
-            if (_first_service_call == nullptr) {
-                _debug_print_num(); svc_call_debug("☝🏻");
-                _first_service_call = this;
-                _pend();
-                return;
-            }
+            bool needs_repended = false;
 
-//            // This happens when we are already in a pendSV context, and we are adding a second one.
-//            // This can also happen if there was already a second one, and we just pre-empted it with a
-//            // higher-priority one.
-//            // IMPORTANT: HIGHER priority tasks have a LOWER number
-//            if (_first_service_call->_interrupt_level > _interrupt_level) {
-//                _debug_print_num(); svc_call_debug("shuffle! ");
-//                this->_next = _first_service_call;
-//                _first_service_call = this;
-//                _pend();
-//                return;
-//            }
+            { // section with the interrupts off
+                SamCommon::InterruptDisabler disabler;
 
-            ServiceCallEvent *walker = _first_service_call;
-            while (walker->_next != nullptr) {
-                // put this in front of lower priority tasks
-                // IMPORTANT: HIGHER priority tasks have a LOWER number
-                if (walker->_next->_interrupt_level > _interrupt_level) { break; }
-                walker = walker->_next;
-            }
 
-            _next = walker->_next; // in case we aren't putting it last in line
-            walker->_next = this;
+                if (_first_service_call == nullptr) {
+                    _debug_print_num(); svc_call_debug("☝🏻");
+                    _first_service_call = this;
+                    _pend();
+                    return;
+                }
 
-            _debug_print_num(); svc_call_debug("🖐🏻");
+    //            // This happens when we are already in a pendSV context, and we are adding a second one.
+    //            // This can also happen if there was already a second one, and we just pre-empted it with a
+    //            // higher-priority one.
+    //            // IMPORTANT: HIGHER priority tasks have a LOWER number
+    //            if (_first_service_call->_interrupt_level > _interrupt_level) {
+    //                _debug_print_num(); svc_call_debug("shuffle! ");
+    //                this->_next = _first_service_call;
+    //                _first_service_call = this;
+    //                _pend();
+    //                return;
+    //            }
+
+                ServiceCallEvent *walker = _first_service_call;
+                while (walker->_next != nullptr) {
+                    // put this in front of lower priority tasks
+                    // IMPORTANT: HIGHER priority tasks have a LOWER number
+                    if (walker->_next->_interrupt_level > _interrupt_level) {
+                        if (walker == _first_service_call) {
+                            needs_repended = true;
+                        }
+                        break;
+                    }
+                    walker = walker->_next;
+                }
+
+                _next = walker->_next; // in case we aren't putting it last in line
+                walker->_next = this;
+
+                _debug_print_num(); svc_call_debug("🖐🏻");
+            } // enable interrupts again
 
             // If the first_service_call's priority is lower (has a higher number)
             // then we'll pend another PendSV to esure the correct level.
-            if ((_first_service_call->_interrupt_level > _interrupt_level)) {
+            if (needs_repended) {
                 _pend();
             }
         };
