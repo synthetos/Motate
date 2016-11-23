@@ -31,8 +31,20 @@
 #define SAMSERVICECALL_H_ONCE
 
 #include <sys/types.h>
-#include "MotateTimers.h" // for the interrupt definitions
 #include <functional>
+
+#include "MotateTimers.h" // for the interrupt definitions
+#include "MotateDebug.h"
+
+// Unless debugging, this should always read "#if 0 && ..."
+// DON'T COMMIT with anything else!
+#if 0 && (IN_DEBUGGER == 1)
+    template<int32_t len>
+    void svc_call_debug(const char (&str)[len]) { Motate::debug.write(str); };
+#else
+    template<int32_t len>
+    void svc_call_debug(const char (&str)[len]) { ; };
+#endif
 
 namespace Motate {
     typedef const uint32_t service_call_number;
@@ -43,7 +55,6 @@ namespace Motate {
         std::function<void(void)> _callback {};
         ServiceCallEvent * volatile _next = nullptr;
         volatile bool _queued = false;
-        volatile bool _setup = false; // this means we've setup the interrupt and triggered the call
 
         static ServiceCallEvent * volatile _first_service_call; // the pointer is volatile
 
@@ -53,28 +64,32 @@ namespace Motate {
         //ServiceCallEvent(std::function<void(void)> &&e) : _callback{std::move(e)} {};
 
         void _add_to_queue() {
-            if (_queued) { return; }
+            if (_queued) {
+                _debug_print_num(); svc_call_debug("💣");
+                return;
+            }
 
             _queued = true;
-            _setup = false;
             _next = nullptr;
 
             if (_first_service_call == nullptr) {
+                _debug_print_num(); svc_call_debug("☝🏻");
                 _first_service_call = this;
                 _pend();
                 return;
             }
 
-            // This happens when we are already in a pendSV context, and we are adding a second one.
-            // This can also happen if there was already a second one, and we just pre-empted it with a
-            // higher-priority one.
-            // IMPORTANT: HIGHER priority tasks have a LOWER number
-            if (_first_service_call->_interrupt_level > _interrupt_level) {
-                this->_next = _first_service_call;
-                _first_service_call = this;
-                _pend();
-                return;
-            }
+//            // This happens when we are already in a pendSV context, and we are adding a second one.
+//            // This can also happen if there was already a second one, and we just pre-empted it with a
+//            // higher-priority one.
+//            // IMPORTANT: HIGHER priority tasks have a LOWER number
+//            if (_first_service_call->_interrupt_level > _interrupt_level) {
+//                _debug_print_num(); svc_call_debug("shuffle! ");
+//                this->_next = _first_service_call;
+//                _first_service_call = this;
+//                _pend();
+//                return;
+//            }
 
             ServiceCallEvent *walker = _first_service_call;
             while (walker->_next != nullptr) {
@@ -83,43 +98,95 @@ namespace Motate {
                 if (walker->_next->_interrupt_level > _interrupt_level) { break; }
                 walker = walker->_next;
             }
+
             _next = walker->_next; // in case we aren't putting it last in line
             walker->_next = this;
+
+            _debug_print_num(); svc_call_debug("🖐🏻");
+
+            // If the first_service_call's priority is lower (has a higher number)
+            // then we'll pend another PendSV to esure the correct level.
+            if ((_first_service_call->_interrupt_level > _interrupt_level)) {
+                _pend();
+            }
         };
 
         // This is static, it doesn't use any local variables
-        static void _pend() {
-            uint32_t _interrupt_level = _first_service_call->_interrupt_level;
+        void _pend() {
+            _debug_print_num(); svc_call_debug("✍🏻");
 
             /* Set interrupt priority */
             if (_interrupt_level & kInterruptPriorityHighest) {
                 NVIC_SetPriority(PendSV_IRQn, 0);
+                svc_call_debug("⇈");
             }
             else if (_interrupt_level & kInterruptPriorityHigh) {
                 NVIC_SetPriority(PendSV_IRQn, 3);
+                svc_call_debug("⇡");
             }
             else if (_interrupt_level & kInterruptPriorityMedium) {
                 NVIC_SetPriority(PendSV_IRQn, 7);
+                svc_call_debug("⦿");
             }
             else if (_interrupt_level & kInterruptPriorityLow) {
                 NVIC_SetPriority(PendSV_IRQn, 11);
+                svc_call_debug("⇣");
             }
             else if (_interrupt_level & kInterruptPriorityLowest) {
                 NVIC_SetPriority(PendSV_IRQn, 15);
+                svc_call_debug("⇊");
             }
 
-            SamCommon::sync();
+            // see http://infocenter.arm.com/help/topic/com.arm.doc.dai0321a/DAI0321A_programming_guide_memory_barriers_for_m_profile.pdf
+            // Section 4.5 and 4.10. Specifically:
+            // "if it is necessary to have the side-effect of the priority change recognized immediately,
+            // an ISB instruction is required"
             SCB->ICSR |= SCB_ICSR_PENDSVSET_Msk;
-            SamCommon::sync();
+            __ISB();
         }
+
+        // Pop the first thing off the list and return it.
+        static auto _pop() {
+            SamCommon::InterruptDisabler disabler;
+
+            // Other than here, we never modify the first one when adding,
+            // but we might put a higher priority
+            // in _first_service_call->_next. We might pop that one.
+
+            // IMPORTANT: HIGHER priority tasks have a LOWER number
+            if (_first_service_call->_next &&
+                (_first_service_call->_next->_interrupt_level < _first_service_call->_interrupt_level))
+            {
+                ServiceCallEvent *popped = _first_service_call->_next;
+                _first_service_call->_next = _first_service_call->_next->_next;
+                popped->_next = nullptr;
+
+                popped->_debug_print_num(); svc_call_debug("⤵︎");
+                return popped;
+            }
+
+            // pop the first one off the list
+            ServiceCallEvent *popped = _first_service_call;
+            _first_service_call = _first_service_call->_next;
+            popped->_next = nullptr;
+
+            popped->_debug_print_num(); svc_call_debug("→");
+            return popped;
+        };
 
         // We were queued and pended, then called.
         void _call() {
             // If we are here then we are in the interrupt context
-
-            // pop this call off the list
-            _first_service_call = _next;
-            _next = nullptr;
+            _debug_print_num(); svc_call_debug("☎️");
+            auto priority_level = NVIC_GetPriority(PendSV_IRQn);
+            switch(priority_level) {
+                case 0: svc_call_debug("⇈"); break;
+                case 3: svc_call_debug("⇡"); break;
+                case 7: svc_call_debug("⦿"); break;
+                case 11: svc_call_debug("⇣"); break;
+                case 15: svc_call_debug("⇊"); break;
+                default: svc_call_debug("?"); break;
+            }
 
             // Mark it as un-queued so it can be re-queued
             _queued = false;
@@ -131,10 +198,24 @@ namespace Motate {
                 interrupt();
             }
 
-            if (_first_service_call != nullptr) {
-                _pend();
+            // if there's another service call, pend it
+            if (((SCB->ICSR & SCB_ICSR_PENDSVSET_Msk) == 0) && (_first_service_call != nullptr)) {
+                // If the next one exists and is higher priority, then pend it instead.
+                // IMPORTANT: HIGHER priority tasks have a LOWER number
+                if ((_first_service_call->_next != nullptr) &&
+                    (_first_service_call->_next->_interrupt_level < _first_service_call->_interrupt_level))
+                {
+                    _first_service_call->_next->_pend();
+                } else {
+                    _first_service_call->_pend();
+                }
             }
+
+            // If we are here then we are in the interrupt context
+            _debug_print_num(); svc_call_debug("🎉\n");
         };
+
+        virtual void _debug_print_num() {;};
 
         virtual void interrupt() {;};
     };
@@ -147,7 +228,7 @@ namespace Motate {
             //_callback = [&](){
             //    interrupt();
             //};
-            _first_service_call = nullptr;
+            //_first_service_call = nullptr;
         };
 
         // Interface that makes sense for this object...
@@ -174,6 +255,22 @@ namespace Motate {
         void setInterruptHandler(std::function<void(void)> &&handler) {
             _callback = std::move(handler);
         }
+
+
+        void _debug_print_num() override {
+            switch (svcNumber) {
+                case 0: svc_call_debug("<0>"); break;
+                case 1: svc_call_debug("<1>"); break;
+                case 2: svc_call_debug("<2>"); break;
+                case 3: svc_call_debug("<3>"); break;
+                case 4: svc_call_debug("<4>"); break;
+                case 5: svc_call_debug("<5>"); break;
+
+                default:
+                    svc_call_debug("<?>");
+                    break;
+            }
+        };
 
         // If the main interrupt isn't overidden, then we'll this one
         //static void alternate_interrupt() {

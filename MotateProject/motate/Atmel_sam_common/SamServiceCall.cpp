@@ -123,6 +123,6 @@ if (Motate::_internal_pendsv_handler_number == n) {\
 void PendSV_Handler() {
     Motate::SamCommon::sync();
     if (Motate::ServiceCallEvent::_first_service_call) {
-        Motate::ServiceCallEvent::_first_service_call->_call();
+        Motate::ServiceCallEvent::_pop()->_call();
     }
 }
