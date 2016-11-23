@@ -150,13 +150,13 @@ namespace Motate {
         };
 
         bool _canBeRead(uint16_t pos) {
-//            if (pos == _last_known_write_offset) {
+            if (pos == _last_known_write_offset) {
                 _getWriteOffset();
                 if (pos == _last_known_write_offset) {
                     //_restartTransfer();
                     return false;
                 }
-//            }
+            }
 
             return true;
         };
@@ -178,9 +178,9 @@ namespace Motate {
 
         bool isEmpty() {
             // If we weren't empty last time we checked, we aren't empty now.
-//            if (!_isEmptyCached()) {
-//                return false;
-//            }
+            if (!_isEmptyCached()) {
+                return false;
+            }
 
             // Update the cache and check again
             _getWriteOffset();
@@ -189,9 +189,9 @@ namespace Motate {
 
         bool isFull() {
             // If we were full last time we checked, we are still full
-//            if (_isFullCached()) {
-//                return true;
-//            }
+            if (_isFullCached()) {
+                return true;
+            }
 
             // Update the cache and check again
             _getWriteOffset();
@@ -256,11 +256,11 @@ namespace Motate {
                 // [0] _write_pos+1 = _read_pos
                 //     We just eliminated that.
                 // [1] _read_pos > _write_pos
-                //     IOW: We read to some position in the middle, and _write_pos is before it
+                //     IOW: We have read to some position in the middle, and _write_pos is before it
                 //          The unread data is between read->end, then 0->write.
                 //          So, we transfer from _write_pos to the _read_pos position - 1.
                 // [2] _read_pos <= _write_pos
-                //     IOW: We read to some position in the middle, and _read_pos is in the range 0 through _write_pos.
+                //     IOW: We have read to some position in the middle, and _read_pos is in the range 0 through _write_pos.
                 //          So, we can transfer from _write_pos to the end of the buffer.
                 // [2a] _read_pos <= _write_pos && _read_pos == 0
                 //     IOW: If we read to the end, we will read _size bytes, and our "full" will look like "empty".
@@ -284,6 +284,7 @@ namespace Motate {
                 } else {
                     transfer_size = (_size - _last_known_write_offset);
                 }
+
 
                 _transfer_requested = transfer_size;
 
