@@ -941,6 +941,10 @@ namespace Motate {
         };
 
         void _attach() {
+            // delay here, let things settle
+            uint16_t d = 10000;
+            while (d--) {;}
+
             SamCommon::InterruptDisabler disabler;
 
             _unfreeze_clock();
