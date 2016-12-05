@@ -184,7 +184,7 @@ namespace Motate {
     //         run_and_link    = 3
     //     };
     //
-    //     USB_DMA_Descriptor *nextDescriptor;    // The address of the next Descriptor
+    //     USB_DMA_Descriptor *next_descriptor;    // The address of the next Descriptor
     //     char *bufferAddress;                    // The address of the buffer to read/write
     //     struct {                                // controlData is a bit field with the settings of the descriptor
     //         // See SAM3X8n datasheet for defintions.
@@ -213,7 +213,7 @@ namespace Motate {
     //     }
     //
     //     void setNextDescriptor(USB_DMA_Descriptor *next) {
-    //         nextDescriptor = next;
+    //         next_descriptor = next;
     //     }
     // };
 
@@ -225,7 +225,7 @@ namespace Motate {
             run_and_link    = 3
         };
 
-        USB_DMA_Descriptor *nextDescriptor;    // The address of the next Descriptor
+        USB_DMA_Descriptor *next_descriptor;    // The address of the next Descriptor
         char *bufferAddress;                    // The address of the buffer to read/write
         union {
             struct {                                // controlData is a bit field with the settings of the descriptor
@@ -257,7 +257,7 @@ namespace Motate {
         }
 
         void setNextDescriptor(USB_DMA_Descriptor *next) {
-            nextDescriptor = next;
+            next_descriptor = next;
         }
     };
     struct USB_DMA_Status {
@@ -308,6 +308,7 @@ namespace Motate {
         uint32_t _inited = 0;
         uint32_t config_number = 0;
         bool _address_available = false;
+        uint32_t _dma_used_by_endpoint;
 
         enum USBSetupState_t {
             SETUP                  = 0, // Waiting for a SETUP packet
@@ -1054,6 +1055,10 @@ namespace Motate {
             if (!_endpoint_configured(endpoint)) {
                 __asm__("BKPT"); // endpoint not configured
             }
+
+            _devdma(endpoint)->command = USB_DMA_Descriptor::stop_now;
+            _devdma(endpoint)->bufferAddress = nullptr;
+            _devdma(endpoint)->buffer_length = 0;
         };
 
         void reset() {
@@ -1069,6 +1074,16 @@ namespace Motate {
             _enable_setup_received_interrupt(0);
             _enable_out_received_interrupt(0);
             _enable_endpoint_interrupt(0);
+
+            // catch the case where we are disconnected and reconnected, and we had open tranfers
+            if (_dma_used_by_endpoint) {
+                for (uint32_t ep = 0; ep < 10; ep++) {
+                    if (_dma_used_by_endpoint & (1 << ep)) {
+                        _dma_used_by_endpoint &= ~(1 << ep);
+                        proxy->handleTransferDone(ep);
+                    }
+                }
+            }
         };
 
         void initSetup() {
@@ -1408,6 +1423,11 @@ namespace Motate {
                         if (_is_in_send(ep)) {
                             _ack_in_send(ep);
                             _ack_fifocon(ep);
+
+//                            if (0 == get_byte_count(ep)) {
+//                                usb_debug("ACK(0) ");
+//                                _ack_fifocon(ep);
+//                            }
 //                            usb_debug(":");
                         }
 //                        usb_debug("tx ");
@@ -1416,12 +1436,10 @@ namespace Motate {
                         // Disable then accept the rx packet interrupt.
                         _disable_out_received_interrupt(ep);
                         _ack_out_received(ep);
-                        // DON'T _ack_fifocon(ep) -- we don't want to toss the packet.
 
                         // if we have no more bytes in this packet, then clear it out
                         if (0 == get_byte_count(ep)) {
                             usb_debug("ACK(0) ");
-//                            _ack_out_received(ep);
                             _ack_fifocon(ep);
                         }
 
@@ -1434,7 +1452,7 @@ namespace Motate {
                     }
 
 
-                    _DMA_Used_By_Endpoint &= ~(1<<ep);
+                    _dma_used_by_endpoint &= ~(1<<ep);
 //                    usb_debug("|\n");
                     proxy->handleTransferDone(ep);
 
@@ -1482,7 +1500,7 @@ namespace Motate {
 //                                //_ack_out_received(ep);
 //                                _disable_out_received_interrupt(ep);
 //                                _disable_endpoint_dma_interrupt(ep);
-//                                _DMA_Used_By_Endpoint &= ~(1<<ep);
+//                                _dma_used_by_endpoint &= ~(1<<ep);
 //                                usb_debug("|\n");
 //                                proxy->handleTransferDone(ep);
 //                            }
@@ -1506,7 +1524,6 @@ namespace Motate {
             return false;
         };
 
-        uint32_t _DMA_Used_By_Endpoint;
         bool transfer(const uint8_t endpoint, USB_DMA_Descriptor& desc) {
             if (!config_number)
                 return false;
@@ -1520,9 +1537,9 @@ namespace Motate {
                 if (0 != (desc.buffer_length % _get_endpoint_size(endpoint)))
                 {
                     // validate the packet at DMA Buffer End (BUFF_COUNT reaches 0)
-                    // desc.end_buffer_enable = true;
+                     desc.end_buffer_enable = true;
                     // interrupt when the DMA transfer ends because USB stopped it
-                    // desc.end_transfer_interrupt_enable = true;
+                     desc.end_transfer_interrupt_enable = true;
                 }
             } else {
                 usb_debug("tr->RX ");
@@ -1539,7 +1556,7 @@ namespace Motate {
             // interrupt when the DMA transfer ends because the buffer ran out
             desc.end_buffer_interrupt_enable = true;
 
-            _DMA_Used_By_Endpoint |= 1 << endpoint;
+            _dma_used_by_endpoint |= 1 << endpoint;
 
             if (_is_endpoint_a_tx_in(endpoint)) {
                 _enable_in_send_interrupt(endpoint);
@@ -1551,7 +1568,7 @@ namespace Motate {
             _enable_endpoint_dma_interrupt(endpoint);
 
             // IMPORTANT: UOTGHS_DEVDMA[0] is endpoint 1!!
-            _devdma(endpoint)->nextDescriptor = &desc;
+            _devdma(endpoint)->next_descriptor = &desc;
             _devdma(endpoint)->command = USB_DMA_Descriptor::load_next_desc;
             return true;
         };
