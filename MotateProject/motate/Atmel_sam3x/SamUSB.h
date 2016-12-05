@@ -1423,7 +1423,7 @@ namespace Motate {
 
                     // ep_status.buffer_count hold how many are left to transfer
                     if (_is_endpoint_a_tx_in(ep)) {
-                        _disable_in_send_interrupt(ep);
+                        //_disable_in_send_interrupt(ep);
                         if (_is_in_send(ep)) {
                             _ack_in_send(ep);
                             _ack_fifocon(ep);
@@ -1438,13 +1438,15 @@ namespace Motate {
                     } else {
                         usb_debug("rx ");
                         // Disable then accept the rx packet interrupt.
-                        _disable_out_received_interrupt(ep);
-                        _ack_out_received(ep);
+                        //_disable_out_received_interrupt(ep);
 
                         // if we have no more bytes in this packet, then clear it out
                         if (0 == get_byte_count(ep)) {
                             usb_debug("ACK(0) ");
+                            _ack_out_received(ep);
                             _ack_fifocon(ep);
+                        } else {
+                            _ack_out_received(ep);
                         }
 
                         if (ep_status & UOTGHS_DEVDMASTATUS_END_TR_ST) {
@@ -1494,7 +1496,14 @@ namespace Motate {
                             if (_is_write_enabled(ep)) { usb_debug(">"); }
 //                            if (0 == dma_buffer_count)  { usb_debug("dma_count_1(0)"); }
                             usb_debug("epRX ");
-                            _ack_out_received(ep);
+                            // if we have no more bytes in this packet, then clear it out
+                            if (0 == get_byte_count(ep)) {
+                                usb_debug("ACK(0) ");
+                                _ack_out_received(ep);
+                                _ack_fifocon(ep);
+                            } else {
+                                _ack_out_received(ep);
+                            }
 
                             // if we have more bytes in the packet, but the DMA request ran out
 //                            if (//_is_endpoint_dma_interrupt_enabled(ep) &&
