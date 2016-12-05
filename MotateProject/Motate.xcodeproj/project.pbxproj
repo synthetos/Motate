@@ -1961,10 +1961,6 @@
 		D4E913361ABBB2370042A16C /* index_xmega */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = index_xmega; sourceTree = BUILT_PRODUCTS_DIR; };
 		D4E913561ABCB58F0042A16C /* xmega_interrupts.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = xmega_interrupts.cpp; sourceTree = "<group>"; };
 		D4E913571ABCB58F0042A16C /* xmega_interrupts.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = xmega_interrupts.h; sourceTree = "<group>"; };
-		D4F22B771B73DC4900C0DDFD /* g2Ref-pinout.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "g2Ref-pinout.h"; sourceTree = "<group>"; };
-		D4F22B781B73DC4900C0DDFD /* motate_pin_assignments.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = motate_pin_assignments.h; sourceTree = "<group>"; };
-		D4F22B791B73DC4900C0DDFD /* g2Ref.gdb */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = g2Ref.gdb; sourceTree = "<group>"; };
-		D4F22B7A1B73DC4900C0DDFD /* g2Ref.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = g2Ref.mk; sourceTree = "<group>"; };
 		D4F22B831B73E63400C0DDFD /* pin_assignments.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = pin_assignments.h; sourceTree = "<group>"; };
 		D4F22B851B73E63400C0DDFD /* pin_assignments.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = pin_assignments.h; sourceTree = "<group>"; };
 		D4F22B871B750B4800C0DDFD /* MotateUtilities.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = MotateUtilities.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
@@ -4432,9 +4428,6 @@
 		D4C79F001957C1E300A1BE28 /* board */ = {
 			isa = PBXGroup;
 			children = (
-				D4F22B761B73DC4900C0DDFD /* g2Ref */,
-				D4F22B791B73DC4900C0DDFD /* g2Ref.gdb */,
-				D4F22B7A1B73DC4900C0DDFD /* g2Ref.mk */,
 				D4C7A1AC19649C2200A1BE28 /* ArduinoDue.gdb */,
 				D4C79F0D1957C2A100A1BE28 /* ArduinoDue.mk */,
 				D4C79F071957C24700A1BE28 /* ArduinoDue */,
@@ -4552,15 +4545,6 @@
 				D4E913571ABCB58F0042A16C /* xmega_interrupts.h */,
 			);
 			path = atmel_xmega;
-			sourceTree = "<group>";
-		};
-		D4F22B761B73DC4900C0DDFD /* g2Ref */ = {
-			isa = PBXGroup;
-			children = (
-				D4F22B771B73DC4900C0DDFD /* g2Ref-pinout.h */,
-				D4F22B781B73DC4900C0DDFD /* motate_pin_assignments.h */,
-			);
-			path = g2Ref;
 			sourceTree = "<group>";
 		};
 		D4F22B811B73E63400C0DDFD /* board */ = {
