@@ -950,10 +950,6 @@ namespace Motate {
         };
 
         void _attach() {
-            // delay here, let things settle
-            uint32_t d = 100000;
-            while (d--) {;}
-
             if (!_get_vbus_state()) {
                 return _detach();
             }
