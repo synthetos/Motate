@@ -1186,8 +1186,28 @@ namespace Motate {
                 return;
             }
             SysTickEvent *event = firstEvent;
-            while (event->next != nullptr) { event = event->next; }
+            if (new_event == event) { return; }
+            while (event->next != nullptr) {
+                event = event->next;
+                if (new_event == event) { return; }
+            }
             event->next = new_event;
+            new_event->next = nullptr;
+        };
+
+        void unregisterEvent(SysTickEvent *new_event) {
+            if (firstEvent == new_event) {
+                firstEvent = firstEvent->next;
+                return;
+            }
+            SysTickEvent *event = firstEvent;
+            while (event->next != nullptr) {
+                if (event->next == new_event) {
+                    event->next = event->next->next;
+                    return;
+                }
+                event = event->next;
+            }
         };
 
         void _handleEvents() {
