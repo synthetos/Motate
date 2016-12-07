@@ -59,7 +59,9 @@ namespace Motate {
         extern "C"
         void UOTGHS_Handler() {
             USBDeviceHardware *hw = USBDeviceHardware::hw;
-            //USBDevice_t *proxy = USBDeviceHardware::hw->proxy;
+
+            // Check for and handle connect and disconnect
+            if (hw->checkAndHandleVbusChange()) { return; }
 
             // Check for and handle SOF and MSOF
             if (hw->checkAndHandleSOF()) { return; }

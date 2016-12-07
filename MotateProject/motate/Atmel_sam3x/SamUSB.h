@@ -365,6 +365,15 @@ namespace Motate {
 
         // Start/stop interrupts
 
+        // ** Manage VBus event (VBUSTE)
+        void _enable_vbus_change_interrupt()     { (Set_bits(UOTGHS->UOTGHS_CTRL, UOTGHS_CTRL_VBUSTE)); };
+        void _disable_vbus_change_interrupt()    { (Clr_bits(UOTGHS->UOTGHS_CTRL, UOTGHS_CTRL_VBUSTE)); };
+        bool _is_vbus_change_interrupt_enabled() { return (Tst_bits(UOTGHS->UOTGHS_CTRL, UOTGHS_CTRL_VBUSTE)); };
+        void _ack_vbus_change()                  { (UOTGHS->UOTGHS_SCR = UOTGHS_SCR_VBUSTIC); };
+        void _raise_vbus_change()                { (UOTGHS->UOTGHS_SFR = UOTGHS_SFR_VBUSTIS); };
+        bool _is_vbus_change()                   { return (Tst_bits(UOTGHS->UOTGHS_SR, UOTGHS_SR_VBUSTI)); };
+        bool _get_vbus_state()                   { return (Tst_bits(UOTGHS->UOTGHS_SR, UOTGHS_SR_VBUS)); };
+
         // ** Manage wake-up event (=usb line activity)
         //     The USB controller is reactivated by a filtered non-idle signal from the lines
         void _enable_wake_up_interrupt()     { (UOTGHS->UOTGHS_DEVIER = UOTGHS_DEVIER_WAKEUPES); };
@@ -928,6 +937,8 @@ namespace Motate {
             //  Unfreeze internal USB clock
             _unfreeze_clock();
 
+            _enable_vbus_change_interrupt();
+
             // Handle any additional setup here
             _inited = 1UL;
             config_number = 0UL;
@@ -937,7 +948,7 @@ namespace Motate {
 
             _freeze_clock();
 
-            _attach();
+            //_attach();
         };
 
         void _attach() {
@@ -972,9 +983,8 @@ namespace Motate {
             // _freeze_clock();
         };
         bool attach() {
-            if (_inited) {
-                // _attach();
-                // configuration = 0;
+            if (_inited && _get_vbus_state()) {
+                _attach();
                 return true;
             }
             return false;
@@ -1078,16 +1088,6 @@ namespace Motate {
             _enable_setup_received_interrupt(0);
             _enable_out_received_interrupt(0);
             _enable_endpoint_interrupt(0);
-
-            // catch the case where we are disconnected and reconnected, and we had open tranfers
-            if (_dma_used_by_endpoint) {
-                for (uint32_t ep = 0; ep < 10; ep++) {
-                    if (_dma_used_by_endpoint & (1 << ep)) {
-                        _dma_used_by_endpoint &= ~(1 << ep);
-                        proxy->handleTransferDone(ep);
-                    }
-                }
-            }
         };
 
         void initSetup() {
@@ -1204,6 +1204,41 @@ namespace Motate {
 
             return true;
         };
+
+        bool isConnected() { return _get_vbus_state(); }
+
+        bool checkAndHandleVbusChange() {
+            if (!_is_vbus_change()) { return false; }
+
+            _ack_vbus_change();
+
+            setup_state = SETUP;
+
+            // from here on is if we disconnected
+            // catch the case where we are disconnected and reconnected, and we had open tranfers
+            if (!_get_vbus_state() && _dma_used_by_endpoint) {
+                for (uint32_t ep = 0; ep < 10; ep++) {
+                    if (_dma_used_by_endpoint & (1 << ep)) {
+                        _dma_used_by_endpoint &= ~(1 << ep);
+
+                        _devdma(ep)->command = USB_DMA_Descriptor::stop_now;
+                        _devdma(ep)->bufferAddress = nullptr;
+                        _devdma(ep)->buffer_length = 0;
+
+                        proxy->handleTransferDone(ep);
+                    }
+                }
+            }
+
+            // check to see if we connected
+            if (_get_vbus_state()) {
+                attach();
+            }
+
+            proxy->handleConnectionStateChanged();
+
+            return true;
+        }
 
         bool checkAndHandleWakeupSuspend() {
             if (/*_is_wake_up_interrupt_enabled() && */_is_wake_up()) {

@@ -76,6 +76,8 @@ namespace Motate {
         virtual const EndpointBufferSettings_t getEndpointConfig(const uint8_t endpoint, const bool otherSpeed) = 0;
         // virtual const uint8_t getEndpointCount(uint8_t &firstEnpointNum) const = 0;
         // virtual uint16_t getEndpointSize(const uint8_t &endpointNum, const bool otherSpeed) const = 0;
+
+        virtual void handleConnectionStateChanged() = 0;
     }; // USBDevice_t
 
 }; // end Motate
@@ -392,6 +394,10 @@ namespace Motate {
             _hardware_type::writeToControl(buffer, config->TotalConfigurationSize);
         };
 
+        void handleConnectionStateChanged() override {
+            _mixins_type::handleConnectionStateChangedInMixin(isConnected());
+        };
+
         bool handleNonstandardRequest() {
             return _mixins_type::handleNonstandardRequestInMixin(setup);
         };
@@ -457,6 +463,7 @@ namespace Motate {
         const EndpointBufferSettings_t getEndpointConfigFromMixin(const uint8_t endpoint, const USBDeviceSpeed_t deviceSpeed, const bool other_speed) const {
             return kEndpointBufferNull;
         };
+        void handleConnectionStateChangedInMixin(const bool connected) { ; };
         bool handleNonstandardRequestInMixin(Setup_t &setup) { return false; };
         bool sendSpecialDescriptorOrConfig(Setup_t &setup) const { return false; };
         constexpr uint16_t getEndpointSizeFromMixin(const uint8_t &endpointNum, const USBDeviceSpeed_t deviceSpeed, const bool otherSpeed) { return 8; };
@@ -539,6 +546,10 @@ namespace Motate {
 
             return ebs;
         };
+        void handleConnectionStateChangedInMixin(const bool connected) {
+            first_mixin::handleConnectionStateChangedInMixin(connected);
+            other_mixins::handleConnectionStateChangedInMixin(connected);
+        };
         bool handleNonstandardRequestInMixin(const Setup_t &setup) {
             return first_mixin::handleNonstandardRequestInMixin(setup) || other_mixins::handleNonstandardRequestInMixin(setup);
         };
@@ -592,6 +603,9 @@ namespace Motate {
         const EndpointBufferSettings_t getEndpointConfigFromMixin(const uint8_t endpoint, const USBDeviceSpeed_t deviceSpeed, const bool other_speed) const {
             return first_mixin::getEndpointConfigFromMixin(endpoint, deviceSpeed, other_speed);
         };
+        void handleConnectionStateChangedInMixin(const bool connected) {
+            first_mixin::handleConnectionStateChangedInMixin(connected);
+        };
         bool handleNonstandardRequestInMixin(const Setup_t &setup) {
             return first_mixin::handleNonstandardRequestInMixin(setup);
         };
@@ -628,6 +642,9 @@ namespace Motate {
 
         const EndpointBufferSettings_t getEndpointConfigFromMixin(const uint8_t endpoint, const USBDeviceSpeed_t deviceSpeed, const bool other_speed) const {
             return other_mixins::getEndpointConfigFromMixin(endpoint, deviceSpeed, other_speed);
+        };
+        void handleConnectionStateChangedInMixin(const bool connected) {
+            other_mixins::handleConnectionStateChangedInMixin(connected);
         };
         bool handleNonstandardRequestInMixin(const Setup_t &setup) {
             return other_mixins::handleNonstandardRequestInMixin(setup);

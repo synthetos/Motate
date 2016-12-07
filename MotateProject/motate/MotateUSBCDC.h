@@ -433,7 +433,7 @@ namespace Motate {
         }
 
         bool isConnected() {
-            return _line_state & (0x01 << kCDCControlState_DTR);
+            return usb.isConnected() && (_line_state & (0x01 << kCDCControlState_DTR));
         }
 
         bool getDTR() {
@@ -446,8 +446,9 @@ namespace Motate {
 
         void setConnectionCallback(std::function<void(bool)> &&callback) {
             connection_state_changed_callback = std::move(callback);
-            if(connection_state_changed_callback && (_line_state & kCDCControlState_DTR))
+            if (connection_state_changed_callback && (_line_state & kCDCControlState_DTR)) {
                 connection_state_changed_callback(_line_state & kCDCControlState_DTR);
+            }
         }
 
         void setDataAvailableCallback(std::function<void(const size_t &length)> &&callback) {
@@ -534,6 +535,14 @@ namespace Motate {
             return false;
         };
 
+        void handleConnectionStateChanged(const bool connected) {
+            // We only use this to inform if DISconnects
+            // We only show connection when the DTR changes, which is later
+            if (connection_state_changed_callback && !connected) {
+                connection_state_changed_callback(false);
+            }
+        }
+
         // Stub in begin() and end()
         void begin(uint32_t baud_count) {};
         void end(void){};
@@ -598,6 +607,9 @@ namespace Motate {
 
         const EndpointBufferSettings_t getEndpointConfigFromMixin(const uint8_t endpoint, const USBDeviceSpeed_t deviceSpeed, const bool other_speed) const {
             return Serial.getEndpointSettings(endpoint, deviceSpeed, other_speed, /*limitedSize*/ false);
+        };
+        void handleConnectionStateChangedInMixin(const bool connected) {
+            Serial.handleConnectionStateChanged(connected);
         };
         bool handleNonstandardRequestInMixin(const Setup_t &setup) {
             return Serial.handleNonstandardRequest(setup);
