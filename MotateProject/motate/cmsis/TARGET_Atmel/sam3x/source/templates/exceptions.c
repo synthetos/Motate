@@ -67,10 +67,10 @@ extern "C" {
 #ifdef __GNUC__
 /* Cortex-M3 core handlers */
 void NMI_Handler        ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
-void HardFault_Handler  ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
-void MemManage_Handler  ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
-void BusFault_Handler   ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
-void UsageFault_Handler ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
+void HardFault_Handler  ( void ) __attribute__ ((weak, alias("Dummy_HardFault_Handler")));
+void MemManage_Handler  ( void ) __attribute__ ((weak, alias("Dummy_MemManage_Handler")));
+void BusFault_Handler   ( void ) __attribute__ ((weak, alias("Dummy_BusFault_Handler")));
+void UsageFault_Handler ( void ) __attribute__ ((weak, alias("Dummy_UsageFault_Handler")));
 void SVC_Handler        ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
 void DebugMon_Handler   ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
 void PendSV_Handler     ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
@@ -231,6 +231,30 @@ void Dummy_Handler(void)
 {
 	while (1) {
 	}
+}
+
+void Dummy_HardFault_Handler(void)
+{
+    while (1) {
+    }
+}
+
+void Dummy_MemManage_Handler(void)
+{
+    while (1) {
+    }
+}
+
+void Dummy_BusFault_Handler(void)
+{
+    while (1) {
+    }
+}
+
+void Dummy_UsageFault_Handler(void)
+{
+    while (1) {
+    }
 }
 
 /* @cond 0 */
