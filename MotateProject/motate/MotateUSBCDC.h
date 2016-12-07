@@ -352,6 +352,10 @@ namespace Motate {
             return usb.getTransferPositon(read_endpoint);
         };
 
+        void setRXTransferDoneCallback(const std::function<void()> &callback) {
+            transfer_rx_done_callback = callback;
+        }
+
         void setRXTransferDoneCallback(std::function<void()> &&callback) {
             transfer_rx_done_callback = std::move(callback);
         }
@@ -369,6 +373,10 @@ namespace Motate {
         char* getTXTransferPosition() {
             return usb.getTransferPositon(write_endpoint);
         };
+
+        void setTXTransferDoneCallback(const std::function<void()> &callback) {
+            transfer_tx_done_callback = callback;
+        }
 
         void setTXTransferDoneCallback(std::function<void()> &&callback) {
             transfer_tx_done_callback = std::move(callback);
@@ -444,11 +452,23 @@ namespace Motate {
             return _line_state & (0x01 << kCDCControlState_RTS);
         }
 
-        void setConnectionCallback(std::function<void(bool)> &&callback) {
-            connection_state_changed_callback = std::move(callback);
-            if (connection_state_changed_callback && (_line_state & kCDCControlState_DTR)) {
+        void setConnectionCallback(const std::function<void(bool)> &callback) {
+            connection_state_changed_callback = callback;
+            if (connection_state_changed_callback && usb.isConnected() && (_line_state & kCDCControlState_DTR)) {
                 connection_state_changed_callback(_line_state & kCDCControlState_DTR);
             }
+        }
+
+        void setConnectionCallback(std::function<void(bool)> &&callback) {
+            connection_state_changed_callback = std::move(callback);
+            if (connection_state_changed_callback && usb.isConnected() && (_line_state & kCDCControlState_DTR)) {
+                connection_state_changed_callback(_line_state & kCDCControlState_DTR);
+            }
+        }
+
+        void setDataAvailableCallback(const std::function<void(const size_t &length)> &callback) {
+            usb.enableRXInterrupt(read_endpoint);
+            data_available_callback = callback;
         }
 
         void setDataAvailableCallback(std::function<void(const size_t &length)> &&callback) {
