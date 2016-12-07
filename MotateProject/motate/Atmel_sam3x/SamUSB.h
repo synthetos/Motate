@@ -937,8 +937,6 @@ namespace Motate {
             //  Unfreeze internal USB clock
             _unfreeze_clock();
 
-            _enable_vbus_change_interrupt();
-
             // Handle any additional setup here
             _inited = 1UL;
             config_number = 0UL;
@@ -953,8 +951,12 @@ namespace Motate {
 
         void _attach() {
             // delay here, let things settle
-            uint16_t d = 10000;
+            uint32_t d = 100000;
             while (d--) {;}
+
+            if (!_get_vbus_state()) {
+                return _detach();
+            }
 
             SamCommon::InterruptDisabler disabler;
 
@@ -964,6 +966,7 @@ namespace Motate {
             UOTGHS->UOTGHS_DEVCTRL &= ~UOTGHS_DEVCTRL_DETACH;
 
             // Enable USB line events
+            _enable_vbus_change_interrupt();
             _enable_reset_interrupt();
             _enable_suspend_interrupt();
             _enable_wake_up_interrupt();
@@ -982,8 +985,9 @@ namespace Motate {
 //            _ack_wake_up();
             // _freeze_clock();
         };
+
         bool attach() {
-            if (_inited && _get_vbus_state()) {
+            if (_inited) {
                 _attach();
                 return true;
             }
@@ -1208,7 +1212,7 @@ namespace Motate {
         bool isConnected() { return _get_vbus_state(); }
 
         bool checkAndHandleVbusChange() {
-            if (!_is_vbus_change()) { return false; }
+            if (!_is_vbus_change() || (!_inited)) { return false; }
 
             _ack_vbus_change();
 
