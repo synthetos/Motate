@@ -1,9 +1,9 @@
 #
 # Makefile
-# 
+#
 # Copyright (c) 2012 - 2014 Robert Giseburt
 # Copyright (c) 2013 - 2014 Alden S. Hart Jr.
-# 
+#
 #	This file is part of the Motate Library.
 #
 #	This file ("the software") is free software: you can redistribute it and/or modify
@@ -46,27 +46,27 @@ ifeq ($(NEEDS_SCANF_FLOAT),1)
 PRINTF_FLOAT_FLAGS = -u _scanf_float
 endif
 
+DEVICE_DEFINES += __$(CHIP)__ __$(CHIP_SERIES)__ __ARM__
 
 # ---------------------------------------------------------------------------------------
 # C Flags (NOT CPP flags)
 
-DEVICE_CFLAGS := -D__$(CHIP)__ -D__$(CHIP_SERIES)__ -D__ARM__  -mcpu=$(CPU_DEV) -mthumb -ffunction-sections -fdata-sections -std=gnu99 $(FLOAT_OPTIONS)
+DEVICE_CFLAGS := -mcpu=$(CPU_DEV) -mthumb -ffunction-sections -fdata-sections -std=gnu99 $(FLOAT_OPTIONS)
 
 #--param max-inline-insns-single=500 -mlong-calls
 
 # ---------------------------------------------------------------------------------------
 # CPP Flags
 
-DEVICE_CPPFLAGS := -D__$(CHIP)__ -D__$(CHIP_SERIES)__ -D__ARM__ -mcpu=$(CPU_DEV) -mthumb -ffunction-sections -fdata-sections -std=gnu++14 -fno-rtti -fno-exceptions -fstrict-volatile-bitfields -fdiagnostics-show-option $(FLOAT_OPTIONS)
+DEVICE_CPPFLAGS := -mcpu=$(CPU_DEV) -mthumb -ffunction-sections -fdata-sections -std=gnu++14 -fno-rtti -fno-exceptions -fstrict-volatile-bitfields -fdiagnostics-show-option $(FLOAT_OPTIONS)
 # --param max-inline-insns-single=500 -mlong-calls
 
 # ---------------------------------------------------------------------------------------
 # Assembly Flags
 
-DEVICE_ASFLAGS  := -D__$(CHIP)__ -D__$(CHIP_SERIES)__ -D__ARM__ -mcpu=$(CPU_DEV) -mthumb $(FLOAT_OPTIONS)
+DEVICE_ASFLAGS  := -mcpu=$(CPU_DEV) -mthumb $(FLOAT_OPTIONS)
 
 # ---------------------------------------------------------------------------------------
 # Linker Flags
 
 DEVICE_LDFLAGS :=  -Wl,--entry=Reset_Handler -nostartfiles -mcpu=$(CPU_DEV) --specs=nano.specs ${PRINTF_FLOAT_FLAGS} -mthumb -L$(DEVICE_LINKER_SCRIPT_PATH) $(FLOAT_OPTIONS)
-

@@ -34,10 +34,11 @@ using Motate::delay;
 
 /******************** External interface setup ************************/
 
-
-#ifdef MOTATE_CONFIG_HAS_SPI
-#include "MotateSPI.h"
-Motate::SPI<kSocket4_SPISlaveSelectPinNumber> spi;
+#include "MotateDebug.h"
+#if IN_DEBUGGER == 1
+namespace Motate {
+    Debug debug;
+}
 #endif
 
 /******************** Initialization setup ************************/

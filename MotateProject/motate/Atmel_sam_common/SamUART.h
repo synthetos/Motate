@@ -28,8 +28,8 @@
 
  */
 
-#ifndef SAM4XUART_H_ONCE
-#define SAM4XUART_H_ONCE
+#ifndef SAMUART_H_ONCE
+#define SAMUART_H_ONCE
 
 #include <MotateUART.h>
 #include <MotateBuffer.h>
@@ -997,4 +997,4 @@ namespace Motate {
 //    };
 }
 
-#endif /* end of include guard: SAM4XUART_H_ONCE */
+#endif /* end of include guard: SAMUART_H_ONCE */

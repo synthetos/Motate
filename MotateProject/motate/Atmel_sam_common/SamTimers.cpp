@@ -29,10 +29,11 @@
 
 
 #include "SamTimers.h"
+#include "SamCommon.h"
 
 extern "C" {
-    void _null_pwm_timer_interrupt() __attribute__ ((unused));
-    void _null_pwm_timer_interrupt() {};
+    // void _null_pwm_timer_interrupt() __attribute__ ((unused));
+    // void _null_pwm_timer_interrupt() {};
 }
 
 namespace Motate {
@@ -65,16 +66,19 @@ extern "C" void SysTick_Handler(void)
     Motate::SysTickTimer._handleEvents();
 }
 
+// , alias("_null_pwm_timer_interrupt")
+
 #define _MAKE_TCx_Handler(x) \
     namespace Motate { \
-        template<> void TimerChannel<x, 0>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt"))); \
-        template<> void TimerChannel<x, 1>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt"))); \
-        template<> void Timer<x>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt"))); \
-        template<> uint32_t Timer<x>::_interrupt_cause_cached = 0; \
+        template<> void TimerChannel<x, 0>::interrupt() __attribute__ ((weak)); \
+        template<> void TimerChannel<x, 1>::interrupt() __attribute__ ((weak)); \
+        template<> void Timer<x>::interrupt() __attribute__ ((weak)); \
+        template<> volatile uint32_t Timer<x>::_interrupt_cause_cached = 0; \
     } \
     extern "C" \
     void TC##x##_Handler(void) { /* delegate to the TimerChannels */ \
         Motate::Timer<x>::_interrupt_cause_cached = Motate::Timer<x>::tcChan()->TC_SR;\
+        Motate::SamCommon::sync();\
         int16_t ch_ = 0; \
         /*auto tcio =*/ Motate::Timer<x>::getInterruptCause(ch_); \
         if (  Motate::TimerChannel<x, 0>::interrupt && \
@@ -105,6 +109,11 @@ extern "C" void SysTick_Handler(void)
     _MAKE_TCx_Handler(7)
     _MAKE_TCx_Handler(8)
 #endif
+#ifdef TC3
+    _MAKE_TCx_Handler(9)
+    _MAKE_TCx_Handler(10)
+    _MAKE_TCx_Handler(11)
+#endif
 
 #undef _MAKE_TCx_Handler
 
@@ -112,24 +121,24 @@ namespace Motate {
     uint32_t pwm_interrupt_cause_cached_1_ = 0;
     uint32_t pwm_interrupt_cause_cached_2_ = 0;
 
-    template<> void PWMTimer<  0>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt")));
-    template<> void PWMTimer<  1>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt")));
-    template<> void PWMTimer<  2>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt")));
-    template<> void PWMTimer<  3>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt")));
-    template<> void PWMTimer<  4>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt")));
-    template<> void PWMTimer<  5>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt")));
-    template<> void PWMTimer<  6>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt")));
-    template<> void PWMTimer<  7>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt")));
+    template<> void PWMTimer<  0>::interrupt() __attribute__ ((weak));
+    template<> void PWMTimer<  1>::interrupt() __attribute__ ((weak));
+    template<> void PWMTimer<  2>::interrupt() __attribute__ ((weak));
+    template<> void PWMTimer<  3>::interrupt() __attribute__ ((weak));
+    template<> void PWMTimer<  4>::interrupt() __attribute__ ((weak));
+    template<> void PWMTimer<  5>::interrupt() __attribute__ ((weak));
+    template<> void PWMTimer<  6>::interrupt() __attribute__ ((weak));
+    template<> void PWMTimer<  7>::interrupt() __attribute__ ((weak));
 
 #if defined(PWM1)
-    template<> void PWMTimer<8+0>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt")));
-    template<> void PWMTimer<8+1>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt")));
-    template<> void PWMTimer<8+2>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt")));
-    template<> void PWMTimer<8+3>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt")));
-    template<> void PWMTimer<8+4>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt")));
-    template<> void PWMTimer<8+5>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt")));
-    template<> void PWMTimer<8+6>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt")));
-    template<> void PWMTimer<8+7>::interrupt() __attribute__ ((weak, alias("_null_pwm_timer_interrupt")));
+    template<> void PWMTimer<8+0>::interrupt() __attribute__ ((weak));
+    template<> void PWMTimer<8+1>::interrupt() __attribute__ ((weak));
+    template<> void PWMTimer<8+2>::interrupt() __attribute__ ((weak));
+    template<> void PWMTimer<8+3>::interrupt() __attribute__ ((weak));
+    template<> void PWMTimer<8+4>::interrupt() __attribute__ ((weak));
+    template<> void PWMTimer<8+5>::interrupt() __attribute__ ((weak));
+    template<> void PWMTimer<8+6>::interrupt() __attribute__ ((weak));
+    template<> void PWMTimer<8+7>::interrupt() __attribute__ ((weak));
 #endif
 }
 
@@ -139,6 +148,7 @@ void PWM_Handler(void) {
     Motate::pwm_interrupt_cause_cached_2_ = PWM->PWM_ISR2 & 0xff00;
 
     uint32_t pwm_interrupt_cause_ = Motate::pwm_interrupt_cause_cached_1_ | (Motate::pwm_interrupt_cause_cached_2_>>8);
+    Motate::SamCommon::sync();
 
     if (Motate::PWMTimer< 0>::interrupt && (pwm_interrupt_cause_ & (1<<  0))) {
         Motate::PWMTimer< 0>::interrupt();
@@ -171,6 +181,7 @@ void PWM0_Handler(void) {
     Motate::pwm_interrupt_cause_cached_2_ = PWM0->PWM_ISR2 & 0xff00;
 
     uint32_t pwm_interrupt_cause_ = Motate::pwm_interrupt_cause_cached_1_ | (Motate::pwm_interrupt_cause_cached_2_>>8);
+    Motate::SamCommon::sync();
 
     if (Motate::PWMTimer<  0>::interrupt && (pwm_interrupt_cause_ & (1<<  0))) {
         Motate::PWMTimer<  0>::interrupt();
@@ -202,6 +213,7 @@ void PWM1_Handler(void) {
     Motate::pwm_interrupt_cause_cached_2_ = PWM1->PWM_ISR2 & 0xff00;
 
     uint32_t pwm_interrupt_cause_ = Motate::pwm_interrupt_cause_cached_1_ | (Motate::pwm_interrupt_cause_cached_2_>>8);
+    Motate::SamCommon::sync();
 
     if (Motate::PWMTimer<8+0>::interrupt && (pwm_interrupt_cause_ & (1<<  0))) {
         Motate::PWMTimer<8+0>::interrupt();

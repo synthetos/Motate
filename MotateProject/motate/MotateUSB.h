@@ -40,6 +40,8 @@ namespace Motate {
 
 #pragma mark struct USBSettings_t
 
+    extern uint8_t USBControlBuffer[512];
+
     struct USBSettings_t {
         const uint16_t vendorID;
         const uint16_t productID;
@@ -59,25 +61,23 @@ namespace Motate {
 
     struct USBDevice_t
     {
-        virtual bool sendDescriptorOrConfig(const Setup_t &setup) const = 0;
-
-        virtual void sendDescriptor(const int16_t maxLength) const = 0;
-
-        virtual void sendQualifierDescriptor(const int16_t maxLength) const = 0;
-
-        virtual void sendConfig(const int16_t maxLength, const bool other) const = 0;
-
-        virtual bool handleNonstandardRequest(const Setup_t &setup) = 0;
+        // virtual bool sendDescriptorOrConfig() const = 0;
+        // virtual void sendDescriptor() const = 0;
+        // virtual void sendQualifierDescriptor() const = 0;
+        // virtual void sendConfig(const bool other) const = 0;
+        // virtual bool handleNonstandardRequest(const Setup_t &setup) = 0;
 
         virtual bool handleDataAvailable(const uint8_t &endpointNum, const size_t &length) = 0;
-
         virtual bool handleTransferDone(const uint8_t &endpointNum) = 0;
 
-        virtual const EndpointBufferSettings_t getEndpointConfig(const uint8_t endpoint, const bool otherSpeed) const = 0;
+        virtual Setup_t& getSetup() = 0;
+        virtual bool handleSetupPacket() = 0;
 
-        virtual const uint8_t getEndpointCount(uint8_t &firstEnpointNum) const = 0;
+        virtual const EndpointBufferSettings_t getEndpointConfig(const uint8_t endpoint, const bool otherSpeed) = 0;
+        // virtual const uint8_t getEndpointCount(uint8_t &firstEnpointNum) const = 0;
+        // virtual uint16_t getEndpointSize(const uint8_t &endpointNum, const bool otherSpeed) const = 0;
 
-        virtual uint16_t getEndpointSize(const uint8_t &endpointNum, const bool otherSpeed) const = 0;
+        virtual void handleConnectionStateChanged() = 0;
     }; // USBDevice_t
 
 }; // end Motate
@@ -126,14 +126,14 @@ namespace Motate {
     template<typename... interfaceTypes>
     struct USBDevice :
         USBDevice_t,
-        USBDeviceHardware< USBDevice<interfaceTypes...> >,
+        USBDeviceHardware,
         USBMixins<USBDevice<interfaceTypes...>, interfaceTypes...>
     {
     public:
         // Shortcut typedefs
         typedef USBDevice<interfaceTypes...> _this_type;
 
-        typedef USBDeviceHardware< USBDevice<interfaceTypes...> > _hardware_type;
+        typedef USBDeviceHardware _hardware_type;
 
         typedef USBMixins<_this_type, interfaceTypes...> _mixins_type;
         typedef USBDefaultDescriptor<interfaceTypes...> _descriptor_type;
@@ -145,33 +145,228 @@ namespace Motate {
         static const uint8_t _interface_0_first_interface = 0; // TODO: Verify this!
         static const uint8_t _total_endpoints_used        = _mixins_type::total_endpoints_used;
 
-        // Init
-        USBDevice() :
-            _hardware_type{},
-            _mixins_type{*this, _interface_0_first_endpoint, _interface_0_first_interface}
-        {
+        Setup_t setup;
+        uint8_t _set_interface = 0;
+
+        union {
+            uint8_t _features_raw[2];
+            struct {
+                uint8_t _empty_0;
+                uint8_t _remote_wakeup : 1,
+                        _self_powered  : 1,
+                        _empty_1 : 6;
+            };
         };
 
-        bool sendDescriptorOrConfig(const Setup_t &setup) const override {
+        // Init
+        USBDevice() :
+            _hardware_type{this},
+            _mixins_type{*this, _interface_0_first_endpoint, _interface_0_first_interface}
+        {
+            resetSetupStatus();
+        };
+
+        void resetSetupStatus() {
+            _hardware_type::initSetup();
+
+            config_number = 0;
+            _set_interface = 0;
+
+            _features_raw[0] = 0;
+            _features_raw[1] = 0;
+        }
+
+        Setup_t& getSetup() override { return setup; };
+
+        bool handleSetupPacket() override {
+            // NOTE: we don't _hardware_type::ackSetupRX() in here, it happens when we return!
+            // If we return false, it happens after a stall request. Otherwise it's done on it's own.
+
+            if (SETUP != _hardware_type::setup_state) {
+                // re-init setup data
+                _hardware_type::initSetup();
+            }
+
+            if (8 != _hardware_type::get_byte_count(0)) {
+                return false; // Error data number doesn't correspond to SETUP packet
+            }
+
+            _hardware_type::readSetupPacket(setup);
+
+            if (!setup.isAStandardRequestType())
+            {
+                return handleNonstandardRequest();
+            };
+
+            // Standard Requests
+            // See http://www.beyondlogic.org/usbnutshell/usb6.shtml#StandardDeviceRequests
+            // and http://wiki.osdev.org/Universal_Serial_Bus#Standard_Requests
+            if (setup.isAGetStatusRequest())
+            {
+                if( setup.isADeviceRequest() )
+                {
+                    if (2 != setup.length()) {
+                        return false;
+                    }
+                    // Send the device status - Bus powered, and cannot remote wakeup the host
+                    _hardware_type::writeToControl((char *)&_features_raw, 2);
+                    return true;
+                }
+                // if( setup.isAnEndpointRequest() )
+                else
+                {
+                    return false;
+                }
+            }
+            else if ( setup.isAClearFeatureRequest() )
+            {
+                // Check which is the selected feature
+                if( setup.featureToSetOrClear() == Setup_t::kSetupDeviceRemoteWakeup )
+                {
+                    return false;
+                }
+                else if( setup.featureToSetOrClear() == Setup_t::kSetupEndpointHalt )
+                {
+                    // TODO: support halting endpoints
+                    return false;
+                }
+
+            }
+            else if (setup.isASetFeatureRequest())
+            {
+                // Check which is the selected feature
+                if( setup.featureToSetOrClear() == Setup_t::kSetupDeviceRemoteWakeup )
+                {
+                    return false;
+                }
+                if( setup.featureToSetOrClear() == Setup_t::kSetupEndpointHalt )
+                {
+                    // TODO: support halting endpoints
+                    return false;
+                }
+                if( setup.featureToSetOrClear() == Setup_t::kSetupTestMode )
+                {
+                    // 7.1.20 Test Mode Support, 9.4.9 SetFeature
+                    // TODO: support test mode
+                    return false;
+                }
+            }
+            else if (setup.isASetAddressRequest())
+            {
+                if (setup.length() == 0) {
+                    _hardware_type::setAddressAvailable();
+                    return true;
+                }
+            }
+            else if (setup.isAGetDescriptorRequest())
+            {
+                return sendDescriptorOrConfig();
+            }
+            else if (setup.isASetDescriptorRequest())
+            {
+                return false; // ???
+            }
+            else if (setup.isAGetConfigurationRequest())
+            {
+                if (1 != setup.length()) {
+                    return false;
+                }
+                _hardware_type::writeToControl((char *)&config_number, 1);
+                return true;
+            }
+            else if (setup.isASetConfigurationRequest())
+            {
+                if (setup.isADeviceRequest())
+                {
+                    // config_number should be set to 1 for high-speed, and 2 for full-speed
+                    config_number = setup.valueLow();
+
+                    uint8_t first_endpoint, total_endpoints;
+                    total_endpoints = getEndpointCount(first_endpoint);
+                    for (uint8_t ep = first_endpoint; ep < total_endpoints; ep++) {
+                        _init_endpoint(ep, getEndpointConfig(ep, /* otherSpeed = */ config_number == 2));
+                        //endpointSizes[ep] = getEndpointSize(ep, /* otherSpeed = */ config_number == 2);
+                    }
+
+                    /* OLD CODE
+                     // Enable interrupt for CDC reception from host (OUT packet)
+                     udd_enable_out_received_interrupt(CDC_RX);
+                     udd_enable_endpoint_interrupt(CDC_RX);
+                     */
+
+                     return true;
+                }
+            }
+            else if (setup.isAGetInterfaceRequest())
+            {
+                if (1 != setup.length()) {
+                    return false;
+                }
+                _hardware_type::writeToControl((char *)&_set_interface, 1);
+                return true;
+            }
+            else if (setup.isASetInterfaceRequest())
+            {
+                _set_interface = setup.valueLow();
+                return true;
+            } else {
+                __asm__("BKPT"); // unknown setup type
+            }
+
+            // if we get here, there's no response, and we send a STALL
+            return false;
+        };
+
+        // This prepares a string to be sent (later, from the interrupt)
+        void sendString(const uint8_t stringNum) {
+            int8_t length = 0;
+            const char *string;
+            if (0 == stringNum) {
+                // Language ID
+                string = (const char *)getUSBLanguageString(length);
+            }
+            else if ((kManufacturerStringId == stringNum) && getUSBVendorString) {
+                string = (const char *)getUSBVendorString(length);
+            } else if ((kProductStringId == stringNum) && getUSBProductString) {
+                string = (const char *)getUSBProductString(length);
+            } else if ((kSerialNumberId == stringNum) && getUSBSerialNumberString) {
+                string = (const char *)getUSBSerialNumberString(length);
+            } else {
+                return; // This is wrong, but works...?
+            }
+
+            // Note: length is in bytes, not char16_t characters!!
+
+            USBDescriptorStringHeader_t *string_header = new (&USBControlBuffer) USBDescriptorStringHeader_t(length);
+
+            int16_t header_size = sizeof(USBDescriptorStringHeader_t);
+
+            _hardware_type::writeToControl((char *)(string_header),
+                                           header_size,
+                                           (char *)string,
+                                           length );
+        };
+
+        bool sendDescriptorOrConfig() {
             const uint8_t type = setup.valueHigh();
             if (type == kConfigurationDescriptor) {
-                sendConfig(setup.length(), /*other = */ setup.valueLow() == 2);
+                sendConfig(/*other = */ setup.valueLow() == 2);
                 return true;
             }
             else if (type == kOtherDescriptor) {
-                sendConfig(setup.length(), /*other = */ true);
+                sendConfig(/*other = */ true);
                 return true;
             }
             else if (type == kDeviceDescriptor) {
-                sendDescriptor(setup.length());
+                sendDescriptor();
                 return true;
             }
             else if (type == kDeviceQualifierDescriptor) {
-                sendQualifierDescriptor(setup.length());
+                sendQualifierDescriptor();
                 return true;
             }
             else if (type == kStringDescriptor) {
-                _this_type::sendString(setup.valueLow(), setup.length());
+                sendString(setup.valueLow());
                 return true;
             }
             else
@@ -181,31 +376,29 @@ namespace Motate {
             return false;
         };
 
-        void sendDescriptor(const int16_t maxLength) const override {
-            const _descriptor_type descriptor(USBSettings.vendorID, USBSettings.productID, USBFloatToBCD(USBSettings.productVersion), _hardware_type::getDeviceSpeed());
-            int16_t length = sizeof(_descriptor_type);
-            int16_t to_send = maxLength < length ? maxLength : length;
-            const char *buffer = (const char *)(&descriptor);
-            _this_type::writeToControl(0, buffer, to_send);
+        void sendDescriptor() {
+            _descriptor_type *descriptor = new (&USBControlBuffer) _descriptor_type(USBSettings.vendorID, USBSettings.productID, USBFloatToBCD(USBSettings.productVersion), _hardware_type::getDeviceSpeed());
+            char *buffer = (char *)(descriptor);
+            _hardware_type::writeToControl(buffer, descriptor->Header.Size);
         };
 
-        void sendQualifierDescriptor(const int16_t maxLength) const override {
-            const _qualifier_type qualifier;
-            int16_t length = sizeof(_qualifier_type);
-            int16_t to_send = maxLength < length ? maxLength : length;
-            const char *buffer = (const char *)(&qualifier);
-            _this_type::writeToControl(0, buffer, to_send);
+        void sendQualifierDescriptor() {
+            _qualifier_type *qualifier = new (&USBControlBuffer) _qualifier_type();
+            char *buffer = (char *)(qualifier);
+            _hardware_type::writeToControl(buffer, qualifier->Header.Size);
         };
 
-        void sendConfig(const int16_t maxLength, const bool other) const override {
-            const _config_type config(USBSettings.attributes, USBSettings.powerConsumption, _hardware_type::getDeviceSpeed(), other);
-            int16_t length = sizeof(_config_type);
-            int16_t to_send = maxLength < length ? maxLength : length;
-            const char *buffer = (const char *)(&config);
-            _this_type::writeToControl(0, buffer, to_send);
+        void sendConfig(const bool other) {
+            _config_type *config = new (&USBControlBuffer) _config_type(USBSettings.attributes, USBSettings.powerConsumption, _hardware_type::getDeviceSpeed(), other);
+            char *buffer = (char *)(config);
+            _hardware_type::writeToControl(buffer, config->TotalConfigurationSize);
         };
 
-        bool handleNonstandardRequest(const Setup_t &setup) override {
+        void handleConnectionStateChanged() override {
+            _mixins_type::handleConnectionStateChangedInMixin(isConnected());
+        };
+
+        bool handleNonstandardRequest() {
             return _mixins_type::handleNonstandardRequestInMixin(setup);
         };
 
@@ -217,7 +410,7 @@ namespace Motate {
             return _mixins_type::handleTransferDoneInMixin(endpointNum);
         };
 
-        const EndpointBufferSettings_t getEndpointConfig(const uint8_t endpoint, const bool otherSpeed) const override {
+        const EndpointBufferSettings_t getEndpointConfig(const uint8_t endpoint, const bool otherSpeed) override {
             EndpointBufferSettings_t ebs = _hardware_type::getEndpointConfigFromHardware(endpoint);
 
             if (ebs == kEndpointBufferNull) {
@@ -226,12 +419,12 @@ namespace Motate {
             return ebs;
         };
 
-        const uint8_t getEndpointCount(uint8_t &firstEnpointNum) const override {
+        const uint8_t getEndpointCount(uint8_t &firstEnpointNum) const {
             firstEnpointNum = _interface_0_first_endpoint;
             return _total_endpoints_used + _interface_0_first_endpoint;
         };
 
-        uint16_t getEndpointSize(const uint8_t &endpointNum, const bool otherSpeed) const override {
+        constexpr uint16_t getEndpointSize(const uint8_t &endpointNum, const bool otherSpeed) {
             uint16_t size = _hardware_type::getEndpointSizeFromHardware(endpointNum, otherSpeed);
             if (size == 0) {
                 size = _mixins_type::getEndpointSizeFromMixin(endpointNum, _hardware_type::getDeviceSpeed(), otherSpeed);
@@ -270,9 +463,10 @@ namespace Motate {
         const EndpointBufferSettings_t getEndpointConfigFromMixin(const uint8_t endpoint, const USBDeviceSpeed_t deviceSpeed, const bool other_speed) const {
             return kEndpointBufferNull;
         };
+        void handleConnectionStateChangedInMixin(const bool connected) { ; };
         bool handleNonstandardRequestInMixin(Setup_t &setup) { return false; };
         bool sendSpecialDescriptorOrConfig(Setup_t &setup) const { return false; };
-        uint16_t getEndpointSizeFromMixin(const uint8_t &endpointNum, const USBDeviceSpeed_t deviceSpeed, const bool otherSpeed) const { return 8; };
+        constexpr uint16_t getEndpointSizeFromMixin(const uint8_t &endpointNum, const USBDeviceSpeed_t deviceSpeed, const bool otherSpeed) { return 8; };
     };
 
 #pragma mark struct USBMixinWrapper : USBMixin<usb_parent_type, position, firstInterfaceType>, USBMixinWrapper<usb_parent_type, position+1, interfaceTypes...>
@@ -352,6 +546,10 @@ namespace Motate {
 
             return ebs;
         };
+        void handleConnectionStateChangedInMixin(const bool connected) {
+            first_mixin::handleConnectionStateChangedInMixin(connected);
+            other_mixins::handleConnectionStateChangedInMixin(connected);
+        };
         bool handleNonstandardRequestInMixin(const Setup_t &setup) {
             return first_mixin::handleNonstandardRequestInMixin(setup) || other_mixins::handleNonstandardRequestInMixin(setup);
         };
@@ -364,7 +562,7 @@ namespace Motate {
         bool sendSpecialDescriptorOrConfig(const Setup_t &setup) const {
             return first_mixin::sendSpecialDescriptorOrConfig(setup) || other_mixins::sendSpecialDescriptorOrConfig(setup);
         };
-        uint16_t getEndpointSizeFromMixin(const uint8_t &endpointNum, const USBDeviceSpeed_t deviceSpeed, const bool otherSpeed) const {
+        constexpr uint16_t getEndpointSizeFromMixin(const uint8_t &endpointNum, const USBDeviceSpeed_t deviceSpeed, const bool otherSpeed) {
             uint16_t size = first_mixin::getEndpointSizeFromMixin(endpointNum, deviceSpeed, otherSpeed);
             if (size == 0) {
                 size = other_mixins::getEndpointSizeFromMixin(endpointNum, deviceSpeed, otherSpeed);
@@ -405,6 +603,9 @@ namespace Motate {
         const EndpointBufferSettings_t getEndpointConfigFromMixin(const uint8_t endpoint, const USBDeviceSpeed_t deviceSpeed, const bool other_speed) const {
             return first_mixin::getEndpointConfigFromMixin(endpoint, deviceSpeed, other_speed);
         };
+        void handleConnectionStateChangedInMixin(const bool connected) {
+            first_mixin::handleConnectionStateChangedInMixin(connected);
+        };
         bool handleNonstandardRequestInMixin(const Setup_t &setup) {
             return first_mixin::handleNonstandardRequestInMixin(setup);
         };
@@ -417,7 +618,7 @@ namespace Motate {
         bool sendSpecialDescriptorOrConfig(const Setup_t &setup) const {
             return first_mixin::sendSpecialDescriptorOrConfig(setup);
         };
-        uint16_t getEndpointSizeFromMixin(const uint8_t &endpointNum, const USBDeviceSpeed_t deviceSpeed, const bool otherSpeed) const {
+        constexpr uint16_t getEndpointSizeFromMixin(const uint8_t &endpointNum, const USBDeviceSpeed_t deviceSpeed, const bool otherSpeed) {
             return first_mixin::getEndpointSizeFromMixin(endpointNum, deviceSpeed, otherSpeed);
         };
     };
@@ -442,6 +643,9 @@ namespace Motate {
         const EndpointBufferSettings_t getEndpointConfigFromMixin(const uint8_t endpoint, const USBDeviceSpeed_t deviceSpeed, const bool other_speed) const {
             return other_mixins::getEndpointConfigFromMixin(endpoint, deviceSpeed, other_speed);
         };
+        void handleConnectionStateChangedInMixin(const bool connected) {
+            other_mixins::handleConnectionStateChangedInMixin(connected);
+        };
         bool handleNonstandardRequestInMixin(const Setup_t &setup) {
             return other_mixins::handleNonstandardRequestInMixin(setup);
         };
@@ -454,7 +658,7 @@ namespace Motate {
         bool sendSpecialDescriptorOrConfig(const Setup_t &setup) const {
             return other_mixins::sendSpecialDescriptorOrConfig(setup);
         };
-        uint16_t getEndpointSizeFromMixin(const uint8_t &endpointNum, const USBDeviceSpeed_t deviceSpeed, const bool otherSpeed) const {
+        static constexpr uint16_t getEndpointSizeFromMixin(const uint8_t &endpointNum, const USBDeviceSpeed_t deviceSpeed, const bool otherSpeed) {
             return other_mixins::getEndpointSizeFromMixin(endpointNum, deviceSpeed, otherSpeed);
         };
     };
@@ -468,24 +672,24 @@ namespace Motate {
     template < typename interfaceType >
     struct USBDefaultDescriptor <interfaceType> : USBDescriptorDevice_t {
         USBDefaultDescriptor(const uint16_t vendorID, const uint16_t productID, const uint16_t productVersionBCD, const USBDeviceSpeed_t deviceSpeed) :
-        USBDescriptorDevice_t(
+        USBDescriptorDevice_t{
                               /*    USBSpecificationBCD = */ USBFloatToBCD(2.0),
                               /*                  Class = */ kNoDeviceClass,
                               /*               SubClass = */ kNoDeviceSubclass,
                               /*               Protocol = */ kNoDeviceProtocol,
 
-                              /*          Endpoint0Size = */ getEndpointSize(0, kEndpointTypeControl, deviceSpeed, false),
+                              /*          Endpoint0Size = */ (uint8_t)getEndpointSize(0, kEndpointTypeControl, deviceSpeed, false),
 
                               /*               VendorID = */ vendorID,
                               /*              ProductID = */ productID,
-                              /*          ReleaseNumber = */ productVersionBCD,
+                              /*          ReleaseNumber = */ (float)productVersionBCD,
 
                               /*   ManufacturerStrIndex = */ kManufacturerStringId,
                               /*        ProductStrIndex = */ kProductStringId,
                               /*      SerialNumStrIndex = */ kSerialNumberId,
 
                               /* NumberOfConfigurations = */ 1  /* !!!!!!!!!!! FIXME */
-                              )
+                          }
         {};
     };
 
@@ -495,24 +699,24 @@ namespace Motate {
     template < typename interface0type, typename interface1type, typename... interfaceOtherTypes >
     struct USBDefaultDescriptor <interface0type, interface1type, interfaceOtherTypes...> : USBDescriptorDevice_t {
         USBDefaultDescriptor(const uint16_t vendorID, const uint16_t productID, const uint16_t productVersion, const USBDeviceSpeed_t deviceSpeed) :
-        USBDescriptorDevice_t(
+        USBDescriptorDevice_t{
                               /*    USBSpecificationBCD = */ USBFloatToBCD(1.1),
                               /*                  Class = */ kIADDeviceClass,
                               /*               SubClass = */ kIADDeviceSubclass,
                               /*               Protocol = */ kIADDeviceProtocol,
 
-                              /*          Endpoint0Size = */ getEndpointSize(0, kEndpointTypeControl, deviceSpeed, false),
+                              /*          Endpoint0Size = */ (uint8_t)getEndpointSize(0, kEndpointTypeControl, deviceSpeed, false),
 
                               /*               VendorID = */ vendorID,
                               /*              ProductID = */ productID,
-                              /*          ReleaseNumber = */ productVersion,
+                              /*          ReleaseNumber = */ (float)productVersion,
 
                               /*   ManufacturerStrIndex = */ kManufacturerStringId,
                               /*        ProductStrIndex = */ kProductStringId,
                               /*      SerialNumStrIndex = */ kSerialNumberId,
 
                               /* NumberOfConfigurations = */ 1
-                              )
+                          }
         {};
     };
 
@@ -526,4 +730,3 @@ namespace Motate {
 
 #endif
 // MOTATEUSB_ONCE
-

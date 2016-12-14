@@ -1,16 +1,16 @@
 /*
  utility/MotateUSBCDC.h - Library for the Motate system
  http://github.com/synthetos/motate/
- 
+
  Copyright (c) 2013 Robert Giseburt
- 
+
  This file is part of the Motate Library.
- 
+
  This file ("the software") is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License, version 2 as published by the
  Free Software Foundation. You should have received a copy of the GNU General Public
  License, version 2 along with the software. If not, see <http://www.gnu.org/licenses/>.
- 
+
  As a special exception, you may use this file as part of a software library without
  restriction. Specifically, if other files instantiate templates or use macros or
  inline functions from this file, or you compile this file and link it with  other
@@ -18,32 +18,32 @@
  executable to be covered by the GNU General Public License. This exception does not
  however invalidate any other reasons why the executable file might be covered by the
  GNU General Public License.
- 
+
  THE SOFTWARE IS DISTRIBUTED IN THE HOPE THAT IT WILL BE USEFUL, BUT WITHOUT ANY
  WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
  OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT
  SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
  OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- 
+
  */
- 
+
 #ifndef MOTATEUSBCDC_ONCE
 #define MOTATEUSBCDC_ONCE
- 
+
 #include "MotateUSBHelpers.h"
 #include <functional>
 #include <type_traits> // for enable_if
 #include "MotatePower.h"
- 
+
 namespace Motate {
- 
+
     /* ############################################ */
     /* #                                          # */
     /* #             USB CDC Interface            # */
     /* #                                          # */
     /* ############################################ */
- 
+
     enum CDCDescriptorClassSubclassProtocol_t
     {
         kCDCClass               = 0x02, /*   Descriptor Class value indicating that the device or interface
@@ -77,7 +77,7 @@ namespace Motate {
                                          *   belongs to no specific protocol of the CDC data class.
                                          */
     };
- 
+
     /** Enum for the CDC class specific control requests that can be issued by the USB bus host. */
     enum CDCClassRequests_t
     {
@@ -88,7 +88,7 @@ namespace Motate {
         kSetControlLineState     = 0x22, /* CDC class-specific request to set the current virtual serial port handshake line states. */
         kSendBreak               = 0x23, /* CDC class-specific request to send a break to the receiver via the carrier channel. */
     };
- 
+
     /** Enum for the CDC class specific notification requests that can be issued by a CDC device to a host. */
     enum CDCClassNotifications_t
     {
@@ -98,7 +98,7 @@ namespace Motate {
                               *   endpoint.
                               */
     };
- 
+
     /** Enum for the CDC class specific interface descriptor subtypes. */
     enum CDCDescriptorSubtypes_t
     {
@@ -120,7 +120,7 @@ namespace Motate {
         kCDCCSInterfaceEthernet         = 0x0F, /* CDC class-specific Ethernet functional descriptor. */
         kCDCCSInterfaceATM              = 0x10, /* CDC class-specific Asynchronous Transfer Mode functional descriptor. */
     };
- 
+
     /** Enum for the possible line encoding formats of a virtual serial port. */
     enum CDCLineEncodingFormats_t
     {
@@ -128,7 +128,7 @@ namespace Motate {
         kCDCLineEncodingOneAndAHalfStopBits = 1, /* Each frame contains one and a half stop bits. */
         kCDCLineEncodingTwoStopBits         = 2, /* Each frame contains two stop bits. */
     };
- 
+
     /** Enum for the possible line encoding parity settings of a virtual serial port. */
     enum CDCLineEncodingParity_t
     {
@@ -138,14 +138,14 @@ namespace Motate {
         kCDCParityMark  = 3, /* Mark parity bit mode on each frame. */
         kCDCParitySpace = 4, /* Space parity bit mode on each frame. */
     };
-     
+
     /** Enum for the parameters of SetControlLineState */
     enum CDCControlState_t
     {
         kCDCControlState_DTR = 0x1, /* Data termianl ready */
         kCDCControlState_RTS = 0x2, /* Ready to send */
     };
- 
+
 #pragma mark USBCDCDescriptorFunctionalHeader_t
     /** CDC class-specific Functional Header Descriptor (LUFA naming conventions).
      *
@@ -154,7 +154,7 @@ namespace Motate {
      *  See the CDC class specification for more details.
      *
      */
- 
+
     struct USBCDCDescriptorFunctionalHeader_t
     {
         USBDescriptorHeader_t   Header; /*   Regular descriptor header containing the descriptor's type and length. */
@@ -174,7 +174,7 @@ namespace Motate {
         CDCSpecificationBCD(_CDCSpecificationBCD)
         {};
     } ATTR_PACKED;
- 
+
 #pragma mark USBCDCDescriptorFunctionalACM_t
     /*  CDC class-specific Functional ACM Descriptor (LUFA naming conventions).
      *
@@ -182,7 +182,7 @@ namespace Motate {
      *  supports the CDC ACM subclass of the CDC specification. See the CDC class specification for more details.
      *
      */
- 
+
     enum USBCDCDescriptorFunctionalACMCapabilities_t {
         kUSBCDCACMCapabilityCommFeatures      = 0x01 << 0,
         kUSBCDCACMCapabilityLineCodingState   = 0x01 << 1,
@@ -205,7 +205,7 @@ namespace Motate {
         Capabilities(_Capabilities)
         {};
     } ATTR_PACKED;
- 
+
 #pragma mark USBCDCDescriptorFunctionalUnion_t
     /*  CDC class-specific Functional Union Descriptor (LUFA naming conventions).
      *
@@ -230,10 +230,10 @@ namespace Motate {
         SlaveInterfaceNumber(_MasterInterfaceNumber+1)
         {};
     } ATTR_PACKED;
- 
- 
+
+
 #pragma mark USBCDC
- 
+
     // Placeholder for use in end-code
     // IOW: USBDevice<USBCDC> usb;
     // Also, used as the base class for the resulting specialized USBMixin.
@@ -241,9 +241,9 @@ namespace Motate {
         static bool isNull() { return false; };
         static const uint8_t endpoints_used = (uint8_t)3;
     };
- 
+
 #pragma mark USBSerial
- 
+
     //Actual implementation of CDC
     template <typename usb_parent_type>
     struct USBSerial {
@@ -263,7 +263,7 @@ namespace Motate {
             uint8_t  bCharFormat;
             uint8_t  bParityType;
             uint8_t  bDataBits;
- 
+
             _line_info_t() :
             dwDTERate(57600),
             bCharFormat(0x00),
@@ -271,11 +271,12 @@ namespace Motate {
             bDataBits(0x08)
             {};
         } ATTR_PACKED;
- 
+
         volatile uint8_t _line_state;
         volatile _line_info_t _line_info;
-        volatile uint32_t _cached_dwDTERate;
- 
+        volatile bool _line_info_valid = false;
+        //volatile uint32_t _cached_dwDTERate;
+
         USBSerial(usb_parent_type &usb_parent,
                   const uint8_t new_endpoint_offset,
                   const uint8_t new_interface_number
@@ -295,61 +296,65 @@ namespace Motate {
         int16_t readByte() {
             return usb.readByte(read_endpoint);
         };
- 
+
         // BLOCKING!!
         uint16_t read(char *buffer, const uint16_t length) {
             int16_t total_read = 0;
             int16_t to_read = length;
             char *read_ptr = buffer;
- 
+
             // BLOCKING!!
             while (to_read > 0) {
                 // Oddity of english: "to read" and "amount read" makes the same read.
                 // So, we'll call it "amount_read".
                 int16_t amount_read = usb.read(read_endpoint, read_ptr, length);
- 
+
                 total_read += amount_read;
                 to_read -= amount_read;
                 read_ptr += amount_read;
             };
- 
+
             return total_read;
         };
- 
+
         // Non-Blocking, returns how much was read, and -1 on error.
         uint16_t readSome(char *buffer, const uint16_t length) {
             int16_t total_read = 0;
             int16_t to_read = length;
             char *read_ptr = buffer;
- 
+
             do {
                 // Oddity of english: "to read" and "amount read" makes the same read.
                 // So, we'll call it "amount_read".
                 int16_t amount_read = usb.read(read_endpoint, read_ptr, length);
- 
+
                 if (amount_read <  1)
                     break;
- 
+
                 total_read += amount_read;
                 to_read -= amount_read;
                 read_ptr += amount_read;
             } while (to_read > 0);
- 
+
             return total_read;
         };
 
         USB_DMA_Descriptor _rx_dma_descriptor;
         bool startRXTransfer(char *buffer, const uint16_t length) {
             _rx_dma_descriptor.setBuffer(buffer, length);
-            // DON'T allow the DMA transfer to be stopped if the buffer runs out
-            // IOW, don't stop reading when a packet doesn't fill the buffer.
-            _rx_dma_descriptor.controlData.end_buffer_enable = false;
+            // // DON'T allow the DMA transfer to be stopped if the buffer runs out
+            // // IOW, don't stop reading when a packet doesn't fill the buffer.
+            // _rx_dma_descriptor.end_buffer_enable = false;
             return usb.transfer(read_endpoint, _rx_dma_descriptor);
         };
 
         char* getRXTransferPosition() {
             return usb.getTransferPositon(read_endpoint);
         };
+
+        void setRXTransferDoneCallback(const std::function<void()> &callback) {
+            transfer_rx_done_callback = callback;
+        }
 
         void setRXTransferDoneCallback(std::function<void()> &&callback) {
             transfer_rx_done_callback = std::move(callback);
@@ -359,15 +364,19 @@ namespace Motate {
         USB_DMA_Descriptor _tx_dma_descriptor;
         bool startTXTransfer(char *buffer, const uint16_t length) {
             _tx_dma_descriptor.setBuffer(buffer, length);
-            // Allow the DMA transfer to be stopped if the buffer runs out.
-            // IOW, send a partially filled packet.
-            _tx_dma_descriptor.controlData.end_buffer_enable = true;
+            // // Allow the DMA transfer to be stopped if the buffer runs out.
+            // // IOW, send a partially filled packet.
+            // _tx_dma_descriptor.end_buffer_enable = true;
             return usb.transfer(write_endpoint, _tx_dma_descriptor);
         };
 
         char* getTXTransferPosition() {
             return usb.getTransferPositon(write_endpoint);
         };
+
+        void setTXTransferDoneCallback(const std::function<void()> &callback) {
+            transfer_tx_done_callback = callback;
+        }
 
         void setTXTransferDoneCallback(std::function<void()> &&callback) {
             transfer_tx_done_callback = std::move(callback);
@@ -379,27 +388,27 @@ namespace Motate {
             int16_t written = 1; // start with a non-zero value
             const char *out_buffer = data;
             int16_t to_write = length;
- 
+
             // BLOCKING!!
             do {
                 written = usb.write(write_endpoint, (char*)out_buffer, to_write);
- 
+
                 if (written < 0) // ERROR!
                     break;
- 
+
                 // TODO: Do this better... -Rob
                 total_written += written;
                 to_write -= written;
                 out_buffer += written;
             } while (to_write > 0);
- 
+
             // HACK! Autoflush forced...
             if (total_written > 0)
                 flush();
- 
+
             return total_written;
         }
- 
+
         // This write will write what it can, return how much it wrote, and will NOT flush.
         // Call <USBSerial>.flush() to flush.
         int32_t writeSome(const char *data, const uint16_t length) {
@@ -407,46 +416,59 @@ namespace Motate {
             int16_t written = 1; // start with a non-zero value
             const char *out_buffer = data;
             int16_t to_write = length;
- 
+
             do {
                 written = usb.write(write_endpoint, out_buffer, to_write);
- 
+
                 if (written < 1) // -1 = ERROR, and 0 means we would block
                     break;
- 
+
                 // TODO: Do this better... -Rob
                 total_written += written;
                 to_write -= written;
                 out_buffer += written;
             } while (to_write > 0);
- 
+
             return total_written;
         }
- 
+
         void flush() {
             usb.flush(write_endpoint);
         }
- 
+
         void flushRead() {
             usb.flushRead(read_endpoint);
         }
- 
+
         bool isConnected() {
-            return _line_state & (0x01 << kCDCControlState_DTR);
+            return usb.isConnected() && (_line_state & (0x01 << kCDCControlState_DTR));
         }
- 
+
         bool getDTR() {
             return _line_state & (0x01 << kCDCControlState_DTR);
         }
- 
+
         bool getRTS() {
             return _line_state & (0x01 << kCDCControlState_RTS);
         }
- 
+
+        void setConnectionCallback(const std::function<void(bool)> &callback) {
+            connection_state_changed_callback = callback;
+            if (connection_state_changed_callback && usb.isConnected() && (_line_state & kCDCControlState_DTR)) {
+                connection_state_changed_callback(_line_state & kCDCControlState_DTR);
+            }
+        }
+
         void setConnectionCallback(std::function<void(bool)> &&callback) {
             connection_state_changed_callback = std::move(callback);
-            if(connection_state_changed_callback && (_line_state & kCDCControlState_DTR))
+            if (connection_state_changed_callback && usb.isConnected() && (_line_state & kCDCControlState_DTR)) {
                 connection_state_changed_callback(_line_state & kCDCControlState_DTR);
+            }
+        }
+
+        void setDataAvailableCallback(const std::function<void(const size_t &length)> &callback) {
+            usb.enableRXInterrupt(read_endpoint);
+            data_available_callback = callback;
         }
 
         void setDataAvailableCallback(std::function<void(const size_t &length)> &&callback) {
@@ -481,39 +503,42 @@ namespace Motate {
         bool handleNonstandardRequest(const Setup_t &setup) {
             if (setup.index() != interface_number)
                 return false;
- 
+
             if (setup.isADeviceToHostClassInterfaceRequest()) {
-                if (setup.requestIs(kGetLineEncoding)) {
-                    usb.writeToControl(usb.master_control_endpoint, (char*)&_line_info, sizeof(_line_info));
+                if (setup.requestIs(kGetLineEncoding) && _line_info_valid) {
+                    usb.writeToControl((char*)&_line_info, sizeof(_line_info_t));
                     return true;
                 }
             }
- 
+
             if (setup.isAHostToDeviceClassInterfaceRequest()) {
                 if (setup.requestIs(kSetLineEncoding)) {
-                    usb.readFromControl(usb.master_control_endpoint, (char*)&_line_info, sizeof(_line_info));
-                    _cached_dwDTERate = _line_info.dwDTERate;
+                    // if (setup.length() < sizeof(_line_info_t)) { return false; }
+                    _line_info_valid = false;
+                    usb.readFromControlThen((char*)&_line_info, sizeof(_line_info_t), [&]{
+                        _line_info_valid = true;
+                    });
                     return true;
                 }
- 
+
                 if (setup.requestIs(kSetControlLineState)) {
                     uint8_t _old_line_state = _line_state;
                     _line_state = setup.valueLow();
- 
+
                     // If the DTR changed, call connectionStateChanged (if it's defined)
                     if ((_old_line_state & kCDCControlState_DTR) != (_line_state & kCDCControlState_DTR)) {
                         flush();
-                        
+
                         if (connection_state_changed_callback) {
                             connection_state_changed_callback(_line_state & kCDCControlState_DTR);
                         }
                     }
                     // Auto-reset into the bootloader is triggered when the port, already open at 1200 bps, is closed.
- 
+
                     // Note that it may be reopened immediately at a different rate.
                     // That will *NOT* cancel the reset.
- 
-                    if (1200 == _cached_dwDTERate)
+
+                    if (_line_info_valid && (1200 == _line_info.dwDTERate))
                     {
                         // We check DTR state to determine if host port is open (bit 0 of lineState).
                         if (!getDTR()) {
@@ -522,22 +547,30 @@ namespace Motate {
 //                        else
 //                            cancelReset();
                     }
- 
+
                     return true;
                 }
             }
- 
+
             return false;
         };
- 
+
+        void handleConnectionStateChanged(const bool connected) {
+            // We only use this to inform if DISconnects
+            // We only show connection when the DTR changes, which is later
+            if (connection_state_changed_callback && !connected) {
+                connection_state_changed_callback(false);
+            }
+        }
+
         // Stub in begin() and end()
         void begin(uint32_t baud_count) {};
         void end(void){};
- 
+
         const EndpointBufferSettings_t getEndpointSettings(const uint8_t endpoint, const USBDeviceSpeed_t deviceSpeed, const bool otherSpeed, const bool limitedSize) const {
             if (endpoint == control_endpoint)
             {
-                uint16_t ep_size = Motate::getEndpointSize(control_endpoint, kEndpointTypeInterrupt, deviceSpeed, otherSpeed);
+                uint16_t ep_size = 0;//Motate::getEndpointSize(control_endpoint, kEndpointTypeInterrupt, deviceSpeed, otherSpeed);
                 const EndpointBufferSettings_t _buffer_size = getBufferSizeFlags(ep_size);
                 return kEndpointBufferInputToHost | _buffer_size | kEndpointBufferBlocks1 | kEndpointBufferTypeInterrupt;
             }
@@ -555,11 +588,11 @@ namespace Motate {
             }
             return kEndpointBufferNull;
         };
- 
+
         uint16_t getEndpointSize(const uint8_t &endpoint, const USBDeviceSpeed_t deviceSpeed, const bool otherSpeed, const bool limitedSize) const {
             if (endpoint == control_endpoint)
             {
-                return Motate::getEndpointSize(control_endpoint, kEndpointTypeInterrupt, deviceSpeed, otherSpeed, limitedSize);
+                return 0;//Motate::getEndpointSize(control_endpoint, kEndpointTypeInterrupt, deviceSpeed, otherSpeed, limitedSize);
             }
             else if (endpoint == read_endpoint)
             {
@@ -571,9 +604,9 @@ namespace Motate {
             }
             return 0;
         };
- 
+
     };
- 
+
 #pragma mark USBMixin< usb_parent_type, position, USBCDC >
     template <typename usb_parent_type, uint8_t position>
     struct USBMixin< usb_parent_type, position, USBCDC > : USBCDC {
@@ -595,6 +628,9 @@ namespace Motate {
         const EndpointBufferSettings_t getEndpointConfigFromMixin(const uint8_t endpoint, const USBDeviceSpeed_t deviceSpeed, const bool other_speed) const {
             return Serial.getEndpointSettings(endpoint, deviceSpeed, other_speed, /*limitedSize*/ false);
         };
+        void handleConnectionStateChangedInMixin(const bool connected) {
+            Serial.handleConnectionStateChanged(connected);
+        };
         bool handleNonstandardRequestInMixin(const Setup_t &setup) {
             return Serial.handleNonstandardRequest(setup);
         };
@@ -615,9 +651,9 @@ namespace Motate {
     //  1- If the ONLY interface is a CDC interface, then we explicity say as much in the device descriptor proper
     //  2- If there are any other interfaces (in any position), then we need to specify that we're using an Interface
     //     Associaton Descriptor (IAD). (Is this correct?? -Rob)
- 
+
     // The configuration (below) has a very similar setup.
- 
+
     // Case 1, we have one CDC interface and the other two are USBNullInterfaces
     template <  >
     struct USBDefaultDescriptor < USBCDC > : USBDescriptorDevice_t {
@@ -627,33 +663,33 @@ namespace Motate {
                               /*                  Class = */ kCDCClass,
                               /*               SubClass = */ kNoSpecificSubclass,
                               /*               Protocol = */ kNoSpecificProtocol,
- 
-                              /*          Endpoint0Size = */ getEndpointSize(0, kEndpointTypeControl, deviceSpeed, false),
- 
+
+                              /*          Endpoint0Size = */ (uint8_t)getEndpointSize(0, kEndpointTypeControl, deviceSpeed, false),
+
                               /*               VendorID = */ vendorID,
                               /*              ProductID = */ productID,
                               /*          ReleaseNumber = */ productVersion,
- 
+
                               /*   ManufacturerStrIndex = */ kManufacturerStringId,
                               /*        ProductStrIndex = */ kProductStringId,
                               /*      SerialNumStrIndex = */ kSerialNumberId,
- 
+
                               /* NumberOfConfigurations = */ 1
                               )
         {};
     };
 
- 
+
 #pragma mark USBConfigMixins< USBCDC, ?, ? >
- 
+
     // Define the CDC ConfigMixins
- 
+
     // The configuration for CDC has similar rules to the descriptor, since it's composite interface:
     //  1- If the ONLY interface is a CDC interface, then we can just present the interfaces, and the descriptor will
     //     instruct the host that they need to be bound.
     //  2- If there are any other interfaces (in any position), then we need to insert an IAD before any CDC interface
     //     to inform the host to associate the two interfaces to one driver.
- 
+
 
     // Case 1: CDC only
     template <uint8_t usb_interface_positon>
@@ -668,49 +704,49 @@ namespace Motate {
         const USBCDCDescriptorFunctionalACM_t    CDC_Functional_ACM;
         const USBCDCDescriptorFunctionalUnion_t  CDC_Functional_Union;
         const USBDescriptorEndpoint_t            CDC_NotificationEndpoint;
- 
+
         // CDC Data Interface
         const USBDescriptorInterface_t CDC_DCI_Interface;
         const USBDescriptorEndpoint_t CDC_DataOutEndpoint;
         const USBDescriptorEndpoint_t CDC_DataInEndpoint;
- 
- 
+
+
         USBConfigMixin (const uint8_t _first_endpoint_number, const uint8_t _first_interface_number, const USBDeviceSpeed_t _deviceSpeed, const bool _other_speed,
                          const bool _limited_size = false)
         : CDC_CCI_Interface(
                             /* _InterfaceNumber   = */ _first_interface_number,
                             /* _AlternateSetting  = */ 0,
                             /* _TotalEndpoints    = */ 1,
- 
+
                             /* _Class             = */ kCDCClass,
                             /* _SubClass          = */ kACMSubclass,
                             /* _Protocol          = */ kATCommandProtocol,
- 
+
                             /* _InterfaceStrIndex = */ 0 // none
         ),
         CDC_Functional_Header(),
         CDC_Functional_ACM(),
         CDC_Functional_Union(_first_interface_number),
-        CDC_NotificationEndpoint(
+        CDC_NotificationEndpoint{
                                  /* _deviceSpeed       = */ _deviceSpeed,
                                  /* _otherSpeed        = */ _other_speed,
                                  /* _input             = */ true,
                                  /* _EndpointAddress   = */ _first_endpoint_number,
                                  /* _Attributes        = */ (kEndpointTypeInterrupt | kEndpointAttrNoSync | kEndpointUsageData),
                                  /* _PollingIntervalMS = */ 0x10,
-                                 /* _maxSize (optional) =*/ 64
-                                 ),
- 
- 
+                                 /* _limited_size      = */ true
+                             },
+
+
         CDC_DCI_Interface(
                           /* _InterfaceNumber   = */ _first_interface_number+1,
                           /* _AlternateSetting  = */ 0,
                           /* _TotalEndpoints    = */ 2,
- 
+
                           /* _Class             = */ kCDCDataClass,
                           /* _SubClass          = */ kNoDataSubclass,
                           /* _Protocol          = */ kNoDataProtocol,
- 
+
                           /* _InterfaceStrIndex = */ 0 // none
         ),
         CDC_DataOutEndpoint(
@@ -730,10 +766,10 @@ namespace Motate {
                            /* _PollingIntervalMS = */ 0x01
                            )
         {};
-         
+
         static bool isNull() { return false; };
     };
-     
+
     // Case 2, we have one CDC interface and at least one other non-null interface
     // Since this is actually four different combinations of template, we make a base class and inherit from it.
     template <uint8_t usb_interface_positon, uint8_t interface_count>
@@ -743,14 +779,14 @@ namespace Motate {
         static const uint8_t endpoints = 3;
 
         const USBDescriptorInterfaceAssociation_t CDC_IAD;
-         
+
         // CDC Control Interface
         const USBDescriptorInterface_t            CDC_CCI_Interface;
         const USBCDCDescriptorFunctionalHeader_t  CDC_Functional_Header;
         const USBCDCDescriptorFunctionalACM_t     CDC_Functional_ACM;
         const USBCDCDescriptorFunctionalUnion_t   CDC_Functional_Union;
         const USBDescriptorEndpoint_t             CDC_NotificationEndpoint;
-         
+
         // CDC Data Interface
         const USBDescriptorInterface_t CDC_DCI_Interface;
         const USBDescriptorEndpoint_t CDC_DataOutEndpoint;
@@ -775,35 +811,35 @@ namespace Motate {
                           /* _InterfaceNumber   = */ _first_interface_number,
                           /* _AlternateSetting  = */ 0,
                           /* _TotalEndpoints    = */ 1,
-                           
+
                           /* _Class             = */ kCDCClass,
                           /* _SubClass          = */ kACMSubclass,
                           /* _Protocol          = */ kATCommandProtocol,
-                           
+
                           /* _InterfaceStrIndex = */ 0 // none
                           ),
         CDC_Functional_Header(),
         CDC_Functional_ACM(),
         CDC_Functional_Union(_first_interface_number),
-        CDC_NotificationEndpoint(
+        CDC_NotificationEndpoint{
                                  /* _deviceSpeed       = */ _deviceSpeed,
                                  /* _otherSpeed        = */ _other_speed,
                                  /* _input             = */ true,
                                  /* _EndpointAddress   = */ _first_endpoint_number,
                                  /* _Attributes        = */ (kEndpointTypeInterrupt | kEndpointAttrNoSync | kEndpointUsageData),
                                  /* _PollingIntervalMS = */ 0x10,
-                                 /* _maxSize (optional) =*/ 64
-                                 ),
-         
+                                 /* _limited_size      = */ true
+                             },
+
         CDC_DCI_Interface(
                           /* _InterfaceNumber   = */ _first_interface_number+1,
                           /* _AlternateSetting  = */ 0,
                           /* _TotalEndpoints    = */ 2,
-                           
+
                           /* _Class             = */ kCDCDataClass,
                           /* _SubClass          = */ kNoDataSubclass,
                           /* _Protocol          = */ kNoDataProtocol,
-                           
+
                           /* _InterfaceStrIndex = */ 0 // none
                           ),
         CDC_DataOutEndpoint(
@@ -829,6 +865,6 @@ namespace Motate {
         static bool isNull() { return false; };
     };
 }
- 
+
 #endif
 // MOTATEUSBCDC_ONCE

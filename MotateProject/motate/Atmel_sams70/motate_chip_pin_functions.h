@@ -33,7 +33,6 @@
 #define Motate_motate_chip_pin_functions_h
 
 namespace Motate {
-
     // PWM Pin assignments
     // Stupid preprocessor! Workaround for the comma in the TimerChannel name:
 #define _MOTATE_TEMP_TC(t,c) Motate::TimerChannel<t,c>
@@ -70,13 +69,14 @@ namespace Motate {
     _MAKE_MOTATE_PWM_PIN('A', 17, Motate::PWMTimer<3>,        /*Peripheral:*/ C,  /*Inverted:*/ true);
     _MAKE_MOTATE_PWM_PIN('A', 19, Motate::PWMTimer<0>,        /*Peripheral:*/ B,  /*Inverted:*/ false);
     _MAKE_MOTATE_PWM_PIN('A', 20, Motate::PWMTimer<1>,        /*Peripheral:*/ B,  /*Inverted:*/ false);
-    _MAKE_MOTATE_PWM_PIN('A', 23, Motate::PWMTimer<0>,        /*Peripheral:*/ B,  /*Inverted:*/ true);
+    // _MAKE_MOTATE_PWM_PIN('A', 23, Motate::PWMTimer<0>,        /*Peripheral:*/ B,  /*Inverted:*/ true);
+    _MAKE_MOTATE_PWM_PIN('A', 23, Motate::PWMTimer<8+2>,      /*Peripheral:*/ B,  /*Inverted:*/ true);
     _MAKE_MOTATE_PWM_PIN('A', 24, Motate::PWMTimer<1>,        /*Peripheral:*/ B,  /*Inverted:*/ true);
     _MAKE_MOTATE_PWM_PIN('A', 25, Motate::PWMTimer<2>,        /*Peripheral:*/ B,  /*Inverted:*/ true);
     _MAKE_MOTATE_PWM_PIN('A', 26, _MOTATE_TEMP_TC(/*0*/2,0),  /*Peripheral:*/ B,  /*Inverted:*/ false);
     _MAKE_MOTATE_PWM_PIN('A', 27, _MOTATE_TEMP_TC(/*0*/2,1),  /*Peripheral:*/ B,  /*Inverted:*/ false);
     _MAKE_MOTATE_PWM_PIN('A', 30, Motate::PWMTimer<2>,        /*Peripheral:*/ A,  /*Inverted:*/ false);
-#endif
+#endif // PIOA
 #ifdef PIOB
     _MAKE_MOTATE_PWM_PIN('B',  0, Motate::PWMTimer<0>,        /*Peripheral:*/ A,  /*Inverted:*/ true);
     _MAKE_MOTATE_PWM_PIN('B',  1, Motate::PWMTimer<1>,        /*Peripheral:*/ A,  /*Inverted:*/ true);
@@ -84,7 +84,7 @@ namespace Motate {
 //    _MAKE_MOTATE_PWM_PIN('B',  5, Motate::PWMTimer<0>,        /*Peripheral:*/ B,  /*Inverted:*/ false); // used by SWD
 //    _MAKE_MOTATE_PWM_PIN('B', 12, Motate::PWMTimer<1>,        /*Peripheral:*/ A,  /*Inverted:*/ false); // used by SWD
     _MAKE_MOTATE_PWM_PIN('B', 13, Motate::PWMTimer<2>,        /*Peripheral:*/ A,  /*Inverted:*/ false);
-#endif
+#endif // PIOB
 #ifdef PIOC
     _MAKE_MOTATE_PWM_PIN('C',  0, Motate::PWMTimer<0>,        /*Peripheral:*/ B,  /*Inverted:*/ false);
     _MAKE_MOTATE_PWM_PIN('C',  1, Motate::PWMTimer<1>,        /*Peripheral:*/ B,  /*Inverted:*/ false);
@@ -113,7 +113,7 @@ namespace Motate {
     _MAKE_MOTATE_PWM_PIN('C', 29, _MOTATE_TEMP_TC(/*1*/5,0),  /*Peripheral:*/ B,  /*Inverted:*/ false);
     _MAKE_MOTATE_PWM_PIN('C', 30, _MOTATE_TEMP_TC(/*1*/5,1),  /*Peripheral:*/ B,  /*Inverted:*/ false);
 #endif // TC1
-#endif
+#endif // PIOC
 #ifdef PIOD
 //    _MAKE_MOTATE_PWM_PIN('D',  0, Motate::PWMTimer<8+0>,      /*Peripheral:*/ B,  /*Inverted:*/ false); // USB_VBUS
     _MAKE_MOTATE_PWM_PIN('D',  1, Motate::PWMTimer<8+0>,      /*Peripheral:*/ B,  /*Inverted:*/ true);
@@ -134,7 +134,7 @@ namespace Motate {
     _MAKE_MOTATE_PWM_PIN('D', 25, Motate::PWMTimer<1>,        /*Peripheral:*/ A,  /*Inverted:*/ false);
     _MAKE_MOTATE_PWM_PIN('D', 26, Motate::PWMTimer<2>,        /*Peripheral:*/ A,  /*Inverted:*/ false);
     _MAKE_MOTATE_PWM_PIN('D', 27, Motate::PWMTimer<3>,        /*Peripheral:*/ A,  /*Inverted:*/ false);
-#endif
+#endif // PIOD
 
 #undef _MOTATE_TEMP_TC//(t,c)
 
@@ -142,13 +142,13 @@ namespace Motate {
     _MAKE_MOTATE_SPI_CS_PIN('A', 31, /* SPINum:*/ 0, /* Peripheral:*/ A, /* CS Index:*/ 1);
 #ifdef PIOB
     _MAKE_MOTATE_SPI_CS_PIN('B',  2, /* SPINum:*/ 0, /* Peripheral:*/ D, /* CS Index:*/ 0);
-#endif
+#endif // PIOB
 #ifdef PIOC
     _MAKE_MOTATE_SPI_CS_PIN('C', 25, /* SPINum:*/ 1, /* Peripheral:*/ C, /* CS Index:*/ 0);
     _MAKE_MOTATE_SPI_CS_PIN('C', 28, /* SPINum:*/ 1, /* Peripheral:*/ C, /* CS Index:*/ 1);
     _MAKE_MOTATE_SPI_CS_PIN('C', 29, /* SPINum:*/ 1, /* Peripheral:*/ C, /* CS Index:*/ 2);
     _MAKE_MOTATE_SPI_CS_PIN('C', 30, /* SPINum:*/ 1, /* Peripheral:*/ C, /* CS Index:*/ 3);
-#endif
+#endif // PIOC
 #ifdef PIOD
     _MAKE_MOTATE_SPI_CS_PIN('D',  0, /* SPINum:*/ 1, /* Peripheral:*/ C, /* CS Index:*/ 1);
     _MAKE_MOTATE_SPI_CS_PIN('D',  1, /* SPINum:*/ 1, /* Peripheral:*/ C, /* CS Index:*/ 2);
@@ -156,19 +156,19 @@ namespace Motate {
     _MAKE_MOTATE_SPI_CS_PIN('D', 12, /* SPINum:*/ 0, /* Peripheral:*/ C, /* CS Index:*/ 2);
     _MAKE_MOTATE_SPI_CS_PIN('D', 25, /* SPINum:*/ 0, /* Peripheral:*/ B, /* CS Index:*/ 1);
     _MAKE_MOTATE_SPI_CS_PIN('D', 27, /* SPINum:*/ 0, /* Peripheral:*/ B, /* CS Index:*/ 3);
-#endif
+#endif // PIOD
 
 #ifdef PIOC
     _MAKE_MOTATE_SPI_MISO_PIN('C', 26, /* SPINum:*/ 1, /* Peripheral */ B);
     _MAKE_MOTATE_SPI_MOSI_PIN('C', 27, /* SPINum:*/ 1, /* Peripheral */ B);
     _MAKE_MOTATE_SPI_SCK_PIN ('C', 24, /* SPINum:*/ 1, /* Peripheral */ B);
-#endif
+#endif // PIOC
 
 #ifdef PIOD
     _MAKE_MOTATE_SPI_MISO_PIN('D', 20, /* SPINum:*/ 0, /* Peripheral */ B);
     _MAKE_MOTATE_SPI_MOSI_PIN('D', 21, /* SPINum:*/ 0, /* Peripheral */ B);
     _MAKE_MOTATE_SPI_SCK_PIN ('D', 22, /* SPINum:*/ 0, /* Peripheral */ B);
-#endif
+#endif // PIOD
 
     //
     // UART Pin Assignments
@@ -193,7 +193,7 @@ namespace Motate {
     _MAKE_MOTATE_UART_RX_PIN( 'D', 18, /* UART number: */ 4+4, /* Peripheral */ C);
     _MAKE_MOTATE_UART_TX_PIN( 'D',  3, /* UART number: */ 4+4, /* Peripheral */ C);
     _MAKE_MOTATE_UART_TX_PIN( 'D', 19, /* UART number: */ 4+4, /* Peripheral */ C);
-#endif
+#endif // PIOD
 
 
 #ifdef PIOB
@@ -206,14 +206,14 @@ namespace Motate {
     _MAKE_MOTATE_UART_TX_PIN ( 'B',   4, /* UART number: */ 1, /* Peripheral */ D);
     _MAKE_MOTATE_UART_RTS_PIN( 'A',  24, /* UART number: */ 1, /* Peripheral */ A);
     _MAKE_MOTATE_UART_CTS_PIN( 'A',  25, /* UART number: */ 1, /* Peripheral */ A);
-#endif
+#endif // PIOB
 
 #ifdef PIOD
     _MAKE_MOTATE_UART_RX_PIN ( 'D',  15, /* UART number: */ 2, /* Peripheral */ B);
     _MAKE_MOTATE_UART_TX_PIN ( 'D',  16, /* UART number: */ 2, /* Peripheral */ B);
     _MAKE_MOTATE_UART_RTS_PIN( 'D',  18, /* UART number: */ 2, /* Peripheral */ B);
     _MAKE_MOTATE_UART_CTS_PIN( 'D',  19, /* UART number: */ 2, /* Peripheral */ B);
-#endif
+#endif // PIOD
 
     // ADC Pin assignments CURRRENTLY WRONG
     //    _MAKE_MOTATE_ADC_PIN('A',  2, /* ADC number:*/  0);

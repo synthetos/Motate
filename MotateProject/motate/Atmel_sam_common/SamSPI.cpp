@@ -31,15 +31,15 @@
 #include "MotateSPI.h"
 
 namespace Motate {
-    template<> std::function<void(uint16_t)> _SPIHardware<0>::_spiInterruptHandler {};
+    template<> std::function<void()> _SPIHardware<0>::_spiInterruptHandlerJumper {};
 #if defined(HAS_SPI1)
-    template<> std::function<void(uint16_t)> _SPIHardware<1>::_spiInterruptHandler {};
+    template<> std::function<void()> _SPIHardware<1>::_spiInterruptHandlerJumper {};
 #endif // HAS_SPI1
 }
 
 extern "C" void SPI0_Handler(void)  {
-    if (Motate::_SPIHardware<0u>::_spiInterruptHandler) {
-        Motate::_SPIHardware<0u>::_spiInterruptHandler(Motate::_SPIHardware<0u>::getInterruptCause());
+    if (Motate::_SPIHardware<0u>::_spiInterruptHandlerJumper) {
+        Motate::_SPIHardware<0u>::_spiInterruptHandlerJumper();
         return;
     }
     __asm__("BKPT");
@@ -47,8 +47,8 @@ extern "C" void SPI0_Handler(void)  {
 
 #if defined(HAS_SPI1)
 extern "C" void SPI1_Handler(void)  {
-    if (Motate::_SPIHardware<1u>::_spiInterruptHandler) {
-        Motate::_SPIHardware<1u>::_spiInterruptHandler(Motate::_SPIHardware<1u>::getInterruptCause());
+    if (Motate::_SPIHardware<1u>::_spiInterruptHandlerJumper) {
+        Motate::_SPIHardware<1u>::_spiInterruptHandlerJumper();
         return;
     }
     __asm__("BKPT");

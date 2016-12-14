@@ -31,6 +31,8 @@
 #define MOTATESPI_H_ONCE
 
 #include <cinttypes>
+#include "MotateCommon.h"
+#include "MotateServiceCall.h"
 
 
 /* After some setup, we call the processor-specific bits, then we have the
@@ -106,31 +108,7 @@ namespace Motate {
 //    }; // SPIBusMode
 
 
-    struct SPIInterrupt {
-        static constexpr uint16_t Off               = 0<<0;
-        /* Alias for "off" to make more sense
-         when returned from setInterruptPending(). */
-        static constexpr uint16_t Unknown           = 0<<0;
-
-        static constexpr uint16_t OnTxReady         = 1<<0;
-        static constexpr uint16_t OnTransmitReady   = 1<<0;
-        static constexpr uint16_t OnTxDone          = 1<<0;
-        static constexpr uint16_t OnTransmitDone    = 1<<0;
-
-        static constexpr uint16_t OnRxReady         = 1<<1;
-        static constexpr uint16_t OnReceiveReady    = 1<<1;
-        static constexpr uint16_t OnRxDone          = 1<<1;
-        static constexpr uint16_t OnReceiveDone     = 1<<1;
-
-        static constexpr uint16_t OnTxTransferDone  = 1<<2;
-        static constexpr uint16_t OnRxTransferDone  = 1<<3;
-
-        /* Set priority levels here as well: */
-        static constexpr uint16_t PriorityHighest   = 1<<5;
-        static constexpr uint16_t PriorityHigh      = 1<<6;
-        static constexpr uint16_t PriorityMedium    = 1<<7;
-        static constexpr uint16_t PriorityLow       = 1<<8;
-        static constexpr uint16_t PriorityLowest    = 1<<9;
+    struct SPIInterrupt : Interrupt {
     };
 
 
@@ -210,7 +188,7 @@ namespace Motate {
 
 
         SPIBusDeviceBase *device;
-        SPIMessage *next_message;
+        SPIMessage * volatile next_message;
 
         std::function<void(void)> message_done_callback;
         volatile bool sending = false;
@@ -220,7 +198,7 @@ namespace Motate {
 //        SPIMessage(std::function<void(void)>&& callback) : message_done_callback{std::move(callback)} {};
 //        SPIMessage(std::function<void(void)> callback) : message_done_callback{callback} {};
 
-        SPIMessage *setup(uint8_t *new_tx_buffer, uint8_t * new_rx_buffer, const uint16_t new_size, const bool new_deassert_after, const bool new_ends_transaction) {
+        SPIMessage *setup(uint8_t *new_tx_buffer, uint8_t *new_rx_buffer, const uint16_t new_size, const bool new_deassert_after, const bool new_ends_transaction) {
             tx_buffer = new_tx_buffer;
             rx_buffer = new_rx_buffer;
             size = new_size;
@@ -240,7 +218,7 @@ namespace Motate {
      *
      **************************************************/
 
-    template<pin_number spiMISOPinNumber, pin_number spiMOSIPinNumber, pin_number spiSCKPinNumber>
+    template<pin_number spiMISOPinNumber, pin_number spiMOSIPinNumber, pin_number spiSCKPinNumber, service_call_number svcCallNum>
     struct SPIBus
     {
 
@@ -264,13 +242,15 @@ namespace Motate {
 
         SPIGetHardware<spiMISOPinNumber, spiMOSIPinNumber, spiSCKPinNumber> hardware;
 
+        ServiceCall<svcCallNum> message_manager;
+
+
         SPIBusDeviceBase *_first_device, *_current_transaction_device;
-        SPIMessage *_first_message;//, *_last_message;
+        SPIMessage * volatile _first_message;//, *_last_message;
 
         volatile bool sending = false; // as long as this is true, sendNextMessage() does nothing
 
         SPIBus() : hardware{} {
-            hardware.init();
         }
 
         void addDevice(SPIBusDeviceBase *new_next) {
@@ -317,6 +297,14 @@ namespace Motate {
         // WARNING!!
         // This must be called later, outside of the contructors, to ensure that all dependencies are contructed.
         void init() {
+            // setup message_manager system call handler and priority
+            message_manager.setInterruptHandler([&]() {
+                this->sendNextMessageActual();
+            });
+            message_manager.setInterrupts(kInterruptPriorityLow);
+
+            // ask the hardware to init
+            hardware.init();
             hardware.setInterruptHandler([&](uint16_t interruptCause) { // use a closure
                 this->spiInterruptHandler(interruptCause);
             });
@@ -324,7 +312,13 @@ namespace Motate {
             hardware.enable();
         };
 
+        // This function uses a ServiceCall to jump to the correct interrupt level, which may be higher or lower than the current level.
         void sendNextMessage() {
+            message_manager.call();
+            //sendNextMessageActual();
+        }
+
+        void sendNextMessageActual() {
             if (sending) { return; }
             if (_first_message == nullptr) { return;}
             if (_first_message->sending) { return; }
@@ -365,6 +359,12 @@ namespace Motate {
         }
 
         void spiInterruptHandler(uint16_t interruptCause) {
+            // This bears stating, even though it's somewhat obvious:
+            // This entire function is in an interrupt (higher priority) context, and will occasionally
+            // interupt other code that interacts with the same structures.
+
+            // So, we have to be careful not to move something out from under the other code.
+
             if (interruptCause & SPIInterrupt::OnTxReady) {
                 // ready to transfer...
             }
@@ -374,48 +374,57 @@ namespace Motate {
             }
 
             if (interruptCause & (SPIInterrupt::OnTxTransferDone | SPIInterrupt::OnRxTransferDone)) {
+                // Check that we're done with all transmission...
+                if (!hardware.doneReading()) {
+                    return;
+                }
+                if (!hardware.doneWriting()) {
+                    return;
+                }
+
                 // This needs to be cleaned up:
                 hardware._disableOnTXTransferDoneInterrupt();
                 hardware._disableOnRXTransferDoneInterrupt();
 
                 // _first_message is done sending.
                 // Go ahead and pop it from the list and reset (partially)
-                auto this_message = _first_message;
-                _first_message = _first_message->next_message;
-                this_message->next_message = nullptr;
-                this_message->sending = false;
+                if (_first_message) {
+                    auto this_message = _first_message;
+                    _first_message = this_message->next_message;
+                    this_message->next_message = nullptr;
+                    this_message->sending = false;
 
-                // Set the values for *this* message before the callback, so
-                // the callback can re-queue with different values AND tell us
-                // how to handle the rest of this transaction. With these defaulted
-                // like this, the callback can do nothing and get the original
-                // behavior the message was configured for.
-                this_message->immediate_ends_transaction = this_message->ends_transaction;
-                this_message->immediate_deassert_after = this_message->deassert_after;
+                    // Set the values for *this* message before the callback, so
+                    // the callback can re-queue with different values AND tell us
+                    // how to handle the rest of this transaction. With these defaulted
+                    // like this, the callback can do nothing and get the original
+                    // behavior the message was configured for.
+                    this_message->immediate_ends_transaction = this_message->ends_transaction;
+                    this_message->immediate_deassert_after = this_message->deassert_after;
 
-                // Call the message's callback, if any, THEN check immediate_ends_transaction
-                // and immediate_deassert_after, since the callback might decide to change those.
+                    // Call the message's callback, if any, THEN check immediate_ends_transaction
+                    // and immediate_deassert_after, since the callback might decide to change those.
 
-                // Ignore ends_transaction and deassert_after, since those are for the next queueing
-                // of the message - which may happen in the callback as well.
+                    // Ignore ends_transaction and deassert_after, since those are for the next queueing
+                    // of the message - which may happen in the callback as well.
 
-                // IMPORTANT NOTE: the callback may call sendNextMessage(), so we
-                //   keep sending at true to prevent issues.
+                    // IMPORTANT NOTE: the callback may call sendNextMessage(), so we
+                    //   keep sending at true to prevent issues.
 
-                if (this_message->message_done_callback) {
-                    this_message->message_done_callback();
+                    if (this_message->message_done_callback) {
+                        this_message->message_done_callback();
+                    }
+
+                    if (this_message->immediate_ends_transaction) {
+                        _current_transaction_device = nullptr;
+                    }
+
+                    if (this_message->immediate_deassert_after) {
+                        hardware.deassert();
+                    }
                 }
-
-                if (this_message->immediate_ends_transaction) {
-                    _current_transaction_device = nullptr;
-                }
-
-                if (this_message->immediate_deassert_after) {
-                    hardware.deassert();
-                }
-
                 sending = false; // we can now allow more sending
-                sendNextMessage();
+                sendNextMessageActual();
             }
         };
 
@@ -430,13 +439,13 @@ namespace Motate {
         struct SPIBusDevice : SPIBusDeviceBase
         {
             // Since we are defining this INSIDE the SPIBus struct, we'll use SPIBus internals liberally
-            SPIBus<spiMISOPinNumber, spiMOSIPinNumber, spiSCKPinNumber> * const _spi_bus;
+            SPIBus<spiMISOPinNumber, spiMOSIPinNumber, spiSCKPinNumber, svcCallNum> * const _spi_bus;
 
             uint32_t _cs_number; // the chip select number
             uint32_t _cs_value;  // the internal value to give the hardware to select the right chip
 
             template <typename chipSelectType>
-            constexpr SPIBusDevice(SPIBus<spiMISOPinNumber, spiMOSIPinNumber, spiSCKPinNumber> *parent_bus, const chipSelectType &cs, const uint32_t baud, const uint16_t options, uint32_t min_between_cs_delay_ns, uint32_t cs_to_sck_delay_ns, uint32_t between_word_delay_ns) : _spi_bus {parent_bus}
+            constexpr SPIBusDevice(SPIBus<spiMISOPinNumber, spiMOSIPinNumber, spiSCKPinNumber, svcCallNum> *parent_bus, const chipSelectType &cs, const uint32_t baud, const uint16_t options, uint32_t min_between_cs_delay_ns, uint32_t cs_to_sck_delay_ns, uint32_t between_word_delay_ns) : _spi_bus {parent_bus}
             {
                 _cs_number = cs.csNumber;
                 _cs_value  = cs.csValue;
@@ -474,17 +483,12 @@ namespace Motate {
                     //_spi_bus->_last_message = msg;
                 }
                 else {
-//                    _spi_bus->_last_message->next_message = msg;
-//                    _spi_bus->_last_message = msg;
-                    SPIMessage *previous_message = _spi_bus->_first_message;
-                    SPIMessage *walker_message = _spi_bus->_first_message->next_message;
-
-                    while (walker_message != nullptr) {
-                        previous_message = walker_message;
+                    SPIMessage *walker_message = _spi_bus->_first_message;
+                    while (walker_message->next_message != nullptr) {
                         walker_message = walker_message->next_message;
                     }
 
-                    previous_message->next_message = msg;
+                    walker_message->next_message = msg;
                 }
 
                 // Either we just queued the first message, OR we *might* have
