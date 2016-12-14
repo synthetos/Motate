@@ -1080,6 +1080,21 @@ namespace Motate {
             _enable_address();
             _address_available = false;
 
+            // catch the case where we are disconnected and reconnected, and we had open tranfers
+            if (!_get_vbus_state() && _dma_used_by_endpoint) {
+                for (uint32_t ep = 0; ep < 10; ep++) {
+                    if (_dma_used_by_endpoint & (1 << ep)) {
+                        _dma_used_by_endpoint &= ~(1 << ep);
+
+                        _devdma(ep)->command = USB_DMA_Descriptor::stop_now;
+                        _devdma(ep)->bufferAddress = nullptr;
+                        _devdma(ep)->buffer_length = 0;
+
+                        proxy->handleTransferDone(ep);
+                    }
+                }
+            }
+
             _init_endpoint(0, proxy->getEndpointConfig(0, /* otherSpeed = */ false));
 
             _enable_setup_received_interrupt(0);
