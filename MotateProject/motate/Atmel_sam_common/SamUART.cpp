@@ -61,7 +61,9 @@ extern "C" void USART0_Handler(void)  {
         Motate::_USARTHardware<0u>::_uartInterruptHandlerJumper();
         return;
     }
+#ifdef IN_DEBUGGER
     __asm__("BKPT");
+#endif
     //while (1) ;
 }
 
@@ -71,7 +73,9 @@ extern "C" void USART1_Handler(void)  {
         Motate::_USARTHardware<1u>::_uartInterruptHandlerJumper();
         return;
     }
+#ifdef IN_DEBUGGER
     __asm__("BKPT");
+#endif
     //while (1) ;
 }
 #endif
@@ -82,7 +86,9 @@ extern "C" void UART0_Handler(void)  {
         Motate::_UARTHardware<0>::_uartInterruptHandlerJumper();
         return;
     }
+#ifdef IN_DEBUGGER
     __asm__("BKPT");
+#endif
     //while (1) ;
 }
 
@@ -92,7 +98,9 @@ extern "C" void UART1_Handler(void)  {
         Motate::_UARTHardware<1>::_uartInterruptHandlerJumper();
         return;
     }
+#ifdef IN_DEBUGGER
     __asm__("BKPT");
+#endif
     //while (1) ;
 }
 #endif
@@ -103,7 +111,9 @@ extern "C" void UART2_Handler(void)  {
         Motate::_UARTHardware<2>::_uartInterruptHandlerJumper();
         return;
     }
+#ifdef IN_DEBUGGER
     __asm__("BKPT");
+#endif
     //while (1) ;
 }
 #endif
@@ -114,7 +124,9 @@ extern "C" void UART3_Handler(void)  {
         Motate::_UARTHardware<3>::_uartInterruptHandlerJumper();
         return;
     }
+#ifdef IN_DEBUGGER
     __asm__("BKPT");
+#endif
     //while (1) ;
 }
 #endif

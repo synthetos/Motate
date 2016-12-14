@@ -968,14 +968,14 @@ namespace Motate {
 
             // Reset following interupts flag
 //            _ack_reset();
-//            _ack_sof();
-//            _ack_msof();
+            _ack_sof();
+            _ack_msof();
 
             // The first suspend interrupt must be forced
             // The first suspend interrupt is not detected else raise it
 //            _raise_suspend();
 
-//            _ack_wake_up();
+            _ack_wake_up();
             // _freeze_clock();
         };
 
@@ -1053,7 +1053,9 @@ namespace Motate {
             }
 
             if (configuration_fixed == kEndpointBufferNull) {
+#ifdef IN_DEBUGGER
                 __asm__("BKPT"); // confoguration not valid
+#endif
             }
 
             // Configure EP
@@ -1064,7 +1066,9 @@ namespace Motate {
             _enable_endpoint(endpoint);
 
             if (!_endpoint_configured(endpoint)) {
+#ifdef IN_DEBUGGER
                 __asm__("BKPT"); // endpoint not configured
+#endif
             }
 
             _devdma(endpoint)->command = USB_DMA_Descriptor::stop_now;
@@ -1079,6 +1083,21 @@ namespace Motate {
             _configure_address(0);
             _enable_address();
             _address_available = false;
+
+            // catch the case where we are disconnected and reconnected, and we had open tranfers
+            if (!_get_vbus_state() && _dma_used_by_endpoint) {
+                for (uint32_t ep = 0; ep < 10; ep++) {
+                    if (_dma_used_by_endpoint & (1 << ep)) {
+                        _dma_used_by_endpoint &= ~(1 << ep);
+
+                        _devdma(ep)->command = USB_DMA_Descriptor::stop_now;
+                        _devdma(ep)->bufferAddress = nullptr;
+                        _devdma(ep)->buffer_length = 0;
+
+                        proxy->handleTransferDone(ep);
+                    }
+                }
+            }
 
             _init_endpoint(0, proxy->getEndpointConfig(0, /* otherSpeed = */ false));
 
@@ -1182,7 +1201,9 @@ namespace Motate {
                 }
             }
             else {
+#ifdef IN_DEBUGGER
                 __asm__("BKPT"); // endpoint interrupt went unhandled
+#endif
             }
 
             return true;
