@@ -944,8 +944,6 @@ namespace Motate {
             _setup_buffer = {nullptr, 0, nullptr, 0};
             setup_state = SETUP;
 
-            _enable_vbus_change_interrupt();
-
             _freeze_clock();
 
             //_attach();
@@ -960,6 +958,7 @@ namespace Motate {
             UOTGHS->UOTGHS_DEVCTRL &= ~UOTGHS_DEVCTRL_DETACH;
 
             // Enable USB line events
+            _enable_vbus_change_interrupt();
             _enable_reset_interrupt();
             _enable_suspend_interrupt();
             _enable_wake_up_interrupt();
@@ -968,14 +967,14 @@ namespace Motate {
 
             // Reset following interupts flag
 //            _ack_reset();
-//            _ack_sof();
-//            _ack_msof();
+            _ack_sof();
+            _ack_msof();
 
             // The first suspend interrupt must be forced
             // The first suspend interrupt is not detected else raise it
 //            _raise_suspend();
 
-//            _ack_wake_up();
+            _ack_wake_up();
             // _freeze_clock();
         };
 
