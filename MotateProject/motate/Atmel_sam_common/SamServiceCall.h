@@ -74,47 +74,42 @@ namespace Motate {
 
             bool needs_repended = false;
 
-            { // section with the interrupts off
-                SamCommon::InterruptDisabler disabler;
+            if (_first_service_call == nullptr) {
+                _debug_print_num(); svc_call_debug("☝🏻");
+                _first_service_call = this;
+                _pend();
+                return;
+            }
 
+//            // This happens when we are already in a pendSV context, and we are adding a second one.
+//            // This can also happen if there was already a second one, and we just pre-empted it with a
+//            // higher-priority one.
+//            // IMPORTANT: HIGHER priority tasks have a LOWER number
+//            if (_first_service_call->_interrupt_level > _interrupt_level) {
+//                _debug_print_num(); svc_call_debug("shuffle! ");
+//                this->_next = _first_service_call;
+//                _first_service_call = this;
+//                _pend();
+//                return;
+//            }
 
-                if (_first_service_call == nullptr) {
-                    _debug_print_num(); svc_call_debug("☝🏻");
-                    _first_service_call = this;
-                    _pend();
-                    return;
-                }
-
-    //            // This happens when we are already in a pendSV context, and we are adding a second one.
-    //            // This can also happen if there was already a second one, and we just pre-empted it with a
-    //            // higher-priority one.
-    //            // IMPORTANT: HIGHER priority tasks have a LOWER number
-    //            if (_first_service_call->_interrupt_level > _interrupt_level) {
-    //                _debug_print_num(); svc_call_debug("shuffle! ");
-    //                this->_next = _first_service_call;
-    //                _first_service_call = this;
-    //                _pend();
-    //                return;
-    //            }
-
-                ServiceCallEvent *walker = _first_service_call;
-                while (walker->_next != nullptr) {
-                    // put this in front of lower priority tasks
-                    // IMPORTANT: HIGHER priority tasks have a LOWER number
-                    if (walker->_next->_interrupt_level > _interrupt_level) {
-                        if (walker == _first_service_call) {
-                            needs_repended = true;
-                        }
-                        break;
+            ServiceCallEvent *walker = _first_service_call;
+            while (walker->_next != nullptr) {
+                // put this in front of lower priority tasks
+                // IMPORTANT: HIGHER priority tasks have a LOWER number
+                if (walker->_next->_interrupt_level > _interrupt_level) {
+                    if (walker == _first_service_call) {
+                        needs_repended = true;
                     }
-                    walker = walker->_next;
+                    break;
                 }
+                walker = walker->_next;
+            }
 
-                _next = walker->_next; // in case we aren't putting it last in line
-                walker->_next = this;
+            _next = walker->_next; // in case we aren't putting it last in line
+            walker->_next = this;
 
-                _debug_print_num(); svc_call_debug("🖐🏻");
-            } // enable interrupts again
+            _debug_print_num(); svc_call_debug("🖐🏻");
 
             // If the first_service_call's priority is lower (has a higher number)
             // then we'll pend another PendSV to esure the correct level.
@@ -122,40 +117,6 @@ namespace Motate {
                 _pend();
             }
         };
-
-        // This is static, it doesn't use any local variables
-        void _pend() {
-            _debug_print_num(); svc_call_debug("✍🏻");
-
-            /* Set interrupt priority */
-            if (_interrupt_level & kInterruptPriorityHighest) {
-                NVIC_SetPriority(PendSV_IRQn, 0);
-                svc_call_debug("⇈");
-            }
-            else if (_interrupt_level & kInterruptPriorityHigh) {
-                NVIC_SetPriority(PendSV_IRQn, 3);
-                svc_call_debug("⇡");
-            }
-            else if (_interrupt_level & kInterruptPriorityMedium) {
-                NVIC_SetPriority(PendSV_IRQn, 7);
-                svc_call_debug("⦿");
-            }
-            else if (_interrupt_level & kInterruptPriorityLow) {
-                NVIC_SetPriority(PendSV_IRQn, 11);
-                svc_call_debug("⇣");
-            }
-            else if (_interrupt_level & kInterruptPriorityLowest) {
-                NVIC_SetPriority(PendSV_IRQn, 15);
-                svc_call_debug("⇊");
-            }
-
-            // see http://infocenter.arm.com/help/topic/com.arm.doc.dai0321a/DAI0321A_programming_guide_memory_barriers_for_m_profile.pdf
-            // Section 4.5 and 4.10. Specifically:
-            // "if it is necessary to have the side-effect of the priority change recognized immediately,
-            // an ISB instruction is required"
-            SCB->ICSR |= SCB_ICSR_PENDSVSET_Msk;
-            __ISB();
-        }
 
         // Pop the first thing off the list and return it.
         static auto _pop() {
@@ -225,6 +186,105 @@ namespace Motate {
 
             // If we are here then we are in the interrupt context
             _debug_print_num(); svc_call_debug("🎉\n");
+        };
+
+        void _pend() {
+            _debug_print_num(); svc_call_debug("✍🏻");
+
+            // We set elevate when we're going to just elevate the context with BASEPRI
+            bool elevate = false;
+
+            // we need to convert the enum to a priority value we can compare
+            uint32_t priority_value = 0;
+            if (_interrupt_level & kInterruptPriorityHighest) {
+                priority_value = 0;
+            }
+            else if (_interrupt_level & kInterruptPriorityHigh) {
+                priority_value = 3;
+            }
+            else if (_interrupt_level & kInterruptPriorityMedium) {
+                priority_value = 7;
+            }
+            else if (_interrupt_level & kInterruptPriorityLow) {
+                priority_value = 11;
+            }
+            else if (_interrupt_level & kInterruptPriorityLowest) {
+                priority_value = 15;
+            }
+
+            auto base_pri = __get_BASEPRI();
+            if ((base_pri == 0) || (base_pri > priority_value)) {
+                // get the currently highest-priority active "exception" (interrpout)
+                // see http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0552a/CHDBIBGJ.html
+                // NOTE: it's signed!
+                int32_t active_interrupt_number = (SCB->ICSR & SCB_ICSR_VECTACTIVE_Msk) >> SCB_ICSR_VECTACTIVE_Pos;
+                if (active_interrupt_number != 0) {
+                    // See not at previous link, we need to subtract 16 from the interrupt number to get the IRQn_Type
+                    IRQn_Type active_irq = (IRQn_Type)(active_interrupt_number - 16);
+
+                    // REMEMBER: "higher priority" means a lower number!!!
+                    //           0 is the highest priority!
+
+                    if (NVIC_GetPriority(active_irq) > priority_value) {
+                        elevate = true;
+                    }
+                } else {
+                    elevate = true;
+                }
+            }
+
+            if (elevate) {
+                __set_BASEPRI(priority_value);
+                if (_interrupt_level & kInterruptPriorityHighest) {
+                    //__set_BASEPRI(0); // THIS WON'T WORK!!!
+                    // TODO: disable interrupts completely in this case
+                    svc_call_debug("_⇈");
+                }
+                else if (_interrupt_level & kInterruptPriorityHigh) {
+                    svc_call_debug("_⇡");
+                }
+                else if (_interrupt_level & kInterruptPriorityMedium) {
+                    svc_call_debug("_⦿");
+                }
+                else if (_interrupt_level & kInterruptPriorityLow) {
+                    svc_call_debug("_⇣");
+                }
+                else if (_interrupt_level & kInterruptPriorityLowest) {
+                    svc_call_debug("_⇊");
+                }
+
+                _pop()->_call();
+
+                svc_call_debug("_");
+                __set_BASEPRI(base_pri);
+                return;
+            }
+
+
+            /* Set interrupt priority */
+            NVIC_SetPriority(PendSV_IRQn, priority_value);
+            if (_interrupt_level & kInterruptPriorityHighest) {
+                svc_call_debug("⇈");
+            }
+            else if (_interrupt_level & kInterruptPriorityHigh) {
+                svc_call_debug("⇡");
+            }
+            else if (_interrupt_level & kInterruptPriorityMedium) {
+                svc_call_debug("⦿");
+            }
+            else if (_interrupt_level & kInterruptPriorityLow) {
+                svc_call_debug("⇣");
+            }
+            else if (_interrupt_level & kInterruptPriorityLowest) {
+                svc_call_debug("⇊");
+            }
+
+            // see http://infocenter.arm.com/help/topic/com.arm.doc.dai0321a/DAI0321A_programming_guide_memory_barriers_for_m_profile.pdf
+            // Section 4.5 and 4.10. Specifically:
+            // "if it is necessary to have the side-effect of the priority change recognized immediately,
+            // an ISB instruction is required"
+            SCB->ICSR |= SCB_ICSR_PENDSVSET_Msk;
+            __ISB();
         };
 
         virtual void _debug_print_num() {;};

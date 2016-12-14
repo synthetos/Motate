@@ -942,21 +942,20 @@ namespace Motate {
             _disable_msof_interrupt();
 
             // Reset following interupts flag
-            _ack_reset();
-            _ack_sof();
-            _ack_msof();
+            // _ack_reset();
+            // _ack_sof();
+            // _ack_msof();
 
             // The first suspend interrupt must be forced
             // The first suspend interrupt is not detected else raise it
 //            _raise_suspend();
 
-            _ack_wake_up();
-            _freeze_clock();
+            // _ack_wake_up();
+            // _freeze_clock();
         };
         bool attach() {
             if (_inited) {
                  _attach();
-//                 configuration = 0;
                 return true;
             }
             return false;
@@ -1049,6 +1048,23 @@ namespace Motate {
             _configure_address(0);
             _enable_address();
             _address_available = false;
+
+            setup_state = SETUP;
+
+            // catch the case where we are disconnected and reconnected, and we had open tranfers
+            if (_dma_used_by_endpoint) {
+                for (uint32_t ep = 0; ep < 10; ep++) {
+                    if (_dma_used_by_endpoint & (1 << ep)) {
+                        _dma_used_by_endpoint &= ~(1 << ep);
+
+                        _devdma(ep)->command = USB_DMA_Descriptor::stop_now;
+                        _devdma(ep)->bufferAddress = nullptr;
+                        _devdma(ep)->buffer_length = 0;
+
+                        proxy->handleTransferDone(ep);
+                    }
+                }
+            }
 
             _init_endpoint(0, proxy->getEndpointConfig(0, /* otherSpeed = */ false));
 
@@ -1172,20 +1188,22 @@ namespace Motate {
             return true;
         };
 
+        bool isConnected() { return !!config_number; }
+
         bool checkAndHandleWakeupSuspend() {
-            if (_is_wake_up_interrupt_enabled() && _is_wake_up()) {
+            if (/*_is_wake_up_interrupt_enabled() && */_is_wake_up()) {
                 _ack_wake_up();
                 _unfreeze_clock();
                 _disable_wake_up_interrupt();
                 _enable_suspend_interrupt();
                 return true;
             }
-            if (_is_suspend_interrupt_enabled() && _is_suspend()) {
+            if (/*_is_suspend_interrupt_enabled() && */_is_suspend()) {
                 _ack_suspend();
                 _unfreeze_clock();
                 _disable_suspend_interrupt();
                 _enable_wake_up_interrupt();
-                _freeze_clock();
+                //_freeze_clock();
                 return true;
             }
 

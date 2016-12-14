@@ -424,7 +424,8 @@ namespace Motate {
                     }
                 }
                 sending = false; // we can now allow more sending
-                sendNextMessageActual();
+                //sendNextMessageActual();
+                message_manager.call();
             }
         };
 
