@@ -944,16 +944,14 @@ namespace Motate {
             _setup_buffer = {nullptr, 0, nullptr, 0};
             setup_state = SETUP;
 
+            _enable_vbus_change_interrupt();
+
             _freeze_clock();
 
             //_attach();
         };
 
         void _attach() {
-            if (!_get_vbus_state()) {
-                return _detach();
-            }
-
             SamCommon::InterruptDisabler disabler;
 
             _unfreeze_clock();
@@ -962,7 +960,6 @@ namespace Motate {
             UOTGHS->UOTGHS_DEVCTRL &= ~UOTGHS_DEVCTRL_DETACH;
 
             // Enable USB line events
-            _enable_vbus_change_interrupt();
             _enable_reset_interrupt();
             _enable_suspend_interrupt();
             _enable_wake_up_interrupt();
@@ -1214,7 +1211,6 @@ namespace Motate {
 
             setup_state = SETUP;
 
-            // from here on is if we disconnected
             // catch the case where we are disconnected and reconnected, and we had open tranfers
             if (!_get_vbus_state() && _dma_used_by_endpoint) {
                 for (uint32_t ep = 0; ep < 10; ep++) {
@@ -1231,7 +1227,9 @@ namespace Motate {
             }
 
             // check to see if we connected
-            if (_get_vbus_state()) {
+            if (!_get_vbus_state()) {
+                // force reattach
+                detach();
                 attach();
             }
 
