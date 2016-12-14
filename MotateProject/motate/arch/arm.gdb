@@ -27,7 +27,7 @@ defin dwt_time
 end
 
 defin dwt_time_us
-print (float)(*(uint32_t *)$DWT_CYCCNT) / (float)(SystemCoreClock / 1000000)
+    print (float)(*(uint32_t *)$DWT_CYCCNT) / (float)(SystemCoreClock / 1000000)
 end
 
 define dwt_reset

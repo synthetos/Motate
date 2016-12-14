@@ -1053,7 +1053,9 @@ namespace Motate {
             }
 
             if (configuration_fixed == kEndpointBufferNull) {
+#ifdef IN_DEBUGGER
                 __asm__("BKPT"); // confoguration not valid
+#endif
             }
 
             // Configure EP
@@ -1064,7 +1066,9 @@ namespace Motate {
             _enable_endpoint(endpoint);
 
             if (!_endpoint_configured(endpoint)) {
+#ifdef IN_DEBUGGER
                 __asm__("BKPT"); // endpoint not configured
+#endif
             }
 
             _devdma(endpoint)->command = USB_DMA_Descriptor::stop_now;
@@ -1197,7 +1201,9 @@ namespace Motate {
                 }
             }
             else {
+#ifdef IN_DEBUGGER
                 __asm__("BKPT"); // endpoint interrupt went unhandled
+#endif
             }
 
             return true;
