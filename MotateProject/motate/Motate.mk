@@ -235,6 +235,7 @@ ifneq (,$(findstring Atmel,$(PATH)))
 $(info "Found that we're in Atmel Studio")
 OS := WIN32
 TOOLS_SUBPATH := win32/gcc-$(CROSS_COMPILE)
+TOOLS_PATH := $(realpath $(TOOLS_PATH))
 PATH := $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin;c:\Program Files\Git\bin;c:\Program Files\Git\cmd;c:\Program Files\Git\mingw32\bin;c:\Program Files\Git\mingw64\bin;$(PATH)
 MKDIR   = gmkdir
 SPECIAL_ATMEL_STUDIO_DEFAULT_TARGETS = $(PROJECT).elf $(PROJECT).map
@@ -243,12 +244,14 @@ ifneq (,$(findstring /cygdrive/,$(PATH)))
 $(info "Found that we're in Windows Cygwin")
 OS := WIN32
 TOOLS_SUBPATH := win32/gcc-$(CROSS_COMPILE)
+TOOLS_PATH := $(realpath $(TOOLS_PATH))
 PATH := $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin;c:\Program Files\Git\bin;c:\Program Files\Git\cmd;c:\Program Files\Git\mingw32\bin;c:\Program Files\Git\mingw64\bin;$(PATH)
 else
 ifneq (,$(findstring WINDOWS,$(PATH)))
 $(info "Found that we're in WINDOWS")
 OS := WIN32
 TOOLS_SUBPATH := win32/gcc-$(CROSS_COMPILE)
+TOOLS_PATH := $(realpath $(TOOLS_PATH))
 PATH := $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin;c:\Program Files\Git\bin;c:\Program Files\Git\cmd;c:\Program Files\Git\mingw32\bin;c:\Program Files\Git\mingw64\bin;$(PATH)
 else
 
