@@ -151,8 +151,25 @@ namespace Motate {
         void _call() {
             // If we are here then we are in the interrupt context
             _debug_print_num(); svc_call_debug("☎️");
-            auto priority_level = NVIC_GetPriority(PendSV_IRQn);
-            switch(priority_level) {
+
+            // debug code to get priority level
+            // see _pend comments for description
+            // this should fold away since these aren't used anywhere.
+            int32_t priority_value = 0;
+            int32_t active_interrupt_number = (SCB->ICSR & SCB_ICSR_VECTACTIVE_Msk) >> SCB_ICSR_VECTACTIVE_Pos;
+            if (active_interrupt_number != 0) {
+                IRQn_Type active_irq = (IRQn_Type)(active_interrupt_number - 16);
+                priority_value = NVIC_GetPriority(active_irq);
+                if (PendSV_IRQn == active_irq) {
+                    svc_call_debug("🕶");
+                } else {
+                    svc_call_debug("👀");
+                }
+            } else {
+                priority_value = __get_BASEPRI() >> (8 - __NVIC_PRIO_BITS);
+            }
+
+            switch(priority_value) {
                 case 0: svc_call_debug("⇈"); break;
                 case 1: svc_call_debug("⇡"); break;
                 case 2: svc_call_debug("⦿"); break;
@@ -212,7 +229,10 @@ namespace Motate {
                 priority_value = 4;
             }
 
-            auto base_pri = __get_BASEPRI();
+            // Thanks to http://embeddedgurus.com/state-space/2014/02/cutting-through-the-confusion-with-arm-cortex-m-interrupt-priorities/
+            // for explaining __get_BASEPRI and __set_BASEPRI needing shifted.
+
+            auto base_pri = __get_BASEPRI() >> (8 - __NVIC_PRIO_BITS);
             if ((base_pri == 0) || (base_pri > priority_value)) {
                 // get the currently highest-priority active "exception" (interrpout)
                 // see http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0552a/CHDBIBGJ.html
@@ -247,8 +267,8 @@ namespace Motate {
 
                 _pop()->_call();
 
-                svc_call_debug("_");
-                __set_BASEPRI(base_pri);
+                svc_call_debug("🛬");
+                __set_BASEPRI(base_pri << (8 - __NVIC_PRIO_BITS));
                 return;
             }
 
@@ -268,8 +288,8 @@ namespace Motate {
             // Section 4.5 and 4.10. Specifically:
             // "if it is necessary to have the side-effect of the priority change recognized immediately,
             // an ISB instruction is required"
-            SCB->ICSR |= SCB_ICSR_PENDSVSET_Msk;
             __ISB();
+            SCB->ICSR |= SCB_ICSR_PENDSVSET_Msk;
         };
 
         virtual void _debug_print_num() {;};
