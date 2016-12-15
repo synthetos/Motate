@@ -178,6 +178,13 @@ namespace Motate {
             EndTransaction = true
         };
 
+        enum class State {
+            Idle = 0,
+            Setup = 1,
+            Sending = 2,
+            Done = 3
+        };
+
         uint8_t *tx_buffer;
         uint8_t *rx_buffer; // "pointer to uint8_t that is const"
         uint16_t size;
@@ -191,7 +198,7 @@ namespace Motate {
         SPIMessage * volatile next_message;
 
         std::function<void(void)> message_done_callback;
-        volatile bool sending = false;
+        volatile State state = State::Idle;
 
 
         SPIMessage() {};
@@ -204,6 +211,7 @@ namespace Motate {
             size = new_size;
             deassert_after = new_deassert_after;
             ends_transaction = new_ends_transaction;
+            state = State::Setup;
 
             return this;
         }
@@ -320,8 +328,13 @@ namespace Motate {
 
         void sendNextMessageActual() {
             if (sending) { return; }
+            while (_first_message && (SPIMessage::State::Done == _first_message->state)) {
+                auto done_message = _first_message;
+                _first_message = _first_message->next_message;
+                done_message->next_message = nullptr;
+            }
             if (_first_message == nullptr) { return;}
-            if (_first_message->sending) { return; }
+            if (SPIMessage::State::Sending == _first_message->state) { return; }
 
             if (_current_transaction_device != nullptr) {
                 // the next message we send must be from the _current_transaction_device
@@ -351,8 +364,14 @@ namespace Motate {
                 }
             }
 
+#ifdef IN_DEBUGGER
+            if (SPIMessage::State::Setup != _first_message->state) {
+                __asm__("BKPT"); // SPI about to send non-Setup message
+            }
+#endif
+
             sending = true;
-            _first_message->sending = true;
+            _first_message->state = SPIMessage::State::Sending;
             _current_transaction_device = _first_message->device;
             hardware.setChannel(_current_transaction_device->getChannel());
             hardware.startTransfer(_first_message->tx_buffer, _first_message->rx_buffer, _first_message->size);
@@ -386,13 +405,23 @@ namespace Motate {
                 hardware._disableOnTXTransferDoneInterrupt();
                 hardware._disableOnRXTransferDoneInterrupt();
 
+
+#ifdef IN_DEBUGGER
+                if (nullptr == _first_message) {
+                    __asm__("BKPT"); // no first message!?
+                }
+#endif
+
                 // _first_message is done sending.
                 // Go ahead and pop it from the list and reset (partially)
-                if (_first_message) {
-                    auto this_message = _first_message;
-                    _first_message = this_message->next_message;
-                    this_message->next_message = nullptr;
-                    this_message->sending = false;
+                auto this_message = _first_message;
+                while (this_message && (SPIMessage::State::Done == this_message->state)) {
+                    this_message = this_message->next_message;
+                }
+
+                if (this_message && (SPIMessage::State::Sending == this_message->state)) {
+                    // Then grab the (only) Sending message and mark it Done, then call it's done callback.
+                    this_message->state = SPIMessage::State::Done;
 
                     // Set the values for *this* message before the callback, so
                     // the callback can re-queue with different values AND tell us
@@ -485,11 +514,13 @@ namespace Motate {
                 }
                 else {
                     SPIMessage *walker_message = _spi_bus->_first_message;
-                    while (walker_message->next_message != nullptr) {
+                    while ((walker_message != msg) && (walker_message->next_message != nullptr)) {
                         walker_message = walker_message->next_message;
                     }
 
-                    walker_message->next_message = msg;
+                    if (walker_message != msg) {
+                        walker_message->next_message = msg;
+                    }
                 }
 
                 // Either we just queued the first message, OR we *might* have
