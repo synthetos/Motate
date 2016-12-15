@@ -242,16 +242,16 @@ namespace Motate {
                     NVIC_SetPriority(usartIRQ(), 0);
                 }
                 else if (interrupts & UARTInterrupt::PriorityHigh) {
-                    NVIC_SetPriority(usartIRQ(), 3);
+                    NVIC_SetPriority(usartIRQ(), 1);
                 }
                 else if (interrupts & UARTInterrupt::PriorityMedium) {
-                    NVIC_SetPriority(usartIRQ(), 7);
+                    NVIC_SetPriority(usartIRQ(), 2);
                 }
                 else if (interrupts & UARTInterrupt::PriorityLow) {
-                    NVIC_SetPriority(usartIRQ(), 11);
+                    NVIC_SetPriority(usartIRQ(), 3);
                 }
                 else if (interrupts & kInterruptPriorityLowest) {
-                    NVIC_SetPriority(usartIRQ(), 15);
+                    NVIC_SetPriority(usartIRQ(), 4);
                 }
 
                 NVIC_EnableIRQ(usartIRQ());
@@ -538,16 +538,16 @@ namespace Motate {
                     NVIC_SetPriority(uartIRQ(), 0);
                 }
                 else if (interrupts & UARTInterrupt::PriorityHigh) {
-                    NVIC_SetPriority(uartIRQ(), 3);
+                    NVIC_SetPriority(uartIRQ(), 1);
                 }
                 else if (interrupts & UARTInterrupt::PriorityMedium) {
-                    NVIC_SetPriority(uartIRQ(), 7);
+                    NVIC_SetPriority(uartIRQ(), 2);
                 }
                 else if (interrupts & UARTInterrupt::PriorityLow) {
-                    NVIC_SetPriority(uartIRQ(), 11);
+                    NVIC_SetPriority(uartIRQ(), 3);
                 }
                 else if (interrupts & kInterruptPriorityLowest) {
-                    NVIC_SetPriority(uartIRQ(), 15);
+                    NVIC_SetPriority(uartIRQ(), 4);
                 }
 
                 NVIC_EnableIRQ(uartIRQ());

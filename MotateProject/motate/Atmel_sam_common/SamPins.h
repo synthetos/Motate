@@ -415,16 +415,16 @@ namespace Motate {
                         NVIC_SetPriority(_IRQn(), 0);
                     }
                     else if (interrupts & kPinInterruptPriorityHigh) {
-                        NVIC_SetPriority(_IRQn(), 3);
+                        NVIC_SetPriority(_IRQn(), 1);
                     }
                     else if (interrupts & kPinInterruptPriorityMedium) {
-                        NVIC_SetPriority(_IRQn(), 7);
+                        NVIC_SetPriority(_IRQn(), 2);
                     }
                     else if (interrupts & kPinInterruptPriorityLow) {
-                        NVIC_SetPriority(_IRQn(), 11);
+                        NVIC_SetPriority(_IRQn(), 3);
                     }
                     else if (interrupts & kPinInterruptPriorityLowest) {
-                        NVIC_SetPriority(_IRQn(), 15);
+                        NVIC_SetPriority(_IRQn(), 4);
                     }
                 }
                 /* Enable the IRQ */
@@ -614,16 +614,16 @@ namespace Motate {
                         NVIC_SetPriority(ADC_IRQn, 0);
                     }
                     else if (interrupts & kPinInterruptPriorityHigh) {
-                        NVIC_SetPriority(ADC_IRQn, 3);
+                        NVIC_SetPriority(ADC_IRQn, 1);
                     }
                     else if (interrupts & kPinInterruptPriorityMedium) {
-                        NVIC_SetPriority(ADC_IRQn, 7);
+                        NVIC_SetPriority(ADC_IRQn, 2);
                     }
                     else if (interrupts & kPinInterruptPriorityLow) {
-                        NVIC_SetPriority(ADC_IRQn, 11);
+                        NVIC_SetPriority(ADC_IRQn, 3);
                     }
                     else if (interrupts & kPinInterruptPriorityLowest) {
-                        NVIC_SetPriority(ADC_IRQn, 15);
+                        NVIC_SetPriority(ADC_IRQn, 4);
                     }
                 }
                 /* Enable the IRQ */

@@ -397,16 +397,16 @@ namespace Motate {
                     NVIC_SetPriority(xdmaIRQ(), 0);
                 }
                 else if (interrupts & Interrupt::PriorityHigh) {
-                    NVIC_SetPriority(xdmaIRQ(), 3);
+                    NVIC_SetPriority(xdmaIRQ(), 1);
                 }
                 else if (interrupts & Interrupt::PriorityMedium) {
-                    NVIC_SetPriority(xdmaIRQ(), 7);
+                    NVIC_SetPriority(xdmaIRQ(), 2);
                 }
                 else if (interrupts & Interrupt::PriorityLow) {
-                    NVIC_SetPriority(xdmaIRQ(), 11);
+                    NVIC_SetPriority(xdmaIRQ(), 3);
                 }
                 else if (interrupts & Interrupt::PriorityLowest) {
-                    NVIC_SetPriority(xdmaIRQ(), 15);
+                    NVIC_SetPriority(xdmaIRQ(), 4);
                 }
 
                 NVIC_EnableIRQ(xdmaIRQ());

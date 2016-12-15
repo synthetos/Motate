@@ -154,10 +154,10 @@ namespace Motate {
             auto priority_level = NVIC_GetPriority(PendSV_IRQn);
             switch(priority_level) {
                 case 0: svc_call_debug("⇈"); break;
-                case 3: svc_call_debug("⇡"); break;
-                case 7: svc_call_debug("⦿"); break;
-                case 11: svc_call_debug("⇣"); break;
-                case 15: svc_call_debug("⇊"); break;
+                case 1: svc_call_debug("⇡"); break;
+                case 2: svc_call_debug("⦿"); break;
+                case 3: svc_call_debug("⇣"); break;
+                case 4: svc_call_debug("⇊"); break;
                 default: svc_call_debug("?"); break;
             }
 
@@ -200,16 +200,16 @@ namespace Motate {
                 priority_value = 0;
             }
             else if (_interrupt_level & kInterruptPriorityHigh) {
-                priority_value = 3;
+                priority_value = 1;
             }
             else if (_interrupt_level & kInterruptPriorityMedium) {
-                priority_value = 7;
+                priority_value = 2;
             }
             else if (_interrupt_level & kInterruptPriorityLow) {
-                priority_value = 11;
+                priority_value = 3;
             }
             else if (_interrupt_level & kInterruptPriorityLowest) {
-                priority_value = 15;
+                priority_value = 4;
             }
 
             auto base_pri = __get_BASEPRI();
@@ -234,23 +234,15 @@ namespace Motate {
             }
 
             if (elevate) {
-                __set_BASEPRI(priority_value);
-                if (_interrupt_level & kInterruptPriorityHighest) {
-                    //__set_BASEPRI(0); // THIS WON'T WORK!!!
-                    // TODO: disable interrupts completely in this case
-                    svc_call_debug("_⇈");
-                }
-                else if (_interrupt_level & kInterruptPriorityHigh) {
-                    svc_call_debug("_⇡");
-                }
-                else if (_interrupt_level & kInterruptPriorityMedium) {
-                    svc_call_debug("_⦿");
-                }
-                else if (_interrupt_level & kInterruptPriorityLow) {
-                    svc_call_debug("_⇣");
-                }
-                else if (_interrupt_level & kInterruptPriorityLowest) {
-                    svc_call_debug("_⇊");
+                __set_BASEPRI(priority_value << (8 - __NVIC_PRIO_BITS));
+                svc_call_debug("🛫");
+                switch(priority_value) {
+                    case 0: svc_call_debug("⇈"); break;
+                    case 1: svc_call_debug("⇡"); break;
+                    case 2: svc_call_debug("⦿"); break;
+                    case 3: svc_call_debug("⇣"); break;
+                    case 4: svc_call_debug("⇊"); break;
+                    default: svc_call_debug("?"); break;
                 }
 
                 _pop()->_call();
@@ -263,20 +255,13 @@ namespace Motate {
 
             /* Set interrupt priority */
             NVIC_SetPriority(PendSV_IRQn, priority_value);
-            if (_interrupt_level & kInterruptPriorityHighest) {
-                svc_call_debug("⇈");
-            }
-            else if (_interrupt_level & kInterruptPriorityHigh) {
-                svc_call_debug("⇡");
-            }
-            else if (_interrupt_level & kInterruptPriorityMedium) {
-                svc_call_debug("⦿");
-            }
-            else if (_interrupt_level & kInterruptPriorityLow) {
-                svc_call_debug("⇣");
-            }
-            else if (_interrupt_level & kInterruptPriorityLowest) {
-                svc_call_debug("⇊");
+            switch(priority_value) {
+                case 0: svc_call_debug("⇈"); break;
+                case 1: svc_call_debug("⇡"); break;
+                case 2: svc_call_debug("⦿"); break;
+                case 3: svc_call_debug("⇣"); break;
+                case 4: svc_call_debug("⇊"); break;
+                default: svc_call_debug("?"); break;
             }
 
             // see http://infocenter.arm.com/help/topic/com.arm.doc.dai0321a/DAI0321A_programming_guide_memory_barriers_for_m_profile.pdf
