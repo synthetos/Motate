@@ -906,7 +906,7 @@ namespace Motate {
             USBHS->USBHS_DEVCTRL &= ~USBHS_DEVCTRL_LS;
 
             //  Then enable High Speed
-            /* UOTGHS_DEVCTRL_SPDCONF_NORMAL means:
+            /* USBHS_DEVCTRL_SPDCONF_NORMAL means:
              * "The peripheral starts in full-speed mode and performs a high-speed reset to switch to the high-speed mode if
              *  the host is high-speed capable."
              */
@@ -1056,10 +1056,10 @@ namespace Motate {
             setup_state = SETUP;
 
             // catch the case where we are disconnected and reconnected, and we had open tranfers
-            if (_dma_used_by_endpoint) {
+            if (_DMA_Used_By_Endpoint) {
                 for (uint32_t ep = 0; ep < 10; ep++) {
-                    if (_dma_used_by_endpoint & (1 << ep)) {
-                        _dma_used_by_endpoint &= ~(1 << ep);
+                    if (_DMA_Used_By_Endpoint & (1 << ep)) {
+                        _DMA_Used_By_Endpoint &= ~(1 << ep);
 
                         _devdma(ep)->command = USB_DMA_Descriptor::stop_now;
                         _devdma(ep)->bufferAddress = nullptr;
@@ -1411,11 +1411,9 @@ namespace Motate {
                     }
                     _disable_endpoint_dma_interrupt(ep);
                     usb_debug("dmaInt->");
-                    // if (0 == ep_status.buffer_count)  { usb_debug("0"); }
 
                     // ep_status.buffer_count hold how many are left to transfer
                     if (_is_endpoint_a_tx_in(ep)) {
-                        _disable_in_send_interrupt(ep);
                         if (_is_in_send(ep)) {
                             _ack_in_send(ep);
                             _ack_fifocon(ep);
@@ -1424,16 +1422,24 @@ namespace Motate {
                         usb_debug("tx ");
                     } else {
                         usb_debug("rx ");
-                        _disable_out_received_interrupt(ep);
-                        // _ack_out_received(ep);
-                        // _ack_fifocon(ep);
-                    }
+                        // Disable then accept the rx packet interrupt.
+                        //_disable_out_received_interrupt(ep);
 
-                    if (ep_status & USBHS_DEVDMASTATUS_END_TR_ST) {
-                        usb_debug("|ET");
-                    }
-                    if (ep_status & USBHS_DEVDMASTATUS_END_BF_ST) {
-                        usb_debug("|EB");
+                        // if we have no more bytes in this packet, then clear it out
+                        if (0 == get_byte_count(ep)) {
+                            usb_debug("ACK(0) ");
+                            _ack_out_received(ep);
+                            _ack_fifocon(ep);
+                        } else {
+                            _ack_out_received(ep);
+                        }
+
+                        if (ep_status & USBHS_DEVDMASTATUS_END_TR_ST) {
+                            usb_debug("|ET|\n");
+                        }
+                        if (ep_status & USBHS_DEVDMASTATUS_END_BF_ST) {
+                            usb_debug("|EB|\n");
+                        }
                     }
 
                     _DMA_Used_By_Endpoint &= ~(1<<ep);
@@ -1471,22 +1477,26 @@ namespace Motate {
 
                             if (_is_write_enabled(ep)) { usb_debug(">"); }
                             if (0 == _devdma(ep)->status.buffer_count)  { usb_debug("0"); }
-                            usb_debug("RX ");
+                            usb_debug("epRX ");
 
-                            _ack_out_received(ep);
-                            _ack_fifocon(ep);
+                            // if we have no more bytes in this packet, then clear it out
+                            if (0 == get_byte_count(ep)) {
+                                usb_debug("ACK(0) ");
+                                _ack_out_received(ep);
+                                _ack_fifocon(ep);
+                            } else {
+                                _ack_out_received(ep);
+                            }
 
-                            // if (0 == _devdma(ep)->buffer_count) {
-                            //     _ack_out_received(ep);
-                            //     _ack_fifocon(ep);
-                            //     _disable_out_received_interrupt(ep);
-                            //     _disable_endpoint_dma_interrupt(ep); // just in case
-                            //     _DMA_Used_By_Endpoint &= ~(1<<ep);
-                            //     proxy->handleTransferDone(ep);
-                            // }
                             return true;
                         } else {
                             usb_debug("!RX ");
+                        }
+
+                        // if we have no more bytes in this packet, then clear it out
+                        if (0 == get_byte_count(ep)) {
+                            usb_debug("ep_count(0) ");
+                            _ack_fifocon(ep);
                         }
                     }
                 }
@@ -1539,7 +1549,7 @@ namespace Motate {
             _enable_endpoint_interrupt(endpoint);
             _enable_endpoint_dma_interrupt(endpoint);
 
-            // IMPORTANT: UOTGHS_DEVDMA[0] is endpoint 1!!
+            // IMPORTANT: USBHS_DEVDMA[0] is endpoint 1!!
             _devdma(endpoint)->nextDescriptor = &desc;
             _devdma(endpoint)->command = USB_DMA_Descriptor::load_next_desc;
             return true;
