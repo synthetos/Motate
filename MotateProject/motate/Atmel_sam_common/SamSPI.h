@@ -576,18 +576,23 @@ namespace Motate {
         // start transfer of message
         bool startTransfer(uint8_t *tx_buffer, uint8_t *rx_buffer, uint16_t size) {
             bool is_setup = false;
+            dma()->setInterrupts(Interrupt::Off);
             if (rx_buffer != nullptr) {
-                const bool handle_interrupts = true;
+                const bool handle_interrupts = false;
                 const bool include_next = false;
                 is_setup = dma()->startRXTransfer(rx_buffer, size, handle_interrupts, include_next);
                 if (!is_setup) { return false; } // fail early
             }
             if (tx_buffer != nullptr) {
-                const bool handle_interrupts = true;
+                const bool handle_interrupts = false;
                 const bool include_next = false;
                 is_setup = dma()->startTXTransfer(tx_buffer, size, handle_interrupts, include_next);
             }
-            if (is_setup) { enable(); }
+            if (is_setup) {
+                enable();
+                dma()->enable();
+                dma()->setInterrupts(Interrupt::OnTxTransferDone | Interrupt::OnRxTransferDone);
+            }
             return is_setup;
         }
 #endif // CAN_SPI_PDC_DMA

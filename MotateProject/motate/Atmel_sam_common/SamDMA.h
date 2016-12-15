@@ -1078,6 +1078,10 @@ namespace Motate {
         // nothing to do here, except for a constxpr constructor
         constexpr DMA(const std::function<void(uint16_t)> &handler) : DMA_XDMAC_RX<Spi*, periph_num>{handler}, DMA_XDMAC_TX<Spi*, periph_num>{handler} {};
 
+        using DMA_XDMAC_common::xdma;
+        using DMA_XDMAC_RX<Spi*, periph_num>::xdmaRxChannelNumber;
+        using DMA_XDMAC_TX<Spi*, periph_num>::xdmaTxChannelNumber;
+
         void setInterrupts(const uint16_t interrupts) const
         {
             DMA_XDMAC_common::setInterrupts(interrupts);
@@ -1094,12 +1098,25 @@ namespace Motate {
                 } else {
                     DMA_XDMAC_RX<Spi*, periph_num>::stopRxDoneInterrupts();
                 }
+            } else {
+                DMA_XDMAC_TX<Spi*, periph_num>::stopTxDoneInterrupts();
+                DMA_XDMAC_RX<Spi*, periph_num>::stopRxDoneInterrupts();
+
             }
         };
 
         void reset() const {
             DMA_XDMAC_TX<Spi*, periph_num>::resetTX();
             DMA_XDMAC_RX<Spi*, periph_num>::resetRX();
+        };
+
+        void enable() const {
+           xdma()->XDMAC_GE = (XDMAC_GIE_IE0 << xdmaRxChannelNumber()) | (XDMAC_GIE_IE0 << xdmaTxChannelNumber());
+        }
+
+        void disable() const
+        {
+            xdma()->XDMAC_GD = (XDMAC_GID_ID0 << xdmaRxChannelNumber()) | (XDMAC_GID_ID0 << xdmaRxChannelNumber());
         };
     };
 #endif // SPI + XDMAC
