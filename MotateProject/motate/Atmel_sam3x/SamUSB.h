@@ -1540,7 +1540,6 @@ namespace Motate {
                             // write is disabled when the buffer is full
 
                             if (_is_write_enabled(ep)) { usb_debug(">"); }
-                            if (0 == dma_buffer_count)  { usb_debug("dma_count_1(0)"); }
                             usb_debug("epRX ");
 
                             // if we have no more bytes in this packet, then clear it out
