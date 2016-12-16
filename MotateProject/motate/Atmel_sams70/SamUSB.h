@@ -943,14 +943,14 @@ namespace Motate {
 
             // Reset following interupts flag
             // _ack_reset();
-            // _ack_sof();
-            // _ack_msof();
+             _ack_sof();
+             _ack_msof();
 
             // The first suspend interrupt must be forced
             // The first suspend interrupt is not detected else raise it
 //            _raise_suspend();
 
-            // _ack_wake_up();
+             _ack_wake_up();
             // _freeze_clock();
         };
         bool attach() {
