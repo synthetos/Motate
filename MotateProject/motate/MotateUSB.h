@@ -310,7 +310,7 @@ namespace Motate {
                 _set_interface = setup.valueLow();
                 return true;
             } else {
-#ifdef IN_DEBUGGER
+#if IN_DEBUGGER == 1
                 __asm__("BKPT"); // unknown setup type
 #endif
             }

@@ -113,7 +113,7 @@ namespace Motate {
                 if (_spiInterruptHandler) {
                     _spiInterruptHandler(getInterruptCause());
                 } else {
-#ifdef IN_DEBUGGER
+#if IN_DEBUGGER == 1
                     __asm__("BKPT");
 #endif
                 }
@@ -243,7 +243,7 @@ namespace Motate {
 
             if (dlybcs > 0xff) {
                 // Break into the debugger
-#ifdef IN_DEBUGGER
+#if IN_DEBUGGER == 1
                 __asm__("BKPT"); // SPI dlybcs is too high!
 #endif
             }
@@ -257,7 +257,7 @@ namespace Motate {
             uint32_t dlybs = (((cs_to_sck_delay_ns*SystemCoreClock)/100000000)+5)/10;
             if (dlybs > 0xff) {
                 // Break into the debugger
-#ifdef IN_DEBUGGER
+#if IN_DEBUGGER == 1
                 __asm__("BKPT"); // SPI dlybs is too high!
 #endif
             }
@@ -266,7 +266,7 @@ namespace Motate {
             uint32_t dlybct = (((between_word_delay_ns*SystemCoreClock)/100000000)+5)/10;
             if (dlybct > 0xff) {
                 // Break into the debugger
-#ifdef IN_DEBUGGER
+#if IN_DEBUGGER == 1
                 __asm__("BKPT"); // SPI dlybct is too high!
 #endif
             }

@@ -42,7 +42,7 @@ extern "C" void SPI0_Handler(void)  {
         Motate::_SPIHardware<0u>::_spiInterruptHandlerJumper();
         return;
     }
-#ifdef IN_DEBUGGER
+#if IN_DEBUGGER == 1
     __asm__("BKPT");
 #endif
 }
@@ -53,7 +53,7 @@ extern "C" void SPI1_Handler(void)  {
         Motate::_SPIHardware<1u>::_spiInterruptHandlerJumper();
         return;
     }
-#ifdef IN_DEBUGGER
+#if IN_DEBUGGER == 1
     __asm__("BKPT");
 #endif
 }

@@ -1052,7 +1052,7 @@ namespace Motate {
             }
 
             if (configuration_fixed == kEndpointBufferNull) {
-#ifdef IN_DEBUGGER
+#if IN_DEBUGGER == 1
                 __asm__("BKPT"); // confoguration not valid
 #endif
             }
@@ -1065,7 +1065,7 @@ namespace Motate {
             _enable_endpoint(endpoint);
 
             if (!_endpoint_configured(endpoint)) {
-#ifdef IN_DEBUGGER
+#if IN_DEBUGGER == 1
                 __asm__("BKPT"); // endpoint not configured
 #endif
             }
@@ -1200,7 +1200,7 @@ namespace Motate {
                 }
             }
             else {
-#ifdef IN_DEBUGGER
+#if IN_DEBUGGER == 1
                 __asm__("BKPT"); // endpoint interrupt went unhandled
 #endif
             }
