@@ -243,27 +243,23 @@ namespace Motate {
             }
 
             _debug_print_num(); svc_call_debug("🎉\n");
+
+            if (_first_service_call != nullptr) {
+                _first_service_call->_pend();
+            }
         };
 
         // This is called *ONLY* from the handler (in the .cpp file)
         void _call_from_handler() {
-            while (_first_service_call != nullptr) {
+            if (_first_service_call != nullptr) {
                 auto _service_call = _first_service_call;
                 {
                     SamCommon::InterruptDisabler disabler;
 
                     _first_service_call = _service_call->_next;
-                    _service_call->_next = nullptr;
+                    //_service_call->_next = nullptr;
                 }
                 _service_call->_call();
-
-                if (_first_service_call && (_first_service_call->_priority_value != _priority_value)) {
-                    break;
-                }
-            }
-            
-            if (_first_service_call != nullptr) {
-                _first_service_call->_pend();
             }
         }
 
