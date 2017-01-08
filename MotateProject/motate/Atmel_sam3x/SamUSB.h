@@ -2,7 +2,8 @@
  utility/SamUSB.h - Library for the Motate system
  http://github.com/synthetos/motate/
 
- Copyright (c) 2015 - 2016 Robert Giseburt
+ Copyright (c) 2015 - 2017 Robert Giseburt
+ Copyright (c) 2017 Alden Hart
 
  This file is part of the Motate Library.
 
@@ -927,12 +928,13 @@ namespace Motate {
             //  Disable "Forced" Low Speed first..
             UOTGHS->UOTGHS_DEVCTRL &= ~UOTGHS_DEVCTRL_LS;
 
-            //  Then enable High Speed
-            /* UOTGHS_DEVCTRL_SPDCONF_NORMAL means:
-             * "The peripheral starts in full-speed mode and performs a high-speed reset to switch to the high-speed mode if
-             *  the host is high-speed capable."
-             */
-            UOTGHS->UOTGHS_DEVCTRL = (UOTGHS->UOTGHS_DEVCTRL & ~ UOTGHS_DEVCTRL_SPDCONF_Msk) | UOTGHS_DEVCTRL_SPDCONF_NORMAL;
+            // Then enable High Speed - 480 MBps
+            // UOTGHS_DEVCTRL_SPDCONF_NORMAL means:
+            //  "The peripheral starts in full-speed mode and performs a high-speed reset 
+            //   to switch to the high-speed mode if the host is high-speed capable."
+            UOTGHS->UOTGHS_DEVCTRL = (UOTGHS->UOTGHS_DEVCTRL & ~ UOTGHS_DEVCTRL_SPDCONF_Msk) |
+//                                      UOTGHS_DEVCTRL_SPDCONF_NORMAL;  // this line for 480 MBps operation
+                                      UOTGHS_DEVCTRL_SPDCONF_FORCED_FS; // this line to limit to 12 MBps
 
             //  Unfreeze internal USB clock
             _unfreeze_clock();
