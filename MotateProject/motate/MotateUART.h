@@ -143,16 +143,18 @@ namespace Motate {
         // WARNING!!
         // This must be called later, outside of the contructors, to ensure that all dependencies are contructed.
         void init() {
-            hardware.setInterruptHandler([&](uint16_t interruptCause) { // use a closure
-                this->uartInterruptHandler(interruptCause);
-            });
-            hardware.setInterrupts(Interrupt::PriorityHigh); // enable interrupts and set the priority
             if (!isRealAndCorrectRTSPin<rtsPinNumber, rxPinNumber>()) {
                 rtsPin = true; // active low
             }
             if (!isRealAndCorrectCTSPin<ctsPinNumber, rxPinNumber>()) {
                 ctsPin.setInterrupts(Interrupt::PriorityHigh); // enable interrupts and set the priority
             }
+            hardware.setInterruptHandler([&](uint16_t interruptCause) { // use a closure
+                this->uartInterruptHandler(interruptCause);
+            });
+            hardware.setInterrupts(Interrupt::PriorityHigh); // enable interrupts and set the priority
+            hardware.setInterruptRxReady(false);
+
         };
 
         void setOptions(const uint32_t baud, const uint16_t options, const bool fromConstructor=false) {
