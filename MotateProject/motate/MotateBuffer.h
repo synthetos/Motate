@@ -111,8 +111,13 @@ namespace Motate {
         };
     };
 
-    // Implement a simple circular buffer, with a compile-time size, and can only be written to by DMA
-    // owner_type is a *pointer* type thet implements const base_type* getRXTransferPosition()
+    /* RXBuffer<uint16_t _size, typename owner_type, typename base_type = char>
+     * Implements a simple circular buffer, with a compile-time size, and can only be written to by DMA
+     * owner_type is a *pointer* type that implements these methods:
+     *   const base_type* getRXTransferPosition()
+     *   void setRXTransferDoneCallback(std::function<void()> &&callback)
+     *   bool startRXTransfer(char *&buffer, uint16_t length)
+     */
     template <uint16_t _size, typename owner_type, typename base_type = char>
     struct RXBuffer {
         static_assert(((_size-1)&_size)==0, "RXBuffer size must be 2^N");
@@ -334,6 +339,14 @@ namespace Motate {
     }; // RXBuffer
 
 
+
+    /* TXBuffer<uint16_t _size, typename owner_type, typename base_type = char>
+     * Implements a simple circular buffer, with a compile-time size, and can only be read from by DMA
+     * owner_type is a *pointer* type that implements these methods:
+     *   const base_type* getTXTransferPosition()
+     *   void setTXTransferDoneCallback(std::function<void()> &&callback)
+     *   bool startTXTransfer(char *&buffer, uint16_t length)
+     */
 
     // Implement a simple circular buffer, with a compile-time size, and can only be read from by DMA
     // owner_type is a *pointer* type thet implements const base_type* getTXTransferPosition()
