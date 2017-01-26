@@ -142,8 +142,8 @@ namespace Motate {
     /** Enum for the parameters of SetControlLineState */
     enum CDCControlState_t
     {
-        kCDCControlState_DTR = 0x1, /* Data termianl ready */
-        kCDCControlState_RTS = 0x2, /* Ready to send */
+        kCDCControlState_DTR = 1<<0, /* Data termianl ready */
+        kCDCControlState_RTS = 1<<1, /* Ready to send */
     };
 
 #pragma mark USBCDCDescriptorFunctionalHeader_t
@@ -441,28 +441,28 @@ namespace Motate {
         }
 
         bool isConnected() {
-            return usb.isConnected() && (_line_state & (0x01 << kCDCControlState_DTR));
+            return usb.isConnected() && (_line_state & ((kCDCControlState_RTS) | (kCDCControlState_DTR)));
         }
 
         bool getDTR() {
-            return _line_state & (0x01 << kCDCControlState_DTR);
+            return _line_state & (kCDCControlState_DTR);
         }
 
         bool getRTS() {
-            return _line_state & (0x01 << kCDCControlState_RTS);
+            return _line_state & (kCDCControlState_RTS);
         }
 
         void setConnectionCallback(const std::function<void(bool)> &callback) {
             connection_state_changed_callback = callback;
-            if (connection_state_changed_callback && usb.isConnected() && (_line_state & kCDCControlState_DTR)) {
-                connection_state_changed_callback(_line_state & kCDCControlState_DTR);
+            if (connection_state_changed_callback && isConnected()) {
+                connection_state_changed_callback(true);
             }
         }
 
         void setConnectionCallback(std::function<void(bool)> &&callback) {
             connection_state_changed_callback = std::move(callback);
-            if (connection_state_changed_callback && usb.isConnected() && (_line_state & kCDCControlState_DTR)) {
-                connection_state_changed_callback(_line_state & kCDCControlState_DTR);
+            if (connection_state_changed_callback && isConnected()) {
+                connection_state_changed_callback(true);
             }
         }
 
@@ -525,12 +525,12 @@ namespace Motate {
                     uint8_t _old_line_state = _line_state;
                     _line_state = setup.valueLow();
 
-                    // If the DTR changed, call connectionStateChanged (if it's defined)
-                    if ((_old_line_state & kCDCControlState_DTR) != (_line_state & kCDCControlState_DTR)) {
+                    // If the RTS changed, call connectionStateChanged (if it's defined)
+                    if ((_old_line_state & kCDCControlState_RTS) != (_line_state & kCDCControlState_RTS)) {
                         flush();
 
                         if (connection_state_changed_callback) {
-                            connection_state_changed_callback(_line_state & kCDCControlState_DTR);
+                            connection_state_changed_callback(_line_state & kCDCControlState_RTS);
                         }
                     }
                     // Auto-reset into the bootloader is triggered when the port, already open at 1200 bps, is closed.
