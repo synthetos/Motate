@@ -1531,6 +1531,11 @@ namespace Motate {
                                 // case 3 or 4
                                 _ack_in_send(ep); // A
                                 _ack_fifocon(ep); // B - This bit is cleared (by writing a one to UOTGHS_DEVEPTIDRx.FIFOCONC bit) to send the FIFO data and to switch to the next bank.
+                            } else {
+                                if (!transfer_completed) {
+                                    _completeTransfer(ep); // C+D
+                                    transfer_completed = true;
+                                }
                             }
                             handled = true;
 
@@ -1551,8 +1556,10 @@ namespace Motate {
                                 _ack_fifocon(ep);
                             } else {
                                 // case 6
-                                _completeTransfer(ep); // C+D
-                                transfer_completed = true;
+                                if (!transfer_completed) {
+                                    _completeTransfer(ep); // C+D
+                                    transfer_completed = true;
+                                }
                             }
                             handled = true;
                         }
@@ -1570,18 +1577,24 @@ namespace Motate {
 //                        continue;
 //                    }
 
+                    if (ep_status & UOTGHS_DEVDMASTATUS_DESC_LDST) {
+                        if (_is_endpoint_a_tx_in(ep)) {
+                            _enable_in_send_interrupt(ep);
+
+                            // save an interrupt
+                            if (_is_in_send(ep) && (0 != get_byte_count(ep))) {
+                                // case 3 or 4
+                                _ack_in_send(ep); // A
+                                _ack_fifocon(ep); // B - This bit is cleared (by writing a one to UOTGHS_DEVEPTIDRx.FIFOCONC bit) to send the FIFO data and to switch to the next bank.
+                            }
+                        }
+                    }
+
                     if (ep_status & UOTGHS_DEVDMASTATUS_END_TR_ST) {
                         // case 2
                         if (!transfer_completed) {
                             _completeTransfer(ep); // C+D
                             transfer_completed = true;
-                        }
-                    }
-
-                    if (ep_status & UOTGHS_DEVDMASTATUS_DESC_LDST) {
-                        if (_is_endpoint_a_tx_in(ep)) {
-                            _enable_in_send_interrupt(ep);
-                            _enable_short_packet_interrupt(ep); // this allows the DMA to send a partial packet
                         }
                     }
 
@@ -1609,14 +1622,14 @@ namespace Motate {
             return handled;
         };
 
-        bool transfer(const uint8_t endpoint, USB_DMA_Descriptor& desc) {
+        bool transfer(const uint8_t ep, USB_DMA_Descriptor& desc) {
             if (!config_number)
                 return false;
 
             desc.command = USB_DMA_Descriptor::run_and_stop;
             // DON'T interrupt when the descriptor is loaded
             desc.descriptor_loaded_interrupt_enable = false;
-            if (_is_endpoint_a_tx_in(endpoint)) {
+            if (_is_endpoint_a_tx_in(ep)) {
                 // if the endpoint is a TX IN:
                 // validate the packet at DMA Buffer End (BUFF_COUNT reaches 0)
                 desc.end_buffer_enable = true;
@@ -1629,8 +1642,8 @@ namespace Motate {
             }
 //            else {
 //                // if the endpoint is an RX OUT:
-//                if ((_get_endpoint_type(endpoint) != kEndpointBufferTypeIsochronous)) // ||
-////                    (desc.buffer_length <= _get_endpoint_size(endpoint)))
+//                if ((_get_endpoint_type(ep) != kEndpointBufferTypeIsochronous)) // ||
+////                    (desc.buffer_length <= _get_endpoint_size(ep)))
 //                {
 //                    // interrupt when the DMA transfer ends because USB stopped it
 //                    //desc.end_transfer_interrupt_enable = true;
@@ -1641,18 +1654,22 @@ namespace Motate {
             // interrupt when the DMA transfer ends because the buffer ran out
             desc.end_buffer_interrupt_enable = true;
 
-            _dma_used_by_endpoint |= 1 << endpoint;
-
-            if (!_is_endpoint_a_tx_in(endpoint)) {
-                _enable_out_received_interrupt(endpoint);
-            }
-
-            _enable_endpoint_interrupt(endpoint);
-            _enable_endpoint_dma_interrupt(endpoint);
+            _dma_used_by_endpoint |= 1 << ep;
 
             // IMPORTANT: UOTGHS_DEVDMA[0] is endpoint 1!!
-            _devdma(endpoint)->next_descriptor = &desc;
-            _devdma(endpoint)->command = USB_DMA_Descriptor::load_next_desc;
+            _devdma(ep)->next_descriptor = &desc;
+            _devdma(ep)->command = USB_DMA_Descriptor::load_next_desc;
+
+            if (_is_endpoint_a_tx_in(ep)) {
+                _enable_in_send_interrupt(ep);
+                _enable_short_packet_interrupt(ep); // this allows the DMA to send a partial packet (badly named function)
+            } else {
+                _enable_out_received_interrupt(ep);
+            }
+
+            _enable_endpoint_interrupt(ep);
+            _enable_endpoint_dma_interrupt(ep);
+
             return true;
         };
 
