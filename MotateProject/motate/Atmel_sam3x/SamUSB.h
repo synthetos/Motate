@@ -1487,34 +1487,51 @@ namespace Motate {
              *       and calling proxy->handleTransferDone(ep).
              *    D) Disable TXIN/RXOUT interrupt.
              *
+             *  It appears we only do A with B, and C with D, so they are AB or CD.
+             *
+             *  When we will see/react to an item will be marked with either:
+             *    - for an endpoint TXINI/RXINI interrupt
+             *    + for a DMA interrupt
+             *    * for either or a mix of both
+             *
+             *  Example: AB(-) is handled in response to an endpoint interrupt.
+             *
              * Possible cases:
-             * TXIN endpoint:
-             *   1) The packet is full, but DMA still has buffered data - actions A+B
-             *   2) The packet is not full, but the DMA buffer is empty - actions A+B+C+D
+             * TXIN - we get interrupts when the packet is filled (unless the interrupts were turned on early):
+             *   1) The packet is empty, but DMA still has buffered data - no action
+             *      We DO NOT clear TXINI here, so we get another interrupt.
+             *      This should NOT happen when interrupts are enabled at the right time.
+             *   2) The packet is not full, but the DMA buffer is empty - actions AB(+)CD(+)
              *      Action B here will send the truncated packet.
-             *   3) The packet is full, and the DMA buffer is empty (both on the same byte) - actions A+B+C+D
+             *   3) The packet is full, but DMA still has buffered data - actions AB(-)
+             *   4) The packet is full, and the DMA buffer is empty (both on the same byte) - actions AB(-)CD(+)
              *      ASSUMES that the TXIN interrupt will happen at the same time or before the DMA interrupt.
-             * RXOUT - we get interrupts when a packet is EPTIED (as mush as it's going to) by DMA
-             *   4) The packet is completely read, and DMA still has buffer space available for all of it - actions A+B
-             *   5) The packet has been partially read, but DMA buffer is full - actions C+D
+             *
+             * RXOUT - we get interrupts when a packet is EMPTIED (as mush as it's going to) by DMA:
+             *   5) The packet is completely read, and DMA still has buffer space available for all of it - actions AB(-)
+             *   6) The packet has been partially read, but DMA buffer is full - actions CD(-)
              *      DO NOT do action B! That'll lose the remaining packet data.
-             *   6) The packet is completely read and the DMA buffer is full - action A+B+C+D
+             *   7) The packet is completely read and the DMA buffer is full - action AB(-)CD(+)
              *      This will ONLY be a DMA interrupt. There won't be a TXOUT interrupt for this case!
              */
             for (uint32_t ep = 1; ep <= _get_endpoint_max_nbr(); ep++)
             {
+                bool transfer_completed = false;
                 if (_is_endpoint_interrupt_enabled(ep))
                 {
                     if (_is_endpoint_a_tx_in(ep))
                     {
                         // check to see if we are done sending this packet
-                        // cases 1 and 3
+                        // cases 1, 3, or 4
                         if (_is_in_send_interrupt_enabled(ep) &&
                             _is_in_send(ep) // This bit is set for isochronous, bulk and interrupt IN endpoints, at the same time as UOTGHS_DEVEPTIMRx.FIFOCON when the current bank is free.
                             )
                         {
-                            _ack_in_send(ep); // A
-                            _ack_fifocon(ep); // B - This bit is cleared (by writing a one to UOTGHS_DEVEPTIDRx.FIFOCONC bit) to send the FIFO data and to switch to the next bank.
+                            if (0 != get_byte_count(ep)) {
+                                // case 3 or 4
+                                _ack_in_send(ep); // A
+                                _ack_fifocon(ep); // B - This bit is cleared (by writing a one to UOTGHS_DEVEPTIDRx.FIFOCONC bit) to send the FIFO data and to switch to the next bank.
+                            }
                             handled = true;
 
                         }
@@ -1526,15 +1543,16 @@ namespace Motate {
                             _is_out_received(ep) // This bit is set for isochronous, bulk and, interrupt OUT endpoints, at the same time as UOTGHS_DEVEPTIMRx.FIFOCON when the current bank is full.
                             )
                         {
-                            // cases 4, 5, or 6
+                            // cases 5, 6, or 7
                             if (0 == get_byte_count(ep)) {
-                                // cases 4 or 6
+                                // cases 5 or 7
                                 _ack_out_received(ep); // A
                                 // B - This bit is cleared (by writing a one to UOTGHS_DEVEPTIDRx.FIFOCONC bit) to free the current bank and to switch to the next bank.
                                 _ack_fifocon(ep);
                             } else {
-                                // case 5
-                                _completeTransfer(ep);
+                                // case 6
+                                _completeTransfer(ep); // C+D
+                                transfer_completed = true;
                             }
                             handled = true;
                         }
@@ -1552,10 +1570,36 @@ namespace Motate {
 //                        continue;
 //                    }
 
+                    if (ep_status & UOTGHS_DEVDMASTATUS_END_TR_ST) {
+                        // case 2
+                        if (!transfer_completed) {
+                            _completeTransfer(ep); // C+D
+                            transfer_completed = true;
+                        }
+                    }
+
+                    if (ep_status & UOTGHS_DEVDMASTATUS_DESC_LDST) {
+                        if (_is_endpoint_a_tx_in(ep)) {
+                            _enable_in_send_interrupt(ep);
+                            _enable_short_packet_interrupt(ep); // this allows the DMA to send a partial packet
+                        }
+                    }
+
                     if (ep_status & UOTGHS_DEVDMASTATUS_END_BF_ST)
                     {
-                        // case 2, 3, or 6
-                        _completeTransfer(ep);
+                        // case 2, 4, or 7
+
+                        if (_is_in_send(ep)) {
+                            // case 2
+                            _ack_in_send(ep); // A
+                            _ack_fifocon(ep); // B - This bit is cleared (by writing a one to UOTGHS_DEVEPTIDRx.FIFOCONC bit) to send the FIFO data and to switch to the next bank.
+                        }
+
+                        if (!transfer_completed) {
+                            // cases 2, 4, or 7
+                            _completeTransfer(ep); // C+D
+                            transfer_completed = true;
+                        }
                     }
 
                     handled = true;
@@ -1575,33 +1619,31 @@ namespace Motate {
             if (_is_endpoint_a_tx_in(endpoint)) {
                 // if the endpoint is a TX IN:
                 // validate the packet at DMA Buffer End (BUFF_COUNT reaches 0)
-                 desc.end_buffer_enable = true;
+                desc.end_buffer_enable = true;
+                // allow the DMA transfer to be stopped by USB (small packet, etc)
+                desc.end_transfer_enable = true;
                 // interrupt when the DMA transfer ends because USB stopped it
-                 desc.end_transfer_interrupt_enable = true;
-                // prepare the buffer
-//                _ack_in_send(endpoint);
-            } else {
-                // if the endpoint is an RX OUT:
-                if ((_get_endpoint_type(endpoint) != kEndpointBufferTypeIsochronous)) // ||
-//                    (desc.buffer_length <= _get_endpoint_size(endpoint)))
-                {
-                    // interrupt when the DMA transfer ends because USB stopped it
-                    //desc.end_transfer_interrupt_enable = true;
-                    // allow the DMA transfer to be stopped by USB (small packet, etc)
-                    //desc.end_transfer_enable = true;
-                }
-                // prepare the buffer
-//                _ack_out_received(endpoint);
+                desc.end_transfer_interrupt_enable = true;
+                // we use the descriptor loaded to turn on the other iterrupts
+                desc.descriptor_loaded_interrupt_enable = true;
             }
+//            else {
+//                // if the endpoint is an RX OUT:
+//                if ((_get_endpoint_type(endpoint) != kEndpointBufferTypeIsochronous)) // ||
+////                    (desc.buffer_length <= _get_endpoint_size(endpoint)))
+//                {
+//                    // interrupt when the DMA transfer ends because USB stopped it
+//                    //desc.end_transfer_interrupt_enable = true;
+//                    // allow the DMA transfer to be stopped by USB (small packet, etc)
+//                    //desc.end_transfer_enable = true;
+//                }
+//            }
             // interrupt when the DMA transfer ends because the buffer ran out
             desc.end_buffer_interrupt_enable = true;
 
             _dma_used_by_endpoint |= 1 << endpoint;
 
-            if (_is_endpoint_a_tx_in(endpoint)) {
-                _enable_in_send_interrupt(endpoint);
-                _enable_short_packet_interrupt(endpoint); // this allows the DMA to send a partial packet
-            } else {
+            if (!_is_endpoint_a_tx_in(endpoint)) {
                 _enable_out_received_interrupt(endpoint);
             }
 
