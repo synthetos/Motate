@@ -164,6 +164,9 @@ namespace Motate {
                     _uartInterruptHandler(getInterruptCause());
                 }
             };
+
+            setInterrupts(UARTInterrupt::PriorityLow);
+            dma()->setInterrupts(UARTInterrupt::PriorityLow);
         };
 
         void enable() { usart()->US_CR = US_CR_TXEN | US_CR_RXEN; };
@@ -476,6 +479,9 @@ namespace Motate {
             // reset PCR to zero
             //uart()->UART_IDR = 0xffffffff; // disable all the things
             dma()->reset();
+
+            setInterrupts(UARTInterrupt::PriorityLow);
+            dma()->setInterrupts(UARTInterrupt::PriorityLow);
         };
 
         void enable() { uart()->UART_CR = UART_CR_TXEN | UART_CR_RXEN; };
