@@ -239,7 +239,7 @@ namespace Motate {
                 bool end_transfer_interrupt_enable : 1;         // END_TR_IT
                 bool end_buffer_interrupt_enable : 1;           // END_BUFFIT
                 bool descriptor_loaded_interrupt_enable : 1;    // DESC_LD_IT
-                bool bust_lock_enable : 1;                      // BURST_LCK
+                bool burst_lock_enable : 1;                     // BURST_LCK
 
                 uint8_t _unused_1 : 8;
 
@@ -1509,10 +1509,9 @@ namespace Motate {
              *
              * RXOUT - we get interrupts when a packet is EMPTIED (as mush as it's going to) by DMA:
              *   5) The packet is completely read, and DMA still has buffer space available for all of it - actions AB(-)
-             *   6) The packet has been partially read, but DMA buffer is full - actions CD(-)
+             *   6) The packet has been partially read, but DMA buffer is full (not active) - actions CD(-)
              *      DO NOT do action B! That'll lose the remaining packet data.
              *   7) The packet is completely read and the DMA buffer is full - action AB(-)CD(+)
-             *      This will ONLY be a DMA interrupt. There won't be a TXOUT interrupt for this case!
              */
             for (uint32_t ep = 1; ep <= _get_endpoint_max_nbr(); ep++)
             {
@@ -1557,8 +1556,11 @@ namespace Motate {
                             } else {
                                 // case 6
                                 if (!transfer_completed) {
-                                    _completeTransfer(ep); // C+D
-                                    transfer_completed = true;
+                                    uint32_t ep_status = _devdma_status(ep);
+                                    if (0 == (ep_status & UOTGHS_DEVDMASTATUS_CHANN_ACT)) {
+                                        _completeTransfer(ep); // C+D
+                                        transfer_completed = true;
+                                    }
                                 }
                             }
                             handled = true;

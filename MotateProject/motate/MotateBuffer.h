@@ -168,9 +168,7 @@ namespace Motate {
 
         uint16_t _getWriteOffset() {
             base_type* pos = _owner->getRXTransferPosition();
-            if (pos==nullptr) {
-                _last_known_write_offset = 0;
-            } else {
+            if (nullptr != pos) {
                 _last_known_write_offset = (pos - _data) & (_size-1); // if it's one past the end, we want it to become zero
             }
             return _last_known_write_offset;
