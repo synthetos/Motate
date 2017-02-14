@@ -721,6 +721,7 @@
 		D48992C01965B118004F73A6 /* MotateBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MotateBuffer.h; path = motate/MotateBuffer.h; sourceTree = SOURCE_ROOT; };
 		D48992C41965B460004F73A6 /* Makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
 		D48992C51965B460004F73A6 /* uart_demo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = uart_demo.cpp; sourceTree = "<group>"; };
+		D492E5A81E4C3504005ED97D /* MotateDebug.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotateDebug.h; sourceTree = "<group>"; };
 		D49367D31B8638F0000BB759 /* MotateServiceCall.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MotateServiceCall.h; sourceTree = "<group>"; };
 		D4A74B2119C15DB00019633A /* frdm-kl05z.cfg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "frdm-kl05z.cfg"; sourceTree = "<group>"; };
 		D4B74A071D4FB25500E0BFB6 /* Atmel_sam_common */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Atmel_sam_common; sourceTree = "<group>"; };
@@ -2092,7 +2093,7 @@
 				D4E90E271ABB54D40042A16C /* Atmel_XMega */,
 				D48992C01965B118004F73A6 /* MotateBuffer.h */,
 				D4782ABA1DA44D8F00B32136 /* MotateCommon.h */,
-				D4E9E43B1D99B28A00B4226F /* MotateDebug.h */,
+				D492E5A81E4C3504005ED97D /* MotateDebug.h */,
 				D4C78F63195201A900A1BE28 /* MotatePins.h */,
 				D449BC59197AC3E3000C0C3C /* MotateSerial.h */,
 				D49367D31B8638F0000BB759 /* MotateServiceCall.h */,
