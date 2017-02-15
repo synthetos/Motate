@@ -1556,8 +1556,7 @@ namespace Motate {
                             } else {
                                 // case 6
                                 if (!transfer_completed) {
-                                    uint32_t ep_status = _devdma_status(ep);
-                                    if (0 == (ep_status & UOTGHS_DEVDMASTATUS_CHANN_ACT)) {
+                                    if (0 == (_devdma_status(ep) >> 16)) {
                                         _completeTransfer(ep); // C+D
                                         transfer_completed = true;
                                     }
