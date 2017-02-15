@@ -2,7 +2,8 @@
  utility/SamUSB.h - Library for the Motate system
  http://github.com/synthetos/motate/
 
- Copyright (c) 2015 - 2016 Robert Giseburt
+ Copyright (c) 2015 - 2017 Robert Giseburt
+ Copyright (c) 2017 Alden Hart
 
  This file is part of the Motate Library.
 
@@ -238,7 +239,7 @@ namespace Motate {
                 bool end_transfer_interrupt_enable : 1;         // END_TR_IT
                 bool end_buffer_interrupt_enable : 1;           // END_BUFFIT
                 bool descriptor_loaded_interrupt_enable : 1;    // DESC_LD_IT
-                bool bust_lock_enable : 1;                      // BURST_LCK
+                bool burst_lock_enable : 1;                     // BURST_LCK
 
                 uint8_t _unused_1 : 8;
 
@@ -308,7 +309,7 @@ namespace Motate {
         uint32_t _inited = 0;
         uint32_t config_number = 0;
         bool _address_available = false;
-        uint32_t _DMA_Used_By_Endpoint;
+        uint32_t _dma_used_by_endpoint;
 
         enum USBSetupState_t {
             SETUP                  = 0, // Waiting for a SETUP packet
@@ -397,7 +398,7 @@ namespace Motate {
         bool _is_sof_interrupt_enabled()  { return (Tst_bits(UOTGHS->UOTGHS_DEVIMR, UOTGHS_DEVIMR_SOFE)); };
         void _ack_sof()                   { (UOTGHS->UOTGHS_DEVICR = UOTGHS_DEVICR_SOFC); };
         void _raise_sof()                 { (UOTGHS->UOTGHS_DEVIFR = UOTGHS_DEVIFR_SOFS); };
-        bool _is_sof()                    { return (Tst_bits(UOTGHS->UOTGHS_DEVISR, UOTGHS_DEVISR_SOF)); };
+        bool _is_sof()                    { return _is_sof_interrupt_enabled() && (Tst_bits(UOTGHS->UOTGHS_DEVISR, UOTGHS_DEVISR_SOF)); };
         uint32_t _frame_number()          { return (Rd_bitfield(UOTGHS->UOTGHS_DEVFNUM, UOTGHS_DEVFNUM_FNUM_Msk)); };
         bool _is_frame_number_crc_error() { return (Tst_bits(UOTGHS->UOTGHS_DEVFNUM, UOTGHS_DEVFNUM_FNCERR)); };
 
@@ -407,7 +408,7 @@ namespace Motate {
         bool _is_msof_interrupt_enabled() { return (Tst_bits(UOTGHS->UOTGHS_DEVIMR, UOTGHS_DEVIMR_MSOFE)); };
         void _ack_msof()                  { (UOTGHS->UOTGHS_DEVICR = UOTGHS_DEVICR_MSOFC); };
         void _raise_msof()                { (UOTGHS->UOTGHS_DEVIFR = UOTGHS_DEVIFR_MSOFS); };
-        bool _is_msof()                   { return (Tst_bits(UOTGHS->UOTGHS_DEVISR, UOTGHS_DEVISR_MSOF)); };
+        bool _is_msof()                   { return _is_msof_interrupt_enabled() && (Tst_bits(UOTGHS->UOTGHS_DEVISR, UOTGHS_DEVISR_MSOF)); };
         uint32_t _micro_frame_number()    {
             return (Rd_bitfield(UOTGHS->UOTGHS_DEVFNUM, (UOTGHS_DEVFNUM_FNUM_Msk|UOTGHS_DEVFNUM_MFNUM_Msk)));
         };
@@ -927,12 +928,13 @@ namespace Motate {
             //  Disable "Forced" Low Speed first..
             UOTGHS->UOTGHS_DEVCTRL &= ~UOTGHS_DEVCTRL_LS;
 
-            //  Then enable High Speed
-            /* UOTGHS_DEVCTRL_SPDCONF_NORMAL means:
-             * "The peripheral starts in full-speed mode and performs a high-speed reset to switch to the high-speed mode if
-             *  the host is high-speed capable."
-             */
-            UOTGHS->UOTGHS_DEVCTRL = (UOTGHS->UOTGHS_DEVCTRL & ~ UOTGHS_DEVCTRL_SPDCONF_Msk) | UOTGHS_DEVCTRL_SPDCONF_NORMAL;
+            // Then enable High Speed - 480 MBps
+            // UOTGHS_DEVCTRL_SPDCONF_NORMAL means:
+            //  "The peripheral starts in full-speed mode and performs a high-speed reset
+            //   to switch to the high-speed mode if the host is high-speed capable."
+            UOTGHS->UOTGHS_DEVCTRL = (UOTGHS->UOTGHS_DEVCTRL & ~ UOTGHS_DEVCTRL_SPDCONF_Msk) |
+                                      UOTGHS_DEVCTRL_SPDCONF_NORMAL;  // this line for 480 MBps operation
+//                                      UOTGHS_DEVCTRL_SPDCONF_FORCED_FS; // this line to limit to 12 MBps
 
             //  Unfreeze internal USB clock
             _unfreeze_clock();
@@ -943,8 +945,6 @@ namespace Motate {
 
             _setup_buffer = {nullptr, 0, nullptr, 0};
             setup_state = SETUP;
-
-            _enable_vbus_change_interrupt();
 
             _freeze_clock();
 
@@ -960,6 +960,7 @@ namespace Motate {
             UOTGHS->UOTGHS_DEVCTRL &= ~UOTGHS_DEVCTRL_DETACH;
 
             // Enable USB line events
+            _enable_vbus_change_interrupt();
             _enable_reset_interrupt();
             _enable_suspend_interrupt();
             _enable_wake_up_interrupt();
@@ -1053,7 +1054,7 @@ namespace Motate {
             }
 
             if (configuration_fixed == kEndpointBufferNull) {
-#ifdef IN_DEBUGGER
+#if IN_DEBUGGER == 1
                 __asm__("BKPT"); // confoguration not valid
 #endif
             }
@@ -1066,7 +1067,7 @@ namespace Motate {
             _enable_endpoint(endpoint);
 
             if (!_endpoint_configured(endpoint)) {
-#ifdef IN_DEBUGGER
+#if IN_DEBUGGER == 1
                 __asm__("BKPT"); // endpoint not configured
 #endif
             }
@@ -1085,10 +1086,10 @@ namespace Motate {
             _address_available = false;
 
             // catch the case where we are disconnected and reconnected, and we had open tranfers
-            if (!_get_vbus_state() && _DMA_Used_By_Endpoint) {
+            if (!_get_vbus_state() && _dma_used_by_endpoint) {
                 for (uint32_t ep = 0; ep < 10; ep++) {
-                    if (_DMA_Used_By_Endpoint & (1 << ep)) {
-                        _DMA_Used_By_Endpoint &= ~(1 << ep);
+                    if (_dma_used_by_endpoint & (1 << ep)) {
+                        _dma_used_by_endpoint &= ~(1 << ep);
 
                         _devdma(ep)->command = USB_DMA_Descriptor::stop_now;
                         _devdma(ep)->bufferAddress = nullptr;
@@ -1201,7 +1202,7 @@ namespace Motate {
                 }
             }
             else {
-#ifdef IN_DEBUGGER
+#if IN_DEBUGGER == 1
                 __asm__("BKPT"); // endpoint interrupt went unhandled
 #endif
             }
@@ -1233,10 +1234,10 @@ namespace Motate {
             setup_state = SETUP;
 
             // catch the case where we are disconnected and reconnected, and we had open tranfers
-            if (!_get_vbus_state() && _DMA_Used_By_Endpoint) {
+            if (!_get_vbus_state() && _dma_used_by_endpoint) {
                 for (uint32_t ep = 0; ep < 10; ep++) {
-                    if (_DMA_Used_By_Endpoint & (1 << ep)) {
-                        _DMA_Used_By_Endpoint &= ~(1 << ep);
+                    if (_dma_used_by_endpoint & (1 << ep)) {
+                        _dma_used_by_endpoint &= ~(1 << ep);
 
                         _devdma(ep)->command = USB_DMA_Descriptor::stop_now;
                         _devdma(ep)->bufferAddress = nullptr;
@@ -1460,160 +1461,216 @@ namespace Motate {
             _enable_nak_in_interrupt(0);
         };
 
+        void _completeTransfer(const uint8_t ep) {
+            if (_is_endpoint_a_tx_in(ep)) {
+                // case 2 or 3
+                _disable_in_send_interrupt(ep); // D
+            } else {
+                // case 5 or 6
+                _disable_out_received_interrupt(ep); // D
+            }
+            // C
+            _disable_endpoint_dma_interrupt(ep);
+            _dma_used_by_endpoint &= ~(1<<ep);
+            proxy->handleTransferDone(ep);
+        }
+
         bool checkAndHandleEndpoint() {
-            for (uint32_t ep = 1; ep <= _get_endpoint_max_nbr(); ep++) {
-                if (//_is_endpoint_dma_interrupt_enabled(ep) &&
-                    _is_endpoint_dma_interrupt(ep)) {
-                    uint32_t ep_status = _devdma_status(ep);
-
-                    if (ep_status & UOTGHS_DEVDMASTATUS_CHANN_ENB) {
-                        // original code say: "Ignore EOT_STA interrupt" ???
-                        usb_debug("dmaInt (ena)|\n");
-                        return true;
-                    }
-                    _disable_endpoint_dma_interrupt(ep);
-                    usb_debug("dmaInt->");
-
-                    // ep_status.buffer_count hold how many are left to transfer
-                    if (_is_endpoint_a_tx_in(ep)) {
-                        if (_is_in_send(ep)) {
-                            _ack_in_send(ep);
-                            _ack_fifocon(ep);
-                            usb_debug(":");
-                        }
-                        usb_debug("tx ");
-                    } else {
-                        usb_debug("rx ");
-                        // Disable then accept the rx packet interrupt.
-                        //_disable_out_received_interrupt(ep);
-
-                        // if we have no more bytes in this packet, then clear it out
-                        if (0 == get_byte_count(ep)) {
-                            usb_debug("ACK(0) ");
-                            _ack_out_received(ep);
-                            _ack_fifocon(ep);
-                        } else {
-                            _ack_out_received(ep);
-                        }
-
-                        if (ep_status & UOTGHS_DEVDMASTATUS_END_TR_ST) {
-                            usb_debug("|ET|\n");
-                        }
-                        if (ep_status & UOTGHS_DEVDMASTATUS_END_BF_ST) {
-                            usb_debug("|EB|\n");
-                        }
-                    }
-
-
-                    _DMA_Used_By_Endpoint &= ~(1<<ep);
-                    usb_debug("|\n");
-                    proxy->handleTransferDone(ep);
-
-                    return true;
-                }
-                if (_is_endpoint_interrupt_enabled(ep)) {
-                    usb_debug("epInt->");
-                    if (_is_endpoint_a_tx_in(ep)) {
-                        // check to see if we are done sending
-                        if (_is_in_send_interrupt_enabled(ep)) { usb_debug(":"); }
-                        if (//_is_in_send_interrupt_enabled(ep) &&
-                            _is_in_send(ep))
+            bool handled = false;
+            /*
+             * Here we handle the endpoint interupts, essentialy coming from a DMA operation.
+             *
+             *  We have to take one or more of three possible actions:
+             *    A) Clear TXINI/RXINI flag to ack the interrupt
+             *    B) Clear FIFICON to send/empty the bank (must happen after A)
+             *    C) Finish the DMA, clearing the appropriate bit in _dma_used_by_endpoint, disabling the DMA interupt,
+             *       and calling proxy->handleTransferDone(ep).
+             *    D) Disable TXIN/RXOUT interrupt.
+             *
+             *  It appears we only do A with B, and C with D, so they are AB or CD.
+             *
+             *  When we will see/react to an item will be marked with either:
+             *    - for an endpoint TXINI/RXINI interrupt
+             *    + for a DMA interrupt
+             *    * for either or a mix of both
+             *
+             *  Example: AB(-) is handled in response to an endpoint interrupt.
+             *
+             * Possible cases:
+             * TXIN - we get interrupts when the packet is filled (unless the interrupts were turned on early):
+             *   1) The packet is empty, but DMA still has buffered data - no action
+             *      We DO NOT clear TXINI here, so we get another interrupt.
+             *      This should NOT happen when interrupts are enabled at the right time.
+             *   2) The packet is not full, but the DMA buffer is empty - actions AB(+)CD(+)
+             *      Action B here will send the truncated packet.
+             *   3) The packet is full, but DMA still has buffered data - actions AB(-)
+             *   4) The packet is full, and the DMA buffer is empty (both on the same byte) - actions AB(-)CD(+)
+             *      ASSUMES that the TXIN interrupt will happen at the same time or before the DMA interrupt.
+             *
+             * RXOUT - we get interrupts when a packet is EMPTIED (as mush as it's going to) by DMA:
+             *   5) The packet is completely read, and DMA still has buffer space available for all of it - actions AB(-)
+             *   6) The packet has been partially read, but DMA buffer is full (not active) - actions CD(-)
+             *      DO NOT do action B! That'll lose the remaining packet data.
+             *   7) The packet is completely read and the DMA buffer is full - action AB(-)CD(+)
+             */
+            for (uint32_t ep = 1; ep <= _get_endpoint_max_nbr(); ep++)
+            {
+                bool transfer_completed = false;
+                if (_is_endpoint_interrupt_enabled(ep))
+                {
+                    if (_is_endpoint_a_tx_in(ep))
+                    {
+                        // check to see if we are done sending this packet
+                        // cases 1, 3, or 4
+                        if (_is_in_send_interrupt_enabled(ep) &&
+                            _is_in_send(ep) // This bit is set for isochronous, bulk and interrupt IN endpoints, at the same time as UOTGHS_DEVEPTIMRx.FIFOCON when the current bank is free.
+                            )
                         {
-                            if (_is_write_enabled(ep)) { usb_debug(">"); }
-                            if (0 == _devdma(ep)->status.buffer_count)  { usb_debug("dma_count_0(0)"); }
-                            usb_debug("TX ");
+                            if (0 != get_byte_count(ep)) {
+                                // case 3 or 4
+                                _ack_in_send(ep); // A
+                                _ack_fifocon(ep); // B - This bit is cleared (by writing a one to UOTGHS_DEVEPTIDRx.FIFOCONC bit) to send the FIFO data and to switch to the next bank.
+                            } else {
+                                if (!transfer_completed) {
+                                    _completeTransfer(ep); // C+D
+                                    transfer_completed = true;
+                                }
+                            }
+                            handled = true;
 
-                            _ack_in_send(ep);
-                            _ack_fifocon(ep);
-
-                            return true;
-                        } else {
-                            usb_debug("!TX ");
                         }
-                    } // is a tx in endpoint
+                    } // if is a tx in endpoint
+
+                    // otherwise we know it's a RXOUT packet, check for cases 4 - 7
                     else {
-                        // we received a packet
-                        if (_is_out_received_interrupt_enabled(ep)) { usb_debug(":"); }
-                        if (//_is_out_received_interrupt_enabled(ep) &&
-                            _is_out_received(ep))
+                        if (_is_out_received_interrupt_enabled(ep) &&
+                            _is_out_received(ep) // This bit is set for isochronous, bulk and, interrupt OUT endpoints, at the same time as UOTGHS_DEVEPTIMRx.FIFOCON when the current bank is full.
+                            )
                         {
-                            // write is disabled when the buffer is full
-
-                            if (_is_write_enabled(ep)) { usb_debug(">"); }
-                            usb_debug("epRX ");
-
-                            // if we have no more bytes in this packet, then clear it out
+                            // cases 5, 6, or 7
                             if (0 == get_byte_count(ep)) {
-                                usb_debug("ACK(0) ");
-                                _ack_out_received(ep);
+                                // cases 5 or 7
+                                _ack_out_received(ep); // A
+                                // B - This bit is cleared (by writing a one to UOTGHS_DEVEPTIDRx.FIFOCONC bit) to free the current bank and to switch to the next bank.
                                 _ack_fifocon(ep);
                             } else {
-                                _ack_out_received(ep);
+                                // case 6
+                                if (!transfer_completed) {
+                                    if (0 == (_devdma_status(ep) >> 16)) {
+                                        _completeTransfer(ep); // C+D
+                                        transfer_completed = true;
+                                    }
+                                }
                             }
+                            handled = true;
+                        }
+                    } // if is a rx out endpoint
+                } // is an endpoint interrupt
 
-                            return true;
-                        } else {
-                            usb_debug("!RX ");
+
+                if (_is_endpoint_dma_interrupt_enabled(ep) &&
+                    _is_endpoint_dma_interrupt(ep))
+                {
+                    uint32_t ep_status = _devdma_status(ep);
+
+//                    if (ep_status & UOTGHS_DEVDMASTATUS_CHANN_ENB) {
+//                        handled = true; // ignore this interrupt, but ack it
+//                        continue;
+//                    }
+
+                    if (ep_status & UOTGHS_DEVDMASTATUS_DESC_LDST) {
+                        if (_is_endpoint_a_tx_in(ep)) {
+                            _enable_in_send_interrupt(ep);
+
+                            // save an interrupt
+                            if (_is_in_send(ep) && (0 != get_byte_count(ep))) {
+                                // case 3 or 4
+                                _ack_in_send(ep); // A
+                                _ack_fifocon(ep); // B - This bit is cleared (by writing a one to UOTGHS_DEVEPTIDRx.FIFOCONC bit) to send the FIFO data and to switch to the next bank.
+                            }
+                        }
+                    }
+
+                    if (ep_status & UOTGHS_DEVDMASTATUS_END_TR_ST) {
+                        // case 2
+                        if (!transfer_completed) {
+                            _completeTransfer(ep); // C+D
+                            transfer_completed = true;
+                        }
+                    }
+
+                    if (ep_status & UOTGHS_DEVDMASTATUS_END_BF_ST)
+                    {
+                        // case 2, 4, or 7
+
+                        if (_is_in_send(ep)) {
+                            // case 2
+                            _ack_in_send(ep); // A
+                            _ack_fifocon(ep); // B - This bit is cleared (by writing a one to UOTGHS_DEVEPTIDRx.FIFOCONC bit) to send the FIFO data and to switch to the next bank.
                         }
 
-                        // if we have no more bytes in this packet, then clear it out
-                        if (0 == get_byte_count(ep)) {
-                            usb_debug("ep_count(0) ");
-                            _ack_fifocon(ep);
+                        if (!transfer_completed) {
+                            // cases 2, 4, or 7
+                            _completeTransfer(ep); // C+D
+                            transfer_completed = true;
                         }
-                    } // is a rx out endpoint
-                }
+                    }
+
+                    handled = true;
+                } // is a dma interrupt
             }
 
-            return false;
+            return handled;
         };
 
-        bool transfer(const uint8_t endpoint, USB_DMA_Descriptor& desc) {
+        bool transfer(const uint8_t ep, USB_DMA_Descriptor& desc) {
             if (!config_number)
                 return false;
 
             desc.command = USB_DMA_Descriptor::run_and_stop;
             // DON'T interrupt when the descriptor is loaded
             desc.descriptor_loaded_interrupt_enable = false;
-            if (_is_endpoint_a_tx_in(endpoint)) {
-//                usb_debug("tr->TX ");
+            if (_is_endpoint_a_tx_in(ep)) {
                 // if the endpoint is a TX IN:
-                if (0 != (desc.buffer_length % _get_endpoint_size(endpoint)))
-                {
-                    // validate the packet at DMA Buffer End (BUFF_COUNT reaches 0)
-                     desc.end_buffer_enable = true;
-                    // interrupt when the DMA transfer ends because USB stopped it
-                     desc.end_transfer_interrupt_enable = true;
-                }
-            } else {
-                usb_debug("tr->RX ");
-                // if the endpoint is an RX OUT:
-                if ((_get_endpoint_type(endpoint) != kEndpointBufferTypeIsochronous)) // ||
-//                    (desc.buffer_length <= _get_endpoint_size(endpoint)))
-                {
-                    // interrupt when the DMA transfer ends because USB stopped it
-                    //desc.end_transfer_interrupt_enable = true;
-                    // allow the DMA transfer to be stopped by USB (small packet, etc)
-                    //desc.end_transfer_enable = true;
-                }
+                // validate the packet at DMA Buffer End (BUFF_COUNT reaches 0)
+                desc.end_buffer_enable = true;
+                // allow the DMA transfer to be stopped by USB (small packet, etc)
+                desc.end_transfer_enable = true;
+                // interrupt when the DMA transfer ends because USB stopped it
+                desc.end_transfer_interrupt_enable = true;
+                // we use the descriptor loaded to turn on the other iterrupts
+                desc.descriptor_loaded_interrupt_enable = true;
             }
+//            else {
+//                // if the endpoint is an RX OUT:
+//                if ((_get_endpoint_type(ep) != kEndpointBufferTypeIsochronous)) // ||
+////                    (desc.buffer_length <= _get_endpoint_size(ep)))
+//                {
+//                    // interrupt when the DMA transfer ends because USB stopped it
+//                    //desc.end_transfer_interrupt_enable = true;
+//                    // allow the DMA transfer to be stopped by USB (small packet, etc)
+//                    //desc.end_transfer_enable = true;
+//                }
+//            }
             // interrupt when the DMA transfer ends because the buffer ran out
             desc.end_buffer_interrupt_enable = true;
 
-            _DMA_Used_By_Endpoint |= 1 << endpoint;
-
-            if (_is_endpoint_a_tx_in(endpoint)) {
-                _enable_in_send_interrupt(endpoint);
-            } else {
-                _enable_out_received_interrupt(endpoint);
-            }
-
-            _enable_endpoint_interrupt(endpoint);
-            _enable_endpoint_dma_interrupt(endpoint);
+            _dma_used_by_endpoint |= 1 << ep;
 
             // IMPORTANT: UOTGHS_DEVDMA[0] is endpoint 1!!
-            _devdma(endpoint)->next_descriptor = &desc;
-            _devdma(endpoint)->command = USB_DMA_Descriptor::load_next_desc;
+            _devdma(ep)->next_descriptor = &desc;
+            _devdma(ep)->command = USB_DMA_Descriptor::load_next_desc;
+
+            if (_is_endpoint_a_tx_in(ep)) {
+                _enable_in_send_interrupt(ep);
+                _enable_short_packet_interrupt(ep); // this allows the DMA to send a partial packet (badly named function)
+            } else {
+                _enable_out_received_interrupt(ep);
+            }
+
+            _enable_endpoint_interrupt(ep);
+            _enable_endpoint_dma_interrupt(ep);
+
             return true;
         };
 

@@ -246,6 +246,7 @@ OS := WIN32
 TOOLS_SUBPATH := win32/gcc-$(CROSS_COMPILE)
 TOOLS_PATH := $(realpath $(TOOLS_PATH))
 PATH := $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin;c:\Program Files\Git\bin;c:\Program Files\Git\cmd;c:\Program Files\Git\mingw32\bin;c:\Program Files\Git\mingw64\bin;$(PATH)
+#MKDIR   = gmkdir
 else
 ifneq (,$(findstring WINDOWS,$(PATH)))
 $(info "Found that we're in WINDOWS")
@@ -253,6 +254,7 @@ OS := WIN32
 TOOLS_SUBPATH := win32/gcc-$(CROSS_COMPILE)
 TOOLS_PATH := $(realpath $(TOOLS_PATH))
 PATH := $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin;c:\Program Files\Git\bin;c:\Program Files\Git\cmd;c:\Program Files\Git\mingw32\bin;c:\Program Files\Git\mingw64\bin;$(PATH)
+#MKDIR   = gmkdir
 else
 
 
@@ -285,7 +287,7 @@ export MOTATE_PATH
 CWD = $(realpath .)
 
 # Compilation tools - hardcode the full path to the ones we provide
-TOOLS_FULLPATH = $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin
+TOOLS_FULLPATH = "$(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin"
 CC      = $(TOOLS_FULLPATH)/$(CROSS_COMPILE)-gcc
 CXX     = $(TOOLS_FULLPATH)/$(CROSS_COMPILE)-g++
 LD      = $(TOOLS_FULLPATH)/$(CROSS_COMPILE)-ld
