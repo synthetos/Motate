@@ -177,47 +177,6 @@ namespace Motate {
 
     /*** USBDeviceHardware ***/
 
-    // struct alignas(16) USB_DMA_Descriptor {
-    //     enum _commands {  // This enum declaration takes up no space, but is in here for name scoping.
-    //         stop_now        = 0,  // These match those of the SAM3X8n datasheet, but downcased.
-    //         run_and_stop    = 1,
-    //         load_next_desc  = 2,
-    //         run_and_link    = 3
-    //     };
-    //
-    //     USB_DMA_Descriptor *next_descriptor;    // The address of the next Descriptor
-    //     char *bufferAddress;                    // The address of the buffer to read/write
-    //     struct {                                // controlData is a bit field with the settings of the descriptor
-    //         // See SAM3X8n datasheet for defintions.
-    //         // Names used there are in the comment.
-    //         _commands command : 2;              // Unnamed but described in "DMA Channel Control Command Summary" chart
-    //
-    //         bool end_transfer_enable : 1;                   // END_TR_EN
-    //         bool end_buffer_enable : 1;                     // END_B_EN
-    //         bool end_transfer_interrupt_enable : 1;         // END_TR_IT
-    //         bool end_buffer_interrupt_enable : 1;           // END_BUFFIT
-    //         bool descriptor_loaded_interrupt_enable : 1;    // DESC_LD_IT
-    //         bool bust_lock_enable : 1;                      // BURST_LCK
-    //
-    //         uint8_t _unused_1 : 8;
-    //
-    //         uint16_t buffer_length : 16;                    // BUFF_LENGTH
-    //     } controlData;
-    //
-    //
-    //     // FUNCTIONS -- these take no space, and don't have a vtable since there's nothing 'virtual'.
-    //
-    //
-    //     void setBuffer(char* data, uint16_t len) {
-    //         bufferAddress = data;
-    //         controlData.buffer_length = len;
-    //     }
-    //
-    //     void setNextDescriptor(USB_DMA_Descriptor *next) {
-    //         next_descriptor = next;
-    //     }
-    // };
-
     struct alignas(16) USB_DMA_Descriptor {
         enum _commands {  // This enum declaration takes up no space, but is in here for name scoping.
             stop_now        = 0,  // These match those of the SAM3X8n datasheet, but downcased.
@@ -227,7 +186,7 @@ namespace Motate {
         };
 
         USB_DMA_Descriptor *next_descriptor;    // The address of the next Descriptor
-        char *bufferAddress;                    // The address of the buffer to read/write
+        char *buffer_address;                    // The address of the buffer to read/write
         union {
             struct {                                // controlData is a bit field with the settings of the descriptor
                 // See SAMS70 datasheet for defintions.
@@ -253,12 +212,8 @@ namespace Motate {
 
 
         void setBuffer(char* data, uint16_t len) {
-            bufferAddress = data;
+            buffer_address = data;
             buffer_length = len;
-        }
-
-        void setNextDescriptor(USB_DMA_Descriptor *next) {
-            next_descriptor = next;
         }
     };
     struct USB_DMA_Status {
@@ -1073,7 +1028,7 @@ namespace Motate {
             }
 
             _devdma(endpoint)->command = USB_DMA_Descriptor::stop_now;
-            _devdma(endpoint)->bufferAddress = nullptr;
+            _devdma(endpoint)->buffer_address = nullptr;
             _devdma(endpoint)->buffer_length = 0;
         };
 
@@ -1092,7 +1047,7 @@ namespace Motate {
                         _dma_used_by_endpoint &= ~(1 << ep);
 
                         _devdma(ep)->command = USB_DMA_Descriptor::stop_now;
-                        _devdma(ep)->bufferAddress = nullptr;
+                        _devdma(ep)->buffer_address = nullptr;
                         _devdma(ep)->buffer_length = 0;
 
                         proxy->handleTransferDone(ep);
@@ -1240,7 +1195,7 @@ namespace Motate {
                         _dma_used_by_endpoint &= ~(1 << ep);
 
                         _devdma(ep)->command = USB_DMA_Descriptor::stop_now;
-                        _devdma(ep)->bufferAddress = nullptr;
+                        _devdma(ep)->buffer_address = nullptr;
                         _devdma(ep)->buffer_length = 0;
 
                         proxy->handleTransferDone(ep);
@@ -1556,7 +1511,7 @@ namespace Motate {
                             } else {
                                 // case 6
                                 if (!transfer_completed) {
-                                    if (0 == (_devdma_status(ep) >> 16)) {
+                                    if (0 == (_devdma_status(ep) & UOTGHS_DEVDMASTATUS_CHANN_ACT)) {
                                         _completeTransfer(ep); // C+D
                                         transfer_completed = true;
                                     }
@@ -1675,15 +1630,6 @@ namespace Motate {
         };
 
         char * getTransferPositon(const uint8_t endpoint) {
-//            volatile auto dma = _devdma(endpoint);
-//            if (nullptr == dma->bufferAddress) {
-//                if (_is_endpoint_a_tx_in(endpoint)) {
-//                    usb_debug("(tN)");
-//                } else {
-//                    usb_debug("(rN)");
-//                }
-//            }
-//            return (char *)dma->bufferAddress;
             return (char *)(_devdma_address(endpoint));
         }
 

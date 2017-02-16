@@ -59,7 +59,6 @@ namespace Motate {
     extern "C"
     void USBHS_Handler() {
         USBDeviceHardware *hw = USBDeviceHardware::hw;
-        //USBDevice_t *proxy = USBDeviceHardware::hw->proxy;
 
         // Check for and handle SOF and MSOF
         if (hw->checkAndHandleSOF()) { return; }
