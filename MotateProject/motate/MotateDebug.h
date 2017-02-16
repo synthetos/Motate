@@ -33,6 +33,10 @@
 #include "MotatePins.h" // Grab the platform-specific libraries - Pins is easy, everything has pins!
 #include "MotateUtilities.h"
 
+#ifndef IN_DEBUGGER
+#define IN_DEBUGGER 0
+#endif
+
 #ifndef DEBUG_SEMIHOSTING
 #define DEBUG_SEMIHOSTING 0
 #endif
