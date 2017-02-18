@@ -939,7 +939,7 @@ namespace Motate {
             _disable_msof_interrupt();
 
             // Reset following interupts flag
-            _ack_reset();
+            //_ack_reset();
             _ack_sof();
             _ack_msof();
 
