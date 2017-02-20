@@ -37,12 +37,16 @@
 #define IN_DEBUGGER 0
 #endif
 
+#ifndef DEBUG_SEMIHOSTING
+#define DEBUG_SEMIHOSTING 0
+#endif
+
 #define DEBUG_USE_SWI 1
 #define DEBUG_USE_ITM 0
 
 // ITM doesn't seem to work too well. Needs work.
 
-#if IN_DEBUGGER == 1
+#if DEBUG_SEMIHOSTING == 1
 #warning IN_DEBUGGER=1: DEEP DEBUGGING IS ON - this firmware must be used with a debugger attached!
 #endif
 namespace Motate {
@@ -66,7 +70,7 @@ struct Debug {
     // write to the debugger blindly
     void open()
     {
-#if IN_DEBUGGER == 1
+#if DEBUG_SEMIHOSTING == 1
         int32_t block[3];
 
         //const char * filename = ":tt"; // this ":tt" is special to the ARM to mean "console"
@@ -82,7 +86,7 @@ struct Debug {
     // write to the debugger blindly
     void write(const char* arg, int32_t length)
     {
-#if IN_DEBUGGER == 1
+#if DEBUG_SEMIHOSTING == 1
         if (0 > STDOUT_fh) { return; } // open apparently failed
 
         int32_t block[3];
@@ -92,7 +96,7 @@ struct Debug {
         block[2] = length;
 
         _swi(AngelSWI_Reason_Write, block);
-#endif // IN_DEBUGGER == 1
+#endif // DEBUG_SEMIHOSTING == 1
     }; // write
 
     // using template size deduction to simplify the syntax.
@@ -104,7 +108,7 @@ struct Debug {
         write(arg, length);
     }
 
-#if IN_DEBUGGER == 1
+#if DEBUG_SEMIHOSTING == 1
     #ifdef __thumb__
         #define AngelSWI      0xAB
     #else
@@ -134,7 +138,7 @@ struct Debug {
                Angel is respecting the APCS.  */
         return response;
     }; // _swi
-#endif // IN_DEBUGGER == 1
+#endif // DEBUG_SEMIHOSTING == 1
 };
 #endif // DEBUG_USE_SWI == 1
 
@@ -152,13 +156,13 @@ struct Debug {
         // write to the debugger blindly
         void write(const char* arg, int32_t length)
         {
-#if IN_DEBUGGER == 1
+#if DEBUG_SEMIHOSTING == 1
             int32_t delay = 100;
             while (delay--) { __asm("NOP"); };
             while (length--) {
                 ITM_SendChar(*arg++);
             }
-#endif // IN_DEBUGGER == 1
+#endif // DEBUG_SEMIHOSTING == 1
         }; // write
 
         // using template size deduction to simplify the syntax.

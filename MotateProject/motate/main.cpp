@@ -35,7 +35,7 @@ using Motate::delay;
 /******************** External interface setup ************************/
 
 #include "MotateDebug.h"
-#if IN_DEBUGGER == 1
+#if DEBUG_SEMIHOSTING == 1
 namespace Motate {
     Debug debug;
 }
