@@ -50,7 +50,7 @@ namespace Motate {
 
     volatile uint32_t *_UUID_REGISTER = (volatile  uint32_t *)0x00080000;
 
-    void _readUUID()  __attribute__ ((noinline,long_call,section (".ramfunc")));
+    void _readUUID()  __attribute__ ((noinline,long_call,section(".ramfunc")));
     void _readUUID() {
         // GAH! We disable ALL IRQs, since the Unique ID is actually placed
         // in the same place in RAM as the interrupt handler table!
