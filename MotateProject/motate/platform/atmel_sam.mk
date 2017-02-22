@@ -159,6 +159,9 @@ DEVICE_LIB_DIRS     += $(MOTATE_PATH)/platform/atmel_sam
 DEVICE_LINKER_SCRIPT = $(SAM_PATH)/linker_scripts/$(CHIP_SERIES)/$(CHIP_SUBSERIES)/$(GCC_TOOLCHAIN)/flash.ld
 DEVICE_LINKER_SCRIPT_PATH = $(DEVICE_PATH)/source/$(GCC_TOOLCHAIN)/
 
+OPENOCD_CFG = $(MOTATE_PATH)/platform/atmel_sam/atmel_sam.cfg
+
 export JLINK_DEVICE
+export OPENOCD_CFG
 
 include $(MOTATE_PATH)/arch/arm.mk

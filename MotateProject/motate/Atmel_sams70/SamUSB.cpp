@@ -56,6 +56,8 @@ namespace Motate {
         return tempSize;
     }
 
+    extern "C" void USBHS_Handler() HOT_FUNC;
+
     extern "C"
     void USBHS_Handler() {
         USBDeviceHardware *hw = USBDeviceHardware::hw;

@@ -686,6 +686,8 @@
 		D40A24041ACE2CCC00406A3A /* atmel_sam.cfg */ = {isa = PBXFileReference; lastKnownFileType = text; path = atmel_sam.cfg; sourceTree = "<group>"; };
 		D410A87D1BABB63C007E4B12 /* pin_assignments.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pin_assignments.h; sourceTree = "<group>"; };
 		D410A87F1BABB63C007E4B12 /* pin_assignments.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pin_assignments.h; sourceTree = "<group>"; };
+		D416B3421E5E0ECE00428411 /* atmel_ice.gdb */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = atmel_ice.gdb; sourceTree = "<group>"; };
+		D416B3441E5E0F5600428411 /* jlink.gdb */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = jlink.gdb; sourceTree = "<group>"; };
 		D423A30A1D07930600575D2C /* TARGET_Atmel */ = {isa = PBXFileReference; lastKnownFileType = folder; path = TARGET_Atmel; sourceTree = "<group>"; };
 		D423A30B1D07B16200575D2C /* Atmel_sam3x */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Atmel_sam3x; sourceTree = "<group>"; };
 		D423A30C1D07B16F00575D2C /* Atmel_sam4e */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Atmel_sam4e; sourceTree = "<group>"; };
@@ -4401,6 +4403,8 @@
 				D4E910B31ABB60550042A16C /* atmel_xmega.mk */,
 				D4C79EF21957C0B700A1BE28 /* freescale_klxx */,
 				D4C79EF91957C0B700A1BE28 /* freescale_klxx.mk */,
+				D416B3421E5E0ECE00428411 /* atmel_ice.gdb */,
+				D416B3441E5E0F5600428411 /* jlink.gdb */,
 			);
 			path = platform;
 			sourceTree = "<group>";

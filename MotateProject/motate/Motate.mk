@@ -511,13 +511,53 @@ $(DEPDIR) $(BIN):
 	$(QUIET)$(MKDIR) -p "$@"
 
 
-# Rule for debugging
-debug: $(OUTPUT_BIN).elf
-	$(GDB) -ex "dir '${MOTATE_PATH}/arch/'" -x "${BOARD_PATH}.gdb" -ex "monitor reset halt" -readnow -se "$(OUTPUT_BIN).elf"
+# Rule for debugging with the J-Link
+# Best to start the server with make ... debugjs first, then run make ... debugj
+.PHONY: debugj debuggyj debugjs debugjs2 debugj-kill debugj-murder
+debugjs2:
+	JLinkGDBServer -device "${JLINK_DEVICE}" -log jlinkgdbserver.log -silent -halt -if SWD &
 
-# Rule for debugging (using python-enabled debugger)
-debuggy: $(OUTPUT_BIN).elf
-	$(GDB_PY) -ex "dir '${MOTATE_PATH}/arch/'" -x "${BOARD_PATH}.gdb" -ex "monitor reset halt" -readnow -se "$(OUTPUT_BIN).elf"
+debugjs:
+	$(MAKE) debugjs2 &
+
+debugj: $(OUTPUT_BIN).elf
+	$(GDB) -ex "dir '${MOTATE_PATH}/arch/'" -x "${BOARD_PATH}.gdb" -x "${MOTATE_PATH}/platform/jlink.gdb" -readnow -se "$(OUTPUT_BIN).elf"
+
+# use the GDB with python enabled
+debuggyj: $(OUTPUT_BIN).elf
+	$(GDB_PY) -ex "dir '${MOTATE_PATH}/arch/'" -x "${BOARD_PATH}.gdb" -x "${MOTATE_PATH}/platform/jlink.gdb" -readnow -se "$(OUTPUT_BIN).elf"
+
+# when done debugging, run this
+debugj-kill:
+	killall JLinkGDBServer
+
+# if the debugger gets "jammed", this'll kill it
+debugj-murder:
+	killall -9 JLinkGDBServer
+
+
+# Rules for debugging with the Atmel-ICE
+.PHONY: debugi debuggyi debugis debugis2 debugi-kill debugi-murder
+debugis2:
+	openocd -c "set CHIPNAME ${CHIP}" -f ${MOTATE_PATH}/openocd.cfg -f ${OPENOCD_CFG} -c "gdb_port 2331; log_output openocd.log"
+
+debugis:
+	$(MAKE) debugis2 &
+
+debugi: $(OUTPUT_BIN).elf
+	$(GDB) -ex "dir '${MOTATE_PATH}/arch/'" -x "${BOARD_PATH}.gdb" -x "${MOTATE_PATH}/platform/atmel_ice.gdb" -readnow -se "$(OUTPUT_BIN).elf"
+
+# Rule for debugging with the Atmel-ICE
+debuggyi: $(OUTPUT_BIN).elf
+	$(GDB_PY) -ex "dir '${MOTATE_PATH}/arch/'" -x "${BOARD_PATH}.gdb" -x "${MOTATE_PATH}/platform/atmel_ice.gdb" -readnow -se "$(OUTPUT_BIN).elf"
+
+# when done debugging, run this
+debugi-kill:
+	killall openocd
+
+# if the debugger gets "jammed", this'll kill it
+debugi-murder:
+	killall -9 openocd
 
 flash: $(FLASH_REQUIRES)
 	$(DEVICE_FLASH_CMD)
