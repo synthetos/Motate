@@ -403,7 +403,8 @@ $(eval $(DEVICE_RULES))
 # We use tools as a "macro" for dependencies later
 tools: | $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin
 
-$(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin:
+# and make it depend on the tools makefile to catch updates
+$(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin: $(TOOLS_PATH)/Makefile
 	@echo Installing the necessary tools...
 	cd ${TOOLS_PATH} && make "ARCH=gcc-${CROSS_COMPILE}"
 

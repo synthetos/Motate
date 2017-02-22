@@ -373,7 +373,7 @@ namespace Motate {
 
     struct DMA_XDMAC_common {
         static constexpr uint32_t peripheralId() { return ID_XDMAC; };
-        static constexpr Xdmac * const xdma() { return XDMAC; };
+        static Xdmac * const xdma() { return XDMAC; };
         static constexpr IRQn_Type xdmaIRQ() { return XDMAC_IRQn; };
 
         void setInterrupts(const uint16_t interrupts) const

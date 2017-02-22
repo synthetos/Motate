@@ -58,7 +58,7 @@ DEVICE_CFLAGS := -mcpu=$(CPU_DEV) -mthumb -ffunction-sections -fdata-sections -s
 # ---------------------------------------------------------------------------------------
 # CPP Flags
 
-DEVICE_CPPFLAGS := -mcpu=$(CPU_DEV) -mthumb -ffunction-sections -fdata-sections -std=gnu++14 -fno-rtti -fno-exceptions -fstrict-volatile-bitfields -fdiagnostics-show-option $(FLOAT_OPTIONS)
+DEVICE_CPPFLAGS := -mcpu=$(CPU_DEV) -mthumb -ffunction-sections -fdata-sections -std=gnu++17 -fno-rtti -fno-exceptions -fstrict-volatile-bitfields -fdiagnostics-show-option $(FLOAT_OPTIONS)
 # --param max-inline-insns-single=500 -mlong-calls
 
 # ---------------------------------------------------------------------------------------
