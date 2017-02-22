@@ -395,4 +395,9 @@ namespace Motate {
 #pragma GCC diagnostic pop
 } // namespace Motate
 
+// A few defines, because sometimes you have to :/
+
+#define HOT_FUNC __attribute__((section(".hot_func")))
+#define HOT_DATA __attribute__((section(".hot_data")))
+
 #endif //MOTATEUTILITIES_H_ONCE
