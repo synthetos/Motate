@@ -578,12 +578,23 @@ $(PROJECT).hex: $(OUTPUT_BIN).elf
 $(PROJECT).bin: $(OUTPUT_BIN).elf
 	$(QUIET)$(OBJCOPY) -O binary $< $@
 
+ifeq (WIN32,${UNAME})
+
 clean:
 	-$(RM) -fR $(OBJ)
 	-$(RM) -fR $(BIN)
 	-$(RM) -fR $(BOARD).elf $(BOARD).map $(BOARD).hex $(BOARD).bin
 	-$(RM) -fR compile_commands.json $(MOTATE_PATH)/compile_commands.json
 
+else
+
+clean:
+	-find  $(OBJ)/ -d -print0 -name \* | xargs -0 rm -rf
+	-find  $(BIN)/ -d -print0 -name \* | xargs -0 rm -rf
+	-$(RM) -fR $(BOARD).elf $(BOARD).map $(BOARD).hex $(BOARD).bin
+	-$(RM) -fR compile_commands.json $(MOTATE_PATH)/compile_commands.json
+
+endif
 
 #
 # Include the dependency files, should be the last of the makefile
