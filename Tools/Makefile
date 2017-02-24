@@ -25,10 +25,13 @@ endif #Atmel Studio
 endif #WINDOWS
 endif #cygdrive
 
+ifneq ($(TOOLS_VERSION), 6.2)
+$(error The TOOLS_VERSION ($(TOOLS_VERSION)) requested is wrong. You project and Motate are mismatched. (?))
+endif
 
 ifeq ($(ARCH), gcc-arm-none-eabi)
 
-TOOLS_EASYPATH = gcc-arm-none-eabi
+TOOLS_EASYPATH = gcc-arm-none-eabi-6.2
 
 TOOLS_VERSION_FILENAME = 6_2-2016q4-20161216
 
@@ -145,13 +148,8 @@ endif
 
 # end additional curl test
 
-${TOOLS_SUBPATH}/${TOOLS_${OS}_ARCHIVE_FILENAME}.check:
-	# if this is missing, we may need to remove the old one if it exists
-	find ${TOOLS_SUBPATH}/${TOOLS_EASYPATH}/ -d -print0 -name \* | xargs -0 rm -rf
-	touch ${TOOLS_SUBPATH}/${TOOLS_${OS}_ARCHIVE_FILENAME}.check
-
 .ONESHELL:
-${TOOLS_SUBPATH}/$(TOOLS_EASYPATH): ${TOOLS_SUBPATH}/${TOOLS_${OS}_ARCHIVE_FILENAME}.check ${TOOLS_SUBPATH}/${TOOLS_${OS}_ARCHIVE_FILENAME}
+${TOOLS_SUBPATH}/$(TOOLS_EASYPATH): ${TOOLS_SUBPATH}/${TOOLS_${OS}_ARCHIVE_FILENAME} ${TOOLS_SUBPATH}/${TOOLS_${OS}_ARCHIVE_FILENAME}
 	mkdir -p $(TOOLS_SUBPATH) && \
 	cd $(TOOLS_SUBPATH) && \
 	../${EXPAND_COMMAND} -o$(TOOLS_EASYPATH) "${TOOLS_${OS}_ARCHIVE_FILENAME}" && \

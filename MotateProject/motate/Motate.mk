@@ -60,6 +60,9 @@ OPTIMIZATION ?= s
 CFLAGS   +=
 CPPFLAGS +=
 
+# The project MUST specify the tools version, so we can assure a match bewteen motate and the project.
+TOOLS_VERSION ?= unspecified
+
 #
 # End of configuration section
 ##############################################################################################
@@ -234,7 +237,7 @@ SPECIAL_ATMEL_STUDIO_DEFAULT_TARGETS =
 ifneq (,$(findstring Atmel,$(PATH)))
 $(info "Found that we're in Atmel Studio")
 OS := WIN32
-TOOLS_SUBPATH := win32/gcc-$(CROSS_COMPILE)
+TOOLS_SUBPATH := win32/gcc-$(CROSS_COMPILE)-$(TOOLS_VERSION)
 TOOLS_PATH := $(realpath $(TOOLS_PATH))
 PATH := $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin;c:\Program Files\Git\bin;c:\Program Files\Git\cmd;c:\Program Files\Git\mingw32\bin;c:\Program Files\Git\mingw64\bin;$(PATH)
 MKDIR   = gmkdir
@@ -243,7 +246,7 @@ else
 ifneq (,$(findstring /cygdrive/,$(PATH)))
 $(info "Found that we're in Windows Cygwin")
 OS := WIN32
-TOOLS_SUBPATH := win32/gcc-$(CROSS_COMPILE)
+TOOLS_SUBPATH := win32/gcc-$(CROSS_COMPILE)-$(TOOLS_VERSION)
 TOOLS_PATH := $(realpath $(TOOLS_PATH))
 PATH := $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin;c:\Program Files\Git\bin;c:\Program Files\Git\cmd;c:\Program Files\Git\mingw32\bin;c:\Program Files\Git\mingw64\bin;$(PATH)
 #MKDIR   = gmkdir
@@ -251,7 +254,7 @@ else
 ifneq (,$(findstring WINDOWS,$(PATH)))
 $(info "Found that we're in WINDOWS")
 OS := WIN32
-TOOLS_SUBPATH := win32/gcc-$(CROSS_COMPILE)
+TOOLS_SUBPATH := win32/gcc-$(CROSS_COMPILE)-$(TOOLS_VERSION)
 TOOLS_PATH := $(realpath $(TOOLS_PATH))
 PATH := $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin;c:\Program Files\Git\bin;c:\Program Files\Git\cmd;c:\Program Files\Git\mingw32\bin;c:\Program Files\Git\mingw64\bin;$(PATH)
 #MKDIR   = gmkdir
@@ -264,12 +267,12 @@ UNAME := $(shell uname -s)
 ifeq (Darwin,${UNAME})
 $(info "Found that we're in OS X")
 OS = OSX
-TOOLS_SUBPATH := osx/gcc-$(CROSS_COMPILE)
+TOOLS_SUBPATH := osx/gcc-$(CROSS_COMPILE)-$(TOOLS_VERSION)
 else
 ifeq (Linux,${UNAME})
 $(info "Found that we're in Linux")
 OS = LINUX
-TOOLS_SUBPATH := linux/gcc-$(CROSS_COMPILE)
+TOOLS_SUBPATH := linux/gcc-$(CROSS_COMPILE)-$(TOOLS_VERSION)
 endif #LINUX
 endif #Darwin
 
@@ -406,7 +409,7 @@ tools: | $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin
 # and make it depend on the tools makefile to catch updates
 $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin: $(TOOLS_PATH)/Makefile
 	@echo Installing the necessary tools...
-	cd ${TOOLS_PATH} && make "ARCH=gcc-${CROSS_COMPILE}"
+	cd ${TOOLS_PATH} && make "ARCH=gcc-${CROSS_COMPILE}" "TOOLS_VERSION=$(TOOLS_VERSION)"
 
 OUTDIR = $(OBJ)
 
