@@ -80,12 +80,16 @@ namespace Motate {
         using _hw::startTxDoneInterrupts;
         using _hw::stopTxDoneInterrupts;
         using _hw::inTxBufferEmptyInterrupt;
-        using _hw::inRxBufferEmptyInterrupt;
+        using _hw::inRxBufferFullInterrupt;
+        using _hw::readByte;
 
         typedef typename _hw::buffer_t buffer_t;
 
         // We don't handle interrupts here, but this is part of the interface, so we silently deal with it
-        void setInterrupts(const uint16_t interrupts) const {};
+        void setInterrupts(const uint16_t interrupts) const {
+            stopRxDoneInterrupts();
+            stopTxDoneInterrupts();
+        };
 
         void reset() const
         {
@@ -106,7 +110,7 @@ namespace Motate {
         };
         void enableRx() const
         {
-            pdc()->PERIPH_PTCR = PERIPH_PTCR_RXTEN;  // enable again
+            pdc()->PERIPH_PTCR = PERIPH_PTCR_RXTEN;  // enable
         };
         void setRx(void * const buffer, const uint32_t length) const
         {
@@ -124,6 +128,7 @@ namespace Motate {
         };
         uint32_t leftToRead(bool include_next = false) const
         {
+            if (pdc()->PERIPH_RPR == 0) { return 0; }
             if (include_next) {
                 return pdc()->PERIPH_RCR + pdc()->PERIPH_RNCR;
             }
@@ -131,6 +136,7 @@ namespace Motate {
         };
         uint32_t leftToReadNext() const
         {
+            if (pdc()->PERIPH_RNPR == 0) { return 0; }
             return pdc()->PERIPH_RNCR;
         };
         bool doneReading(bool include_next = false) const
@@ -146,23 +152,51 @@ namespace Motate {
         };
 
         // Bundle it all up
-        bool startRXTransfer(void * const buffer, const uint32_t length, bool handle_interrupts = true, bool include_next = false) const
+        bool startRXTransfer(void * const buffer,
+                             const uint32_t length,
+                             bool handle_interrupts = true,
+                             bool include_next = false
+                             ) const
         {
+            if (0 == length) { return false; }
+
             if (doneReading()) {
                 if (handle_interrupts) { stopRxDoneInterrupts(); }
+//                disableRx(); // make it stand still first
+
                 setRx(buffer, length);
-                if (length != 0) {
-                    if (handle_interrupts) { startRxDoneInterrupts(); }
-                    enableRx();
-                    return true;
-                }
-                return false;
+
+                enableRx();
+                if (handle_interrupts) { startRxDoneInterrupts(); }
             }
+            // check to see if they overlap, in which case we're extending the region
+            else if ((pdc()->PERIPH_RPR >= (uint32_t)buffer) &&
+                     (pdc()->PERIPH_RPR < ((uint32_t)buffer + length))
+                    )
+            {
+                if (handle_interrupts) { stopRxDoneInterrupts(); }
+
+                // they overlap, we need to compute the new length
+                decltype(pdc()->PERIPH_RPR) pos_save;
+                do {
+                    pos_save = pdc()->PERIPH_RPR;
+
+                    // new_length = (start_pos + length) - current_positon
+                    pdc()->PERIPH_RCR = ((uint32_t)buffer + length) - pos_save;
+
+                    // catch rare case where it advances while we were computing
+                } while (pdc()->PERIPH_RPR > pos_save);
+
+                enableRx();
+                if (handle_interrupts) { startRxDoneInterrupts(); }
+            }
+            // otherwise, we set the next region, if requested. We DON'T attempt to extend it.
             else if (include_next && doneReadingNext()) {
                 setNextRx(buffer, length);
                 return true;
             }
-            return false;
+
+            return (length > 0);
         }
 
 
@@ -253,27 +287,56 @@ namespace Motate {
 
         typedef char* buffer_t ;
 
-        void startRxDoneInterrupts() const { usart()->US_IER = US_IER_RXBUFF; };
-        void stopRxDoneInterrupts() const { usart()->US_IDR = US_IDR_RXBUFF; };
-        void startTxDoneInterrupts() const { usart()->US_IER = US_IER_TXBUFE; };
-        void stopTxDoneInterrupts() const { usart()->US_IDR = US_IDR_TXBUFE; };
+        void startRxDoneInterrupts(const bool include_next = false) const {
+            usart()->US_IER = include_next ? US_IER_RXBUFF : US_IER_ENDRX;
+        };
+        void stopRxDoneInterrupts(const bool include_next = false) const {
+            usart()->US_IDR = include_next ? US_IDR_RXBUFF : US_IDR_ENDRX;
+        };
+        void startTxDoneInterrupts(const bool include_next = true) const {
+            usart()->US_IER = include_next ? US_IER_TXBUFE : US_IDR_ENDTX;
+        };
+        void stopTxDoneInterrupts(const bool include_next = true) const {
+            usart()->US_IDR = include_next ? US_IDR_TXBUFE : US_IDR_ENDTX;
+        };
 
-        bool inRxBufferEmptyInterrupt() const
+        int16_t readByte() const {
+            if (!(usart()->US_CSR & US_CSR_RXRDY)) { return -1; }
+            return (usart()->US_RHR & US_RHR_RXCHR_Msk);
+        }
+
+        bool inRxBufferFullInterrupt() const
         {
-            // we check if the interupt is enabled
-            if (usart()->US_IMR & US_IMR_RXBUFF) {
-                // then we read the status register
-                return (usart()->US_CSR & US_CSR_RXBUFF);
+            // we check if the interupt is enabled, then read it if it is
+            if ((usart()->US_IMR & US_IMR_RXBUFF) &&
+                (usart()->US_CSR & US_CSR_RXBUFF)
+                )
+            {
+                return true;
+            }
+            if ((usart()->US_IMR & US_IMR_ENDRX) &&
+                (usart()->US_CSR & US_CSR_ENDRX)
+                )
+            {
+                return true;
             }
             return false;
         }
 
         bool inTxBufferEmptyInterrupt() const
         {
-            // we check if the interupt is enabled
-            if (usart()->US_IMR & US_IMR_TXBUFE) {
-                // then we read the status register
-                return (usart()->US_CSR & US_CSR_TXBUFE);
+            // we check if the interupt is enabled, then read it if it is
+            if ((usart()->US_IMR & US_IMR_TXBUFE) &&
+                (usart()->US_CSR & US_CSR_TXBUFE)
+                )
+            {
+                return true;
+            }
+            if ((usart()->US_IMR & US_IMR_ENDTX) &&
+                (usart()->US_CSR & US_CSR_ENDTX)
+                )
+            {
+                return true;
             }
             return false;
         }
@@ -309,27 +372,57 @@ namespace Motate {
             return (uartPeripheralNumber == 0) ? PDC_UART0 : PDC_UART1;
         };
 
-        void startRxDoneInterrupts() const { uart()->UART_IER = UART_IER_RXBUFF; };
-        void stopRxDoneInterrupts() const { uart()->UART_IDR = UART_IDR_RXBUFF; };
-        void startTxDoneInterrupts() const { uart()->UART_IER = UART_IER_TXBUFE; };
-        void stopTxDoneInterrupts() const { uart()->UART_IDR = UART_IDR_TXBUFE; };
+        void startRxDoneInterrupts(const bool include_next = false) const {
+            uart()->UART_IER = include_next ? UART_IER_RXBUFF : UART_IER_ENDRX;
+        };
+        void stopRxDoneInterrupts(const bool include_next = false) const {
+            uart()->UART_IDR = include_next ? UART_IDR_RXBUFF : UART_IDR_ENDRX;
+        };
+        void startTxDoneInterrupts(const bool include_next = true) const {
+            uart()->UART_IER = include_next ? UART_IER_TXBUFE : UART_IER_ENDTX;
+        };
+        void stopTxDoneInterrupts(const bool include_next = true) const {
+            uart()->UART_IDR = include_next ? UART_IDR_TXBUFE : UART_IDR_ENDTX;
+        };
 
-        bool inRxBufferEmptyInterrupt() const
+        int16_t readByte() const {
+            if (!(uart()->UART_SR & UART_SR_RXRDY)) { return -1; }
+            return (uart()->UART_RHR & UART_RHR_RXCHR_Msk);
+        }
+
+        bool inRxBufferFullInterrupt() const
         {
-            // we check if the interupt is enabled
-            if (uart()->UART_IMR & UART_IMR_RXBUFF) {
-                // then we read the status register
-                return (uart()->UART_SR & UART_SR_RXBUFF);
+            // we check if the interupt is enabled, then read it if it is
+            if ((uart()->UART_IMR & UART_IMR_RXBUFF) &&
+                (uart()->UART_SR & UART_SR_RXBUFF)
+                )
+            {
+                return true;
             }
+            if ((uart()->UART_IMR & UART_IMR_ENDRX) &&
+                (uart()->UART_SR & UART_SR_ENDRX)
+                )
+            {
+                return true;
+            }
+
             return false;
         }
 
         bool inTxBufferEmptyInterrupt() const
         {
-            // we check if the interupt is enabled
-            if (uart()->UART_IMR & UART_IMR_TXBUFE) {
-                // then we read the status register
-                return (uart()->UART_SR & UART_SR_TXBUFE);
+            // we check if the interupt is enabled, then read it if it is
+            if ((uart()->UART_IMR & UART_IMR_TXBUFE) &&
+                (uart()->UART_SR & UART_SR_TXBUFE)
+                )
+            {
+                return true;
+            }
+            if ((uart()->UART_IMR & UART_IMR_ENDTX) &&
+                (uart()->UART_SR & UART_SR_ENDTX)
+                )
+            {
+                return true;
             }
             return false;
         }
@@ -722,24 +815,45 @@ namespace Motate {
         };
 
         // Bundle it all up
-        bool startRXTransfer(void * const buffer, const uint32_t length, bool handle_interrupts = true, bool include_next = false) const
+        bool startRXTransfer(void * const buffer,
+                             const uint32_t length,
+                             bool handle_interrupts = true,
+                             bool include_next = false
+                             ) const
         {
             if (doneReading()) {
                 disableRx();
                 if (handle_interrupts) { stopRxDoneInterrupts(); }
                 setRx(buffer, length);
-                if (length != 0) {
-                    if (handle_interrupts) { startRxDoneInterrupts(); }
-                    enableRx();
-                    return true;
-                }
-                return false;
             }
+            // check to see if they overlap, in which case we're extending the region
+            else if ((xdmaRxChannel()->XDMAC_CDA >= (uint32_t)buffer) &&
+                     (xdmaRxChannel()->XDMAC_CDA < ((uint32_t)buffer + length))
+                     )
+            {
+                // they overlap, we need to compute the new length
+                disableRx(); // make it stand still first
+                if (handle_interrupts) { stopRxDoneInterrupts(); }
+
+                // new_length = (start_pos + length) - current_positon
+                xdmaRxChannel()->XDMAC_CUBC = ((uint32_t)buffer + length) - xdmaRxChannel()->XDMAC_CDA;
+            }
+            // otherwise, we set the next region, if requested. We DON'T attempt to extend it.
             else if (include_next && doneReadingNext()) {
                 setNextRx(buffer, length);
                 return true;
+            } else {
+                length = 0; // we didn't add anything, this prevents turning things back on
             }
-            return false;
+
+            if (length != 0) {
+                if (handle_interrupts) { startRxDoneInterrupts(); }
+                enableRx();
+                return true;
+            }
+
+            return length > 0;
+
         };
 
 
@@ -753,7 +867,7 @@ namespace Motate {
         
         // These two get called from the peripheral interrupt handler,
         // and must always return false
-        constexpr bool inRxBufferEmptyInterrupt() const { return false; };
+        constexpr bool inRxBufferFullInterrupt() const { return false; };
     };
 
 

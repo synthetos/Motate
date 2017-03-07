@@ -140,6 +140,7 @@ namespace Motate {
         typedef _USARTHardware<uartPeripheralNumber> this_type_t;
 
         static std::function<void()> _uartInterruptHandlerJumper;
+
         _USARTHardware()
         {
             // We DON'T init here, because the optimizer is fickle, and will remove this whole area.
@@ -155,18 +156,23 @@ namespace Motate {
             // Reset and disable TX and RX
             usart()->US_CR = US_CR_RSTRX | US_CR_RSTTX | US_CR_RXDIS | US_CR_TXDIS;
 
+            // Disable interrupts
+            usart()->US_IDR = US_IDR_TXRDY | US_IDR_RXRDY;
+
             // reset PCR to zero
             usart()->US_IDR = 0xffffffff; // disable all the things
             dma()->reset();
 
             _uartInterruptHandlerJumper = [&]() {
+                auto interruptCause = getInterruptCause();
                 if (_uartInterruptHandler) {
-                    _uartInterruptHandler(getInterruptCause());
+                    _uartInterruptHandler(interruptCause);
                 }
             };
 
             setInterrupts(UARTInterrupt::PriorityLow);
-            dma()->setInterrupts(UARTInterrupt::PriorityLow);
+            setInterruptTxTransferDone(false);
+            setInterruptRxTransferDone(false);
         };
 
         void enable() { usart()->US_CR = US_CR_TXEN | US_CR_RXEN; };
@@ -333,7 +339,7 @@ namespace Motate {
             {
                 status |= UARTInterrupt::OnRxReady;
             }
-            if (dma()->inRxBufferEmptyInterrupt())
+            if (dma()->inRxBufferFullInterrupt())
             {
                 status |= UARTInterrupt::OnRxTransferDone;
             }
@@ -384,7 +390,9 @@ namespace Motate {
 
         // ***** Handle Tranfers
         bool startRXTransfer(char *buffer, const uint16_t length) {
-            return dma()->startRXTransfer(buffer, length, true);
+            const bool handleInterrupts = true;
+            const bool includeNext = true;
+            return dma()->startRXTransfer(buffer, length, handleInterrupts, includeNext);
         };
 
         char* getRXTransferPosition() {
@@ -456,14 +464,14 @@ namespace Motate {
 
         static std::function<void()> _uartInterruptHandlerJumper;
 
-
         _UARTHardware()
         {
             // We DON'T init here, because the optimizer is fickle, and will remove this whole area.
             // Instead, we call init from UART<>::init(), so that the optimizer will keep it.
             _uartInterruptHandlerJumper = [&]() {
+                auto interruptCause = getInterruptCause();
                 if (_uartInterruptHandler) {
-                    _uartInterruptHandler(getInterruptCause());
+                    _uartInterruptHandler(interruptCause);
                 }
             };
         };
@@ -476,12 +484,16 @@ namespace Motate {
             // Reset and disable TX and RX
             uart()->UART_CR = UART_CR_RSTRX | UART_CR_RSTTX | UART_CR_RXDIS | UART_CR_TXDIS;
 
+            // Disable interrupts
+            uart()->UART_IDR = UART_IDR_TXRDY | UART_IDR_RXRDY;
+
             // reset PCR to zero
-            //uart()->UART_IDR = 0xffffffff; // disable all the things
+            uart()->UART_IDR = 0xffffffff; // disable all the things
             dma()->reset();
 
             setInterrupts(UARTInterrupt::PriorityLow);
-            dma()->setInterrupts(UARTInterrupt::PriorityLow);
+            setInterruptTxTransferDone(false);
+            setInterruptRxTransferDone(false);
         };
 
         void enable() { uart()->UART_CR = UART_CR_TXEN | UART_CR_RXEN; };
@@ -630,7 +642,7 @@ namespace Motate {
             {
                 status |= UARTInterrupt::OnRxReady;
             }
-            if (dma()->inRxBufferEmptyInterrupt())
+            if (dma()->inRxBufferFullInterrupt())
             {
                 status |= UARTInterrupt::OnRxTransferDone;
             }
@@ -673,7 +685,9 @@ namespace Motate {
 
         // ***** Handle Tranfers
         bool startRXTransfer(char *buffer, const uint16_t length) {
-            return dma()->startRXTransfer(buffer, length, true);
+            const bool handleInterrupts = true;
+            const bool includeNext = true;
+            return dma()->startRXTransfer(buffer, length, handleInterrupts, includeNext);
         };
 
         char* getRXTransferPosition() {

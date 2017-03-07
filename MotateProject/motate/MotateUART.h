@@ -132,9 +132,9 @@ namespace Motate {
         std::function<void(void)> transfer_rx_done_callback;
         std::function<void(void)> transfer_tx_done_callback;
 
-        Buffer<16> overflowBuffer;
+        uint8_t highWaterChars;
 
-        UART(const uint32_t baud = 115200, const uint16_t options = UARTMode::As8N1) : ctsPin{kPullUp, [&]{this->uartInterruptHandler(UARTInterrupt::OnCTSChanged);}} {
+        UART(const uint32_t baud = 115200, const uint16_t options = UARTMode::As8N1, const uint8_t highWater=10) : ctsPin{kPullUp, [&]{this->uartInterruptHandler(UARTInterrupt::OnCTSChanged);}}, highWaterChars{highWater} {
             hardware.init();
             // Auto-enable RTS/CTS if the pins are provided.
             setOptions(baud, options | UARTMode::RTSCTSFlowControl, /*fromConstructor =*/ true);
@@ -143,9 +143,8 @@ namespace Motate {
         // WARNING!!
         // This must be called later, outside of the contructors, to ensure that all dependencies are contructed.
         void init() {
-            if (!isRealAndCorrectRTSPin<rtsPinNumber, rxPinNumber>()) {
-                rtsPin = true; // active low
-            }
+            _stopRX();
+
             if (!isRealAndCorrectCTSPin<ctsPinNumber, rxPinNumber>()) {
                 ctsPin.setInterrupts(Interrupt::PriorityHigh); // enable interrupts and set the priority
             }
@@ -171,6 +170,18 @@ namespace Motate {
 
         int16_t readByte() {
             return hardware.readByte();
+        };
+
+        void _startRX() {
+            if (!isRealAndCorrectRTSPin<rtsPinNumber, rxPinNumber>()) {
+                rtsPin = false; // active low, so this means go
+            }
+        };
+
+        void _stopRX() {
+            if (!isRealAndCorrectRTSPin<rtsPinNumber, rxPinNumber>()) {
+                rtsPin = true; // active low, so this means stop
+            }
         };
 
         // WARNING: Currently only reads in bytes. For more-that-byte size data, we'll need another call.
@@ -284,42 +295,78 @@ namespace Motate {
             //            connection_state_changed_callback(true);
         }
 
-        char* _manual_rx_position = nullptr;
-        bool startRXTransfer(char *&buffer, uint16_t length) {
-            hardware.setInterruptRxReady(false);
 
-            int16_t overflow;
-            while (((overflow = overflowBuffer.read()) > 0) && (length > 0)) {
-                *buffer = (char)overflow;
-                buffer++;
-                length--;
+        // We need highWaterChars of high-water, so start the transfers such that it will split
+        // at the high water mark. When the DMA for the high-water mark starts, we deassert
+        // RTS (to stop the transmission) and call transfer_rx_done_callback() to hopefully
+        // get a new transfer request soon.
+
+        // This also means that this may be called with buffer that is in the region of
+        // or one past the high-water mark DMA. If it's one past then there's nothing to adjust,
+        // but we probably lost characters.
+        // If it's in the region of the high-water-mark then we extend the high water mark DMA,
+        // assert RTS (to start transmission again), making a new high-water mark region after it.
+
+        // Cases:
+        //   Notes:
+        //     sections marked with (HW) are to be marked as high-water regions
+        //     sections marked with (B) are to start from buffer
+        //     sections marked with (B2) are to start from buffer2
+        //     sections marked with (E) are to start from the end of the previous region
+        //     sections marked with (X) are the previous region extended to the new end position
+        //     It is assumed that if length2 > 0, length > 0.
+        //     length2 may be zero, but length may not.
+        //     Sections outlined below that are 0 length are simply not made.
+
+        // 0 - length <= highWaterChars && length2 < highWaterChars
+        //     Do nothing, return false.
+        // 1 - length > 0 && length2 >= highWaterChars
+        //     Make: length (B,X), highWaterChars (B2,HW)
+        // 2 - length > highWaterChars && length2 < highWaterChars
+        //     Make: length-highWaterChars (B,X), highWaterChars (E,HW)
+
+
+        bool _addTransfer(char *start, uint16_t length, char *high_water_start) {
+            if (!hardware.startRXTransfer(start, length)) { return false; }
+            if (!hardware.startRXTransfer(high_water_start, highWaterChars)) { return false; }
+            hardware.setInterruptRxTransferDone(true);
+            _startRX();
+            return true;
+        }
+
+        void _transactionEnded() {
+            // this is called from the interupt when a transaction is done
+            _stopRX();
+            hardware.setInterruptRxTransferDone(false);
+            if (transfer_rx_done_callback) {
+                // when we enter the high-water region, we need to tell the upper layers
+                transfer_rx_done_callback();
+            }
+        }
+
+        volatile uint32_t _coverage_testing = 0;
+
+        bool startRXTransfer(char *&buffer, uint16_t length, char *&buffer2, uint16_t length2) {
+            // case 0 - no room
+            if ((length <= highWaterChars) && (length2 < highWaterChars)) {
+                _coverage_testing |= 1<<0;
+                return false;
             }
 
-            if (length == 0) {
-                _manual_rx_position = buffer;
-
-            } else {
-                _manual_rx_position = nullptr;
-                if (hardware.startRXTransfer(buffer, length)) {
-                    if (!isRealAndCorrectRTSPin<rtsPinNumber, rxPinNumber>()) {
-                        rtsPin = false; // active low
-                    }
-                    return true;
-                }
+            // case 1 - we can wrap around
+            if (length2 >= highWaterChars) {
+                _coverage_testing |= 1<<1;
+                return _addTransfer(buffer, length, buffer2);
             }
 
-            if (!isRealAndCorrectRTSPin<rtsPinNumber, rxPinNumber>()) {
-                rtsPin = true; // active low
-            }
-
-            hardware.setInterruptRxReady(true);
-            return false;
+            // case 2 - we can make a buffer and a high-water buffer in length
+            // we know from the previous tests that:
+            // length > highWaterChars && length2 < highWaterChars
+            _coverage_testing |= 1<<2;
+            return _addTransfer(buffer, length-highWaterChars, buffer+(length-highWaterChars));
         };
 
         char* getRXTransferPosition() {
-            if (_manual_rx_position) {
-                return _manual_rx_position;
-            }
             return hardware.getRXTransferPosition();
         };
 
@@ -345,14 +392,18 @@ namespace Motate {
 
         // *** Handling interrupts
 
+        Motate::Timeout connectionTimeout;
+
         void uartInterruptHandler(uint16_t interruptCause) {
             if (interruptCause & UARTInterrupt::OnTxReady) {
                 // ready to transfer...
             }
 
             if (interruptCause & UARTInterrupt::OnRxReady) {
-                // new data is ready to read. If we're between transfers we need to squirrel away the value
-                overflowBuffer.write(hardware.readByte());
+                // uh oh, we just lost data!
+#if IN_DEBUGGER == 1
+                __asm__("BKPT"); // UART buffer overflow!
+#endif
             }
 
             if (interruptCause & UARTInterrupt::OnTxTransferDone) {
@@ -363,14 +414,7 @@ namespace Motate {
             }
 
             if (interruptCause & UARTInterrupt::OnRxTransferDone) {
-                if (!isRealAndCorrectRTSPin<rtsPinNumber, rxPinNumber>()) {
-                    rtsPin = true; // active low
-                }
-                hardware.setInterruptRxTransferDone(false);
-                hardware.setInterruptRxReady(true);
-                if (transfer_rx_done_callback) {
-                    transfer_rx_done_callback();
-                }
+                _transactionEnded();
             }
             
             if (interruptCause & UARTInterrupt::OnCTSChanged) {
@@ -382,8 +426,17 @@ namespace Motate {
                     }
                 }
                 if (connection_state_changed_callback && isConnected()) {
-                    // We only report when it's connected, NOT disconnected
-                    connection_state_changed_callback(isConnected());
+                    if (isConnected()) {
+                        // if we were told to hold for more that 5 seconds, we treat it as a disconnection
+                        if (connectionTimeout.isPast()) {
+                            connection_state_changed_callback(false);
+                        }
+                        connectionTimeout.clear();
+                        connection_state_changed_callback(true);
+                    } else {
+                        // start keeping track of when we we paused to later know if we disconnected
+                        connectionTimeout.set(5000);
+                    }
                 }
             }
         };
