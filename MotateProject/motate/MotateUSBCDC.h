@@ -340,7 +340,8 @@ namespace Motate {
         };
 
         USB_DMA_Descriptor _rx_dma_descriptor;
-        bool startRXTransfer(char *buffer, const uint16_t length) {
+        // for now we ignore buffer2 and length2
+        bool startRXTransfer(char *buffer, const uint16_t length, char *buffer2, const uint16_t length2) {
             _rx_dma_descriptor.setBuffer(buffer, length);
             // // DON'T allow the DMA transfer to be stopped if the buffer runs out
             // // IOW, don't stop reading when a packet doesn't fill the buffer.

@@ -385,7 +385,7 @@ namespace Motate {
             {
                 status |= SPIInterrupt::OnTxTransferDone;
             }
-            if (dma()->inRxBufferEmptyInterrupt())
+            if (dma()->inRxBufferFullInterrupt())
             {
                 status |= SPIInterrupt::OnRxTransferDone;
             }

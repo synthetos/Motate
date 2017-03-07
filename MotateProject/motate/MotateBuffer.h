@@ -130,7 +130,6 @@ namespace Motate {
         volatile uint16_t _last_requested_write_offset = 0;  // The offset into the buffer of the last requested write
 
         volatile uint16_t _transfer_requested = 0;   // keep track of how much we have requested. Non-zero means a request is active.
-        volatile uint16_t _requested_check = 0;
 
         // Internal properties!
         // Some devices write in whole-word (4-byte) chunks, even though the last bytes are garbage, and past what we requested.
@@ -232,79 +231,78 @@ namespace Motate {
             if (_transfer_requested != 0) {
                 return;
             }
-//            static volatile bool _is_requesting = 0;
-//            if (_is_requesting) {
-//                return;
-//            }
-//            _is_requesting = true;
 
-            // TODO: check _data + size + 1 to be 0
+            // We can only request contiguous chunks. Let's see what the next one is.
+            _getWriteOffset(); // cache the write position
 
-            // We use a do..while here to repeat until the transfer "takes".
-            // The transfer can only fail if the startRXTransfer immediately loaded data into
-            // the buffer.
-            do {
-                // We can only request contiguous chunks. Let's see what the next one is.
-                _getWriteOffset(); // cache the write position
+            // Bail early if the buffer is full.
+            if (isFull()) {
+                return;
+            }
 
-                int16_t transfer_size = 0;
-                base_type *_write_pos = _data + _last_known_write_offset;
+            // Some owners can handle two data blocks, others will ignore the second one,
+            // so we compute both and pass them both to startRXTransfer.
+            // Note that we will only have a second one if the available region "wraps"
+            // past the end of the circular buffer.
 
-                if (isFull()) {
-                    break;
+            int16_t transfer_size = 0;
+            int16_t transfer_size_extra = 0;
+            base_type *write_pos = _data + _last_known_write_offset;
+            base_type *write_pos_extra = _data;
+
+            // Possible cases:
+            // We must keep in mind we don't want to read _size bytes, but _size-1.
+            // (In the "drawings", "~" is data, "." is freed, "R" is the read pos, and "W" is thw write position.
+            // [0] write_offset+1 = _read_offset
+            //     |~~~~~~~~~~~~~WR~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|
+            //     We just eliminated this, the full case.
+            // [1] _read_offset > write_offset
+            //     |~~~~~~~~~~~~~W...............R~~~~~~~~~~~~~~|
+            //     IOW: We have read to some position in the middle, and write_offset is before it.
+            //          The unread data is between _read_offset->end, then 0->write_offset.
+            //          So, we transfer from write_offset to the _read_offset-1.
+            // [2] _read_offset <= write_offset
+            //     |.............R~~~~~~~~~~~~~~~W..............|
+            //     IOW: We have read to some position in the middle, and _read_offset is in the range 0 through
+            //           write_offset. So, we can transfer from write_offset to the end of the buffer, and a second
+            //           region between the end and the _read_offset-1.
+            // [2a] _read_offset <= write_offset && _read_offset == 0
+            //     |R~~~~~~~~~~~~~~~~~~W........................|
+            //     IOW: If we read to the end, we will read _size bytes, and our "full" will look like "empty".
+            //          So, we read to the end of the buffer-1.
+
+            // Additional note: SOME DMA systems transfer in 4-byte words, and so a non-4-byte transfer will
+            // drop 3 NULLS (or other garbage) into the area past what we requested.
+            // So, we have padded the end of the data buffer by 4 bytes in order to catch those for [2] and [2a],
+            // ans will leave 4 bytes of padding for [1] and the extra on [2].
+
+            // Case [1]
+            if (_read_offset > _last_known_write_offset) {
+                transfer_size = (_read_offset - _last_known_write_offset) - 4;
+                if (transfer_size < 1) {
+                    return;
                 }
+            // Case [2a]
+            } else if (_read_offset == 0) {
+                transfer_size = (_size - _last_known_write_offset) - 1;
 
-                // Possible cases:
-                // We must keep in mind we don't want to read _size bytes, but _size-1.
-                // [0] _write_pos+1 = _read_pos
-                //     We just eliminated that.
-                // [1] _read_pos > _write_pos
-                //     IOW: We have read to some position in the middle, and _write_pos is before it
-                //          The unread data is between read->end, then 0->write.
-                //          So, we transfer from _write_pos to the _read_pos position - 1.
-                // [2] _read_pos <= _write_pos
-                //     IOW: We have read to some position in the middle, and _read_pos is in the range 0 through _write_pos.
-                //          So, we can transfer from _write_pos to the end of the buffer.
-                // [2a] _read_pos <= _write_pos && _read_pos == 0
-                //     IOW: If we read to the end, we will read _size bytes, and our "full" will look like "empty".
-                //          So, we read to the end of the buffer - 1.
+            // Case [2]
+            } else {
+                transfer_size = (_size - _last_known_write_offset);
+                transfer_size_extra = std::max(0, _read_offset - 4);
+            }
 
-                // Additional note: SOME DMA systems transfer is 4-byte words, and so a non-4-byte transfer will
-                // drop 3 NULLS (or other garbage) into the area past what we requested. So, we are using
-                // transfer_size - 4 for case [1] to work around that.
+            _transfer_requested = transfer_size + transfer_size_extra;
 
-                // Case [1]
-                if (_read_offset > _last_known_write_offset) {
-                    transfer_size = (_read_offset - _last_known_write_offset) - 4;
-                    if (transfer_size < 1) {
-                        break;
-                    }
-                // Case [2a]
-                } else if (_read_offset == 0) {
-                    transfer_size = (_size - _last_known_write_offset) - 1;
+            // startRXTransfer will return false if it couldn't start the transfer.
+            if (_owner->startRXTransfer(write_pos, transfer_size, write_pos_extra, transfer_size_extra)) {
+                _last_requested_write_offset = (_last_known_write_offset + _transfer_requested) & (_size-1);
+                return;
+            }
 
-                // Case [2]
-                } else {
-                    transfer_size = (_size - _last_known_write_offset);
-                }
-
-
-                _transfer_requested = transfer_size;
-
-                _requested_check = (_last_known_write_offset+_transfer_requested) & (_size-1);
-
-                // startRXTransfer will return false if it couldn't start the transfer.
-                if (_owner->startRXTransfer(_write_pos, transfer_size)) {
-                    _last_requested_write_offset = (_last_known_write_offset + _transfer_requested) & (_size-1);
-                    break;
-                }
-
-                // If we're here, startRXTransfer loaded some data into the buffer and ran out of room.
-                // Note that _getWriteOffset() must return the new position
-                _transfer_requested = 0;
-            } while (1);
-
-            // _is_requesting = false;
+            // If we're here, startRXTransfer loaded some data into the buffer and ran out of room.
+            // Note that _getWriteOffset() must return the new position
+            _transfer_requested = 0;
         };
 
         int16_t read() {
