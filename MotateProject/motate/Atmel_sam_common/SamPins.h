@@ -448,8 +448,10 @@ namespace Motate {
                 i = i->next;
             }
             i->next = newInt;
-        }
+        };
     };
+
+
 
     /**************************************************
      *
@@ -488,16 +490,18 @@ namespace Motate {
 
 
 
-#if defined(__SAM3X8E__) || defined(__SAM3X8C__)
-
-#pragma mark ADC_Module/ACD_Pin (Sam3x)
+#pragma mark ADC_Module/ACD_Pin
     /**************************************************
      *
-     * PIN CHANGE INTERRUPT SUPPORT: IsIRQPin / MOTATE_PIN_INTERRUPT
+     * PIN CHANGE INTERRUPT SUPPORT: ADC_Module/ACD_Pin
      *
      **************************************************/
 
     constexpr uint32_t startup_table[] = { 0, 8, 16, 24, 64, 80, 96, 112, 512, 576, 640, 704, 768, 832, 896, 960 };
+
+#if defined(__SAM3X8E__) || defined(__SAM3X8C__)
+
+#pragma mark ADC_Module/ACD_Pin (Sam3x)
 
     // Internal ADC object, and a parent of the ADCPin objects.
     // Handles: Setting options for the ADC module as a whole,
@@ -507,13 +511,14 @@ namespace Motate {
         static const uint32_t default_adc_startup_time = 12;
         static const uint32_t peripheralId() { return ID_ADC; }
 
-        static bool inited_;
+        static bool _inited;
+        static _pinChangeInterrupt *_firstInterrupt;
 
         void init(const uint32_t adc_clock_frequency, const uint8_t adc_startuptime) {
-            if (inited_) {
+            if (_inited) {
                 return;
             }
-            inited_ = true;
+            _inited = true;
 
             SamCommon::enablePeripheralClock(peripheralId());
 
@@ -565,6 +570,18 @@ namespace Motate {
         static void startFreeRunning() {
             ADC->ADC_MR |= ADC_MR_FREERUN_ON;
         };
+
+        void addInterrupt(_pinChangeInterrupt *newInt) {
+            _pinChangeInterrupt *i = _firstInterrupt;
+            if (i == nullptr) {
+                _firstInterrupt = newInt;
+                return;
+            }
+            while (i->next != nullptr) {
+                i = i->next;
+            }
+            i->next = newInt;
+        };
     };
 
     template<pin_number pinNum>
@@ -575,13 +592,42 @@ namespace Motate {
     };
 
     template<pin_number pinNum>
-    struct ADCPin : ADCPinParent<pinNum>, Pin<pinNum>, ADC_Module {
+    struct ADCPin : ADCPinParent<pinNum>, Pin<pinNum>, ADC_Module, _pinChangeInterrupt {
         using ADCPinParent<pinNum>::adcMask;
         using ADCPinParent<pinNum>::adcNumber;
         using ADCPinParent<pinNum>::getTop;
 
-        ADCPin() : ADCPinParent<pinNum>(), Pin<pinNum>(kInput), ADC_Module() { init(); };
-        ADCPin(const PinOptions_t options) : ADCPinParent<pinNum>(), Pin<pinNum>(kInput), ADC_Module() { init(); };
+        ADCPin() : ADCPinParent<pinNum>(), Pin<pinNum>(kInput), ADC_Module(),
+            _pinChangeInterrupt(Pin<pinNum>::mask, interrupt, ADC_Module::_firstInterrupt)
+        {
+            init();
+            setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
+        };
+        ADCPin(const PinOptions_t options,
+               const uint32_t interrupt_settings = kPinInterruptOnChange|kPinInterruptPriorityMedium
+               )
+        : ADCPinParent<pinNum>(),
+          Pin<pinNum>(kInput, options),
+          ADC_Module(),
+          _pinChangeInterrupt(Pin<pinNum>::mask, interrupt, ADC_Module::_firstInterrupt)
+        {
+            init();
+            setInterrupts(interrupt_settings);
+        };
+
+        ADCPin(const PinOptions_t options,
+               std::function<void(void)> &&_interrupt,
+               const uint32_t interrupt_settings = kPinInterruptOnChange|kPinInterruptPriorityMedium
+               )
+        : ADCPinParent<pinNum>(),
+          Pin<pinNum>(kInput, options),
+          _pinChangeInterrupt(Pin<pinNum>::mask, std::move(_interrupt), ADC_Module::_firstInterrupt)
+        {
+            init();
+            setInterrupts(interrupt_settings);
+        };
+
+        static const bool is_real = true; // Yeah, they ALL can be interrupt pins (in hardware).
 
         void init() {
             /* Enable the pin */
@@ -643,7 +689,17 @@ namespace Motate {
                 }
             }
         };
-        static void interrupt();
+
+        // Interrupt interface option 1: create this function (use macro MOTATE_PIN_INTERRUPT)
+        static void interrupt() __attribute__ (( weak ));
+
+        // Inerrupt inferface option 2: call this function with your closure or function pointer
+        void setInterruptHandler(std::function<void(void)> &&handler) {
+            _pinChangeInterrupt::setInterrupt(std::move(handler)); // enable interrupts and set the priority
+        };
+        void setInterruptHandler(const std::function<void(void)> &handler) {
+            _pinChangeInterrupt::setInterrupt(handler); // enable interrupts and set the priority
+        };
     };
 
     template<int16_t adcNum>
@@ -676,60 +732,257 @@ namespace Motate {
 
 #else // not Sam3x
 
-#pragma mark ADC_Module/ACD_Pin (Sam3x)
+#pragma mark ADC_Module/ACD_Pin (SamS70)
     /**************************************************
      *
-     * PIN CHANGE INTERRUPT SUPPORT: IsIRQPin / MOTATE_PIN_INTERRUPT
+     * PIN CHANGE INTERRUPT SUPPORT: ADC_Module/ACD_Pin (SamS70)
      *
      **************************************************/
+
+    // Internal ADC object, and a parent of the ADCPin objects.
+    // Handles: Setting options for the ADC module as a whole,
+    //          and initializing the ADC module once.
+    template <int32_t afecNum>
+    struct ADC_Module {
+        const uint32_t default_adc_clock_frequency = 20000000;
+        const uint32_t default_adc_startup_time = 12;
+        constexpr Afec* const afec() const { return afecNum == 0 ? AFEC0 : AFEC1; };
+        constexpr IRQn const afecIRQnum() const { return afecNum == 0 ? AFEC0_IRQn : AFEC1_IRQn; };
+        constexpr uint32_t peripheralId() const { return afecNum == 0 ? ID_AFEC0 : ID_AFEC1; };
+
+        static bool _inited;
+        static _pinChangeInterrupt *_firstInterrupt;
+
+        void init(const uint32_t adc_clock_frequency, const uint8_t adc_startuptime) {
+            if (_inited) {
+                return;
+            }
+            _inited = true;
+
+            SamCommon::enablePeripheralClock(peripheralId());
+
+            uint32_t ul_prescal, ul_startup,  ul_mr_startup, ul_real_adc_clock;
+            afec()->AFEC_CR = AFEC_CR_SWRST;
+
+            /* Reset Mode Register. */
+            afec()->AFEC_MR = 0;
+
+            if (SystemCoreClock % (2 * adc_clock_frequency)) {
+                // Division with reminder
+                ul_prescal = SystemCoreClock / (2 * adc_clock_frequency);
+            } else {
+                // Whole division
+                ul_prescal = SystemCoreClock / (2 * adc_clock_frequency) - 1;
+            }
+            ul_real_adc_clock = SystemCoreClock / (2 * (ul_prescal + 1));
+
+            // ADC clocks needed to get ul_startuptime uS
+            ul_startup = (ul_real_adc_clock / 1000000) * adc_startuptime;
+
+            // Find correct MR_STARTUP value from conversion table
+            for (ul_mr_startup=0; ul_mr_startup<16; ul_mr_startup++) {
+                if (startup_table[ul_mr_startup] >= ul_startup)
+                    break;
+            }
+            if (ul_mr_startup==16)
+                return /*-1*/;
+
+            afec()->AFEC_MR |=
+                AFEC_MR_PRESCAL(ul_prescal) |
+                ((ul_mr_startup << AFEC_MR_STARTUP_Pos) & AFEC_MR_STARTUP_Msk) |
+                AFEC_MR_ONE // becuase this bit must be one, apparently
+                ;
+        };
+
+        ADC_Module() {
+            init(default_adc_clock_frequency, default_adc_startup_time);
+        };
+
+        void startSampling() {
+            afec()->AFEC_CR = AFEC_CR_START; /* start the sample */;
+        };
+
+        static void startFreeRunning() {
+            afec()->AFEC_MR |= AFEC_MR_FREERUN_ON;
+        };
+
+        static constexpr bool is_real = true;
+        void setInterrupts(const uint32_t interrupts, const uint32_t adcMask) {
+            if (interrupts != kPinInterruptsOff) {
+                /* Set interrupt priority */
+                if (interrupts & kPinInterruptPriorityMask) {
+                    if (interrupts & kPinInterruptPriorityHighest) {
+                        NVIC_SetPriority(afecIRQnum(), 0);
+                    }
+                    else if (interrupts & kPinInterruptPriorityHigh) {
+                        NVIC_SetPriority(afecIRQnum(), 3);
+                    }
+                    else if (interrupts & kPinInterruptPriorityMedium) {
+                        NVIC_SetPriority(afecIRQnum(), 7);
+                    }
+                    else if (interrupts & kPinInterruptPriorityLow) {
+                        NVIC_SetPriority(afecIRQnum(), 11);
+                    }
+                    else if (interrupts & kPinInterruptPriorityLowest) {
+                        NVIC_SetPriority(afecIRQnum(), 15);
+                    }
+                }
+                /* Enable the IRQ */
+                NVIC_EnableIRQ(afecIRQnum());
+                /* Enable the interrupt */
+                afec()->AFEC_IER = adcMask;
+                /* Enable the pin */
+                afec()->AFEC_CHER = adcMask;
+            } else {
+                /* Disable the pin */
+                afec()->AFEC_CHDR = adcMask;
+                /* Disable the interrupt */
+                afec()->AFEC_IDR = adcMask;
+                /* Disable the interrupt - if all channels are disabled */
+                if (afec()->AFEC_CHSR == 0) {
+                    NVIC_DisableIRQ(afecIRQnum());
+                }
+            }
+        };
+
+        void addInterrupt(_pinChangeInterrupt *newInt) {
+            _pinChangeInterrupt *i = _firstInterrupt;
+            if (i == nullptr) {
+                _firstInterrupt = newInt;
+                return;
+            }
+            while (i->next != nullptr) {
+                i = i->next;
+            }
+            i->next = newInt;
+        };
+    };
 
     template<pin_number pinNum>
     struct ADCPinParent {
         static const uint32_t adcMask = 0;
         static const uint32_t adcNumber = 0;
-        static const uint16_t getTop() { return 4095; };
+        static const uint32_t afecNumber = 0;
+
+        constexpr Afec* const afec() const { return nullptr; };
+        static constexpr bool is_real = false;
+        void init();
+        void setInterrupts(const uint32_t interrupts, const uint32_t adcMask) { };
     };
 
-    // Some pins are ADC pins.
-     template<pin_number n>
-     struct ADCPin : Pin<-1> {
-         ADCPin() : Pin<-1>() {};
-         ADCPin(const PinOptions_t options) : Pin<-1>() {};
-    
-         uint32_t getRaw() {
-             return 0;
-         };
-         uint32_t getValue() {
-             return 0;
-         };
-         operator int16_t() {
-             return getValue();
-         };
-         operator float() {
-             return 0.0;
-         };
-         static const uint16_t getTop() { return 4095; };
-    
-         static const bool is_real = false;
-         void setInterrupts(const uint32_t interrupts) {};
-         static void interrupt() __attribute__ (( weak )); // Allow setting an interrupt on a invalid ADC pin -- will never be called
-     };
+    template<pin_number pinNum, class _enabled = void>
+    struct ADCPin : ADCPinParent<pinNum>, Pin<pinNum> {
+        static constexpr uint32_t adcMask = 0;
+        static constexpr uint32_t adcNumber = 0;
 
-    template<int16_t adcNum>
-    struct ReverseADCPin : ADCPin<-1> {
-        ReverseADCPin() : ADCPin<-1>() {};
-        ReverseADCPin(const PinOptions_t options) : ADCPin<-1>() {};
+        ADCPin() : ADCPinParent<pinNum>(), Pin<pinNum>(kInput) {  };
+        ADCPin(const PinOptions_t options) : ADCPinParent<pinNum>(), Pin<pinNum>(kInput) {  };
+
+        void init() {};
+        uint32_t getRaw() { return 0; };
+        uint32_t getValue() { return 0; };
+        uint16_t getTop() { return 4095; };
+        operator int16_t() { return 0; };
+        operator float() { return 0.0; };
+        void setInterrupts(const uint32_t interrupts) { };
     };
 
-    #define _MAKE_MOTATE_ADC_PIN(registerChar, registerPin, adcNum) \
+    template<pin_number pinNum>
+    struct ADCPin<pinNum, typename std::enable_if<ADCPinParent<pinNum>::is_real>::type> : ADCPinParent<pinNum>, Pin<pinNum>, _pinChangeInterrupt {
+        using ADCPinParent<pinNum>::adcMask;
+        using ADCPinParent<pinNum>::adcNumber;
+        using ADCPinParent<pinNum>::afec;
+        using ADCPinParent<pinNum>::afecNumber;
+
+        ADCPin() : ADCPinParent<pinNum>(), Pin<pinNum>(kInput),
+          _pinChangeInterrupt(adcMask, interrupt, ADC_Module<afecNumber>::_firstInterrupt)
+        {
+            init();
+            setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
+        };
+
+        ADCPin(const PinOptions_t options,
+               const uint32_t interrupt_settings = kPinInterruptOnChange|kPinInterruptPriorityMedium
+               )
+        : ADCPinParent<pinNum>(),
+          Pin<pinNum>(kInput, options),
+          _pinChangeInterrupt(adcMask, interrupt, ADC_Module<afecNumber>::_firstInterrupt)
+        {
+            init();
+            setInterrupts(interrupt_settings);
+        };
+
+        ADCPin(const PinOptions_t options,
+               std::function<void(void)> &&_interrupt,
+               const uint32_t interrupt_settings = kPinInterruptOnChange|kPinInterruptPriorityMedium
+               )
+        : ADCPinParent<pinNum>(),
+          Pin<pinNum>(kInput, options),
+          _pinChangeInterrupt(adcMask, std::move(_interrupt), ADC_Module<afecNumber>::_firstInterrupt)
+        {
+            init();
+            setInterrupts(interrupt_settings);
+        };
+
+        static const bool is_real = true; // Yeah, they ALL can be interrupt pins (in hardware).
+
+        void init() {
+            /* Enable the pin */
+            afec()->AFEC_CHER = adcMask;
+            /* Enable the conversion TAG */
+            afec()->AFEC_EMR = AFEC_EMR_TAG ;
+        };
+        uint32_t getRaw() {
+            afec()->AFEC_CSELR = AFEC_CSELR_CSEL(adcNumber);
+            return afec()->AFEC_CDR;
+        };
+        uint32_t getValue() {
+            if ((afec()->AFEC_CHSR & adcMask) != adcMask) {
+                afec()->AFEC_CR = AFEC_CR_START; /* start the sample */
+                while ((afec()->AFEC_ISR & AFEC_ISR_DRDY) != AFEC_ISR_DRDY) {;} /* Wait... */
+            }
+            return getRaw();
+        };
+        uint16_t getTop() {
+            return 4095;
+        };
+        operator int16_t() {
+            return getValue();
+        };
+        operator float() {
+            return (float)getValue() / getTop();
+        };
+        void setInterrupts(const uint32_t interrupts) { ADCPinParent<pinNum>::setInterrupts(interrupts, adcMask); };
+
+
+        // Interrupt interface option 1: create this function (use macro MOTATE_PIN_INTERRUPT)
+        static void interrupt() __attribute__ (( weak ));
+
+        // Inerrupt inferface option 2: call this function with your closure or function pointer
+        void setInterruptHandler(std::function<void(void)> &&handler) {
+            _pinChangeInterrupt::setInterrupt(std::move(handler)); // enable interrupts and set the priority
+        };
+        void setInterruptHandler(const std::function<void(void)> &handler) {
+            _pinChangeInterrupt::setInterrupt(handler); // enable interrupts and set the priority
+        };
+    };
+
+    template<int16_t afecNum, int16_t adcNum>
+    struct ReverseADCPin : ADCPin<adcNum> {
+        ReverseADCPin() : ADCPin<adcNum>() {};
+        ReverseADCPin(const PinOptions_t options) : ADCPin<adcNum>() {};
+    };
+
+    #define _MAKE_MOTATE_ADC_PIN(registerChar, registerPin, afecNum, adcNum) \
         template<> \
-            struct ADCPinParent< ReversePinLookup<registerChar, registerPin>::number > { \
-            static const uint32_t adcMask = 1 << adcNum; \
-            static const uint32_t adcNumber = adcNum; \
-            static const uint16_t getTop() { return 4095; }; \
+        struct ADCPinParent< ReversePinLookup<registerChar, registerPin>::number > : ADC_Module<afecNum> { \
+            static constexpr uint32_t adcMask = 1 << adcNum; \
+            static constexpr uint32_t adcNumber = adcNum; \
+            static constexpr uint32_t afecNumber = afecNum; \
+            static constexpr bool is_real = true; \
         }; \
         template<> \
-        struct ReverseADCPin<adcNum> : ADCPin<ReversePinLookup<registerChar, registerPin>::number> { \
+        struct ReverseADCPin<afecNum, adcNum> : ADCPin<ReversePinLookup<registerChar, registerPin>::number> { \
             ReverseADCPin() : ADCPin<ReversePinLookup<registerChar, registerPin>::number>() {}; \
             ReverseADCPin(const PinOptions_t options) : ADCPin<ReversePinLookup<registerChar, registerPin>::number>(options) {}; \
         };
@@ -740,8 +993,8 @@ namespace Motate {
     template<uint8_t portChar, int16_t portPin>
     using LookupADCPin = ADCPin< ReversePinLookup<portChar, portPin>::number >;
 
-    template<int16_t adcNum>
-    using LookupADCPinByADC = ADCPin< ReverseADCPin< adcNum >::number >;
+    template<int16_t afecNum, int16_t adcNum>
+    using LookupADCPinByADC = ADCPin< ReverseADCPin< afecNum, adcNum >::number >;
 
 #endif
 

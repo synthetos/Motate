@@ -215,22 +215,39 @@ namespace Motate {
     _MAKE_MOTATE_UART_CTS_PIN( 'D',  19, /* UART number: */ 2, /* Peripheral */ B);
 #endif // PIOD
 
-    // ADC Pin assignments CURRRENTLY WRONG
-    //    _MAKE_MOTATE_ADC_PIN('A',  2, /* ADC number:*/  0);
-    //    _MAKE_MOTATE_ADC_PIN('A',  3, /* ADC number:*/  1);
-    //    _MAKE_MOTATE_ADC_PIN('A',  4, /* ADC number:*/  2);
-    //    _MAKE_MOTATE_ADC_PIN('A',  6, /* ADC number:*/  3);
-    //    _MAKE_MOTATE_ADC_PIN('A', 16, /* ADC number:*/  7);
-    //    _MAKE_MOTATE_ADC_PIN('A', 22, /* ADC number:*/  4);
-    //    _MAKE_MOTATE_ADC_PIN('A', 23, /* ADC number:*/  5);
-    //    _MAKE_MOTATE_ADC_PIN('A', 24, /* ADC number:*/  6);
-    //    _MAKE_MOTATE_ADC_PIN('B', 12, /* ADC number:*/  8);
-    //    _MAKE_MOTATE_ADC_PIN('B', 13, /* ADC number:*/  9);
-    //    _MAKE_MOTATE_ADC_PIN('B', 17, /* ADC number:*/ 10);
-    //    _MAKE_MOTATE_ADC_PIN('B', 18, /* ADC number:*/ 11);
-    //    _MAKE_MOTATE_ADC_PIN('B', 19, /* ADC number:*/ 12);
-    //    _MAKE_MOTATE_ADC_PIN('B', 20, /* ADC number:*/ 13);
-    //    _MAKE_MOTATE_ADC_PIN('B', 21, /* ADC number:*/ 14);
+    // ADC Pin assignments
+
+    _MAKE_MOTATE_ADC_PIN('A', 17, /* AFEC: */0, /* ADC number:*/  6);
+    _MAKE_MOTATE_ADC_PIN('A', 18, /* AFEC: */0, /* ADC number:*/  7);
+    _MAKE_MOTATE_ADC_PIN('A', 19, /* AFEC: */0, /* ADC number:*/  8);
+    _MAKE_MOTATE_ADC_PIN('A', 20, /* AFEC: */0, /* ADC number:*/  9);
+    _MAKE_MOTATE_ADC_PIN('A', 21, /* AFEC: */0, /* ADC number:*/  1);
+#ifdef PIOB
+    _MAKE_MOTATE_ADC_PIN('B',  0, /* AFEC: */0, /* ADC number:*/ 10);
+    _MAKE_MOTATE_ADC_PIN('B',  1, /* AFEC: */1, /* ADC number:*/  0);
+    _MAKE_MOTATE_ADC_PIN('B',  2, /* AFEC: */0, /* ADC number:*/  5);
+    _MAKE_MOTATE_ADC_PIN('B',  3, /* AFEC: */0, /* ADC number:*/  2);
+#endif
+#ifdef PIOC
+    _MAKE_MOTATE_ADC_PIN('C',  0, /* AFEC: */1, /* ADC number:*/  9);
+    _MAKE_MOTATE_ADC_PIN('C', 12, /* AFEC: */1, /* ADC number:*/  3);
+    _MAKE_MOTATE_ADC_PIN('C', 13, /* AFEC: */1, /* ADC number:*/  1);
+    _MAKE_MOTATE_ADC_PIN('C', 15, /* AFEC: */1, /* ADC number:*/  2);
+    _MAKE_MOTATE_ADC_PIN('C', 26, /* AFEC: */1, /* ADC number:*/  7);
+    _MAKE_MOTATE_ADC_PIN('C', 27, /* AFEC: */1, /* ADC number:*/  8);
+    _MAKE_MOTATE_ADC_PIN('C', 29, /* AFEC: */1, /* ADC number:*/  4);
+    _MAKE_MOTATE_ADC_PIN('C', 30, /* AFEC: */1, /* ADC number:*/  5);
+    _MAKE_MOTATE_ADC_PIN('C', 31, /* AFEC: */1, /* ADC number:*/  6);
+#endif
+#ifdef PIOD
+    _MAKE_MOTATE_ADC_PIN('D', 30, /* AFEC: */0, /* ADC number:*/  0);
+#endif
+#ifdef PIOE
+    _MAKE_MOTATE_ADC_PIN('E',  0, /* AFEC: */1, /* ADC number:*/ 11);
+    _MAKE_MOTATE_ADC_PIN('E',  3, /* AFEC: */1, /* ADC number:*/ 10);
+    _MAKE_MOTATE_ADC_PIN('E',  4, /* AFEC: */0, /* ADC number:*/  4);
+    _MAKE_MOTATE_ADC_PIN('E',  5, /* AFEC: */0, /* ADC number:*/  3);
+#endif
 
 // Clock outputs (LIKELY WRONG)
 //     _MAKE_MOTATE_CLOCK_OUTPUT_PIN('A',  6, /*clockNumber*/0, /*peripheralAorB*/B);
