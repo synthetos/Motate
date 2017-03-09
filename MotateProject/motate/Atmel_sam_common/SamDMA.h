@@ -814,6 +814,7 @@ namespace Motate {
             return (buffer_t)xdmaRxChannel()->XDMAC_CDA;
         };
 
+
         // Bundle it all up
         bool startRXTransfer(void * const buffer,
                              const uint32_t length,
@@ -821,39 +822,43 @@ namespace Motate {
                              bool include_next = false
                              ) const
         {
+            if (0 == length) { return false; }
+
             if (doneReading()) {
                 disableRx();
                 if (handle_interrupts) { stopRxDoneInterrupts(); }
                 setRx(buffer, length);
+                enableRx();
+                if (handle_interrupts) { startRxDoneInterrupts(); }
             }
             // check to see if they overlap, in which case we're extending the region
             else if ((xdmaRxChannel()->XDMAC_CDA >= (uint32_t)buffer) &&
                      (xdmaRxChannel()->XDMAC_CDA < ((uint32_t)buffer + length))
                      )
             {
-                // they overlap, we need to compute the new length
-                disableRx(); // make it stand still first
                 if (handle_interrupts) { stopRxDoneInterrupts(); }
 
-                // new_length = (start_pos + length) - current_positon
-                xdmaRxChannel()->XDMAC_CUBC = ((uint32_t)buffer + length) - xdmaRxChannel()->XDMAC_CDA;
+                // they overlap, we need to compute the new length
+                decltype(xdmaRxChannel()->XDMAC_CDA) pos_save;
+                do {
+                    pos_save = xdmaRxChannel()->XDMAC_CDA;
+
+                    // new_length = (start_pos + length) - current_positon
+                    xdmaRxChannel()->XDMAC_CUBC = ((uint32_t)buffer + length) - pos_save;
+
+                    // catch rare case where it advances while we were computing
+                } while (xdmaRxChannel()->XDMAC_CDA > pos_save);
+
+                enableRx();
+                if (handle_interrupts) { startRxDoneInterrupts(); }
             }
             // otherwise, we set the next region, if requested. We DON'T attempt to extend it.
             else if (include_next && doneReadingNext()) {
                 setNextRx(buffer, length);
                 return true;
-            } else {
-                length = 0; // we didn't add anything, this prevents turning things back on
             }
-
-            if (length != 0) {
-                if (handle_interrupts) { startRxDoneInterrupts(); }
-                enableRx();
-                return true;
-            }
-
-            return length > 0;
-
+            
+            return (length > 0);
         };
 
 
