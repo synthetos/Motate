@@ -597,7 +597,7 @@ namespace Motate {
         using ADCPinParent<pinNum>::adcNumber;
         using ADCPinParent<pinNum>::getTop;
 
-        ADCPin() : ADCPinParent<pinNum>(), Pin<pinNum>(kInput), ADC_Module(),
+        ADCPin() : ADCPinParent<pinNum>(), Pin<pinNum>(kUnchanged), ADC_Module(),
             _pinChangeInterrupt(Pin<pinNum>::mask, interrupt, ADC_Module::_firstInterrupt)
         {
             init();
@@ -607,7 +607,7 @@ namespace Motate {
                const uint32_t interrupt_settings = kPinInterruptOnChange|kPinInterruptPriorityMedium
                )
         : ADCPinParent<pinNum>(),
-          Pin<pinNum>(kInput, options),
+          Pin<pinNum>(kUnchanged, options),
           ADC_Module(),
           _pinChangeInterrupt(Pin<pinNum>::mask, interrupt, ADC_Module::_firstInterrupt)
         {
@@ -620,7 +620,7 @@ namespace Motate {
                const uint32_t interrupt_settings = kPinInterruptOnChange|kPinInterruptPriorityMedium
                )
         : ADCPinParent<pinNum>(),
-          Pin<pinNum>(kInput, options),
+          Pin<pinNum>(kUnchanged, options),
           _pinChangeInterrupt(Pin<pinNum>::mask, std::move(_interrupt), ADC_Module::_firstInterrupt)
         {
             init();
@@ -744,8 +744,8 @@ namespace Motate {
     //          and initializing the ADC module once.
     template <int32_t afecNum>
     struct ADC_Module {
-        const uint32_t default_adc_clock_frequency = 20000000;
-        const uint32_t default_adc_startup_time = 12;
+        const uint32_t default_adc_clock_frequency = 6000000;
+        const uint32_t default_adc_startup_time = 10;
         constexpr Afec* const afec() const { return afecNum == 0 ? AFEC0 : AFEC1; };
         constexpr IRQn const afecIRQnum() const { return afecNum == 0 ? AFEC0_IRQn : AFEC1_IRQn; };
         constexpr uint32_t peripheralId() const { return afecNum == 0 ? ID_AFEC0 : ID_AFEC1; };
@@ -767,14 +767,8 @@ namespace Motate {
             /* Reset Mode Register. */
             afec()->AFEC_MR = 0;
 
-            if (SystemCoreClock % (2 * adc_clock_frequency)) {
-                // Division with reminder
-                ul_prescal = SystemCoreClock / (2 * adc_clock_frequency);
-            } else {
-                // Whole division
-                ul_prescal = SystemCoreClock / (2 * adc_clock_frequency) - 1;
-            }
-            ul_real_adc_clock = SystemCoreClock / (2 * (ul_prescal + 1));
+            ul_prescal = (SamCommon::getPeripheralClockFreq() / adc_clock_frequency) - 1;
+            ul_real_adc_clock = SamCommon::getPeripheralClockFreq() / (ul_prescal + 1);
 
             // ADC clocks needed to get ul_startuptime uS
             ul_startup = (ul_real_adc_clock / 1000000) * adc_startuptime;
@@ -787,11 +781,23 @@ namespace Motate {
             if (ul_mr_startup==16)
                 return /*-1*/;
 
-            afec()->AFEC_MR |=
+            afec()->AFEC_MR =
                 AFEC_MR_PRESCAL(ul_prescal) |
-                ((ul_mr_startup << AFEC_MR_STARTUP_Pos) & AFEC_MR_STARTUP_Msk) |
-                AFEC_MR_ONE // becuase this bit must be one, apparently
-                ;
+                AFEC_MR_STARTUP(ul_mr_startup) |
+                AFEC_MR_TRACKTIM(15) |
+                AFEC_MR_TRANSFER(0) |
+                AFEC_MR_ONE            // becuase this bit must be one, apparently
+            ;
+            afec()->AFEC_EMR =
+                AFEC_EMR_TAG | // enable the conversion TAG
+                AFEC_EMR_STM   // enable Single Trigger Mode
+            ;
+
+            afec()->AFEC_ACR =
+                AFEC_ACR_IBCTL(1) |
+                AFEC_ACR_PGA0EN |
+                AFEC_ACR_PGA1EN
+            ;
         };
 
         ADC_Module() {
@@ -860,9 +866,9 @@ namespace Motate {
 
     template<pin_number pinNum>
     struct ADCPinParent {
+        static const uint32_t afecNumber = 0;
         static const uint32_t adcMask = 0;
         static const uint32_t adcNumber = 0;
-        static const uint32_t afecNumber = 0;
 
         constexpr Afec* const afec() const { return nullptr; };
         static constexpr bool is_real = false;
@@ -889,12 +895,12 @@ namespace Motate {
 
     template<pin_number pinNum>
     struct ADCPin<pinNum, typename std::enable_if<ADCPinParent<pinNum>::is_real>::type> : ADCPinParent<pinNum>, Pin<pinNum>, _pinChangeInterrupt {
+        using ADCPinParent<pinNum>::afecNumber;
         using ADCPinParent<pinNum>::adcMask;
         using ADCPinParent<pinNum>::adcNumber;
         using ADCPinParent<pinNum>::afec;
-        using ADCPinParent<pinNum>::afecNumber;
 
-        ADCPin() : ADCPinParent<pinNum>(), Pin<pinNum>(kInput),
+        ADCPin() : ADCPinParent<pinNum>(), Pin<pinNum>(kUnchanged),
           _pinChangeInterrupt(adcMask, interrupt, ADC_Module<afecNumber>::_firstInterrupt)
         {
             init();
@@ -905,7 +911,7 @@ namespace Motate {
                const uint32_t interrupt_settings = kPinInterruptOnChange|kPinInterruptPriorityMedium
                )
         : ADCPinParent<pinNum>(),
-          Pin<pinNum>(kInput, options),
+          Pin<pinNum>(kUnchanged, options),
           _pinChangeInterrupt(adcMask, interrupt, ADC_Module<afecNumber>::_firstInterrupt)
         {
             init();
@@ -917,7 +923,7 @@ namespace Motate {
                const uint32_t interrupt_settings = kPinInterruptOnChange|kPinInterruptPriorityMedium
                )
         : ADCPinParent<pinNum>(),
-          Pin<pinNum>(kInput, options),
+          Pin<pinNum>(kUnchanged, options),
           _pinChangeInterrupt(adcMask, std::move(_interrupt), ADC_Module<afecNumber>::_firstInterrupt)
         {
             init();
@@ -927,19 +933,29 @@ namespace Motate {
         static const bool is_real = true; // Yeah, they ALL can be interrupt pins (in hardware).
 
         void init() {
-            /* Enable the pin */
+            // Enable the pin
             afec()->AFEC_CHER = adcMask;
-            /* Enable the conversion TAG */
-            afec()->AFEC_EMR = AFEC_EMR_TAG ;
-        };
-        uint32_t getRaw() {
             afec()->AFEC_CSELR = AFEC_CSELR_CSEL(adcNumber);
+            // The offset (AOFF) is a 10-bit signed value that will be subtracted from the value
+            // See 54.8.4.2 of the SamS70 Manual (19-Jan-16 ed):
+            // C_i = (4096/V_refp)*(V_in-V_DAC)*gain+2047
+            // The VDAC uses the AOFF value as an "input"
+            afec()->AFEC_COCR = AFEC_COCR_AOFF(511);
+//            afec()->AFEC_CGR =
+//                (afec()->AFEC_CGR & ~(0x03u << (2 * adcNumber))) |
+//                ((1) << (2 * adcNumber));
+        };
+        int32_t getRaw() {
+            afec()->AFEC_CSELR = AFEC_CSELR_CSEL(adcNumber);
+            // technically this could be a 16-bit signed or unsigned value
+            // the way it's currently being used, it can only be unsigned
+            // but if it's being used as signed it'll have to be converted again later.
             return afec()->AFEC_CDR;
         };
-        uint32_t getValue() {
+        int32_t getValue() {
             if ((afec()->AFEC_CHSR & adcMask) != adcMask) {
                 afec()->AFEC_CR = AFEC_CR_START; /* start the sample */
-                while ((afec()->AFEC_ISR & AFEC_ISR_DRDY) != AFEC_ISR_DRDY) {;} /* Wait... */
+                while ((afec()->AFEC_CHSR & adcMask) != adcMask) {;} /* Wait... */
             }
             return getRaw();
         };
