@@ -107,7 +107,7 @@ extern "C" {
 #if defined(__SAM3X8E__) || defined(__SAM3X8C__)
 namespace Motate {
     bool ADC_Module::_inited = false;
-    bool ADC_Module::_firstInterrupt;
+    _pinChangeInterrupt* ADC_Module::_firstInterrupt {};
 }
 
 extern "C"
@@ -125,7 +125,6 @@ void ADC_Handler(void) {
     NVIC_ClearPendingIRQ(ADC_IRQn);
 } // ADC_Handler
 
-#warning here (NOO)
 #endif // sam3x
 #endif // ADC
 

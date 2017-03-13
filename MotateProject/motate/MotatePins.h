@@ -397,6 +397,171 @@ namespace Motate {
     template<uint8_t portChar, uint8_t portPin>
     using LookupIRQPin = IRQPin< ReversePinLookup<portChar, portPin>::number >;
 
+#pragma mark ADCPin / ADCPinParent
+    /**************************************************
+     *
+     * Analog-to-Digital (ADC) input pins: ADCPin / ADCPinParent
+     *
+     * ADC pins read a voltage and sample it, converting it to a value between adc_pin.getBottom() and adc_pin.getTop().
+     * These are returned as int32_t, and may be signed if getBottom() returns < 0.
+     *
+     * adc_pin.getRaw() return the result of the last conversion. Start a sampling sequence with adc_pin.startSampling(),
+     * which will pass the request to the ADCParent, which will sample for all pins with the same parent.
+     *
+     * In order to know when a sample is completed, you can set the interrupts and callback. If you use the constructor form
+     * ADCPin(options, function, interrupt_settings) you can control the interrupt and pass a lambda or function pointer.
+     *
+     **************************************************/
+
+    template<pin_number pinNum>
+    struct ADCPinParent {
+        static const uint32_t adcMask = 0;
+        static const uint32_t adcNumber = 0;
+
+        static constexpr bool is_real = false; // this must be true in a real ADCParent
+
+        void init();
+        void startSampling() { };
+        void setInterrupts(const uint32_t interrupts, const uint32_t adcMask) { };
+
+        void initPin(const uint32_t adcNumber);
+        int32_t getRawPin(const uint32_t adcNumber);
+        int32_t getValuePin(const uint32_t adcNumber);
+        int32_t getBottomPin(const uint32_t adcNumber);
+        int32_t getTopPin(const uint32_t adcNumber);
+    };
+
+    // This first one is the "default" ADCPin, which is what gets used for pins that cannot actually be ADC pins
+    template<pin_number pinNum, class _enabled = void>
+    struct ADCPin : ADCPinParent<pinNum>, Pin<pinNum> {
+        static constexpr uint32_t adcMask = 0;
+        static constexpr uint32_t adcNumber = 0;
+
+        ADCPin() : ADCPinParent<pinNum>(), Pin<pinNum>(kUnchanged) { };
+
+        ADCPin(const PinOptions_t options,
+               const uint32_t interrupt_settings = kPinInterruptOnChange|kPinInterruptPriorityMedium
+               )
+        : ADCPinParent<pinNum>(), Pin<pinNum>(kUnchanged, options)
+        { };
+
+        ADCPin(const PinOptions_t options,
+               std::function<void(void)> &&_interrupt,
+               const uint32_t interrupt_settings = kPinInterruptOnChange|kPinInterruptPriorityMedium
+               )
+        : ADCPinParent<pinNum>(), Pin<pinNum>(kUnchanged, options)
+        { };
+
+        void init() {};
+        int32_t getRaw() { return 0; };
+        int32_t getValue() { return 0; };
+        int32_t getBottom() { return 0; };
+        int32_t getTop() { return 4095; };
+        operator int16_t() { return 0; };
+//        operator int32_t() { return 0; };
+//        operator float() { return 0.0; };
+
+        void startSampling() { };
+        void setInterrupts(const uint32_t interrupts) { };
+
+        static void interrupt() __attribute__ (( weak ));
+        void setInterruptHandler(std::function<void(void)> &&handler) { };
+        void setInterruptHandler(const std::function<void(void)> &handler) { };
+
+    };
+
+
+    // This is the REAL ADCPin definition, and is triggered when ADCPinParent<pinNum>::is_real == true
+    template<pin_number pinNum>
+    struct ADCPin<pinNum, typename std::enable_if<ADCPinParent<pinNum>::is_real>::type> : ADCPinParent<pinNum>, Pin<pinNum>, _pinChangeInterrupt {
+        using ADCPinParent<pinNum>::adcMask;
+        using ADCPinParent<pinNum>::adcNumber;
+        using ADCPinParent<pinNum>::initPin;
+        using ADCPinParent<pinNum>::getRawPin;
+        using ADCPinParent<pinNum>::getValuePin;
+        using ADCPinParent<pinNum>::getBottomPin;
+        using ADCPinParent<pinNum>::getTopPin;
+
+        ADCPin() : ADCPinParent<pinNum>(), Pin<pinNum>(kUnchanged),
+        _pinChangeInterrupt(adcMask, interrupt, ADCPinParent<pinNum>::_firstInterrupt)
+        {
+            init();
+            setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
+        };
+
+        ADCPin(const PinOptions_t options,
+               const uint32_t interrupt_settings = kPinInterruptOnChange|kPinInterruptPriorityMedium
+               )
+        : ADCPinParent<pinNum>(),
+        Pin<pinNum>(kUnchanged, options),
+        _pinChangeInterrupt(adcMask, interrupt, ADCPinParent<pinNum>::_firstInterrupt)
+        {
+            init();
+            setInterrupts(interrupt_settings);
+        };
+
+        ADCPin(const PinOptions_t options,
+               std::function<void(void)> &&_interrupt,
+               const uint32_t interrupt_settings = kPinInterruptOnChange|kPinInterruptPriorityMedium
+               )
+        : ADCPinParent<pinNum>(),
+        Pin<pinNum>(kUnchanged, options),
+        _pinChangeInterrupt(adcMask, std::move(_interrupt), ADCPinParent<pinNum>::_firstInterrupt)
+        {
+            init();
+            setInterrupts(interrupt_settings);
+        };
+
+        static const bool is_real = true; // Yeah, they ALL can be interrupt pins (in hardware).
+
+        void init() {
+            initPin(adcNumber);
+        };
+        int32_t getRaw() {
+            return getRawPin(adcNumber);
+        };
+        int32_t getValue() {
+            return getValuePin(adcNumber);
+        };
+        int32_t getBottom() {
+            return getBottomPin(adcNumber);
+        };
+        int32_t getTop() {
+            return getTopPin(adcNumber);
+        };
+        operator int16_t() {
+            return getValue();
+        };
+//        operator int32_t() {
+//            return getValue();
+//        };
+//        operator float() {
+//            return (float)getValue() / getTop();
+//        };
+
+
+        void setInterrupts(const uint32_t interrupts) { ADCPinParent<pinNum>::setInterrupts(interrupts, adcMask); };
+
+        // Interrupt interface option 1: create this function (use macro MOTATE_PIN_INTERRUPT)
+        static void interrupt() __attribute__ (( weak ));
+
+        // Inerrupt inferface option 2: call this function with your closure or function pointer
+        void setInterruptHandler(std::function<void(void)> &&handler) {
+            _pinChangeInterrupt::setInterrupt(std::move(handler)); // enable interrupts and set the priority
+        };
+        void setInterruptHandler(const std::function<void(void)> &handler) {
+            _pinChangeInterrupt::setInterrupt(handler); // enable interrupts and set the priority
+        };
+    };
+
+    template<int16_t pinNum>
+    constexpr const bool IsADCPin() { return ADCPin<pinNum>::is_real; };
+
+    template<uint8_t portChar, int16_t portPin>
+    using LookupADCPin = ADCPin< ReversePinLookup<portChar, portPin>::number >;
+
+
+
 
 #pragma mark PWMOutputPin / RealPWMOutputPin / PWMLikeOutputPin
     /**************************************************
