@@ -581,7 +581,7 @@ $(PROJECT).hex: $(OUTPUT_BIN).elf
 $(PROJECT).bin: $(OUTPUT_BIN).elf
 	$(QUIET)$(OBJCOPY) -O binary $< $@
 
-ifeq (WIN32,${UNAME})
+ifneq (WIN32,${UNAME})
 
 clean:
 	-$(RM) -fR $(OBJ)
