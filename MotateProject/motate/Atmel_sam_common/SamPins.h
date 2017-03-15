@@ -507,11 +507,14 @@ namespace Motate {
     // Handles: Setting options for the ADC module as a whole,
     //          and initializing the ADC module once.
     struct ADC_Module {
-        static const uint32_t default_adc_clock_frequency = 20 * 1000000; // 20MHz
-        static const uint32_t default_adc_startup_time = 12;
+        static const uint32_t _default_adc_clock_frequency = 20 * 1000000; // 20MHz
+        static const uint32_t _default_adc_startup_time = 12;
 
         static const uint32_t peripheralId() { return ID_ADC; }
         static constexpr bool is_real = true;
+
+        const float _default_vref = 3.28;
+        float _vref = _default_vref;
 
         static bool _inited;
         static _pinChangeInterrupt *_firstInterrupt;
@@ -562,7 +565,7 @@ namespace Motate {
         };
 
         ADC_Module() {
-            init(default_adc_clock_frequency, default_adc_startup_time);
+            init(_default_adc_clock_frequency, _default_adc_startup_time);
         };
 
         static void startSampling() {
@@ -595,8 +598,23 @@ namespace Motate {
         int32_t getBottomPin(const uint32_t adcNumber) {
             return 0;
         };
+        float getBottomVoltagePin(const uint32_t adcNumber) {
+            return 0.0;
+        }
         int32_t getTopPin(const uint32_t adcNumber) {
             return 4095;
+        };
+        float getTopVoltagePin(const uint32_t adcNumber) {
+            return _vref;
+        }
+        void setVoltageRangePin(const uint32_t adcNumber,
+                                const float vref,
+                                const float min_expected,
+                                const float max_expected,
+                                const float ideal_steps)
+        {
+            _vref = vref; // all pins on the same module share the same vref
+            // ignore min_expected and max_expected for now
         };
 
         void addInterrupt(_pinChangeInterrupt *newInt) {
@@ -633,15 +651,21 @@ namespace Motate {
     //          and initializing the ADC module once.
     template <int32_t afecNum>
     struct ADC_Module {
-        const uint32_t default_adc_clock_frequency = 20 * 1000000; // 20MHz
-        const uint32_t default_adc_startup_time = 10;
+        const uint32_t _default_adc_clock_frequency = 10 * 1000000; // 10MHz
+        const uint32_t _default_adc_startup_time = 10;
 
         // these are highly tuned parameters, and may need to become adjustable at runtime in the future
         // see http://www.atmel.com/Images/Atmel-44093-AFE-Calibration-on-SAM-V7-SAM-E7-SAM-S7-Microcontrollers_Application-Note.pdf
         //    specifically section 2.2.2
-        const float default_gain = 0.991073741551146;
-        const float default_offset = -3.7;
-        const float default_vref = 3.28;
+        const float _default_gain = 0.991073741551146;
+        const float _default_offset = 400;
+        const float _default_vref = 3.28;
+
+        float _gain;
+        float _offset;
+        float _vref;
+
+        int32_t _top_value = 4095;
 
         constexpr Afec* const afec() const { return afecNum == 0 ? AFEC0 : AFEC1; };
         constexpr IRQn const afecIRQnum() const { return afecNum == 0 ? AFEC0_IRQn : AFEC1_IRQn; };
@@ -692,7 +716,7 @@ namespace Motate {
             ;
 
             afec()->AFEC_ACR =
-                AFEC_ACR_IBCTL(10) |
+                AFEC_ACR_IBCTL(1) |
                 AFEC_ACR_PGA0EN |
                 AFEC_ACR_PGA1EN
             ;
@@ -702,11 +726,11 @@ namespace Motate {
             // enable it generally, however
             afec()->AFEC_COSR = AFEC_COSR_CSEL;
 
-            setupErrorCorrection(default_gain, default_offset, default_vref);
+            setupErrorCorrection(_default_gain, _default_offset, _default_vref);
         };
 
         ADC_Module() {
-            init(default_adc_clock_frequency, default_adc_startup_time);
+            init(_default_adc_clock_frequency, _default_adc_startup_time);
         };
 
         void startSampling() {
@@ -717,13 +741,16 @@ namespace Motate {
             afec()->AFEC_MR |= AFEC_MR_FREERUN_ON;
         };
 
-        void setupErrorCorrection(float gain, float offset, float vref) {
+        void setupErrorCorrection(const float gain, const float offset, const float vref) {
             // Using two measurements: V1 the actual voltage, with V1_a being the actual measurement (no correction) and
             //  V1_i being the ideal and a second measurement (preferably near the other end of the range) V2, V2_a, and
             //  V2_i, where Vn_i = 2^12*(Vn/VREF). Arrange it so that V1 is a higher voltage than V2.
             // To get the gain:     gain = (V1_a-V2_a)/(V1_i-V2_i)
             // To get the offset: offset = (V1_a-2^11)-gain*(V1_i-2^11)
 
+            _gain = gain;
+            _offset = offset;
+            _vref = vref;
             afec()->AFEC_CVR = AFEC_CVR_OFFSETCORR(-(int16_t)offset) | AFEC_CVR_GAINCORR((int16_t)(32768.0/gain));
         };
 
@@ -765,9 +792,77 @@ namespace Motate {
         int32_t getBottomPin(const uint32_t adcNumber) {
             return 0;
         };
+        float getBottomVoltagePin(const uint32_t adcNumber) {
+            return 0.0;
+        }
         int32_t getTopPin(const uint32_t adcNumber) {
-            return 4095;
+            return _top_value;
         };
+        float getTopVoltagePin(const uint32_t adcNumber) {
+            return _vref;
+        }
+        void setVoltageRangePin(const uint32_t adcNumber,
+                                const float vref,
+                                const float min_expected,
+                                const float max_expected,
+                                const float ideal_steps)
+        {
+            _vref = vref; // all pins on the same module share the same vref
+            // ignore min_expected and max_expected for now, except to set the bits
+            // we have as optins 12, 13, 14, 15, and 16bit, each costs more in sample time
+
+            float min_lsb = (vref/(max_expected-min_expected))*ideal_steps;
+            if (min_lsb > 4095) { // 2^12 = 4096
+                if (min_lsb > 8191) { // 2^13 = 8192
+                    if (min_lsb > 16383) { // 2^14 = 16384
+                        if (min_lsb > 32767) { // 2^15 = 32,768
+                            // 2^16 = 65,536
+                            // use 16 bit
+                            afec()->AFEC_EMR = (afec()->AFEC_EMR & ~AFEC_EMR_RES_Msk) | AFEC_EMR_RES(5);
+                            _top_value = 65535;
+                        } else {
+                            // use 15 bit
+                            afec()->AFEC_EMR = (afec()->AFEC_EMR & ~AFEC_EMR_RES_Msk) | AFEC_EMR_RES(4);
+                            _top_value = 32767;
+                        }
+                    } else {
+                        // use 14 bit
+                        afec()->AFEC_EMR = (afec()->AFEC_EMR & ~AFEC_EMR_RES_Msk) | AFEC_EMR_RES(3);
+                        _top_value = 16383;
+                    }
+                } else {
+                    // use 13 bit
+                    afec()->AFEC_EMR = (afec()->AFEC_EMR & ~AFEC_EMR_RES_Msk) | AFEC_EMR_RES(2);
+                    _top_value = 8191;
+                }
+            } else {
+                // use 12 bit
+                afec()->AFEC_EMR = (afec()->AFEC_EMR & ~AFEC_EMR_RES_Msk) | AFEC_EMR_RES(0);
+                _top_value = 4095;
+            }
+
+            // handle scale, which is per-pin
+            float scale_used = (max_expected-min_expected)/vref;
+            if (scale_used < 0.25) { // 4x scale
+                afec()->AFEC_CSELR = AFEC_CSELR_CSEL(adcNumber);
+                afec()->AFEC_CGR = 2 << (adcNumber * 2);
+                afec()->AFEC_COCR = AFEC_COCR_AOFF(128);
+                _top_value *= 4;
+            }
+            else if (scale_used < 0.5) { // 2x scale
+                afec()->AFEC_CSELR = AFEC_CSELR_CSEL(adcNumber);
+                afec()->AFEC_CGR = 1 << (adcNumber * 2);
+                afec()->AFEC_COCR = AFEC_COCR_AOFF(256);
+                _top_value *= 2;
+            }
+            else { // 1x scale
+                afec()->AFEC_CSELR = AFEC_CSELR_CSEL(adcNumber);
+                afec()->AFEC_CGR = 0 << (adcNumber * 2);
+                afec()->AFEC_COCR = AFEC_COCR_AOFF(512);
+            }
+
+        };
+
         void setInterrupts(const uint32_t interrupts, const uint32_t adcMask) {
             if (interrupts != kPinInterruptsOff) {
                 /* Set interrupt priority */

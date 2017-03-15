@@ -424,11 +424,19 @@ namespace Motate {
         void startSampling() { };
         void setInterrupts(const uint32_t interrupts, const uint32_t adcMask) { };
 
+        // The folowing will need to be implemented per-processor, but should NOT be used for non-real pins
         void initPin(const uint32_t adcNumber);
         int32_t getRawPin(const uint32_t adcNumber);
         int32_t getValuePin(const uint32_t adcNumber);
         int32_t getBottomPin(const uint32_t adcNumber);
+        float getBottomVoltagePin(const uint32_t adcNumber);
         int32_t getTopPin(const uint32_t adcNumber);
+        float getTopVoltagePin(const uint32_t adcNumber);
+        void setVoltageRangePin(const uint32_t adcNumber,
+                                const float vref,
+                                const float min_expected,
+                                const float max_expected,
+                                const float ideal_steps);
     };
 
     // This first one is the "default" ADCPin, which is what gets used for pins that cannot actually be ADC pins
@@ -436,6 +444,8 @@ namespace Motate {
     struct ADCPin : ADCPinParent<pinNum>, Pin<pinNum> {
         static constexpr uint32_t adcMask = 0;
         static constexpr uint32_t adcNumber = 0;
+
+        float _vref = 3.3;
 
         ADCPin() : ADCPinParent<pinNum>(), Pin<pinNum>(kUnchanged) { };
 
@@ -456,10 +466,16 @@ namespace Motate {
         int32_t getRaw() { return 0; };
         int32_t getValue() { return 0; };
         int32_t getBottom() { return 0; };
+        float getBottomVoltage() { return 0.0; };
         int32_t getTop() { return 4095; };
-        operator int16_t() { return 0; };
-//        operator int32_t() { return 0; };
-//        operator float() { return 0.0; };
+        float getTopVoltage() { return _vref; };
+
+        void setVoltageRange(const float vref, const float min_expected = 0, const float max_expected = -1, const float ideal_steps = 1) {
+            _vref = vref;
+        };
+        float getVoltage() { return 0.0; }
+        operator float() { return getVoltage(); };
+
 
         void startSampling() { };
         void setInterrupts(const uint32_t interrupts) { };
@@ -480,7 +496,10 @@ namespace Motate {
         using ADCPinParent<pinNum>::getRawPin;
         using ADCPinParent<pinNum>::getValuePin;
         using ADCPinParent<pinNum>::getBottomPin;
+        using ADCPinParent<pinNum>::getBottomVoltagePin;
         using ADCPinParent<pinNum>::getTopPin;
+        using ADCPinParent<pinNum>::getTopVoltagePin;
+        using ADCPinParent<pinNum>::setVoltageRangePin;
 
         ADCPin() : ADCPinParent<pinNum>(), Pin<pinNum>(kUnchanged),
         _pinChangeInterrupt(adcMask, interrupt, ADCPinParent<pinNum>::_firstInterrupt)
@@ -526,19 +545,29 @@ namespace Motate {
         int32_t getBottom() {
             return getBottomPin(adcNumber);
         };
+        float getBottomVoltage() {
+            return getBottomVoltagePin(adcNumber);
+        };
         int32_t getTop() {
             return getTopPin(adcNumber);
         };
-        operator int16_t() {
-            return getValue();
+        float getTopVoltage() {
+            return getTopVoltagePin(adcNumber);
         };
+//        operator int16_t() {
+//            return getValue();
+//        };
 //        operator int32_t() {
 //            return getValue();
 //        };
-//        operator float() {
-//            return (float)getValue() / getTop();
-//        };
 
+        void setVoltageRange(const float vref, const float min_expected = 0, const float max_expected = -1, const float ideal_steps = 1) {
+            setVoltageRangePin(adcNumber, vref, min_expected, (max_expected < 0) ? vref : max_expected, ideal_steps);
+        };
+        float getVoltage() {
+            return ((float)getRaw()-getBottom())/(float)(getTop()-getBottom())*(getTopVoltage()-getBottomVoltage())+getBottomVoltage();
+        };
+        operator float() { return getVoltage(); };
 
         void setInterrupts(const uint32_t interrupts) { ADCPinParent<pinNum>::setInterrupts(interrupts, adcMask); };
 
