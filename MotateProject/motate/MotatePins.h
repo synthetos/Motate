@@ -631,14 +631,14 @@ namespace Motate {
         void operator=(const float value) { write(value); };
         void write(const float value) {
             uint16_t duty = timerOrPWM::getTopValue() * value;
-            if (duty < 2)
+            if (duty == 0)
                 timerOrPWM::stopPWMOutput();
             else
                 timerOrPWM::startPWMOutput();
             timerOrPWM::setExactDutyCycle(duty);
         };
         void writeRaw(const uint16_t duty) {
-            if (duty < 2)
+            if (duty == 0)
                 timerOrPWM::stopPWMOutput();
             else
                 timerOrPWM::startPWMOutput();

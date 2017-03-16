@@ -658,7 +658,7 @@ namespace Motate {
         // see http://www.atmel.com/Images/Atmel-44093-AFE-Calibration-on-SAM-V7-SAM-E7-SAM-S7-Microcontrollers_Application-Note.pdf
         //    specifically section 2.2.2
         const float _default_gain = 0.991073741551146;
-        const float _default_offset = 400;
+        const float _default_offset = 30;
         const float _default_vref = 3.28;
 
         float _gain;
@@ -796,7 +796,8 @@ namespace Motate {
             return 0.0;
         }
         int32_t getTopPin(const uint32_t adcNumber) {
-            return _top_value;
+            uint32_t scale = 1<<((afec()->AFEC_CGR >> (adcNumber * 2)) & 0x3u);
+            return _top_value * scale;
         };
         float getTopVoltagePin(const uint32_t adcNumber) {
             return _vref;
@@ -845,19 +846,22 @@ namespace Motate {
             float scale_used = (max_expected-min_expected)/vref;
             if (scale_used < 0.25) { // 4x scale
                 afec()->AFEC_CSELR = AFEC_CSELR_CSEL(adcNumber);
-                afec()->AFEC_CGR = 2 << (adcNumber * 2);
+                afec()->AFEC_CGR = (afec()->AFEC_CGR & ~(0x3 << (adcNumber * 2))) |
+                                    (2 << (adcNumber * 2));
                 afec()->AFEC_COCR = AFEC_COCR_AOFF(128);
-                _top_value *= 4;
+//                _top_value *= 4;
             }
             else if (scale_used < 0.5) { // 2x scale
                 afec()->AFEC_CSELR = AFEC_CSELR_CSEL(adcNumber);
-                afec()->AFEC_CGR = 1 << (adcNumber * 2);
+                afec()->AFEC_CGR = (afec()->AFEC_CGR & ~(0x3 << (adcNumber * 2))) |
+                                    (1 << (adcNumber * 2));
                 afec()->AFEC_COCR = AFEC_COCR_AOFF(256);
-                _top_value *= 2;
+//                _top_value *= 2;
             }
             else { // 1x scale
                 afec()->AFEC_CSELR = AFEC_CSELR_CSEL(adcNumber);
-                afec()->AFEC_CGR = 0 << (adcNumber * 2);
+                afec()->AFEC_CGR = (afec()->AFEC_CGR & ~(0x3 << (adcNumber * 2))) |
+                                    (0 << (adcNumber * 2));
                 afec()->AFEC_COCR = AFEC_COCR_AOFF(512);
             }
 

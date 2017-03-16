@@ -722,11 +722,12 @@ namespace Motate {
     static constexpr uint32_t divisors[11] = {1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024};
 
 
-    template <uint8_t timerNum>
+    template <uint8_t moduleNum, uint8_t timerNum>
     struct PWMTimer {
 
 #if defined(PWM)
-        static_assert(timerNum>=0 && timerNum<8, "PWMTimer<n>: n must be within 0 through 7 on this processor.");
+        static_assert(moduleNum==0, "PWMTimer<m,n>: m must be 0 on this processor.");
+        static_assert(timerNum>=0 && timerNum<8, "PWMTimer<m,n>: n must be within 0 through 7 on this processor.");
 
         // For external inspection
         static constexpr uint8_t peripheral_num = 0;
@@ -739,32 +740,33 @@ namespace Motate {
         static constexpr const IRQn_Type pwmIRQ() { return PWM_IRQn; };
 
 #elif defined(PWM1)
-        static_assert(timerNum>=0 && timerNum<16, "PWMTimer<n>: n must be within 0 through 16 on this processor.");
+        static_assert(moduleNum==0 || moduleNum==1, "PWMTimer<m,n>: m must be 0 or 1 on this processor.");
+        static_assert(timerNum>=0 && timerNum<8, "PWMTimer<n>: n must be within 0 through 16 on this processor.");
 
         // For external inspection
-        static constexpr uint8_t peripheral_num = (timerNum<8)?0:1;
-        static constexpr uint8_t timer_num = (timerNum<8) ? timerNum : (timerNum-8);
+        static constexpr uint8_t peripheral_num = moduleNum;
+        static constexpr uint8_t timer_num = timerNum;
 
         // NOTE: Notice! The *pointers* are const, not the *values*.
         static constexpr Pwm * const pwm()
         {
-            if (timerNum < 8) { return PWM0; }
-            else              { return PWM1; }
+            if (moduleNum == 0) { return PWM0; }
+            else                { return PWM1; }
         };
         static constexpr PwmCh_num * const pwmChan()
         {
-            if (timerNum < 8) { return PWM0->PWM_CH_NUM + timerNum; }
-            else              { return PWM1->PWM_CH_NUM + (timerNum-8); }
+            if (moduleNum == 0) { return PWM0->PWM_CH_NUM + timerNum; }
+            else                { return PWM1->PWM_CH_NUM + timerNum; }
         };
         static constexpr const uint32_t peripheralId()
         {
-            if (timerNum < 8) { return ID_PWM0; }
-            else              { return ID_PWM1; }
+            if (moduleNum == 0) { return ID_PWM0; }
+            else                { return ID_PWM1; }
         };
         static constexpr const IRQn_Type pwmIRQ()
         {
-            if (timerNum < 8) { return PWM0_IRQn; }
-            else              { return PWM1_IRQn; }
+            if (moduleNum == 0) { return PWM0_IRQn; }
+            else                { return PWM1_IRQn; }
         };
 #endif
 
@@ -1050,7 +1052,7 @@ namespace Motate {
             stopPWMOutput();
         };
         void stopPWMOutput() {
-            //			stop();
+//            stop();
         };
 
         // These two start the waveform. We try to be as fast as we can.
@@ -1060,7 +1062,7 @@ namespace Motate {
             startPWMOutput();
         };
         void startPWMOutput() {
-            //			start();
+//            start();
         };
 
         void setInterrupts(const uint32_t interrupts) {
@@ -1130,8 +1132,8 @@ namespace Motate {
     }; // struct PWMTimer
 
 
-    template<uint8_t timerNum, uint8_t channelNum>
-    struct PWMTimerChannel : PWMTimer<timerNum> {
+    template<uint8_t moduleNumber, uint8_t timerNum, uint8_t channelNum>
+    struct PWMTimerChannel : PWMTimer<moduleNumber, timerNum> {
         //Intentionally empty
     };
 
