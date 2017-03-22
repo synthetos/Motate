@@ -561,11 +561,11 @@ namespace Motate {
 //            return getValue();
 //        };
 
-        void setVoltageRange(const float vref, const float min_expected = 0, const float max_expected = -1, const float ideal_steps = 1) {
-            setVoltageRangePin(adcNumber, vref, min_expected, (max_expected < 0) ? vref : max_expected, ideal_steps);
+        void setVoltageRange(const float vref, const float min_expected = 0, const float max_expected = -1, const bool differential = false, const float ideal_steps = 1) {
+            setVoltageRangePin(adcNumber, vref, min_expected, (max_expected < 0) ? vref : max_expected, differential, ideal_steps);
         };
         float getVoltage() {
-            return ((float)getRaw()-getBottom())/(float)(getTop()-getBottom())*(getTopVoltage()-getBottomVoltage())+getBottomVoltage();
+            return ((float)getRaw()-getBottom())/(float)(getTop()-getBottom())*getTopVoltage()+getBottomVoltage();
         };
         operator float() { return getVoltage(); };
 

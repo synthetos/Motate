@@ -611,6 +611,7 @@ namespace Motate {
                                 const float vref,
                                 const float min_expected,
                                 const float max_expected,
+                                const bool differential,
                                 const float ideal_steps)
         {
             _vref = vref; // all pins on the same module share the same vref
@@ -661,11 +662,11 @@ namespace Motate {
         const float _default_offset = 30;
         const float _default_vref = 3.28;
 
-        float _gain;
-        float _offset;
-        float _vref;
-
+        // each pin holds a copy of this object, so these a per-pin inherently
         int32_t _top_value = 4095;
+        float   _pin_offset = 0;
+        int32_t _pin_scale = 1;
+        float _vref = _default_vref;
 
         constexpr Afec* const afec() const { return afecNum == 0 ? AFEC0 : AFEC1; };
         constexpr IRQn const afecIRQnum() const { return afecNum == 0 ? AFEC0_IRQn : AFEC1_IRQn; };
@@ -748,9 +749,6 @@ namespace Motate {
             // To get the gain:     gain = (V1_a-V2_a)/(V1_i-V2_i)
             // To get the offset: offset = (V1_a-2^11)-gain*(V1_i-2^11)
 
-            _gain = gain;
-            _offset = offset;
-            _vref = vref;
             afec()->AFEC_CVR = AFEC_CVR_OFFSETCORR(-(int16_t)offset) | AFEC_CVR_GAINCORR((int16_t)(32768.0/gain));
         };
 
@@ -776,10 +774,7 @@ namespace Motate {
         };
         int32_t getRawPin(const uint32_t adcNumber) {
             afec()->AFEC_CSELR = AFEC_CSELR_CSEL(adcNumber);
-            // technically this could be a 16-bit signed or unsigned value
-            // the way it's currently being used, it can only be unsigned
-            // but if it's being used as signed it'll have to be converted again later.
-            return afec()->AFEC_CDR;
+            return (int16_t)afec()->AFEC_CDR; // cast to get negative value correct
         };
         int32_t getValuePin(const uint32_t adcNumber) {
             const uint32_t adcMask = 1<<adcNumber;
@@ -793,11 +788,13 @@ namespace Motate {
             return 0;
         };
         float getBottomVoltagePin(const uint32_t adcNumber) {
-            return 0.0;
+            return _pin_offset * _vref;
         }
         int32_t getTopPin(const uint32_t adcNumber) {
-            uint32_t scale = 1<<((afec()->AFEC_CGR >> (adcNumber * 2)) & 0x3u);
-            return _top_value * scale;
+            if (afec()->AFEC_DIFFR & (1<<adcNumber)) {
+                return (_top_value * _pin_scale)/2;
+            }
+            return (_pin_offset + 1.0) * _top_value * _pin_scale;
         };
         float getTopVoltagePin(const uint32_t adcNumber) {
             return _vref;
@@ -806,6 +803,7 @@ namespace Motate {
                                 const float vref,
                                 const float min_expected,
                                 const float max_expected,
+                                const bool differential,
                                 const float ideal_steps)
         {
             _vref = vref; // all pins on the same module share the same vref
@@ -843,26 +841,59 @@ namespace Motate {
             }
 
             // handle scale, which is per-pin
+            // also handles offset, which is the center of the range of size (VREF/scale)
+            // and it cannot offset more that 1/(scale*2) from zero
             float scale_used = (max_expected-min_expected)/vref;
             if (scale_used < 0.25) { // 4x scale
                 afec()->AFEC_CSELR = AFEC_CSELR_CSEL(adcNumber);
                 afec()->AFEC_CGR = (afec()->AFEC_CGR & ~(0x3 << (adcNumber * 2))) |
                                     (2 << (adcNumber * 2));
-                afec()->AFEC_COCR = AFEC_COCR_AOFF(128);
-//                _top_value *= 4;
+                if (!differential) {
+                    int32_t offset = (1024 * min_expected)/vref + 128;
+                    offset = std::min(offset, 1024L);
+                    afec()->AFEC_COCR = AFEC_COCR_AOFF(offset);
+                    _pin_offset = ((float)(offset-128)/1024.0);
+                    afec()->AFEC_DIFFR = afec()->AFEC_DIFFR & ~(1 << adcNumber);
+                } else {
+                    afec()->AFEC_COCR = AFEC_COCR_AOFF(0);
+                    afec()->AFEC_DIFFR |= 1 << adcNumber;
+                    _pin_offset = 0;
+                }
+                _pin_scale = 4;
             }
             else if (scale_used < 0.5) { // 2x scale
                 afec()->AFEC_CSELR = AFEC_CSELR_CSEL(adcNumber);
                 afec()->AFEC_CGR = (afec()->AFEC_CGR & ~(0x3 << (adcNumber * 2))) |
                                     (1 << (adcNumber * 2));
-                afec()->AFEC_COCR = AFEC_COCR_AOFF(256);
-//                _top_value *= 2;
+                if (!differential) {
+                    int32_t offset = (1024 * min_expected)/vref + 256;
+                    offset = std::min(offset, 1024L);
+                    afec()->AFEC_COCR = AFEC_COCR_AOFF(offset);
+                    _pin_offset = ((float)(offset-256)/1024.0);
+                    afec()->AFEC_DIFFR = afec()->AFEC_DIFFR & ~(1 << adcNumber);
+                } else {
+                    afec()->AFEC_COCR = AFEC_COCR_AOFF(0);
+                    afec()->AFEC_DIFFR |= 1 << adcNumber;
+                    _pin_offset = 0;
+                }
+                _pin_scale = 2;
             }
             else { // 1x scale
                 afec()->AFEC_CSELR = AFEC_CSELR_CSEL(adcNumber);
                 afec()->AFEC_CGR = (afec()->AFEC_CGR & ~(0x3 << (adcNumber * 2))) |
                                     (0 << (adcNumber * 2));
-                afec()->AFEC_COCR = AFEC_COCR_AOFF(512);
+                if (!differential) {
+                    int32_t offset = (1024 * min_expected)/vref + 512;
+                    offset = std::min(offset, 1024L);
+                    afec()->AFEC_COCR = AFEC_COCR_AOFF(offset);
+                    _pin_offset = ((float)(offset-512)/1024.0);
+                    afec()->AFEC_DIFFR = afec()->AFEC_DIFFR & ~(1 << adcNumber);
+                } else {
+                    afec()->AFEC_COCR = AFEC_COCR_AOFF(0);
+                    afec()->AFEC_DIFFR |= 1 << adcNumber;
+                    _pin_offset = 0;
+                }
+                _pin_scale = 1;
             }
 
         };
