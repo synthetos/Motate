@@ -180,20 +180,39 @@ namespace Motate {
             // We derive the baud from the master clock with a divider.
             // We want the closest match *below* the value asked for. It's safer to bee too slow.
             uint32_t new_otions = 0;
+            uint32_t old_options = spi()->SPI_CSR[channel];
 
-            uint16_t divider = SystemCoreClock / baud;
+            uint32_t divider = SamCommon::getPeripheralClockFreq() / baud;
             if (divider > 255) {
                 divider = 255;
             } else if (divider < 1) {
                 divider = 1;
             }
 
+            uint32_t old_divider = (old_options & SPI_CSR_SCBR_Msk) >> SPI_CSR_SCBR_Pos;
+            divider = std::max(old_divider, divider); // this gives the slowest rate of the old or new setting
             new_otions |= SPI_CSR_SCBR(divider);
 
+            // We can't really mix these ... they must already be compatible
+            // But if we are using a debugger we can throw a wrench in and catch it
+#if IN_DEBUGGER == 1
+            uint32_t old_polarity = (old_options & SPI_CSR_CPOL);
+            if ((old_divider != 0) && (!!(options & kSPIPolarityReversed) != !!old_polarity)) {
+                __asm__("BKPT"); // two SPI devices sharing config have different polarity!
+            }
+#endif
             if (options & kSPIPolarityReversed) {
                 new_otions |= SPI_CSR_CPOL;
             }
 
+            // We can't really mix these ... they must already be compatible
+            // But if we are using a debugger we can throw a wrench in and catch it
+#if IN_DEBUGGER == 1
+            uint32_t old_phase = (old_options & SPI_CSR_NCPHA);
+            if ((old_divider != 0) && (!!(options & kSPIClockPhaseReversed) != !!old_phase)) {
+                __asm__("BKPT"); // two SPI devices sharing config have different phases!
+            }
+#endif
             if (options & kSPIClockPhaseReversed) {
                 new_otions |= SPI_CSR_NCPHA;
             }
@@ -230,16 +249,22 @@ namespace Motate {
                     break;
             }
 
+#if IN_DEBUGGER == 1
+            uint32_t old_bits = (old_options & SPI_CSR_BITS_Msk);
+            if ((old_divider != 0) && ((options & SPI_CSR_BITS_Msk) != old_bits)) {
+                __asm__("BKPT"); // two SPI devices have different bit-lengths!
+            }
+#endif
 
             // min_between_cs_delay_ns = DLYBCS
             // cs_to_sck_delay_ns = DLYBS
             // between_word_delay_ns = DLYBCT
 
-            // these are in mupliples of MCLK (mater clock, a.k.a. SystemCoreClock)
+            // these are in mupliples of MCLK (master clock, a.k.a. SystemCoreClock)
             // we want to round up, not down, so we divide by 100,000,000 instead of
             // 1,000,000,000, then add 5 and then further divide by 10.
 
-            uint32_t dlybcs = (((min_between_cs_delay_ns*SystemCoreClock)/100000000)+5)/10;
+            uint32_t dlybcs = (((min_between_cs_delay_ns*SamCommon::getPeripheralClockFreq())/100000000)+5)/10;
 
             if (dlybcs > 0xff) {
                 // Break into the debugger
@@ -248,31 +273,34 @@ namespace Motate {
 #endif
             }
 
-            // Check to see if the new value is bigger than the old one
-            if ( ((spi()->SPI_MR & SPI_MR_DLYBCS_Msk) >> SPI_MR_DLYBCS_Pos) < dlybcs ) {
+            // Always use the larger delay
+            uint32_t old_dlybcs = ((spi()->SPI_MR & SPI_MR_DLYBCS_Msk) >> SPI_MR_DLYBCS_Pos);
+            if ( old_dlybcs < dlybcs ) {
                 spi()->SPI_MR = (spi()->SPI_MR & ~SPI_MR_DLYBCS_Msk) | SPI_MR_DLYBCS(dlybcs);
             }
 
 
-            uint32_t dlybs = (((cs_to_sck_delay_ns*SystemCoreClock)/100000000)+5)/10;
+            uint32_t dlybs = (((cs_to_sck_delay_ns*SamCommon::getPeripheralClockFreq())/100000000)+5)/10;
             if (dlybs > 0xff) {
                 // Break into the debugger
 #if IN_DEBUGGER == 1
                 __asm__("BKPT"); // SPI dlybs is too high!
 #endif
             }
-            new_otions |= SPI_CSR_DLYBS(dlybs);
+            uint32_t old_dlybs = (old_options & SPI_CSR_SCBR_Msk) >> SPI_CSR_SCBR_Pos;
+            new_otions |= SPI_CSR_DLYBS(std::max(dlybs, old_dlybs));
 
-            uint32_t dlybct = (((between_word_delay_ns*SystemCoreClock)/100000000)+5)/10;
+            uint32_t dlybct = (((between_word_delay_ns*SamCommon::getPeripheralClockFreq())/100000000)+5)/10;
             if (dlybct > 0xff) {
                 // Break into the debugger
 #if IN_DEBUGGER == 1
                 __asm__("BKPT"); // SPI dlybct is too high!
 #endif
             }
-            new_otions |= SPI_CSR_DLYBCT(dlybct);
+            uint32_t old_dlybct = (old_options & SPI_CSR_DLYBCT_Msk) >> SPI_CSR_DLYBCT_Pos;
+            new_otions |= SPI_CSR_DLYBCT(std::max(dlybct, old_dlybct));
 
-            // We'll drive CS low after we're done, so we want this:
+            // We'll drive CS low after we're done, so we always want this:
             new_otions |= SPI_CSR_CSAAT;
 
             spi()->SPI_CSR[channel] = new_otions;
