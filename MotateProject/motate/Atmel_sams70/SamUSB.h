@@ -1479,7 +1479,7 @@ namespace Motate {
                         }
                     } // if is a tx in endpoint
 
-                    // otherwise we know it's a RXOUT packet, check for cases 4 - 7
+                    // otherwise we know it's a RXOUT packet, check for cases 5 - 7
                     else {
                         if (_is_out_received_interrupt_enabled(ep) &&
                             _is_out_received(ep) // This bit is set for isochronous, bulk and, interrupt OUT endpoints, at the same time as USBHS_DEVEPTIMRx.FIFOCON when the current bank is full.
@@ -1515,12 +1515,12 @@ namespace Motate {
                         if (_is_endpoint_a_tx_in(ep)) {
                             _enable_in_send_interrupt(ep);
 
-                            // save an interrupt
-                            if (_is_in_send(ep) && (0 != get_byte_count(ep))) {
-                                // case 3 or 4
-                                _ack_in_send(ep); // A
-                                _ack_fifocon(ep); // B - This bit is cleared (by writing a one to USBHS_DEVEPTIDRx.FIFOCONC bit) to send the FIFO data and to switch to the next bank.
-                            }
+//                            // save an interrupt
+//                            if (_is_in_send(ep) && (0 != get_byte_count(ep))) {
+//                                // case 3 or 4
+//                                _ack_in_send(ep); // A
+//                                _ack_fifocon(ep); // B - This bit is cleared (by writing a one to USBHS_DEVEPTIDRx.FIFOCONC bit) to send the FIFO data and to switch to the next bank.
+//                            }
                         }
                     }
 
