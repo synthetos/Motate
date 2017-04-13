@@ -360,6 +360,30 @@ namespace Motate {
 
         uint16_t _transfer_requested = 0;   // keep track of how much we have requested. Non-zero means a request is active.
 
+        // DEBUGGING STRUCTURES
+#if true && IN_DEBUGGER
+#define TRACE_TRANSACTIONS true
+#else
+#define TRACE_TRANSACTIONS false
+#endif
+#if TRACE_TRANSACTIONS
+        struct transactions_t {
+            struct transaction_t {
+                uint16_t start = 0;
+                uint16_t end   = 0;
+            };
+
+            transaction_t t[8];
+            uint8_t next = 0;
+
+            void add(uint16_t start, uint16_t end) {
+                t[next].start = start;
+                t[next].end = end;
+                next = (next+1)&7;
+            };
+        } transactions;
+#endif
+
         constexpr int16_t size() { return _size; };
 
         TXBuffer(owner_type owner) : _owner(owner) { _data[_size] = 0; };
@@ -434,6 +458,9 @@ namespace Motate {
         }
 
         void _restartTransfer() {
+            volatile static bool is_requesting = false;
+            if (is_requesting) { return; }
+            is_requesting = true;
             if ((_transfer_requested == 0) && !isEmpty()) {
                 // We can only request contiguous chunks. Let's see what the next one is.
                 _getReadOffset(); // cache the read position
@@ -464,11 +491,17 @@ namespace Motate {
                 // We set _transfer_requested BEFORE startRXTransfer, in case an interrupt fires before we exit startRXTransfer
                 //   (which should only happen if it started succesfully).
                 // startRXTransfer will return false if it couldn't start the transfer.
+
+#if TRACE_TRANSACTIONS
+                transactions.add(_last_known_read_offset, _last_known_read_offset + transfer_size);
+#endif
+
                 _transfer_requested = transfer_size;
                 if (!_owner->startTXTransfer(_read_pos, transfer_size)) {
                     _transfer_requested = 0;
                 }
             }
+            is_requesting = false;
         };
 
         // BLOCKING write
