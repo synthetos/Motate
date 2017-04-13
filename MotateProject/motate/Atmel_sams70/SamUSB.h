@@ -251,6 +251,10 @@ namespace Motate {
         return ((USBHS->USBHS_DEVDMA + (ep-1))->USBHS_DEVDMAADDRESS);
     }
 
+    static auto _devdma_buffer_count(const uint32_t ep) {
+        return (((USBHS->USBHS_DEVDMA + (ep-1))->USBHS_DEVDMASTATUS) & USBHS_DEVDMASTATUS_BUFF_COUNT_Msk) >> USBHS_DEVDMASTATUS_BUFF_COUNT_Pos;
+    }
+
     using namespace Private::BitManipulation;
 
     // USBDeviceHardware actually talks to the hardware, and marshalls data to/from the interfaces.
@@ -846,7 +850,7 @@ namespace Motate {
         // ** addresses are identical to the DPRAM internal pointer modulo 32 bits.
         // #define udd_get_endpoint_fifo_access(ep, scale) (((volatile TPASTE2(U, scale) (*)[0x8000 / ((scale) / 8)])USBHS_RAM_ADDR)[(ep)])
 
-        // Now, what that crazt thing above does is make an array of volatile 32K buffers, starting at USBHS_RAM_ADDR.
+        // Now, what that crazy thing above does is make an array of volatile 32K buffers, starting at USBHS_RAM_ADDR.
         // We'll do that in a more readable format now. Note that we only support byte-level access. This is because we
         // only plan on using it that way.
 
@@ -1437,7 +1441,7 @@ namespace Motate {
              *   1) The packet is empty, but DMA still has buffered data - no action
              *      We DO NOT clear TXINI here, so we get another interrupt.
              *      This should NOT happen when interrupts are enabled at the right time.
-             *   2) The packet is not full, but the DMA buffer is empty - actions AB(+)CD(+)
+             *   2) The packet is not full, but the DMA buffer is empty - actions AB(-)CD(*)
              *      Action B here will send the truncated packet.
              *   3) The packet is full, but DMA still has buffered data - actions AB(-)
              *   4) The packet is full, and the DMA buffer is empty (both on the same byte) - actions AB(-)CD(+)
@@ -1462,20 +1466,23 @@ namespace Motate {
                             _is_in_send(ep) // This bit is set for isochronous, bulk and interrupt IN endpoints, at the same time as USBHS_DEVEPTIMRx.FIFOCON when the current bank is free.
                             )
                         {
-                            if (0 != get_byte_count(ep)) {
-                                // case 3 or 4
+                            auto byte_count = get_byte_count(ep);
+                            auto dma_bytes_left = _devdma_buffer_count(ep);
+                            if ((_get_endpoint_size(ep) == byte_count) || // case 3 or 4
+                                (0 == dma_bytes_left)           // case 2
+                                )
+                            {
                                 _ack_in_send(ep); // A
                                 _ack_fifocon(ep); // B - This bit is cleared (by writing a one to USBHS_DEVEPTIDRx.FIFOCONC bit) to send the FIFO data and to switch to the next bank.
-                            } else {
-                                if (!transfer_completed) {
-                                    if (0 == (_devdma_status(ep) >> 16)) {
-                                        _completeTransfer(ep); // C+D
-                                        transfer_completed = true;
-                                    }
-                                }
                             }
-                            handled = true;
 
+                            if (0 == dma_bytes_left) {
+                                // case 2
+                                _completeTransfer(ep); // C+D
+                                transfer_completed = true;
+                            }
+
+                            handled = true;
                         }
                     } // if is a tx in endpoint
 
@@ -1493,13 +1500,12 @@ namespace Motate {
                                 _ack_fifocon(ep);
                             } else {
                                 // case 6
-                                if (!transfer_completed) {
-                                    if (0 == (_devdma_status(ep) >> 16)) {
-                                        _completeTransfer(ep); // C+D
-                                        transfer_completed = true;
-                                    }
+                                if (0 == _devdma_buffer_count(ep)) {
+                                    _completeTransfer(ep); // C+D
+                                    transfer_completed = true;
                                 }
                             }
+
                             handled = true;
                         }
                     } // if is a rx out endpoint
@@ -1514,21 +1520,6 @@ namespace Motate {
                     if (ep_status & USBHS_DEVDMASTATUS_DESC_LDST) {
                         if (_is_endpoint_a_tx_in(ep)) {
                             _enable_in_send_interrupt(ep);
-
-//                            // save an interrupt
-//                            if (_is_in_send(ep) && (0 != get_byte_count(ep))) {
-//                                // case 3 or 4
-//                                _ack_in_send(ep); // A
-//                                _ack_fifocon(ep); // B - This bit is cleared (by writing a one to USBHS_DEVEPTIDRx.FIFOCONC bit) to send the FIFO data and to switch to the next bank.
-//                            }
-                        }
-                    }
-
-                    if (ep_status & USBHS_DEVDMASTATUS_END_TR_ST) {
-                        // case 2
-                        if (!transfer_completed) {
-                            _completeTransfer(ep); // C+D
-                            transfer_completed = true;
                         }
                     }
 
@@ -1536,11 +1527,11 @@ namespace Motate {
                     {
                         // case 2, 4, or 7
 
-                        if (_is_in_send(ep) && (0 != get_byte_count(ep))) {
-                            // case 2
-                            _ack_in_send(ep); // A
-                            _ack_fifocon(ep); // B - This bit is cleared (by writing a one to USBHS_DEVEPTIDRx.FIFOCONC bit) to send the FIFO data and to switch to the next bank.
-                        }
+//                        if (_is_in_send(ep) && (0 != get_byte_count(ep))) {
+//                            // case 2
+//                            _ack_in_send(ep); // A
+//                            _ack_fifocon(ep); // B - This bit is cleared (by writing a one to USBHS_DEVEPTIDRx.FIFOCONC bit) to send the FIFO data and to switch to the next bank.
+//                        }
 
                         if (!transfer_completed) {
                             // cases 2, 4, or 7
@@ -1568,10 +1559,6 @@ namespace Motate {
                 // if the endpoint is a TX IN:
                 // validate the packet at DMA Buffer End (BUFF_COUNT reaches 0)
                 desc.end_buffer_enable = true;
-                // allow the DMA transfer to be stopped by USB (small packet, etc)
-                desc.end_transfer_enable = true;
-                // interrupt when the DMA transfer ends because USB stopped it
-                desc.end_transfer_interrupt_enable = true;
                 // we use the descriptor loaded to turn on the other iterrupts
                 desc.descriptor_loaded_interrupt_enable = true;
             }
