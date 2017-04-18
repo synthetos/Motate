@@ -77,6 +77,9 @@ namespace Motate {
 
         // For use on PWM pins only!
         kPWMPinInverted = 1<<8,
+
+        // For use on ADC pins only!
+        kDifferentialPair = 1<<9,
     };
 
     enum PinInterruptOptions : PinInterruptOptions_t {
@@ -576,7 +579,8 @@ namespace Motate {
             ADC->ADC_MR |= ADC_MR_FREERUN_ON;
         };
 
-        void initPin(const uint32_t adcNumber) {
+        void initPin(const uint32_t adcNumber, bool differential) {
+            // NOTE: differential is ignored
             const uint32_t adcMask = 1<<adcNumber;
 
             /* Enable the pin */
@@ -611,7 +615,6 @@ namespace Motate {
                                 const float vref,
                                 const float min_expected,
                                 const float max_expected,
-                                const bool differential,
                                 const float ideal_steps)
         {
             _vref = vref; // all pins on the same module share the same vref
@@ -652,20 +655,27 @@ namespace Motate {
     //          and initializing the ADC module once.
     template <int32_t afecNum>
     struct ADC_Module {
+        static const uint32_t moduleNumber = afecNum;
+
         const uint32_t _default_adc_clock_frequency = 10 * 1000000; // 10MHz
         const uint32_t _default_adc_startup_time = 10;
 
         // these are highly tuned parameters, and may need to become adjustable at runtime in the future
         // see http://www.atmel.com/Images/Atmel-44093-AFE-Calibration-on-SAM-V7-SAM-E7-SAM-S7-Microcontrollers_Application-Note.pdf
         //    specifically section 2.2.2
-        const float _default_gain = 0.991073741551146;
-        const float _default_offset = 30;
+//        const float _default_gain = 0.991073741551146;
+        const float _default_gain = 0.9903;
+//        const float _default_gain = 1;
+
+        const float _default_offset = 106;
+//        const float _default_offset = 0;
         const float _default_vref = 3.28;
 
         // each pin holds a copy of this object, so these a per-pin inherently
         int32_t _top_value = 4095;
         float   _pin_offset = 0;
         int32_t _pin_scale = 1;
+        bool    _differential = false;
         float _vref = _default_vref;
 
         constexpr Afec* const afec() const { return afecNum == 0 ? AFEC0 : AFEC1; };
@@ -698,11 +708,13 @@ namespace Motate {
 
             // Find correct MR_STARTUP value from conversion table
             for (ul_mr_startup=0; ul_mr_startup<16; ul_mr_startup++) {
-                if (startup_table[ul_mr_startup] >= ul_startup)
+                if (startup_table[ul_mr_startup] >= ul_startup) {
                     break;
+                }
             }
-            if (ul_mr_startup==16)
+            if (ul_mr_startup==16) {
                 return /*-1*/;
+            }
 
             afec()->AFEC_MR =
                 AFEC_MR_PRESCAL(ul_prescal) |
@@ -752,15 +764,19 @@ namespace Motate {
             afec()->AFEC_CVR = AFEC_CVR_OFFSETCORR(-(int16_t)offset) | AFEC_CVR_GAINCORR((int16_t)(32768.0/gain));
         };
 
-        void initPin(const uint32_t adcNumber) {
+        void initPin(const uint32_t adcNumber, bool differential) {
             const uint32_t adcMask = 1<<adcNumber;
+
+            // Note about differential pairs: they are sequential, starting from 0
+            // 0 and 1, 2 and 3, etc.
+            // So, the other one from any adcNumber is adcNumber XOR 1, or adcNumber^1
 
             // Enable the pin
             afec()->AFEC_CHER = adcMask;
 
             // Enable error correction - note the actual correction parameters are shared across this module
             // and are set in setupErrorCorrection
-            AFEC0->AFEC_CECR |= adcMask;
+            afec()->AFEC_CECR |= adcMask;
 
             // The offset (AOFF) is a 10-bit value that will set where in the range is the mid-point.
             // The startup value is 0, and the ideal midpoint is 2^10 / 2=512.
@@ -771,6 +787,8 @@ namespace Motate {
             // http://www.atmel.com/Images/Atmel-44093-AFE-Calibration-on-SAM-V7-SAM-E7-SAM-S7-Microcontrollers_Application-Note.pdf
             afec()->AFEC_CSELR = AFEC_CSELR_CSEL(adcNumber);
             afec()->AFEC_COCR = AFEC_COCR_AOFF(512);
+
+            _differential = differential;
         };
         int32_t getRawPin(const uint32_t adcNumber) {
             afec()->AFEC_CSELR = AFEC_CSELR_CSEL(adcNumber);
@@ -788,11 +806,15 @@ namespace Motate {
             return 0;
         };
         float getBottomVoltagePin(const uint32_t adcNumber) {
+            if (afec()->AFEC_DIFFR & (1<<adcNumber)) {
+                return 0.0; // differential values both have the offset, so it cancels out
+            }
             return _pin_offset * _vref;
         }
         int32_t getTopPin(const uint32_t adcNumber) {
             if (afec()->AFEC_DIFFR & (1<<adcNumber)) {
-                return (_top_value * _pin_scale)/2;
+                // differential values are centered and the offset cancels out
+                return (_top_value * _pin_scale)/2.0;
             }
             return (_pin_offset + 1.0) * _top_value * _pin_scale;
         };
@@ -803,7 +825,6 @@ namespace Motate {
                                 const float vref,
                                 const float min_expected,
                                 const float max_expected,
-                                const bool differential,
                                 const float ideal_steps)
         {
             _vref = vref; // all pins on the same module share the same vref
@@ -840,6 +861,13 @@ namespace Motate {
                 _top_value = 4095;
             }
 
+            if (_differential) {
+                // make sure any differential pins are enabled as well
+                afec()->AFEC_CHER = 1<<(adcNumber^1);
+                afec()->AFEC_CECR |= (1 << adcNumber) | (1 << (adcNumber^1));
+                afec()->AFEC_DIFFR |= (1 << adcNumber) | (1 << (adcNumber^1));
+            }
+
             // handle scale, which is per-pin
             // also handles offset, which is the center of the range of size (VREF/scale)
             // and it cannot offset more that 1/(scale*2) from zero
@@ -847,55 +875,64 @@ namespace Motate {
             if (scale_used < 0.25) { // 4x scale
                 afec()->AFEC_CSELR = AFEC_CSELR_CSEL(adcNumber);
                 afec()->AFEC_CGR = (afec()->AFEC_CGR & ~(0x3 << (adcNumber * 2))) |
-                                    (2 << (adcNumber * 2));
-                if (!differential) {
-                    int32_t offset = (1024 * min_expected)/vref + 128;
-                    offset = std::min(offset, 1024L);
+                                    (2 << (adcNumber * 2)
+                                   );
+
+                int32_t offset = (1024 * min_expected)/vref + 128;
+                offset = std::min(offset, 1024L);
+                afec()->AFEC_COCR = AFEC_COCR_AOFF(offset);
+                _pin_offset = ((float)(offset-128)/1024.0);
+
+                if (_differential) {
+                    afec()->AFEC_CSELR = AFEC_CSELR_CSEL((adcNumber^1));
+                    afec()->AFEC_CGR = (afec()->AFEC_CGR & ~(0x3 << ((adcNumber^1) * 2))) |
+                                        (2 << ((adcNumber^1) * 2)
+                                       );
                     afec()->AFEC_COCR = AFEC_COCR_AOFF(offset);
-                    _pin_offset = ((float)(offset-128)/1024.0);
-                    afec()->AFEC_DIFFR = afec()->AFEC_DIFFR & ~(1 << adcNumber);
-                } else {
-                    afec()->AFEC_COCR = AFEC_COCR_AOFF(0);
-                    afec()->AFEC_DIFFR |= 1 << adcNumber;
-                    _pin_offset = 0;
                 }
                 _pin_scale = 4;
             }
             else if (scale_used < 0.5) { // 2x scale
                 afec()->AFEC_CSELR = AFEC_CSELR_CSEL(adcNumber);
                 afec()->AFEC_CGR = (afec()->AFEC_CGR & ~(0x3 << (adcNumber * 2))) |
-                                    (1 << (adcNumber * 2));
-                if (!differential) {
-                    int32_t offset = (1024 * min_expected)/vref + 256;
-                    offset = std::min(offset, 1024L);
+                                    (1 << (adcNumber * 2)
+                                   );
+
+                int32_t offset = (1024 * min_expected)/vref + 256;
+                offset = std::min(offset, 1024L);
+                afec()->AFEC_COCR = AFEC_COCR_AOFF(offset);
+                _pin_offset = ((float)(offset-256)/1024.0);
+
+                if (_differential) {
+                    afec()->AFEC_CSELR = AFEC_CSELR_CSEL(adcNumber^1);
+                    afec()->AFEC_CGR = (afec()->AFEC_CGR & ~(0x3 << ((adcNumber^1) * 2))) |
+                                        (1 << ((adcNumber^1) * 2)
+                                       );
                     afec()->AFEC_COCR = AFEC_COCR_AOFF(offset);
-                    _pin_offset = ((float)(offset-256)/1024.0);
-                    afec()->AFEC_DIFFR = afec()->AFEC_DIFFR & ~(1 << adcNumber);
-                } else {
-                    afec()->AFEC_COCR = AFEC_COCR_AOFF(0);
-                    afec()->AFEC_DIFFR |= 1 << adcNumber;
-                    _pin_offset = 0;
                 }
+
                 _pin_scale = 2;
             }
             else { // 1x scale
                 afec()->AFEC_CSELR = AFEC_CSELR_CSEL(adcNumber);
                 afec()->AFEC_CGR = (afec()->AFEC_CGR & ~(0x3 << (adcNumber * 2))) |
                                     (0 << (adcNumber * 2));
-                if (!differential) {
-                    int32_t offset = (1024 * min_expected)/vref + 512;
-                    offset = std::min(offset, 1024L);
+
+                int32_t offset = (1024 * min_expected)/vref + 512;
+                offset = std::min(offset, 1024L);
+                afec()->AFEC_COCR = AFEC_COCR_AOFF(offset);
+                _pin_offset = ((float)(offset-512)/1024.0);
+
+                if (_differential) {
+                    afec()->AFEC_CSELR = AFEC_CSELR_CSEL(adcNumber^1);
+                    afec()->AFEC_CGR = (afec()->AFEC_CGR & ~(0x3 << ((adcNumber^1) * 2))) |
+                                        (0 << ((adcNumber^1) * 2)
+                                       );
                     afec()->AFEC_COCR = AFEC_COCR_AOFF(offset);
-                    _pin_offset = ((float)(offset-512)/1024.0);
-                    afec()->AFEC_DIFFR = afec()->AFEC_DIFFR & ~(1 << adcNumber);
-                } else {
-                    afec()->AFEC_COCR = AFEC_COCR_AOFF(0);
-                    afec()->AFEC_DIFFR |= 1 << adcNumber;
-                    _pin_offset = 0;
                 }
+
                 _pin_scale = 1;
             }
-
         };
 
         void setInterrupts(const uint32_t interrupts, const uint32_t adcMask) {
@@ -956,7 +993,21 @@ namespace Motate {
             static constexpr uint32_t adcNumber = adcNum; \
         };
 
+//    #define _MAKE_MOTATE_ADC_DIFFERENTIAL_PAIR(adcNegNum, adcPosNum) \
+//        template<> \
+//        constexpr const bool IsADCDifferentialPair<adcNegNum, adcPosNum>() { \
+//            return (ADCPin<adcNegNum>::moduleNumber == ADCPin<adcPosNum>::moduleNumber) && \
+//                   (ADCPin<adcNegNum>::adcNumber == (ADCPin<adcPosNum>::adcNumber^1)); \
+//        };
+
 #endif
+
+//    template<pin_number negPinNum, pin_number posPinNum>
+//    constexpr const bool IsADCDifferentialPair() {
+//        return (ADCPin<adcNegNum>::moduleNumber == ADCPin<adcPosNum>::moduleNumber) &&
+//        (ADCPin<adcNegNum>::adcNumber == (ADCPin<adcPosNum>::adcNumber^1));
+//    };
+
 
 #pragma mark PWMOutputPin support
     /**************************************************

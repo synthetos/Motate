@@ -408,8 +408,12 @@ namespace Motate {
      * adc_pin.getRaw() return the result of the last conversion. Start a sampling sequence with adc_pin.startSampling(),
      * which will pass the request to the ADCParent, which will sample for all pins with the same parent.
      *
-     * In order to know when a sample is completed, you can set the interrupts and callback. If you use the constructor form
-     * ADCPin(options, function, interrupt_settings) you can control the interrupt and pass a lambda or function pointer.
+     * In order to know when a sample is completed, you can set the interrupts and callback. If you use the constructor
+     *  from ADCPin(options, function, interrupt_settings) you can control the interrupt and pass a lambda or function
+     * pointer.
+     *
+     *  Requires: template<pin_number negPinNum, pin_number posPinNum> constexpr const bool IsADCDifferentialPair()
+
      *
      **************************************************/
 
@@ -439,7 +443,9 @@ namespace Motate {
                                 const float ideal_steps);
     };
 
-    // This first one is the "default" ADCPin, which is what gets used for pins that cannot actually be ADC pins
+    // This is the default ADCPin, which is FAKE.
+    // It is what gets used for pins that cannot actually be ADC pins.
+    // The real ADCPin is a template specialization below.
     template<pin_number pinNum, class _enabled = void>
     struct ADCPin : ADCPinParent<pinNum>, Pin<pinNum> {
         static constexpr uint32_t adcMask = 0;
@@ -501,7 +507,7 @@ namespace Motate {
         using ADCPinParent<pinNum>::getTopVoltagePin;
         using ADCPinParent<pinNum>::setVoltageRangePin;
 
-        ADCPin() : ADCPinParent<pinNum>(), Pin<pinNum>(kUnchanged),
+        ADCPin() : ADCPinParent<pinNum>(), Pin<pinNum>(kInput),
         _pinChangeInterrupt(adcMask, interrupt, ADCPinParent<pinNum>::_firstInterrupt)
         {
             init();
@@ -512,10 +518,10 @@ namespace Motate {
                const uint32_t interrupt_settings = kPinInterruptOnChange|kPinInterruptPriorityMedium
                )
         : ADCPinParent<pinNum>(),
-        Pin<pinNum>(kUnchanged, options),
+        Pin<pinNum>(kInput, options),
         _pinChangeInterrupt(adcMask, interrupt, ADCPinParent<pinNum>::_firstInterrupt)
         {
-            init();
+            init(options);
             setInterrupts(interrupt_settings);
         };
 
@@ -524,17 +530,17 @@ namespace Motate {
                const uint32_t interrupt_settings = kPinInterruptOnChange|kPinInterruptPriorityMedium
                )
         : ADCPinParent<pinNum>(),
-        Pin<pinNum>(kUnchanged, options),
+        Pin<pinNum>(kInput, options),
         _pinChangeInterrupt(adcMask, std::move(_interrupt), ADCPinParent<pinNum>::_firstInterrupt)
         {
-            init();
+            init(options);
             setInterrupts(interrupt_settings);
         };
 
-        static const bool is_real = true; // Yeah, they ALL can be interrupt pins (in hardware).
-
-        void init() {
-            initPin(adcNumber);
+        static const bool is_real = true;
+        
+        void init(const PinOptions_t options) {
+            initPin(adcNumber, false);
         };
         int32_t getRaw() {
             return getRawPin(adcNumber);
@@ -561,8 +567,12 @@ namespace Motate {
 //            return getValue();
 //        };
 
-        void setVoltageRange(const float vref, const float min_expected = 0, const float max_expected = -1, const bool differential = false, const float ideal_steps = 1) {
-            setVoltageRangePin(adcNumber, vref, min_expected, (max_expected < 0) ? vref : max_expected, differential, ideal_steps);
+        void setVoltageRange(const float vref,
+                             const float min_expected = 0,
+                             const float max_expected = -1,
+                             const float ideal_steps = 1)
+        {
+            setVoltageRangePin(adcNumber, vref, min_expected, (max_expected < 0) ? vref : max_expected, ideal_steps);
         };
         float getVoltage() {
             return ((float)getRaw()-getBottom())/(float)(getTop()-getBottom())*getTopVoltage()+getBottomVoltage();
@@ -590,6 +600,188 @@ namespace Motate {
     using LookupADCPin = ADCPin< ReversePinLookup<portChar, portPin>::number >;
 
 
+//    // ADCDifferentialPair is for handling ADCPins where two pins are used and their
+//    // values are subtracted to get a result.
+//    // This is the default ADCDifferentialPair, which is FAKE.
+//    // It is what gets used for pins that cannot actually be ADC pins.
+//    // The real ADCPin is a template specialization below.
+//    template<pin_number negPinNum, pin_number posPinNum, class _enabled = void>
+//    struct ADCDifferentialPair : ADCPinParent<negPinNum>, Pin<negPinNum>, Pin<posPinNum> {
+//#if 0 // make 1 if it's okay to fake a ADCDifferentialPair
+//        static constexpr uint32_t adcMask = 0;
+//        static constexpr uint32_t adcNumber = 0;
+//
+//        float _vref = 3.3;
+//
+//        ADCDifferentialPair()
+//        : ADCPinParent<negPinNum>(),
+//          Pin<negPinNum>(kUnchanged),
+//          Pin<posPinNum>(kUnchanged)
+//        { };
+//
+//        ADCDifferentialPair(const PinOptions_t options,
+//                            const uint32_t interrupt_settings = kPinInterruptOnChange|kPinInterruptPriorityMedium
+//                            )
+//        : ADCPinParent<negPinNum>(),
+//          Pin<negPinNum>(kUnchanged, options),
+//          Pin<posPinNum>(kUnchanged, options)
+//        { };
+//
+//        ADCDifferentialPair(const PinOptions_t options,
+//                            std::function<void(void)> &&_interrupt,
+//                            const uint32_t interrupt_settings = kPinInterruptOnChange|kPinInterruptPriorityMedium
+//                            )
+//        : ADCPinParent<negPinNum>(),
+//          Pin<negPinNum>(kUnchanged, options),
+//          Pin<posPinNum>(kUnchanged, options)
+//        { };
+//
+//        void init() {};
+//        int32_t getRaw() { return 0; };
+//        int32_t getValue() { return 0; };
+//        int32_t getBottom() { return 0; };
+//        float getBottomVoltage() { return 0.0; };
+//        int32_t getTop() { return 4095; };
+//        float getTopVoltage() { return _vref; };
+//
+//        void setVoltageRange(const float vref, const float min_expected = 0, const float max_expected = -1, const float ideal_steps = 1) {
+//            _vref = vref;
+//        };
+//        float getVoltage() { return 0.0; }
+//        operator float() { return getVoltage(); };
+//
+//
+//        void startSampling() { };
+//        void setInterrupts(const uint32_t interrupts) { };
+//
+//        static void interrupt() __attribute__ (( weak ));
+//        void setInterruptHandler(std::function<void(void)> &&handler) { };
+//        void setInterruptHandler(const std::function<void(void)> &handler) { };
+//#else
+//        static_assert(false, "Tried to use a fake ADCDifferentialPair!");
+//#endif
+//    };
+//
+    // This is the REAL ADCPin definition, and is triggered when IsADCDifferentialPair<negPinNum, posPinNum> == true
+    // Assumption: Both pins of the differential pair share the same ADCPinParent
+    // Assumption: Pin<negPinNum> can be initialized before Pin<posPinNum>
+    // Assumption: Pin<negPinNum> can be the sole source of the pin change interrupt
+    template<pin_number negPinNum, pin_number posPinNum>
+    struct ADCDifferentialPair : // <negPinNum, posPinNum, typename std::enable_if<IsADCDifferentialPair<negPinNum, posPinNum>()>>
+        ADCPinParent<negPinNum>, Pin<negPinNum>, Pin<posPinNum>, _pinChangeInterrupt
+    {
+        static_assert((ADCPin<negPinNum>::moduleNumber == ADCPin<posPinNum>::moduleNumber) &&
+                      (ADCPin<negPinNum>::adcNumber == (ADCPin<posPinNum>::adcNumber^1)),
+                      "Tried to use an invalid ADCDifferentialPair");
+
+        using ADCPinParent<negPinNum>::adcMask;
+        using ADCPinParent<negPinNum>::adcNumber;
+        using ADCPinParent<negPinNum>::initPin;
+        using ADCPinParent<negPinNum>::getRawPin;
+        using ADCPinParent<negPinNum>::getValuePin;
+        using ADCPinParent<negPinNum>::getBottomPin;
+        using ADCPinParent<negPinNum>::getBottomVoltagePin;
+        using ADCPinParent<negPinNum>::getTopPin;
+        using ADCPinParent<negPinNum>::getTopVoltagePin;
+        using ADCPinParent<negPinNum>::setVoltageRangePin;
+
+        ADCDifferentialPair()
+        : ADCPinParent<negPinNum>(),
+          Pin<negPinNum>(kInput),
+          Pin<posPinNum>(kInput),
+          _pinChangeInterrupt(adcMask, interrupt, ADCPinParent<negPinNum>::_firstInterrupt)
+        {
+            init(kDifferentialPair);
+            setInterrupts(kPinInterruptOnChange|kPinInterruptPriorityMedium);
+        };
+
+        ADCDifferentialPair(const PinOptions_t options,
+                            const uint32_t interrupt_settings = kPinInterruptOnChange|kPinInterruptPriorityMedium
+                            )
+        : ADCPinParent<negPinNum>(),
+          Pin<negPinNum>(kInput),
+          Pin<posPinNum>(kInput),
+          _pinChangeInterrupt(adcMask, interrupt, ADCPinParent<negPinNum>::_firstInterrupt)
+        {
+            init(options);
+            setInterrupts(interrupt_settings);
+        };
+
+        ADCDifferentialPair(const PinOptions_t options,
+                            std::function<void(void)> &&_interrupt,
+                            const uint32_t interrupt_settings = kPinInterruptOnChange|kPinInterruptPriorityMedium
+                            )
+        : ADCPinParent<negPinNum>(),
+          Pin<negPinNum>(kInput),
+          Pin<posPinNum>(kInput),
+          _pinChangeInterrupt(adcMask, std::move(_interrupt), ADCPinParent<negPinNum>::_firstInterrupt)
+        {
+            init(options);
+            setInterrupts(interrupt_settings);
+        };
+
+        static const bool is_real = true;
+
+        void init(const PinOptions_t options) {
+            initPin(adcNumber, options | kDifferentialPair);
+        };
+        int32_t getRaw() {
+            return getRawPin(adcNumber);
+        };
+        int32_t getValue() {
+            return getValuePin(adcNumber);
+        };
+        int32_t getBottom() {
+            return getBottomPin(adcNumber);
+        };
+        float getBottomVoltage() {
+            return getBottomVoltagePin(adcNumber);
+        };
+        int32_t getTop() {
+            return getTopPin(adcNumber);
+        };
+        float getTopVoltage() {
+            return getTopVoltagePin(adcNumber);
+        };
+        //        operator int16_t() {
+        //            return getValue();
+        //        };
+        //        operator int32_t() {
+        //            return getValue();
+        //        };
+
+        void setVoltageRange(const float vref,
+                             const float min_expected = 0,
+                             const float max_expected = -1,
+                             const float ideal_steps = 1)
+        {
+            setVoltageRangePin(adcNumber, vref, min_expected, (max_expected < 0) ? vref : max_expected, ideal_steps);
+        };
+        float getVoltage() {
+            return ((float)getRaw()-getBottom())/(float)(getTop()-getBottom())*getTopVoltage()+getBottomVoltage();
+        };
+        operator float() { return getVoltage(); };
+
+        void setInterrupts(const uint32_t interrupts) {
+            ADCPinParent<negPinNum>::setInterrupts(interrupts, adcMask);
+        };
+
+        // Interrupt interface option 1: create this function (use macro MOTATE_PIN_INTERRUPT)
+        static void interrupt() __attribute__ (( weak ));
+
+        // Inerrupt inferface option 2: call this function with your closure or function pointer
+        void setInterruptHandler(std::function<void(void)> &&handler) {
+            _pinChangeInterrupt::setInterrupt(std::move(handler)); // enable interrupts and set the priority
+        };
+        void setInterruptHandler(const std::function<void(void)> &handler) {
+            _pinChangeInterrupt::setInterrupt(handler); // enable interrupts and set the priority
+        };
+
+    }; // ADCDifferentialPair
+
+    // Should have been provided by the platform-specific pins file
+    //template<pin_number negPinNum, pin_number posPinNum>
+    //constexpr const bool IsADCDifferentialPair() { return false; };
 
 
 #pragma mark PWMOutputPin / RealPWMOutputPin / PWMLikeOutputPin
