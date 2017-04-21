@@ -805,9 +805,8 @@ namespace Motate {
     template<pin_number pinNum, typename timerOrPWM>
     struct RealPWMOutputPin : Pin<pinNum>, timerOrPWM {
 
-        RealPWMOutputPin(const PinMode pinMode) : Pin<pinNum>(pinMode, pinMode), timerOrPWM(kTimerUpToMatch, kDefaultPWMFrequency) {};
+        RealPWMOutputPin(const PinMode pinMode) : Pin<pinNum>(pinMode), timerOrPWM(kTimerUpToMatch, kDefaultPWMFrequency) {};
         RealPWMOutputPin(const PinMode pinMode, const PinOptions_t options, const uint32_t freq) : Pin<pinNum>(pinMode, options), timerOrPWM(kTimerUpToMatch, freq) {};
-//        RealPWMOutputPin(const PinMode pinMode, const uint32_t freq) : Pin<pinNum>(pinMode, kNormal), timerOrPWM(kTimerUpToMatch, freq) {};
         bool canPWM() { return true; };
 
         void pwmpin_init(const TimerChannelOutputOptions options) {
@@ -823,17 +822,19 @@ namespace Motate {
         void operator=(const float value) { write(value); };
         void write(const float value) {
             uint16_t duty = timerOrPWM::getTopValue() * value;
-            if (duty == 0)
+            if (duty == 0) {
                 timerOrPWM::stopPWMOutput();
-            else
+            } else {
                 timerOrPWM::startPWMOutput();
+            }
             timerOrPWM::setExactDutyCycle(duty);
         };
         void writeRaw(const uint16_t duty) {
-            if (duty == 0)
+            if (duty == 0) {
                 timerOrPWM::stopPWMOutput();
-            else
+            } else {
                 timerOrPWM::startPWMOutput();
+            }
             timerOrPWM::setExactDutyCycle(duty);
         };
         void setInterrupts(const uint32_t interrupts) {
@@ -866,7 +867,6 @@ namespace Motate {
     struct PWMLikeOutputPin : Pin<pinNum> {
         PWMLikeOutputPin() : Pin<pinNum>(kOutput) {};
         PWMLikeOutputPin(const PinOptions_t options, const uint32_t freq) : Pin<pinNum>(kOutput, options) {};
-//        PWMLikeOutputPin(const uint32_t freq) : Pin<pinNum>(kOutput, kNormal) {};
         void setFrequency(const uint32_t freq) {};
         operator float() { return !!Pin<pinNum>::getOutputValue(); };
         operator uint32_t() { return (100 * (!!Pin<pinNum>::getOutputValue())); };
@@ -904,7 +904,6 @@ namespace Motate {
         typedef _GetAvailablePWMOrAlike<pinNum> _pin_parent;
         PWMOutputPin() : _pin_parent() {};
         PWMOutputPin(const PinOptions_t options, const uint32_t freq) : _pin_parent(options, freq) {};
-//        PWMOutputPin(const uint32_t freq) : _pin_parent(kOutput, kNormal) {};
 
         using _GetAvailablePWMOrAlike<pinNum>::operator=;
         using _GetAvailablePWMOrAlike<pinNum>::setFrequency;

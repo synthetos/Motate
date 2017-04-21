@@ -892,12 +892,14 @@ namespace Motate {
 
             SamCommon::enablePeripheralClock(peripheralId());
 
-            if (mode == kTimerInputCapture || mode == kTimerInputCaptureToMatch)
+            if (mode == kTimerInputCapture || mode == kTimerInputCaptureToMatch) {
                 return kFrequencyUnattainable;
+            }
 
             // Remember: kTimerUpDownToMatch and kPWMCenterAligned are identical.
-            if (mode == kPWMCenterAligned)
+            if (mode == kPWMCenterAligned) {
                 frequency /= 2;
+            }
 
             /* Setup clock "prescaler" */
             /* Divisors: 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024 */
@@ -911,7 +913,6 @@ namespace Motate {
 
             if (clock == kPWMClockPrescaleAndDivA || clock == kPWMClockPrescaleAndDivB) {
                 // ** THIS CLOCK A/CLOCK B CODE ALL NEEDS CHECKED ** //
-
 
                 // Find prescaler value
                 prescaler = (masterClock / divisors[divisor_index]) / frequency;
@@ -928,7 +929,7 @@ namespace Motate {
                     pwm()->PWM_CLK = (pwm()->PWM_CLK & ~PWM_CLK_DIVA_Msk) | prescaler | (divisors[divisor_index] << 8);
 
                     int32_t newTop = masterClock/(divisors[divisor_index] * prescaler * frequency);
-                    setTop(newTop, /*setOnNext=*/false);
+                    setTop(newTop);
 
                     // Determine and return the new frequency.
                     return masterClock/(divisors[divisor_index]*newTop);
@@ -957,7 +958,7 @@ namespace Motate {
             // ToDo: Polarity setttings, Dead-Time control, Counter events
 
             int32_t newTop = test_value / frequency;
-            setTop(newTop, /*setOnNext=*/ false);
+            setTop(newTop);
 
             // Determine and return the new frequency.
             return test_value * newTop;
@@ -965,11 +966,12 @@ namespace Motate {
 
         // Set the TOP value for modes that use it.
         // WARNING: No sanity checking is done to verify that you are, indeed, in a mode that uses it.
-        void setTop(const uint32_t topValue, bool setOnNext = false) {
-            if (setOnNext)
+        void setTop(const uint32_t topValue) {
+            if (pwm()->PWM_SR & (1 << timerNum)) {
                 pwmChan()->PWM_CPRDUPD = topValue;
-            else
+            } else {
                 pwmChan()->PWM_CPRD = topValue;
+            }
         };
 
         // Here we want to get what the TOP value is.
@@ -993,15 +995,15 @@ namespace Motate {
         // Channel-specific functions. These are Motate channels, but they happen to line-up.
 
         // Specify the duty cycle as a value from 0.0 .. 1.0;
-        void setDutyCycleForChannel(const uint8_t channel, const float ratio, bool setOnNext = false) {
-            setExactDutyCycle(ratio, setOnNext);
+        void setDutyCycleForChannel(const uint8_t channel, const float ratio) {
+            setExactDutyCycle(ratio);
         };
-        void setDutyCycle(const float ratio, bool setOnNext = false) {
-            if (setOnNext)
+        void setDutyCycle(const float ratio) {
+            if (pwm()->PWM_SR & (1 << timerNum)) {
                 pwmChan()->PWM_CDTYUPD = getTopValue() * ratio;
-            else
+            } else {
                 pwmChan()->PWM_CDTY = getTopValue() * ratio;
-
+            }
         };
         float getDutyCycleForChannel(const uint8_t channel) {
             return getDutyCycle();
@@ -1015,15 +1017,15 @@ namespace Motate {
 
         // Specify channel A/B duty cycle as a integer value from 0 .. TOP.
         // TOP in this case is either RC_RC or 0xFFFF.
-        void setExactDutyCycleForChannel(const uint8_t channel, const uint32_t absolute, bool setOnNext = false) {
-            setExactDutyCycle(absolute, setOnNext);
+        void setExactDutyCycleForChannel(const uint8_t channel, const uint32_t absolute) {
+            setExactDutyCycle(absolute);
         };
-        void setExactDutyCycle(const uint32_t absolute, bool setOnNext = false) {
-            if (setOnNext)
+        void setExactDutyCycle(const uint32_t absolute) {
+            if (pwm()->PWM_SR & (1 << timerNum)) {
                 pwmChan()->PWM_CDTYUPD = absolute;
-            else
+            } else {
                 pwmChan()->PWM_CDTY = absolute;
-
+            }
         };
         uint32_t getExactDutyCycleForChannel(const uint8_t channel) {
             return getExactDutyCycle();
@@ -1062,7 +1064,7 @@ namespace Motate {
             startPWMOutput();
         };
         void startPWMOutput() {
-//            start();
+            start();
         };
 
         void setInterrupts(const uint32_t interrupts) {
