@@ -865,21 +865,25 @@ namespace Motate {
     // don't want to use.
     template<pin_number pinNum>
     struct PWMLikeOutputPin : Pin<pinNum> {
+        bool _inverted = false;
         PWMLikeOutputPin() : Pin<pinNum>(kOutput) {};
         PWMLikeOutputPin(const PinOptions_t options, const uint32_t freq) : Pin<pinNum>(kOutput, options) {};
         void setFrequency(const uint32_t freq) {};
-        operator float() { return !!Pin<pinNum>::getOutputValue(); };
-        operator uint32_t() { return (100 * (!!Pin<pinNum>::getOutputValue())); };
+        operator float() { return (!!Pin<pinNum>::getOutputValue())^_inverted; };
+        operator uint32_t() { return (100 * ((!!Pin<pinNum>::getOutputValue())^_inverted)); };
         void operator=(const float value) { write(value); };
-        void write(const float value) { Pin<pinNum>::write(value >= 0.5); };
-        void writeRaw(const uint16_t duty) { Pin<pinNum>::write(duty >= 50); };
+        void write(const float value) { Pin<pinNum>::write((value >= 0.5)^_inverted); };
+        void writeRaw(const uint16_t duty) { Pin<pinNum>::write((duty >= 50)^_inverted); };
         uint16_t getTopValue() { return 100; };
         bool canPWM() { return false; };
         void setInterrupts(const uint32_t interrupts) {
             // This is for timer interrupts, not pin interrupts.
         };
 
-        /*Override these to pick up new methods */
+        // make a fake version of the timer setOutputOptions to catch inversion
+        void setOutputOptions(const uint32_t options) {
+            _inverted = (options == kPWMOnInverted);
+        };
 
     private: /* Make these private to catch them early. */
         /* These are intentially not defined. */
