@@ -25,36 +25,39 @@ endif #Atmel Studio
 endif #WINDOWS
 endif #cygdrive
 
-ifneq ($(TOOLS_VERSION), 6.2)
+ifneq ("$(TOOLS_VERSION)", "6.2u1")
 $(error The TOOLS_VERSION ($(TOOLS_VERSION)) requested is wrong. You project and Motate are mismatched. (?))
 endif
 
+# ARM GCC ------
+
 ifeq ($(ARCH), gcc-arm-none-eabi)
 
-TOOLS_EASYPATH = gcc-arm-none-eabi-6.2
+TOOLS_EASYPATH = gcc-arm-none-eabi-6.2u1
 
-TOOLS_VERSION_FILENAME = 6_2-2016q4-20161216
+TOOLS_VERSION_FILENAME = 6-2017-q1-update
 
 # Example:  https://developer.arm.com/-/media/Files/downloads/gnu-rm/6-2016q4/gcc-arm-none-eabi-6_2-2016q4-20161216-mac.tar.bz2?product=GNU%20ARM%20Embedded%20Toolchain,64-bit,,Mac%20OS%20X,6-2016-q4-major
-# downloads as Mac: gcc-arm-none-eabi-6_2-2016q4-20161216-mac.tar.bz2
-#            Linux: gcc-arm-none-eabi-6_2-2016q4-20161216-linux.tar.bz2
-#          Windows: gcc-arm-none-eabi-6_2-2016q4-20161216-win32.zip
+#           https://developer.arm.com/-/media/Files/downloads/gnu-rm/6_1-2017q1/gcc-arm-none-eabi-6-2017-q1-update-win32.exe?product=GNU%20ARM%20Embedded%20Toolchain,32-bit,,Windows,6-2017-q1-update
+# downloads as Mac: gcc-arm-none-eabi-6-2017-q1-update-mac.tar.bz2
+#            Linux: gcc-arm-none-eabi-6-2017-q1-update-linux.tar.bz2
+#          Windows: gcc-arm-none-eabi-6-2017-q1-update-win32.zip
 
-# exands to Linux/Mac: gcc-arm-none-eabi-6_2-2016q4
-#           Windows:   gcc-arm-none-eabi-6_2-2016q4-20161216-win32
+# exapnds to Linux/Mac: gcc-arm-none-eabi-6-2017-q1-update
+#              Windows: gcc-arm-none-eabi-6-2017-q1-update-win32
 
-TOOLS_OSX_URL_PREFIX = https://developer.arm.com/-/media/Files/downloads/gnu-rm/6-2016q4/gcc-arm-none-eabi-6_2-2016q4-20161216-mac.tar.bz2?product=GNU%20ARM%20Embedded%20Toolchain,64-bit,,Mac%20OS%20X,6-2016-q4-major
-TOOLS_LINUX_URL_PREFIX = https://developer.arm.com/-/media/Files/downloads/gnu-rm/6-2016q4/gcc-arm-none-eabi-6_2-2016q4-20161216-linux.tar.bz2?product=GNU%20ARM%20Embedded%20Toolchain,64-bit,,Linux,6-2016-q4-major
-TOOLS_WIN32_URL_PREFIX = https://developer.arm.com/-/media/Files/downloads/gnu-rm/6-2016q4/gcc-arm-none-eabi-6_2-2016q4-20161216-win32-zip.zip?product=GNU%20ARM%20Embedded%20Toolchain,ZIP,,Windows,6-2016-q4-major
+TOOLS_OSX_URL_PREFIX = https://developer.arm.com/-/media/Files/downloads/gnu-rm/6_1-2017q1/gcc-arm-none-eabi-6-2017-q1-update-mac.tar.bz2?product=GNU%20ARM%20Embedded%20Toolchain,64-bit,,Mac%20OS%20X,6-2017-q1-update
+TOOLS_LINUX_URL_PREFIX = https://developer.arm.com/-/media/Files/downloads/gnu-rm/6_1-2017q1/gcc-arm-none-eabi-6-2017-q1-update-linux.tar.bz2?product=GNU%20ARM%20Embedded%20Toolchain,64-bit,,Linux,6-2017-q1-update
+TOOLS_WIN32_URL_PREFIX = https://developer.arm.com/-/media/Files/downloads/gnu-rm/6_1-2017q1/gcc-arm-none-eabi-6-2017-q1-update-win32-zip.zip?product=GNU%20ARM%20Embedded%20Toolchain,ZIP,,Windows,6-2017-q1-update
 TOOLS_URL_PREFIX = ${TOOLS_${OS}_URL_PREFIX}
 
-TOOLS_OSX_ARCHIVE_FILENAME = gcc-arm-none-eabi-${TOOLS_VERSION_FILENAME}-mac.tar.bz2
+TOOLS_OSX_ARCHIVE_FILENAME   = gcc-arm-none-eabi-${TOOLS_VERSION_FILENAME}-mac.tar.bz2
 TOOLS_LINUX_ARCHIVE_FILENAME = gcc-arm-none-eabi-${TOOLS_VERSION_FILENAME}-linux.tar.bz2
 TOOLS_WIN32_ARCHIVE_FILENAME = gcc-arm-none-eabi-${TOOLS_VERSION_FILENAME}-win32.zip
 
-TOOLS_OSX_EXPANDED_DIRNAME = gcc-arm-none-eabi-6_2-2016q4
-TOOLS_LINUX_EXPANDED_DIRNAME = gcc-arm-none-eabi-6_2-2016q4
-TOOLS_WIN32_EXPANDED_DIRNAME = gcc-arm-none-eabi-6_2-2016q4-20161216-win32
+TOOLS_OSX_EXPANDED_DIRNAME   = gcc-arm-none-eabi-6-2017-q1-update
+TOOLS_LINUX_EXPANDED_DIRNAME = gcc-arm-none-eabi-6-2017-q1-update
+TOOLS_WIN32_EXPANDED_DIRNAME = gcc-arm-none-eabi-6-2017-q1-update-win32
 TOOLS_EXPANDED_DIRNAME = ${TOOLS_${OS}_EXPANDED_DIRNAME}
 
 TEST_COMMAND_BASE=arm-none-eabi-gcc
@@ -62,6 +65,7 @@ TEST_COMMAND_BASE=arm-none-eabi-gcc
 endif #eq ($(ARCH), 'gcc-arm-none-eabi')
 
 
+# AVR GCC ------
 
 ifeq ($(ARCH), gcc-avr)
 
@@ -81,6 +85,8 @@ TEST_COMMAND_BASE=avr-gcc
 
 endif #eq ($(ARCH), 'gcc-avr')
 
+
+# all platforms from here on -----
 
 
 EXPAND_COMMAND_OSX = tar xjf
