@@ -413,7 +413,7 @@ namespace Motate {
             tcChan()->TC_RC = topValue;
         };
 
-        // Here we want to get what the TOP value is. Is the mode is one that resets on RC, then RC is the TOP.
+        // Here we want to get what the TOP value is. If the mode is one that resets on RC, then RC is the TOP.
         // Otherwise, TOP is 0xFFFF. In order to see if TOP is RC, we need to look at the CPCTRG (RC Compare
         // Trigger Enable) bit of the CMR (Channel Mode Register). Note that this bit position is the same for
         // waveform or Capture mode, even though the Datasheet seems to obfuscate this fact.

@@ -993,13 +993,6 @@ namespace Motate {
             static constexpr uint32_t adcNumber = adcNum; \
         };
 
-//    #define _MAKE_MOTATE_ADC_DIFFERENTIAL_PAIR(adcNegNum, adcPosNum) \
-//        template<> \
-//        constexpr const bool IsADCDifferentialPair<adcNegNum, adcPosNum>() { \
-//            return (ADCPin<adcNegNum>::moduleNumber == ADCPin<adcPosNum>::moduleNumber) && \
-//                   (ADCPin<adcNegNum>::adcNumber == (ADCPin<adcPosNum>::adcNumber^1)); \
-//        };
-
 #endif
 
 //    template<pin_number negPinNum, pin_number posPinNum>
