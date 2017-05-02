@@ -71,11 +71,11 @@ namespace Motate {
     _MAKE_MOTATE_PWM_PIN('A', 19, _PWM(0,0),       /*Peripheral:*/ B,  /*Inverted:*/ false);
     _MAKE_MOTATE_PWM_PIN('A', 20, _PWM(0,1),       /*Peripheral:*/ B,  /*Inverted:*/ false);
     // _MAKE_MOTATE_PWM_PIN('A', 23, _PWM(0,0),       /*Peripheral:*/ B,  /*Inverted:*/ true);
-    _MAKE_MOTATE_PWM_PIN('A', 23, _PWM(1,2),     /*Peripheral:*/ D,  /*Inverted:*/ true);
+    _MAKE_MOTATE_PWM_PIN('A', 23, _PWM(1,2),       /*Peripheral:*/ D,  /*Inverted:*/ false);
     _MAKE_MOTATE_PWM_PIN('A', 24, _PWM(0,1),       /*Peripheral:*/ B,  /*Inverted:*/ true);
     _MAKE_MOTATE_PWM_PIN('A', 25, _PWM(0,2),       /*Peripheral:*/ B,  /*Inverted:*/ true);
-    _MAKE_MOTATE_PWM_PIN('A', 26, _TC(/*0*/2,0),  /*Peripheral:*/ B,  /*Inverted:*/ false);
-    _MAKE_MOTATE_PWM_PIN('A', 27, _TC(/*0*/2,1),  /*Peripheral:*/ B,  /*Inverted:*/ false);
+    _MAKE_MOTATE_PWM_PIN('A', 26, _TC(/*0*/2,0),   /*Peripheral:*/ B,  /*Inverted:*/ false);
+    _MAKE_MOTATE_PWM_PIN('A', 27, _TC(/*0*/2,1),   /*Peripheral:*/ B,  /*Inverted:*/ false);
     _MAKE_MOTATE_PWM_PIN('A', 30, _PWM(0,2),       /*Peripheral:*/ A,  /*Inverted:*/ false);
 #endif // PIOA
 #ifdef PIOB
