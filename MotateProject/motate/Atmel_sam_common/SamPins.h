@@ -870,9 +870,9 @@ namespace Motate {
             // we have as optins 12, 13, 14, 15, and 16bit, each costs more in sample time
 
             float min_lsb = (vref/(max_expected-min_expected))*ideal_steps;
-            if (min_lsb > 4095) { // 2^12 = 4096
-                if (min_lsb > 8191) { // 2^13 = 8192
-                    if (min_lsb > 16383) { // 2^14 = 16384
+            if (min_lsb > (_differential ? 2047 : 4095)) { // 2^12 = 4096
+                if (min_lsb > (_differential ? 4095 : 8191)) { // 2^13 = 8192
+                    if (min_lsb > (_differential ? 8191 : 16383)) { // 2^14 = 16384
                         if (min_lsb > 32767) { // 2^15 = 32,768
                             // 2^16 = 65,536
                             // use 16 bit
@@ -909,7 +909,7 @@ namespace Motate {
             // handle scale, which is per-pin
             // also handles offset, which is the center of the range of size (VREF/scale)
             // and it cannot offset more that 1/(scale*2) from zero
-            float scale_used = (max_expected-min_expected)/vref;
+            float scale_used = (max_expected-(_differential?0:min_expected))/vref;
             if (scale_used < 0.25) { // 4x scale
                 afec()->AFEC_CSELR = AFEC_CSELR_CSEL(adcNumber);
                 afec()->AFEC_CGR = (afec()->AFEC_CGR & ~(0x3 << (adcNumber * 2))) |
