@@ -423,6 +423,7 @@ namespace Motate {
         static const uint32_t adcNumber = 0;
 
         static constexpr bool is_real = false; // this must be true in a real ADCParent
+        static constexpr bool is_differential = false;
 
         void init();
         void startSampling() { };
@@ -453,42 +454,42 @@ namespace Motate {
 
         float _vref = 3.3;
 
-        ADCPin() : ADCPinParent<pinNum>(), Pin<pinNum>(kUnchanged) { };
-
-        ADCPin(const PinOptions_t options,
-               const uint32_t interrupt_settings = kPinInterruptOnChange|kPinInterruptPriorityMedium
-               )
-        : ADCPinParent<pinNum>(), Pin<pinNum>(kUnchanged, options)
-        { };
-
-        ADCPin(const PinOptions_t options,
-               std::function<void(void)> &&_interrupt,
-               const uint32_t interrupt_settings = kPinInterruptOnChange|kPinInterruptPriorityMedium
-               )
-        : ADCPinParent<pinNum>(), Pin<pinNum>(kUnchanged, options)
-        { };
-
-        void init() {};
-        int32_t getRaw() { return 0; };
-        int32_t getValue() { return 0; };
-        int32_t getBottom() { return 0; };
-        float getBottomVoltage() { return 0.0; };
-        int32_t getTop() { return 4095; };
-        float getTopVoltage() { return _vref; };
-
-        void setVoltageRange(const float vref, const float min_expected = 0, const float max_expected = -1, const float ideal_steps = 1) {
-            _vref = vref;
-        };
-        float getVoltage() { return 0.0; }
-        operator float() { return getVoltage(); };
-
-
-        void startSampling() { };
-        void setInterrupts(const uint32_t interrupts) { };
-
-        static void interrupt() __attribute__ (( weak ));
-        void setInterruptHandler(std::function<void(void)> &&handler) { };
-        void setInterruptHandler(const std::function<void(void)> &handler) { };
+//        ADCPin() : ADCPinParent<pinNum>(), Pin<pinNum>(kUnchanged) { };
+//
+//        ADCPin(const PinOptions_t options,
+//               const uint32_t interrupt_settings = kPinInterruptOnChange|kPinInterruptPriorityMedium
+//               )
+//        : ADCPinParent<pinNum>(), Pin<pinNum>(kUnchanged, options)
+//        { };
+//
+//        ADCPin(const PinOptions_t options,
+//               std::function<void(void)> &&_interrupt,
+//               const uint32_t interrupt_settings = kPinInterruptOnChange|kPinInterruptPriorityMedium
+//               )
+//        : ADCPinParent<pinNum>(), Pin<pinNum>(kUnchanged, options)
+//        { };
+//
+//        void init() {};
+//        int32_t getRaw() { return 0; };
+//        int32_t getValue() { return 0; };
+//        int32_t getBottom() { return 0; };
+//        float getBottomVoltage() { return 0.0; };
+//        int32_t getTop() { return 4095; };
+//        float getTopVoltage() { return _vref; };
+//
+//        void setVoltageRange(const float vref, const float min_expected = 0, const float max_expected = -1, const float ideal_steps = 1) {
+//            _vref = vref;
+//        };
+//        float getVoltage() { return 0.0; }
+//        operator float() { return getVoltage(); };
+//
+//
+//        void startSampling() { };
+//        void setInterrupts(const uint32_t interrupts) { };
+//
+//        static void interrupt() __attribute__ (( weak ));
+//        void setInterruptHandler(std::function<void(void)> &&handler) { };
+//        void setInterruptHandler(const std::function<void(void)> &handler) { };
 
     };
 
@@ -537,10 +538,11 @@ namespace Motate {
             setInterrupts(interrupt_settings);
         };
 
-        static const bool is_real = true;
-        
+        static constexpr bool is_real = true;
+        static constexpr bool is_differential = false;
+
         void init(const PinOptions_t options) {
-            initPin(adcNumber, false);
+            initPin(adcNumber, options);
         };
         int32_t getRaw() {
             return getRawPin(adcNumber);
@@ -579,7 +581,9 @@ namespace Motate {
         };
         operator float() { return getVoltage(); };
 
-        void setInterrupts(const uint32_t interrupts) { ADCPinParent<pinNum>::setInterrupts(interrupts, adcMask); };
+        void setInterrupts(const uint32_t interrupts) {
+            ADCPinParent<pinNum>::setInterrupts(interrupts, adcMask);
+        };
 
         // Interrupt interface option 1: create this function (use macro MOTATE_PIN_INTERRUPT)
         static void interrupt() __attribute__ (( weak ));
@@ -720,7 +724,8 @@ namespace Motate {
             setInterrupts(interrupt_settings);
         };
 
-        static const bool is_real = true;
+        static constexpr bool is_real = true;
+        static constexpr bool is_differential = true;
 
         void init(const PinOptions_t options) {
             initPin(adcNumber, options | kDifferentialPair);
