@@ -621,6 +621,44 @@ namespace Motate {
             // ignore min_expected and max_expected for now
         };
 
+        void setInterrupts(const uint32_t interrupts, const uint32_t adcMask) {
+            if (interrupts != kPinInterruptsOff) {
+                /* Set interrupt priority */
+                if (interrupts & kPinInterruptPriorityMask) {
+                    if (interrupts & kPinInterruptPriorityHighest) {
+                        NVIC_SetPriority(ADC_IRQn, 0);
+                    }
+                    else if (interrupts & kPinInterruptPriorityHigh) {
+                        NVIC_SetPriority(ADC_IRQn, 1);
+                    }
+                    else if (interrupts & kPinInterruptPriorityMedium) {
+                        NVIC_SetPriority(ADC_IRQn, 2);
+                    }
+                    else if (interrupts & kPinInterruptPriorityLow) {
+                        NVIC_SetPriority(ADC_IRQn, 3);
+                    }
+                    else if (interrupts & kPinInterruptPriorityLowest) {
+                        NVIC_SetPriority(ADC_IRQn, 4);
+                    }
+                }
+                /* Enable the IRQ */
+                NVIC_EnableIRQ(ADC_IRQn);
+                /* Enable the interrupt */
+                ADC->ADC_IER = adcMask;
+                /* Enable the pin */
+                ADC->ADC_CHER = adcMask;
+            } else {
+                /* Disable the pin */
+                ADC->ADC_CHDR = adcMask;
+                /* Disable the interrupt */
+                ADC->ADC_IDR = adcMask;
+                /* Disable the interrupt - if all channels are disabled */
+                if (ADC->ADC_CHSR == 0) {
+                    NVIC_DisableIRQ(ADC_IRQn);
+                }
+            }
+        };
+
         void addInterrupt(_pinChangeInterrupt *newInt) {
             _pinChangeInterrupt *i = _firstInterrupt;
             if (i == nullptr) {
@@ -634,12 +672,12 @@ namespace Motate {
         };
     };
 
-#define _MAKE_MOTATE_ADC_PIN(registerChar, registerPin, adcNum) \
-    template<> \
-    struct ADCPinParent< ReversePinLookup<registerChar, registerPin>::number > { \
-        static const uint32_t adcMask = 1 << adcNum; \
-        static const uint32_t adcNumber = adcNum; \
-    };
+    #define _MAKE_MOTATE_ADC_PIN(registerChar, registerPin, adcNum) \
+        template<> \
+        struct ADCPinParent< ReversePinLookup<registerChar, registerPin>::number > : ADC_Module { \
+            static constexpr uint32_t adcMask = 1 << adcNum; \
+            static constexpr uint32_t adcNumber = adcNum; \
+        };
 
 #else // not Sam3x
 
