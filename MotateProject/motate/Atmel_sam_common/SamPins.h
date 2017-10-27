@@ -695,7 +695,7 @@ namespace Motate {
     struct ADC_Module {
         static const uint32_t moduleNumber = afecNum;
 
-        const uint32_t _default_adc_clock_frequency = 10 * 1000000; // 10MHz
+        const uint32_t _default_adc_clock_frequency = 0.5 * 100000; // 1MHz
         const uint32_t _default_adc_startup_time = 10;
 
         // these are highly tuned parameters, and may need to become adjustable at runtime in the future
