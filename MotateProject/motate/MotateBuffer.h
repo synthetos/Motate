@@ -93,7 +93,7 @@ namespace Motate {
         int16_t write(const base_type newValue) {
             if (isFull())
                 return -1;
-            
+
             _data[_write_offset] = newValue;
             _write_offset = _nextWriteOffset();
 
@@ -460,8 +460,8 @@ namespace Motate {
         void _restartTransfer() {
             volatile static bool is_requesting = false;
             if (is_requesting) { return; }
-            is_requesting = true;
             if ((_transfer_requested == 0) && !isEmpty()) {
+                is_requesting = true;
                 // We can only request contiguous chunks. Let's see what the next one is.
                 _getReadOffset(); // cache the read position
 
@@ -497,11 +497,11 @@ namespace Motate {
 #endif
 
                 _transfer_requested = transfer_size;
-                if (!_owner->startTXTransfer(_read_pos, transfer_size)) {
-                    _transfer_requested = 0;
+                is_requesting = false;
+                while (!_owner->startTXTransfer(_read_pos, transfer_size)) {
+                    //_transfer_requested = 0;
                 }
             }
-            is_requesting = false;
         };
 
         // BLOCKING write
@@ -563,8 +563,8 @@ namespace Motate {
                 return (_last_known_read_offset) + (_size - _write_offset);
             }
         };
-        
-        
+
+
         int16_t available() {
             _getReadOffset(); // cache the write position
             return _getAvailableCached();

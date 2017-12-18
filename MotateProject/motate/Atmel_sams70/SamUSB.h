@@ -954,6 +954,7 @@ namespace Motate {
             _ack_wake_up();
             // _freeze_clock();
         };
+
         bool attach() {
             if (_inited) {
                  _attach();
@@ -1447,7 +1448,7 @@ namespace Motate {
              *   4) The packet is full, and the DMA buffer is empty (both on the same byte) - actions AB(-)CD(+)
              *      ASSUMES that the TXIN interrupt will happen at the same time or before the DMA interrupt.
              *
-             * RXOUT - we get interrupts when a packet is EMPTIED (as mush as it's going to) by DMA:
+             * RXOUT - we get interrupts when a packet is EMPTIED (as much as it's going to) by DMA:
              *   5) The packet is completely read, and DMA still has buffer space available for all of it - actions AB(-)
              *   6) The packet has been partially read, but DMA buffer is full (not active) - actions CD(-)
              *      DO NOT do action B! That'll lose the remaining packet data.
@@ -1456,6 +1457,8 @@ namespace Motate {
             for (uint32_t ep = 1; ep <= _get_endpoint_max_nbr(); ep++)
             {
                 bool transfer_completed = false;
+                uint32_t ep_status = 0;
+
                 if (_is_endpoint_interrupt_enabled(ep))
                 {
                     if (_is_endpoint_a_tx_in(ep))
@@ -1469,17 +1472,15 @@ namespace Motate {
                             auto byte_count = get_byte_count(ep);
                             auto dma_bytes_left = _devdma_buffer_count(ep);
                             if ((_get_endpoint_size(ep) == byte_count) || // case 3 or 4
-                                (0 == dma_bytes_left)           // case 2
+                                (0 == dma_bytes_left)                     // case 2 or 4
                                 )
                             {
                                 _ack_in_send(ep); // A
                                 _ack_fifocon(ep); // B - This bit is cleared (by writing a one to USBHS_DEVEPTIDRx.FIFOCONC bit) to send the FIFO data and to switch to the next bank.
                             }
 
-                            if (0 == dma_bytes_left) {
-                                // case 2
-                                _completeTransfer(ep); // C+D
-                                transfer_completed = true;
+                            if (0 == dma_bytes_left) { // case 2 or 4
+                                transfer_completed = true; // C+D
                             }
 
                             handled = true;
@@ -1501,8 +1502,7 @@ namespace Motate {
                             } else {
                                 // case 6
                                 if (0 == _devdma_buffer_count(ep)) {
-                                    _completeTransfer(ep); // C+D
-                                    transfer_completed = true;
+                                    transfer_completed = true; // C+D
                                 }
                             }
 
@@ -1516,8 +1516,8 @@ namespace Motate {
                     _is_endpoint_dma_interrupt(ep))
                 {
                     uint32_t ep_status = _devdma_status(ep);
-
-                    if (ep_status & USBHS_DEVDMASTATUS_DESC_LDST) {
+                    
+                    if (ep_status & USBHS_DEVDMASTATUS_DESC_LDST && !transfer_completed) {
                         if (_is_endpoint_a_tx_in(ep)) {
                             _enable_in_send_interrupt(ep);
                         }
@@ -1533,17 +1533,18 @@ namespace Motate {
 //                            _ack_fifocon(ep); // B - This bit is cleared (by writing a one to USBHS_DEVEPTIDRx.FIFOCONC bit) to send the FIFO data and to switch to the next bank.
 //                        }
 
-                        if (!transfer_completed) {
-                            // cases 2, 4, or 7
-                            _completeTransfer(ep); // C+D
-                            transfer_completed = true;
-                        }
+                        // cases 2, 4, or 7
+                        transfer_completed = true;
                     }
                     
                     handled = true;
                 } // is a dma interrupt
-            }
-            
+
+                if (transfer_completed) {
+                    _completeTransfer(ep);
+                }
+            } // for (ep ...)
+
             return handled;
         };
 
