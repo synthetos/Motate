@@ -830,7 +830,7 @@ namespace Motate {
         };
         int32_t getRawPin(const uint32_t adcNumber) {
             afec()->AFEC_CSELR = AFEC_CSELR_CSEL(adcNumber);
-            return (int16_t)afec()->AFEC_CDR; // cast to get negative value correct
+            return (int32_t)afec()->AFEC_CDR; // cast to get negative value correct
         };
         int32_t getValuePin(const uint32_t adcNumber) {
             const uint32_t adcMask = 1<<adcNumber;
