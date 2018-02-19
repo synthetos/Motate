@@ -289,6 +289,7 @@ namespace Motate {
         // ensure we can't copy or move a USBDeviceHardware
         USBDeviceHardware(const USBDeviceHardware&) = delete;
         USBDeviceHardware(USBDeviceHardware&&) = delete;
+        USBDeviceHardware() = delete;
 
         // hold the buffer pointers to setup responses.
         // we hold two pointers and lengths, they are to be sent in order
@@ -866,11 +867,11 @@ namespace Motate {
 
         void _init() {
             // Disable interrupts until end-of-scope
-            SamCommon::InterruptDisabler disabler;
+//            SamCommon::InterruptDisabler disabler;
 
             // FORCE disable the USB hardware:
             USBHS->USBHS_CTRL &= ~USBHS_CTRL_USBE;
-            SamCommon::sync();
+//            SamCommon::sync();
 
             SamCommon::enablePeripheralClock(ID_USBHS);
 
@@ -924,7 +925,9 @@ namespace Motate {
             _setup_buffer = {nullptr, 0, nullptr, 0};
             setup_state = SETUP;
 
-            _detach();
+            _freeze_clock();
+
+//            _detach();
         };
 
         void _attach() {
@@ -933,12 +936,16 @@ namespace Motate {
             _unfreeze_clock();
 
             // Authorize attach if Vbus is present
+            if (!isConnected()) {
+                return;
+            }
+
             USBHS->USBHS_DEVCTRL &= ~USBHS_DEVCTRL_DETACH;
 
             // Enable USB line events
             _enable_reset_interrupt();
             _enable_suspend_interrupt();
-            //_enable_wake_up_interrupt();
+            _enable_wake_up_interrupt();
             _disable_sof_interrupt();
             _disable_msof_interrupt();
 
@@ -949,17 +956,20 @@ namespace Motate {
 
             // The first suspend interrupt must be forced
             // The first suspend interrupt is not detected else raise it
-            _raise_suspend();
+//            _raise_suspend();
 
             _ack_wake_up();
-            // _freeze_clock();
+//            _freeze_clock();
         };
 
         bool attach() {
             if (_inited) {
-                 _attach();
+                _attach();
                 return true;
             }
+#if IN_DEBUGGER == 1
+            __asm__("BKPT"); // endpoint not configured
+#endif
             return false;
         };
 
@@ -1048,7 +1058,7 @@ namespace Motate {
         };
 
         void reset() {
-            SamCommon::InterruptDisabler disabler;
+//            SamCommon::InterruptDisabler disabler;
 
             // this is called from the reset USB request
             _ack_reset();
@@ -1196,10 +1206,10 @@ namespace Motate {
             return true;
         };
 
-        bool isConnected() { return !!config_number; }
+        virtual bool isConnected() { return false; };
 
         bool checkAndHandleWakeupSuspend() {
-            SamCommon::InterruptDisabler disabler;
+//            SamCommon::InterruptDisabler disabler;
 
             if (_is_wake_up_interrupt_enabled() && _is_wake_up()) {
                 _ack_wake_up();
@@ -1213,7 +1223,7 @@ namespace Motate {
                 _unfreeze_clock();
                 _disable_suspend_interrupt();
                 _enable_wake_up_interrupt();
-                _freeze_clock();
+//                _freeze_clock();
                 return true;
             }
 
@@ -1457,7 +1467,6 @@ namespace Motate {
             for (uint32_t ep = 1; ep <= _get_endpoint_max_nbr(); ep++)
             {
                 bool transfer_completed = false;
-                uint32_t ep_status = 0;
 
                 if (_is_endpoint_interrupt_enabled(ep))
                 {
@@ -1645,7 +1654,57 @@ namespace Motate {
             return kEndpointBufferNull;
         };
 
+        bool handleVbusChange(const bool force = false) {
+            if (!_inited) { return false; }
+
+            if (force || !isConnected()) {
+
+                // catch the case where we are disconnected and reconnected, and we had open tranfers
+                if (_dma_used_by_endpoint) {
+                    for (uint32_t ep = 0; ep < 10; ep++) {
+                        if (_dma_used_by_endpoint & (1 << ep)) {
+                            _dma_used_by_endpoint &= ~(1 << ep);
+
+                            _devdma(ep)->command = USB_DMA_Descriptor::stop_now;
+                            _devdma(ep)->buffer_address = nullptr;
+                            _devdma(ep)->buffer_length = 0;
+
+                            proxy->handleTransferDone(ep);
+                        }
+                    }
+                }
+
+                _detach();
+            }
+
+            if (isConnected()) {
+                _attach();
+            }
+
+            proxy->handleConnectionStateChanged();
+
+            return true;
+        };
+
+
     }; //class USBDeviceHardware
+
+
+    template<typename pin_type>
+    struct USBDeviceHardwareVBus : USBDeviceHardware {
+        pin_type vbus_pin;
+
+        USBDeviceHardwareVBus(USBDevice_t * const _proxy) :
+            USBDeviceHardware(_proxy),
+            vbus_pin {kNormal, [&]{ this->handleVbusChange(); }}
+        {};
+
+        bool isConnected() override {
+            return (bool)vbus_pin;
+        };
+
+    };
+
 }
 
 #endif

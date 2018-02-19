@@ -123,17 +123,17 @@ namespace Motate {
     // USBDevice is our primary controller class, and "owns" the interfaces.
     // USBDevice actually talks to the hardware, and marshalls data to/from the interfaces.
     // There should only be one USBDevice per hardware USB device -- there will almost always be just one.
-    template<typename... interfaceTypes>
+    template<typename USBHW_t, typename... interfaceTypes>
     struct USBDevice :
         USBDevice_t,
-        USBDeviceHardware,
-        USBMixins<USBDevice<interfaceTypes...>, interfaceTypes...>
+        USBHW_t,
+        USBMixins<USBDevice<USBHW_t, interfaceTypes...>, interfaceTypes...>
     {
     public:
         // Shortcut typedefs
-        typedef USBDevice<interfaceTypes...> _this_type;
+        typedef USBDevice<USBHW_t, interfaceTypes...> _this_type;
 
-        typedef USBDeviceHardware _hardware_type;
+        typedef USBHW_t _hardware_type;
 
         typedef USBMixins<_this_type, interfaceTypes...> _mixins_type;
         typedef USBDefaultDescriptor<interfaceTypes...> _descriptor_type;
@@ -144,6 +144,9 @@ namespace Motate {
         static const uint8_t _interface_0_first_endpoint  = 1; // TODO: Verify with mixin control endpoint usage.
         static const uint8_t _interface_0_first_interface = 0; // TODO: Verify this!
         static const uint8_t _total_endpoints_used        = _mixins_type::total_endpoints_used;
+
+        using _hardware_type::config_number;
+        using _hardware_type::SETUP;
 
         Setup_t setup;
         uint8_t _set_interface = 0;
@@ -284,7 +287,7 @@ namespace Motate {
                     uint8_t first_endpoint, total_endpoints;
                     total_endpoints = getEndpointCount(first_endpoint);
                     for (uint8_t ep = first_endpoint; ep < total_endpoints; ep++) {
-                        _init_endpoint(ep, getEndpointConfig(ep, /* otherSpeed = */ config_number == 2));
+                        _hardware_type::_init_endpoint(ep, getEndpointConfig(ep, /* otherSpeed = */ config_number == 2));
                         //endpointSizes[ep] = getEndpointSize(ep, /* otherSpeed = */ config_number == 2);
                     }
 
@@ -397,7 +400,7 @@ namespace Motate {
         };
 
         void handleConnectionStateChanged() override {
-            _mixins_type::handleConnectionStateChangedInMixin(isConnected());
+            _mixins_type::handleConnectionStateChangedInMixin(this->isConnected());
         };
 
         bool handleNonstandardRequest() {
@@ -435,11 +438,6 @@ namespace Motate {
         };
     }; // USBDevice<...>
 
-
-    template<>
-    struct USBDevice <> {
-
-    };
 
 
 #pragma mark struct USBMixin<>
