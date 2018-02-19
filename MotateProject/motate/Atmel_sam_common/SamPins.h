@@ -695,26 +695,28 @@ namespace Motate {
     struct ADC_Module {
         static const uint32_t moduleNumber = afecNum;
 
-        const uint32_t _default_adc_clock_frequency = 0.5 * 100000; // 1MHz
+        const uint32_t _default_adc_clock_frequency = 10*1000000; // 10MHz
         const uint32_t _default_adc_startup_time = 10;
 
         // these are highly tuned parameters, and may need to become adjustable at runtime in the future
         // see http://www.atmel.com/Images/Atmel-44093-AFE-Calibration-on-SAM-V7-SAM-E7-SAM-S7-Microcontrollers_Application-Note.pdf
         //    specifically section 2.2.2
 //        const float _default_gain = 0.991073741551146;
-        const float _default_gain = 0.9903;
+//        const float _default_gain = 0.9903;
+        const float _default_gain = 1.01;
 //        const float _default_gain = 1;
 
-        const float _default_offset = 106;
+//        const float _default_offset = 106;
+        const float _default_offset = 11;
 //        const float _default_offset = 0;
-        const float _default_vref = 3.28;
+        const float _default_vref = 3.29;
 
         // each pin holds a copy of this object, so these a per-pin inherently
         int32_t _top_value = 4095;
         float   _pin_offset = 0;
         int32_t _pin_scale = 1;
         bool    _differential = false;
-        float _vref = _default_vref;
+        float  _vref = _default_vref;
 
         constexpr Afec* const afec() const { return afecNum == 0 ? AFEC0 : AFEC1; };
         constexpr IRQn const afecIRQnum() const { return afecNum == 0 ? AFEC0_IRQn : AFEC1_IRQn; };
@@ -799,7 +801,7 @@ namespace Motate {
             // To get the gain:     gain = (V1_a-V2_a)/(V1_i-V2_i)
             // To get the offset: offset = (V1_a-2^11)-gain*(V1_i-2^11)
 
-            afec()->AFEC_CVR = AFEC_CVR_OFFSETCORR(-(int16_t)offset) | AFEC_CVR_GAINCORR((int16_t)(32768.0/gain));
+            afec()->AFEC_CVR = AFEC_CVR_OFFSETCORR((int16_t)-offset) | AFEC_CVR_GAINCORR((int16_t)(32768.0/gain));
         };
 
         void initPin(const uint32_t adcNumber, bool differential) {
