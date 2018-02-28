@@ -162,15 +162,7 @@ namespace Motate {
                 ;
             }
 
-            uint8_t channel_setting;
-
-            if (!(spi()->SPI_MR & SPI_MR_PCSDEC)) {
-                channel_setting = ~(1 << channel);
-            } else {
-                channel_setting = channel;
-            }
-
-            spi()->SPI_MR = (spi()->SPI_MR & ~SPI_MR_PCS_Msk) | SPI_MR_PCS(channel_setting);
+            spi()->SPI_MR = (spi()->SPI_MR & ~SPI_MR_PCS_Msk) | SPI_MR_PCS(channel);
 
             enable();
             return true;
@@ -478,7 +470,7 @@ namespace Motate {
 
                 NVIC_EnableIRQ(spiIRQ());
             } else {
-                
+
                 NVIC_DisableIRQ(spiIRQ());
             }
         };
@@ -654,7 +646,7 @@ namespace Motate {
         static const uint32_t peripheralId() { return hardware.peripheralId(); };
         static const IRQn_Type spiIRQ() { return hardware.spiIRQ(); };
 
-        
+
 
         SPI(const uint32_t baud = 4000000, const uint16_t options = kSPI8Bit | kSPIMode0) {
             hardware.init();
@@ -754,14 +746,14 @@ namespace Motate {
                     lastXfer = true;
 
                 int16_t ret = write(*out_buffer, lastXfer);
-                
+
                 if (ret > 0) {
                     out_buffer++;
                     total_written++;
                     to_write--;
                 }
             } while (to_write);
-            
+
             // HACK! Autoflush forced...
             if (autoFlush && total_written > 0)
                 flush();
@@ -771,7 +763,7 @@ namespace Motate {
     };
 
 #endif
-    
+
 
 
     template <pin_number csBit0PinNumber, pin_number csBit1PinNumber, pin_number csBit2PinNumber, pin_number csBit3PinNumber>

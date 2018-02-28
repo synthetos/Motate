@@ -1084,7 +1084,7 @@ namespace Motate {
             static constexpr bool is_real = true; \
             static constexpr uint8_t spiNum = spiNumber; \
             static constexpr uint8_t csNumber =  csNum; \
-            static constexpr uint8_t csValue  = ~csNum; \
+            static constexpr uint8_t csValue  = ~(1<<csNum); \
             static constexpr bool usesDecoder = false; \
         };
 
