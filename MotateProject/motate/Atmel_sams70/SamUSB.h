@@ -867,20 +867,19 @@ namespace Motate {
 
         void _init() {
             // Disable interrupts until end-of-scope
-//            SamCommon::InterruptDisabler disabler;
+            SamCommon::InterruptDisabler disabler;
+
+
+            SamCommon::enablePeripheralClock(ID_USBHS);
+            SamCommon::sync();
 
             // FORCE disable the USB hardware:
             USBHS->USBHS_CTRL &= ~USBHS_CTRL_USBE;
-//            SamCommon::sync();
-
-            SamCommon::enablePeripheralClock(ID_USBHS);
+            SamCommon::sync();
 
             // ID pin not used then force device mode
             USBHS->USBHS_CTRL = USBHS_CTRL_UIMOD_DEVICE;
-
-            // Enable USB hardware
-            //  Enable USB macro
-            USBHS->USBHS_CTRL |= USBHS_CTRL_USBE;
+            SamCommon::sync();
 
             // pmc_enable_upll_clock();
             PMC->CKGR_UCKR = CKGR_UCKR_UPLLCOUNT(3) | CKGR_UCKR_UPLLEN;
@@ -902,6 +901,10 @@ namespace Motate {
             // pmc_set_fast_startup_input(PMC_FSMR_USBAL);
             PMC->PMC_FSMR |= PMC_FSMR_USBAL;
 
+            // Enable USB hardware
+            //  Enable USB macro
+            USBHS->USBHS_CTRL |= USBHS_CTRL_USBE;
+
             // Enable High Speed
             //  Disable "Forced" Low Speed first..
             USBHS->USBHS_DEVCTRL &= ~USBHS_DEVCTRL_LS;
@@ -916,7 +919,7 @@ namespace Motate {
                                     USBHS_DEVCTRL_SPDCONF_FORCED_FS; // this line to limit to 12 MBps
 
 
-            _unfreeze_clock();
+            // _unfreeze_clock();
 
             // Handle any additional setup here
             _inited = 1UL;
@@ -925,9 +928,9 @@ namespace Motate {
             _setup_buffer = {nullptr, 0, nullptr, 0};
             setup_state = SETUP;
 
-            _freeze_clock();
+            // _freeze_clock();
 
-//            _detach();
+            _detach();
         };
 
         void _attach() {
@@ -968,7 +971,7 @@ namespace Motate {
                 return true;
             }
 #if IN_DEBUGGER == 1
-            __asm__("BKPT"); // endpoint not configured
+            __asm__("BKPT"); // attach_before_init1
 #endif
             return false;
         };
@@ -1449,9 +1452,10 @@ namespace Motate {
              *
              * Possible cases:
              * TXIN - we get interrupts when the packet is filled (unless the interrupts were turned on early):
-             *   1) The packet is empty, but DMA still has buffered data - no action
+             *   1) The packet is empty, but DMA still has buffered data - CD(-)
              *      We DO NOT clear TXINI here, so we get another interrupt.
              *      This should NOT happen when interrupts are enabled at the right time.
+             *      This has been seen after first initial connection after bootup.
              *   2) The packet is not full, but the DMA buffer is empty - actions AB(-)CD(*)
              *      Action B here will send the truncated packet.
              *   3) The packet is full, but DMA still has buffered data - actions AB(-)
@@ -1492,6 +1496,11 @@ namespace Motate {
                                 transfer_completed = true; // C+D
                             }
 
+                            if (0 == byte_count && dma_bytes_left > 0) { // case 1
+                                // goose it!
+                                transfer_completed = true; // C+D
+                            }
+
                             handled = true;
                         }
                     } // if is a tx in endpoint
@@ -1525,7 +1534,7 @@ namespace Motate {
                     _is_endpoint_dma_interrupt(ep))
                 {
                     uint32_t ep_status = _devdma_status(ep);
-                    
+
                     if (ep_status & USBHS_DEVDMASTATUS_DESC_LDST && !transfer_completed) {
                         if (_is_endpoint_a_tx_in(ep)) {
                             _enable_in_send_interrupt(ep);
@@ -1545,7 +1554,7 @@ namespace Motate {
                         // cases 2, 4, or 7
                         transfer_completed = true;
                     }
-                    
+
                     handled = true;
                 } // is a dma interrupt
 
@@ -1559,8 +1568,12 @@ namespace Motate {
 
         uint32_t _dma_used_by_endpoint;
         bool transfer(const uint8_t ep, USB_DMA_Descriptor& desc) {
-            if (!config_number)
+            if (!config_number) {
+#if IN_DEBUGGER == 1
+                __asm__("BKPT"); // endpoint not configured
+#endif
                 return false;
+            }
 
             desc.command = USB_DMA_Descriptor::run_and_stop;
             // DON'T interrupt when the descriptor is loaded
@@ -1654,10 +1667,25 @@ namespace Motate {
             return kEndpointBufferNull;
         };
 
+        bool _vbus_changed = true;
         bool handleVbusChange(const bool force = false) {
-            if (!_inited) { return false; }
+            _vbus_changed = true;
+            return true;
+        }
 
-            if (force || !isConnected()) {
+
+        bool checkAndHandleVbusChange() {
+            if (!_vbus_changed) { return false; }
+            _vbus_changed = false;
+
+            if (!_inited) {
+#if IN_DEBUGGER == 1
+                __asm__("BKPT"); // vbus_changed_before_init
+#endif
+                return false;
+            }
+
+            if (!isConnected()) {
 
                 // catch the case where we are disconnected and reconnected, and we had open tranfers
                 if (_dma_used_by_endpoint) {

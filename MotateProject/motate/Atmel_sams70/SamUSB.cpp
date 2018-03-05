@@ -62,6 +62,9 @@ namespace Motate {
     void USBHS_Handler() {
         USBDeviceHardware *hw = USBDeviceHardware::hw;
 
+        // Check for and handle connect and disconnect
+        if (hw->checkAndHandleVbusChange()) { return; }
+
         // Check for and handle SOF and MSOF
         if (hw->checkAndHandleSOF()) { return; }
 
