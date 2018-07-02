@@ -25,13 +25,11 @@ endif #Atmel Studio
 endif #WINDOWS
 endif #cygdrive
 
-ifneq ("$(TOOLS_VERSION)", "6.2u1")
-$(error The TOOLS_VERSION ($(TOOLS_VERSION)) requested is wrong. You project and Motate are mismatched. (?))
-endif
-
 # ARM GCC ------
 
 ifeq ($(ARCH), gcc-arm-none-eabi)
+
+ifeq ("$(TOOLS_VERSION)", "6.2u1")
 
 TOOLS_EASYPATH = gcc-arm-none-eabi-6.2u1
 
@@ -62,8 +60,45 @@ TOOLS_EXPANDED_DIRNAME = ${TOOLS_${OS}_EXPANDED_DIRNAME}
 
 TEST_COMMAND_BASE=arm-none-eabi-gcc
 
-endif #eq ($(ARCH), 'gcc-arm-none-eabi')
+else ifeq ("$(TOOLS_VERSION)", "7u2")
 
+TOOLS_EASYPATH = gcc-arm-none-eabi-7u2
+
+TOOLS_VERSION_FILENAME = 7-2018-q2-update
+
+# Example:
+#  https://developer.arm.com/-/media/Files/downloads/gnu-rm/7-2018q2/gcc-arm-none-eabi-7-2018-q2-update-mac.tar.bz2?revision=982ef8a4-1815-4651-9c44-6144c9d8b34b?product=GNU%20Arm%20Embedded%20Toolchain,64-bit,,Mac%20OS%20X,7-2018-q2-update
+
+# downloads as Mac: gcc-arm-none-eabi-7-2018-q2-update-mac.tar.bz2
+#            Linux: gcc-arm-none-eabi-7-2018-q2-update-linux.tar.bz2
+#          Windows: gcc-arm-none-eabi-7-2018-q2-update-win32.zip
+
+# exapnds to Linux/Mac: gcc-arm-none-eabi-7-2018-q2-update
+#              Windows: gcc-arm-none-eabi-7-2018-q2-update-win32
+
+TOOLS_OSX_URL_PREFIX = https://developer.arm.com/-/media/Files/downloads/gnu-rm/7-2018q2/gcc-arm-none-eabi-7-2018-q2-update-mac.tar.bz2?revision=982ef8a4-1815-4651-9c44-6144c9d8b34b?product=GNU%20Arm%20Embedded%20Toolchain,64-bit,,Mac%20OS%20X,7-2018-q2-update
+TOOLS_LINUX_URL_PREFIX = https://developer.arm.com/-/media/Files/downloads/gnu-rm/7-2018q2/gcc-arm-none-eabi-7-2018-q2-update-linux.tar.bz2?revision=bc2c96c0-14b5-4bb4-9f18-bceb4050fee7?product=GNU%20Arm%20Embedded%20Toolchain,64-bit,,Linux,7-2018-q2-update
+TOOLS_WIN32_URL_PREFIX = https://developer.arm.com/-/media/Files/downloads/gnu-rm/7-2018q2/gcc-arm-none-eabi-7-2018-q2-update-win32.zip?revision=9b83e69c-e279-4d16-9401-990c836197b3?product=GNU%20Arm%20Embedded%20Toolchain,ZIP,,Windows,7-2018-q2-update
+TOOLS_URL_PREFIX = ${TOOLS_${OS}_URL_PREFIX}
+
+TOOLS_OSX_ARCHIVE_FILENAME   = gcc-arm-none-eabi-${TOOLS_VERSION_FILENAME}-mac.tar.bz2
+TOOLS_LINUX_ARCHIVE_FILENAME = gcc-arm-none-eabi-${TOOLS_VERSION_FILENAME}-linux.tar.bz2
+TOOLS_WIN32_ARCHIVE_FILENAME = gcc-arm-none-eabi-${TOOLS_VERSION_FILENAME}-win32.zip
+
+TOOLS_OSX_EXPANDED_DIRNAME   = gcc-arm-none-eabi-${TOOLS_VERSION_FILENAME}
+TOOLS_LINUX_EXPANDED_DIRNAME = gcc-arm-none-eabi-${TOOLS_VERSION_FILENAME}
+TOOLS_WIN32_EXPANDED_DIRNAME = gcc-arm-none-eabi-${TOOLS_VERSION_FILENAME}-win32
+TOOLS_EXPANDED_DIRNAME = ${TOOLS_${OS}_EXPANDED_DIRNAME}
+
+TEST_COMMAND_BASE=arm-none-eabi-gcc
+
+else
+
+$(error The TOOLS_VERSION ($(TOOLS_VERSION)) requested is not a valid option. You project and Motate are mismatched. (?))
+
+endif #$(TOOLS_VERSION)
+
+endif #eq ($(ARCH), 'gcc-arm-none-eabi')
 
 # AVR GCC ------
 
