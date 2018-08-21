@@ -447,7 +447,7 @@ LINKER_SCRIPT_OPTION =
 endif
 
 # Generate dependency information
-DEPFLAGS = -MMD -MF $(OBJ)/dep/$(@F).d -MT $(subst $(OUTDIR),$(OBJ),$@)
+DEPFLAGS = -MMD -MF $(abspath $(OBJ)/dep/$(@F).d) -MT $(abspath $(subst $(OUTDIR),$(OBJ),$@))
 
 $(OUTPUT_BIN).elf: $(ALL_C_OBJECTS) $(ALL_CXX_OBJECTS) $(ALL_ASM_OBJECTS) $(LINKER_SCRIPT)
 	@echo $(START_BOLD)"Linking $(OUTPUT_BIN).elf" $(END_BOLD)
@@ -468,37 +468,37 @@ $(OUTPUT_BIN).hex: $(OUTPUT_BIN).elf
 $(MOTATE_CXX_OBJECTS): | tools $(sort $(dir $(MOTATE_CXX_OBJECTS))) $(DEPDIR) $(BIN)
 $(MOTATE_CXX_OBJECTS): $(OUTDIR)/motate/%.o: $(MOTATE_PATH)/%.cpp
 	@echo $(START_BOLD)"Compiling cpp $<"; echo "    -> $@" $(END_BOLD)
-	@cd $(MOTATE_PATH) && $(REC) $(CWD) $(realpath $<) $(realpath $(CXX)) $(subst $(MOTATE_PATH),$(realpath $(MOTATE_PATH)),$(INCLUDES) $(patsubst %,-D%,$(DEVICE_DEFINES) $(USER_DEFINES))) -xc++ -c -o $(realpath $@) $(realpath $<)
+	$(REC) $(realpath $(CWD)) $(realpath $(CWD)) $< $(CXX) "$(CPPFLAGS) $(DEPFLAGS) -xc++ -c -o $@ $<"
 	$(QUIET)$(CXX) $(CPPFLAGS) $(DEPFLAGS) -xc++ -c -o $@ $<
 
 $(ALL_OTHER_CXX_OBJECTS): | tools $(sort $(dir $(ALL_OTHER_CXX_OBJECTS))) $(DEPDIR) $(BIN)
 $(ALL_OTHER_CXX_OBJECTS): $(OUTDIR)/%.o: %.cpp
 	@echo $(START_BOLD)"Compiling cpp $<"; echo "    -> $@" $(END_BOLD)
-	@$(REC) $(CWD) $(realpath $<) $(realpath $(CXX)) $(INCLUDES) $(patsubst %,-D%,$(DEVICE_DEFINES) $(USER_DEFINES)) -xc++ -c -o $@ $<
+	$(REC) $(realpath $(CWD)) $(realpath $(CWD)) $< $(CXX) "$(CPPFLAGS) $(DEPFLAGS) -xc++ -c -o $@ $<"
 	$(QUIET)$(CXX) $(CPPFLAGS) $(DEPFLAGS) -xc++ -c -o $@ $<
 
 $(MOTATE_C_OBJECTS): | tools $(sort $(dir $(MOTATE_C_OBJECTS))) $(DEPDIR) $(BIN)
 $(MOTATE_C_OBJECTS): $(OUTDIR)/motate/%.o: $(MOTATE_PATH)/%.c
 	@echo $(START_BOLD)"Compiling c $<"; echo "    -> $@" $(END_BOLD)
-	@cd $(MOTATE_PATH) && $(REC) $(CWD) $(realpath $<) $(realpath $(CC)) $(subst $(MOTATE_PATH),$(realpath $(MOTATE_PATH)),$(INCLUDES) $(patsubst %,-D%,$(DEVICE_DEFINES) $(USER_DEFINES))) -c -o $(realpath $@) $(realpath $<)
+	@$(REC) $(realpath $(CWD)) $(realpath $(CWD)) $< $(CC) "$(CFLAGS) $(DEPFLAGS) -c -o $@ $<"
 	$(QUIET)$(CC) $(CFLAGS) $(DEPFLAGS) -c -o $@ $<
 
 $(ALL_OTHER_C_OBJECTS): | tools $(sort $(dir $(ALL_OTHER_C_OBJECTS))) $(DEPDIR) $(BIN)
 $(ALL_OTHER_C_OBJECTS): $(OUTDIR)/%.o: %.c
 	@echo $(START_BOLD)"Compiling c $<"; echo "    -> $@" $(END_BOLD)
-	@$(REC) $(CWD) $(realpath $<) $(realpath $(CC)) $(INCLUDES) $(patsubst %,-D%,$(DEVICE_DEFINES) $(USER_DEFINES)) -c -o $@ $<
+	@$(REC) $(realpath $(CWD)) $(realpath $(CWD)) $< $(CC) "$(CFLAGS) $(DEPFLAGS) -c -o $@ $<"
 	$(QUIET)$(CC) $(CFLAGS) $(DEPFLAGS) -c -o $@ $<
 
 $(MOTATE_ASM_OBJECTS): | tools $(sort $(dir $(MOTATE_ASM_OBJECTS))) $(DEPDIR) $(BIN)
 $(MOTATE_ASM_OBJECTS): $(OUTDIR)/motate/%.o: $(MOTATE_PATH)/%.s
 	@echo $(START_BOLD)"Compiling $<"; echo "    -> $@"  $(END_BOLD)
-	@cd $(MOTATE_PATH) && $(REC) $(CWD) $(realpath $<) $(realpath $(CC)) $(subst $(MOTATE_PATH),$(realpath $(MOTATE_PATH)),$(INCLUDES) $(patsubst %,-D%,$(DEVICE_DEFINES) $(USER_DEFINES))) -c -o $(realpath $@) $(realpath $<)
+	@$(REC) $(realpath $(CWD)) $(realpath $(CWD)) $< $(CC) "$(ASFLAGS) $(DEPFLAGS) -c -o $@ $<"
 	$(QUIET)$(CC) $(ASFLAGS) $(DEPFLAGS) -c -o $@ $<
 
 $(ALL_OTHER_ASM_OBJECTS): | tools $(sort $(dir $(ALL_OTHER_ASM_OBJECTS))) $(DEPDIR) $(BIN)
 $(ALL_OTHER_ASM_OBJECTS): $(OUTDIR)/%.o: %.s
 	@echo $(START_BOLD)"Compiling $<"; echo "    -> $@"  $(END_BOLD)
-	@$(REC) $(CWD) $(realpath $<) $(realpath $(CC)) $(INCLUDES) $(patsubst %,-D%,$(DEVICE_DEFINES) $(USER_DEFINES)) -c -o $(realpath $@) $(realpath $<)
+	@$(REC) $(realpath $(CWD)) $(realpath $(CWD)) $< $(CC) "$(ASFLAGS) $(DEPFLAGS) -c -o $@ $<"
 	$(QUIET)$(CC) $(ASFLAGS) $(DEPFLAGS) -c -o $@ $<
 
 
