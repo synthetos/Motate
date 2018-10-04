@@ -1,8 +1,8 @@
 /*
- Atmel_sam_common/SamSPI.h - Library for the Motate system
+ Atmel_sam_common/SamTWI.h - Library for the Motate system
  http://github.com/synthetos/motate/
 
- Copyright (c) 2013 - 2018 Robert Giseburt
+ Copyright (c) 2018 Robert Giseburt
 
  This file is part of the Motate Library.
 
@@ -28,33 +28,33 @@
 
  */
 
-#include "MotateSPI.h"
+// #include "MotateTWI.h"
 
-namespace Motate {
-    template<> std::function<void()> _SPIHardware<0>::_spiInterruptHandlerJumper {};
-#if defined(HAS_SPI1)
-    template<> std::function<void()> _SPIHardware<1>::_spiInterruptHandlerJumper {};
-#endif // HAS_SPI1
-}
+// namespace Motate {
+//     template<> std::function<void()> _SPIHardware<0>::_spiInterruptHandlerJumper {};
+// #if defined(HAS_SPI1)
+//     template<> std::function<void()> _SPIHardware<1>::_spiInterruptHandlerJumper {};
+// #endif // HAS_SPI1
+// }
 
-extern "C" void SPI0_Handler(void)  {
-    if (Motate::_SPIHardware<0u>::_spiInterruptHandlerJumper) {
-        Motate::_SPIHardware<0u>::_spiInterruptHandlerJumper();
-        return;
-    }
-#if IN_DEBUGGER == 1
-    __asm__("BKPT");
-#endif
-}
+// extern "C" void SPI0_Handler(void)  {
+//     if (Motate::_SPIHardware<0u>::_spiInterruptHandlerJumper) {
+//         Motate::_SPIHardware<0u>::_spiInterruptHandlerJumper();
+//         return;
+//     }
+// #if IN_DEBUGGER == 1
+//     __asm__("BKPT");
+// #endif
+// }
 
-#if defined(HAS_SPI1)
-extern "C" void SPI1_Handler(void)  {
-    if (Motate::_SPIHardware<1u>::_spiInterruptHandlerJumper) {
-        Motate::_SPIHardware<1u>::_spiInterruptHandlerJumper();
-        return;
-    }
-#if IN_DEBUGGER == 1
-    __asm__("BKPT");
-#endif
-}
-#endif // HAS_SPI1
+// #if defined(HAS_SPI1)
+// extern "C" void SPI1_Handler(void)  {
+//     if (Motate::_SPIHardware<1u>::_spiInterruptHandlerJumper) {
+//         Motate::_SPIHardware<1u>::_spiInterruptHandlerJumper();
+//         return;
+//     }
+// #if IN_DEBUGGER == 1
+//     __asm__("BKPT");
+// #endif
+// }
+// #endif // HAS_SPI1

@@ -41,6 +41,489 @@
 #include "SamDMA.h" // pull in defines and fix them
 
 namespace Motate {
+
+    #ifdef UART0
+    // This is for the Sam4e
+    Uart* const UART0_DONT_CONFLICT = static_cast<Uart *>(UART0);
+    #undef UART0
+    Uart* const UART0 = UART0_DONT_CONFLICT;
+    #define HAS_UART0
+
+    constexpr uint16_t const ID_UART0_DONT_CONFLICT = ID_UART0;
+    #undef ID_UART0
+    constexpr uint16_t const ID_UART0 = ID_UART0_DONT_CONFLICT;
+
+    #ifdef PDC_UART0
+    Pdc* const PDC_UART0_DONT_CONFLICT = static_cast<Pdc *>(PDC_UART0);
+    #undef PDC_UART0
+    Pdc* const PDC_UART0 = PDC_UART0_DONT_CONFLICT;
+    #define HAS_PDC
+    #define HAS_PDC_UART0
+    #endif  // PDC_UART0
+
+    #else
+    #ifdef UART
+    // NOTE: We homogenize, and move the names UART -> UART0
+    // This is for the Sam3x
+    Uart* const UART0_DONT_CONFLICT = static_cast<Uart *>(UART);
+    #undef UART
+    Uart* const UART0               = UART0_DONT_CONFLICT;
+    #define HAS_UART0
+    #define HAD_UART
+
+    constexpr uint32_t   ID_UART0                = ID_UART;
+    #undef ID_UART
+
+    #ifdef PDC_UART
+    Pdc* const PDC_UART0_DONT_CONFLICT = static_cast<Pdc *>(PDC_UART);
+    #undef PDC_UART
+    Pdc* const PDC_UART0               = PDC_UART0_DONT_CONFLICT;
+    #define HAS_PDC
+    #define HAS_PDC_UART0
+
+    // BONUS, make fake PDC_UART1 to save ifdefs
+    constexpr Pdc* const PDC_UART1 = nullptr;
+    #endif  // PDC_UART
+
+    constexpr IRQn_Type    UART0_IRQn  = UART_IRQn;
+    #endif  // ifdef UART
+    #endif  // ifdef UART0
+
+    #ifdef UART1
+    Uart* const UART1_DONT_CONFLICT = static_cast<Uart *>(UART1);
+    #undef UART1
+    Uart* const UART1 = UART1_DONT_CONFLICT;
+    #define HAS_UART1
+
+    constexpr uint32_t const ID_UART1_DONT_CONFLICT = ID_UART1;
+    #undef ID_UART1
+    constexpr uint32_t const ID_UART1 = ID_UART1_DONT_CONFLICT;
+
+    #ifdef PDC_UART1
+    Pdc* const PDC_UART1_DONT_CONFLICT = static_cast<Pdc *>(PDC_UART1);
+    #undef PDC_UART1
+    Pdc* const PDC_UART1 = PDC_UART1_DONT_CONFLICT;
+    #define HAS_PDC
+    #define HAS_PDC_UART1
+    #endif  // PDC_UART1
+
+    #else  // no UART1
+    constexpr Uart* const  UART1       = nullptr;
+    constexpr uint32_t     ID_UART1    = 0;
+    constexpr IRQn_Type    UART1_IRQn  = (IRQn_Type)0u;
+    #endif
+
+    #ifdef UART2
+    Uart* const UART2_DONT_CONFLICT = static_cast<Uart *>(UART2);
+    #undef UART2
+    Uart* const UART2 = UART2_DONT_CONFLICT;
+    #define HAS_UART2
+
+    constexpr uint32_t const ID_UART2_DONT_CONFLICT = ID_UART2;
+    #undef ID_UART2
+    constexpr uint32_t const ID_UART2 = ID_UART2_DONT_CONFLICT;
+
+    #ifdef PDC_UART2
+    Pdc* const PDC_UART2_DONT_CONFLICT = static_cast<Pdc *>(PDC_UART2);
+    #undef PDC_UART2
+    Pdc* const PDC_UART2 = PDC_UART2_DONT_CONFLICT;
+    #define HAS_PDC
+    #define HAS_PDC_UART2
+    #endif  // PDC_UART1
+
+    #else  // no UART2
+    constexpr Uart* const  UART2       = nullptr;
+    constexpr uint32_t     ID_UART2    = 0;
+    constexpr IRQn_Type    UART2_IRQn  = (IRQn_Type)0u;
+    #endif
+
+    #ifdef UART3
+    Uart* const UART3_DONT_CONFLICT = static_cast<Uart *>(UART3);
+    #undef UART3
+    Uart* const UART3 = UART3_DONT_CONFLICT;
+    #define HAS_UART3
+
+    constexpr uint32_t const ID_UART3_DONT_CONFLICT = ID_UART3;
+    #undef ID_UART3
+    constexpr uint32_t const ID_UART3 = ID_UART3_DONT_CONFLICT;
+
+    #ifdef PDC_UART3
+    Pdc* const PDC_UART3_DONT_CONFLICT = static_cast<Pdc *>(PDC_UART3);
+    #undef PDC_UART3
+    Pdc* const PDC_UART3 = PDC_UART3_DONT_CONFLICT;
+    #define HAS_PDC
+    #define HAS_PDC_UART3
+    #endif  // PDC_UART1
+
+    #else  // no UART3
+    constexpr Uart* const  UART3       = nullptr;
+    constexpr uint32_t     ID_UART3    = 0;
+    constexpr IRQn_Type    UART3_IRQn  = (IRQn_Type)0u;
+    #endif
+
+    #ifdef UART4
+    Uart* const UART4_DONT_CONFLICT = static_cast<Uart *>(UART4);
+    #undef UART4
+    Uart* const UART4 = UART4_DONT_CONFLICT;
+    #define HAS_UART4
+
+    constexpr uint32_t const ID_UART4_DONT_CONFLICT = ID_UART4;
+    #undef ID_UART4
+    constexpr uint32_t const ID_UART4 = ID_UART4_DONT_CONFLICT;
+
+    #ifdef PDC_UART4
+    Pdc* const PDC_UART4_DONT_CONFLICT = static_cast<Pdc *>(PDC_UART4);
+    #undef PDC_UART4
+    Pdc* const PDC_UART4 = PDC_UART4_DONT_CONFLICT;
+    #define HAS_PDC
+    #define HAS_PDC_UART4
+    #endif  // PDC_UART1
+
+    #else  // no UART4
+    constexpr Uart* const  UART4       = nullptr;
+    constexpr uint32_t     ID_UART4    = 0;
+    constexpr IRQn_Type    UART4_IRQn  = (IRQn_Type)0u;
+    #endif
+
+    static constexpr Uart * const uart(uint8_t uartPeripheralNumber) {
+        switch (uartPeripheralNumber) {
+            case (0): return UART0;
+            case (1): return UART1;
+            case (2): return UART2;
+            case (3): return UART3;
+            case (4): return UART4;
+        };
+        return nullptr;
+    };
+
+
+    #ifdef USART0
+    // Thi isn't strictly necessary, but preventative and for consistency.
+    Usart* const USART0_DONT_CONFLICT = static_cast<Usart *>(USART0);
+    #undef USART0
+    Usart* const USART0 = USART0_DONT_CONFLICT;
+    #define HAS_USART0
+
+    constexpr uint32_t const ID_USART0_DONT_CONFLICT = ID_USART0;
+    #undef ID_USART0
+    constexpr uint32_t const ID_USART0 = ID_USART0_DONT_CONFLICT;
+
+
+    #ifdef PDC_USART0
+    Pdc* const PDC_USART0_DONT_CONFLICT = static_cast<Pdc *>(PDC_USART0);
+    #undef PDC_USART0
+    Pdc* const PDC_USART0 = PDC_USART0_DONT_CONFLICT;
+    #define HAS_PDC
+    #define HAS_PDC_USART0
+    #endif  // PDC_USART0
+    #else   // no USART0
+    constexpr Usart* const USART0      = nullptr;
+    constexpr uint32_t     ID_USART0   = 0;
+    constexpr IRQn_Type    USART0_IRQn = (IRQn_Type)0u;
+    #endif  // ifdef USART0
+
+    #ifdef USART1
+    // Thi isn't strictly necessary, but preventative and for consistency.
+    Usart* const USART1_DONT_CONFLICT = static_cast<Usart *>(USART1);
+    #undef USART1
+    Usart* const USART1 = USART1_DONT_CONFLICT;
+    #define HAS_USART1
+
+    constexpr uint32_t const ID_USART1_DONT_CONFLICT = ID_USART1;
+    #undef ID_USART1
+    constexpr uint32_t const ID_USART1 = ID_USART1_DONT_CONFLICT;
+
+
+    #ifdef PDC_USART1
+    Pdc* const PDC_USART1_DONT_CONFLICT = static_cast<Pdc *>(PDC_USART1);
+    #undef PDC_USART1
+    Pdc* const PDC_USART1 = PDC_USART1_DONT_CONFLICT;
+    #define HAS_PDC
+    #define HAS_PDC_USART1
+    #endif  // PDC_UART1
+    #else   // no USART1
+    constexpr Usart* const USART1      = nullptr;
+    constexpr uint32_t     ID_USART1   = 0;
+    constexpr IRQn_Type    USART1_IRQn = (IRQn_Type)0u;
+    #endif  // ifdef USART1
+
+    #ifdef USART2
+    // Thi isn't strictly necessary, but preventative and for consistency.
+    Usart* const USART2_DONT_CONFLICT = static_cast<Usart *>(USART2);
+    #undef USART2
+    Usart* const USART2 = USART2_DONT_CONFLICT;
+    #define HAS_USART2
+
+    constexpr uint32_t const ID_USART2_DONT_CONFLICT = ID_USART2;
+    #undef ID_USART2
+    constexpr uint32_t const ID_USART2 = ID_USART2_DONT_CONFLICT;
+
+
+    #ifdef PDC_USART2
+    Pdc* const PDC_USART2_DONT_CONFLICT = static_cast<Pdc *>(PDC_USART2);
+    #undef PDC_USART2
+    Pdc* const PDC_USART2 = PDC_USART2_DONT_CONFLICT;
+    #define HAS_PDC
+    #define HAS_PDC_USART2
+    #endif  // PDC_UART2
+    #else   // no USART2
+    constexpr Usart* const USART2      = nullptr;
+    constexpr uint32_t     ID_USART2   = 0;
+    constexpr IRQn_Type    USART2_IRQn = (IRQn_Type)0u;
+    #endif  // ifdef USART2
+
+
+    static constexpr Usart * const usart(const uint8_t uartPeripheralNumber)
+    {
+        switch (uartPeripheralNumber) {
+            case (0): return USART0;
+            case (1): return USART1;
+            case (2): return USART2;
+        };
+        return nullptr;
+    };
+
+
+    // NOTE: If we have an XDMAC peripheral, we don't have PDC, and it's the
+    // only want to DMC all of these peripherals.
+    // So we don't need the XDMAC deduction -- it's already done.
+
+    // We're deducing if there's a USART and it has a PDC
+    // Notice that this relies on defines set up in SamCommon.h
+#ifdef HAS_USART0
+
+#pragma mark DMA_XDMAC Usart implementation
+
+    template<uint8_t uartPeripheralNumber>
+    struct DMA_XDMAC_hardware<Usart*, uartPeripheralNumber> {
+        constexpr DMA_XDMAC_hardware() {};
+        typedef char* buffer_t;
+
+        // this is identical to in SamUART
+        static constexpr Usart * const usart()
+        {
+            return Motate::usart(uartPeripheralNumber);
+        };
+    };
+
+    template<uint8_t uartPeripheralNumber>
+    struct DMA_XDMAC_TX_hardware<Usart*, uartPeripheralNumber> : virtual DMA_XDMAC_hardware<Usart*, uartPeripheralNumber>, virtual DMA_XDMAC_common {
+        using DMA_XDMAC_hardware<Usart*, uartPeripheralNumber>::usart;
+
+        static constexpr uint8_t const xdmaTxPeripheralId()
+        {
+            switch (uartPeripheralNumber) {
+                case (0): return  7;
+                case (1): return  9;
+                case (2): return 11;
+            };
+            return 0;
+        };
+        static constexpr uint8_t const xdmaTxChannelNumber()
+        {
+            switch (uartPeripheralNumber) {
+                case (0): return  0;
+                case (1): return  2;
+                case (2): return  4;
+            };
+            return 0;
+        };
+        static constexpr XdmacChid * const xdmaTxChannel()
+        {
+            return xdma()->XDMAC_CHID + xdmaTxChannelNumber();
+        };
+        static constexpr void * const xdmaPeripheralTxAddress()
+        {
+            return &usart()->US_THR;
+        };
+    };
+
+    template<uint8_t uartPeripheralNumber>
+    struct DMA_XDMAC_RX_hardware<Usart*, uartPeripheralNumber> : virtual DMA_XDMAC_hardware<Usart*, uartPeripheralNumber>, virtual DMA_XDMAC_common {
+        using DMA_XDMAC_hardware<Usart*, uartPeripheralNumber>::usart;
+
+        static constexpr uint8_t const xdmaRxPeripheralId()
+        {
+            switch (uartPeripheralNumber) {
+                case (0): return  8;
+                case (1): return 10;
+                case (2): return 12;
+            };
+            return 0;
+        };
+        static constexpr uint8_t const xdmaRxChannelNumber()
+        {
+            switch (uartPeripheralNumber) {
+                case (0): return  1;
+                case (1): return  3;
+                case (2): return  5;
+            };
+            return 0;
+        };
+        static constexpr XdmacChid * const xdmaRxChannel()
+        {
+            return xdma()->XDMAC_CHID + xdmaRxChannelNumber();
+        };
+        static constexpr void * const xdmaPeripheralRxAddress()
+        {
+            return &usart()->US_RHR;
+        };
+    };
+
+    // Construct a DMA specialization that uses the PDC
+    template<uint8_t periph_num>
+    struct DMA<Usart*, periph_num> : virtual DMA_XDMAC_RX<Usart*, periph_num>, virtual DMA_XDMAC_TX<Usart*, periph_num> {
+        // nothing to do here, except for a constxpr constructor
+        constexpr DMA(const std::function<void(uint16_t)> &handler) : DMA_XDMAC_RX<Usart*, periph_num>{handler}, DMA_XDMAC_TX<Usart*, periph_num>{handler} {};
+
+        void setInterrupts(const uint16_t interrupts) const
+        {
+            DMA_XDMAC_common::setInterrupts(interrupts);
+
+            if (interrupts != Interrupt::Off) {
+                if (interrupts & Interrupt::OnTxTransferDone) {
+                    DMA_XDMAC_TX<Uart*, periph_num>::startTxDoneInterrupts();
+                } else {
+                    DMA_XDMAC_TX<Uart*, periph_num>::stopTxDoneInterrupts();
+                }
+
+                if (interrupts & Interrupt::OnRxTransferDone) {
+                    DMA_XDMAC_RX<Usart*, periph_num>::startRxDoneInterrupts();
+                } else {
+                    DMA_XDMAC_RX<Usart*, periph_num>::stopRxDoneInterrupts();
+                }
+            }
+        };
+
+        void reset() const {
+            DMA_XDMAC_TX<Usart*, periph_num>::resetTX();
+            DMA_XDMAC_RX<Usart*, periph_num>::resetRX();
+        };
+    };
+
+#endif // USART + XDMAC
+
+    // We're deducing if there's a UART and it has a PDC
+    // Notice that this relies on defines set up in SamCommon.h
+#ifdef HAS_UART0
+
+#pragma mark DMA_XDMAC Usart implementation
+
+    template<uint8_t uartPeripheralNumber>
+    struct DMA_XDMAC_hardware<Uart*, uartPeripheralNumber>
+    {
+        static constexpr Uart * const uart() {
+            return Motate::uart(uartPeripheralNumber);
+        };
+
+        typedef char* buffer_t;
+    };
+
+    template<uint8_t uartPeripheralNumber>
+    struct DMA_XDMAC_TX_hardware<Uart*, uartPeripheralNumber> : virtual DMA_XDMAC_hardware<Uart*, uartPeripheralNumber>, virtual DMA_XDMAC_common {
+        using DMA_XDMAC_hardware<Uart*, uartPeripheralNumber>::uart;
+
+        static constexpr uint8_t const xdmaTxPeripheralId()
+        {
+            switch (uartPeripheralNumber) {
+                case (0): return 20;
+                case (1): return 22;
+                case (2): return 24;
+                case (3): return 26;
+                case (4): return 28;
+            };
+            return 0;
+        };
+        static constexpr uint8_t const xdmaTxChannelNumber()
+        {
+            switch (uartPeripheralNumber) {
+                case (0): return  6;
+                case (1): return  8;
+                case (2): return 10;
+                case (3): return 12;
+                case (4): return 14;
+            };
+            return 0;
+        };
+        static constexpr XdmacChid * const xdmaTxChannel()
+        {
+            return xdma()->XDMAC_CHID + xdmaTxChannelNumber();
+        };
+        static constexpr volatile void * const xdmaPeripheralTxAddress()
+        {
+            return &uart()->UART_THR;
+        };
+    };
+
+    template<uint8_t uartPeripheralNumber>
+    struct DMA_XDMAC_RX_hardware<Uart*, uartPeripheralNumber> : virtual DMA_XDMAC_hardware<Uart*, uartPeripheralNumber>, virtual DMA_XDMAC_common {
+        using DMA_XDMAC_hardware<Uart*, uartPeripheralNumber>::uart;
+
+        static constexpr uint8_t const xdmaRxPeripheralId()
+        {
+            switch (uartPeripheralNumber) {
+                case (0): return 21;
+                case (1): return 23;
+                case (2): return 25;
+                case (3): return 27;
+                case (4): return 29;
+            };
+            return 0;
+        };
+        static constexpr uint8_t const xdmaRxChannelNumber()
+        {
+            switch (uartPeripheralNumber) {
+                case (0): return  7;
+                case (1): return  9;
+                case (2): return 11;
+                case (3): return 13;
+                case (4): return 15;
+            };
+            return 0;
+        };
+        static constexpr XdmacChid * const xdmaRxChannel()
+        {
+            return xdma()->XDMAC_CHID + xdmaRxChannelNumber();
+        };
+        static constexpr volatile void * const xdmaPeripheralRxAddress()
+        {
+            return &uart()->UART_RHR;
+        };
+    };
+
+    // Construct a DMA specialization that uses the PDC
+    template<uint8_t periph_num>
+    struct DMA<Uart*, periph_num> : DMA_XDMAC_RX<Uart*, periph_num>, DMA_XDMAC_TX<Uart*, periph_num> {
+        // nothing to do here, except for a constxpr constructor
+        constexpr DMA(const std::function<void(uint16_t)> &handler) : DMA_XDMAC_RX<Uart*, periph_num>{handler}, DMA_XDMAC_TX<Uart*, periph_num>{handler} {};
+
+        void setInterrupts(const uint16_t interrupts) const
+        {
+            DMA_XDMAC_common::setInterrupts(interrupts);
+
+            if (interrupts != Interrupt::Off) {
+                if (interrupts & Interrupt::OnTxTransferDone) {
+                    DMA_XDMAC_TX<Uart*, periph_num>::startTxDoneInterrupts();
+                } else {
+                    DMA_XDMAC_TX<Uart*, periph_num>::stopTxDoneInterrupts();
+                }
+
+                if (interrupts & Interrupt::OnRxTransferDone) {
+                    DMA_XDMAC_RX<Uart*, periph_num>::startRxDoneInterrupts();
+                } else {
+                    DMA_XDMAC_RX<Uart*, periph_num>::stopRxDoneInterrupts();
+                }
+            }
+        };
+
+        void reset() const {
+            DMA_XDMAC_TX<Uart*, periph_num>::resetTX();
+            DMA_XDMAC_RX<Uart*, periph_num>::resetRX();
+        };
+    };
+#endif // UART + XDMAC
+
+
     // Convenience template classes for specialization:
 
     template<pin_number rxPinNumber, pin_number txPinNumber>
