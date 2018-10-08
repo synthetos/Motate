@@ -447,7 +447,7 @@ LINKER_SCRIPT_OPTION =
 endif
 
 # Generate dependency information
-DEPFLAGS = -MMD -MF $(abspath $(OBJ)/dep/$(@F).d) -MT $(abspath $(subst $(OUTDIR),$(OBJ),$@))
+DEPFLAGS = -MMD -MF $(OBJ)/dep/$(@F).d -MT $(subst $(OUTDIR),$(OBJ),$@)
 
 $(OUTPUT_BIN).elf: $(ALL_C_OBJECTS) $(ALL_CXX_OBJECTS) $(ALL_ASM_OBJECTS) $(LINKER_SCRIPT)
 	@echo $(START_BOLD)"Linking $(OUTPUT_BIN).elf" $(END_BOLD)
