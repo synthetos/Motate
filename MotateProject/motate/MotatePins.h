@@ -900,7 +900,7 @@ namespace Motate {
     };
 
 
-    
+
     template <pin_number pinNum>
     using _GetAvailablePWMOrAlike = typename std::conditional<
     (AvailablePWMOutputPin<pinNum>::_isAvailable()),
@@ -966,6 +966,34 @@ namespace Motate {
     };
     template <pin_number pinNum>
     constexpr bool IsSPISCKPin() { return SPISCKPin<pinNum>::is_real; };
+
+
+#pragma mark TWISCKPin / TWISDAPin
+    /**************************************************
+     *
+     * TWI PIN METADATA and wiring: TWISCKPin / TWISDAPin
+     *
+     * TWI uses these pins to wire up pin muxing and handle tests if pins can support SPI.
+     *
+     * REQUIRES: _MAKE_MOTATE_TWI_SCK_PIN
+     *           _MAKE_MOTATE_TWI_SDA_PIN
+     **************************************************/
+
+    template<pin_number pinNum>
+    struct TWISCKPin {
+        static constexpr bool is_real = false;
+        static constexpr uint8_t twiNum = -1; // yes, we assigned -1 to a uint8_t
+    };
+    template <pin_number pinNum>
+    constexpr bool IsTWISCKPin() { return TWISCKPin<pinNum>::is_real; };
+
+    template<pin_number pinNum>
+    struct TWISDAPin {
+        static constexpr bool is_real = false;
+        static constexpr uint8_t twiNum = -1; // yes, we assigned -1 to a uint8_t
+    };
+    template <pin_number pinNum>
+    constexpr bool IsTWISDAPin() { return TWISDAPin<pinNum>::is_real; };
 
 
 #pragma mark UARTTxPin / UARTRxPin / UARTRTSPin / UARTCTSPin

@@ -1,8 +1,8 @@
 /*
- Atmel_sam_common/SamSPI.h - Library for the Motate system
+ Atmel_sam_common/SamTWI.h - Library for the Motate system
  http://github.com/synthetos/motate/
 
- Copyright (c) 2013 - 2018  Robert Giseburt
+ Copyright (c) 2018 Robert Giseburt
 
  This file is part of the Motate Library.
 
@@ -28,8 +28,8 @@
 
  */
 
-#ifndef SAMSPI_H_ONCE
-#define SAMSPI_H_ONCE
+#ifndef SAMTWI_H_ONCE
+#define SAMTWI_H_ONCE
 
 #include "sam.h"
 
@@ -39,245 +39,51 @@
 #include <type_traits>
 
 namespace Motate {
-    namespace SPI_internal {
-        template<class T, const intptr_t val>
-        struct deregister {
-            static constexpr T const value() { return reinterpret_cast<T>(val); }
-            constexpr deregister() {};
-            constexpr T const operator->() const { return reinterpret_cast<T>(val); }
-            constexpr operator T const() const { return reinterpret_cast<T>(val); }
-        };
-
-        #if defined(SPI)
-            #define CAN_SPI_PDC_DMA 1
-
-            // This is for the Sam4e
-            Spi * const SPI0_DONT_CONFLICT = static_cast<Spi *>(SPI);
-            #undef SPI
-            Spi * const SPI0_Peripheral = SPI0_DONT_CONFLICT;
-            constexpr uint16_t const ID_SPI0_DONT_CONFLICT = ID_SPI;
-
-            #undef ID_SPI
-            constexpr uint16_t const ID_SPI0 = ID_SPI0_DONT_CONFLICT;
-            constexpr IRQn_Type SPI0_IRQn = SPI_IRQn;
-
-            #define HAS_SPI0
-            // This define is because, on this processor, they chose to call it "SPI_Handler" instead
-            // and saves an ifdef and duplicated code in the SamSPI.cpp
-            #define SPI0_Handler SPI_Handler
-        #elif defined(SPI0)
-            // This is for the Sam3x and SamS70
-            static const intptr_t SPI0_DONT_CONFLICT {(intptr_t)SPI0};
-            #undef SPI0
-            constexpr deregister<Spi *, SPI0_DONT_CONFLICT> SPI0_Peripheral;
-
-            constexpr uint16_t const ID_SPI0_DONT_CONFLICT = ID_SPI0;
-            #undef ID_SPI0
-            constexpr uint16_t const ID_SPI0 = ID_SPI0_DONT_CONFLICT;
-
-            #define HAS_SPI0
-        #endif
-
-        #if defined(SPI1)
-            // This is for the Sam3x and SamS70
-            static const intptr_t SPI1_DONT_CONFLICT {(intptr_t)SPI1};
-            #undef SPI1
-            constexpr deregister<Spi *, SPI1_DONT_CONFLICT> SPI1_Peripheral;
-
-            constexpr uint16_t const ID_SPI1_DONT_CONFLICT = ID_SPI1;
-            #undef ID_SPI1
-            constexpr uint16_t const ID_SPI1 = ID_SPI1_DONT_CONFLICT;
-
-            #define HAS_SPI1
-        #endif
-
-        template<int8_t spiPeripheralNumber>
-        struct SPIInfo {}; // SPIInfo <generic>
-
-        template<>
-        struct SPIInfo<0>
-        {
-            static constexpr bool exists = true;
-            // static constexpr Spi * const spi_fn() { return SPI0_DONT_CONFLICT.value(); }
-            static constexpr auto spi = SPI0_Peripheral;
-            static constexpr uint32_t peripheralId = ID_SPI0;
-            static constexpr IRQn_Type spiIRQ = SPI0_IRQn;
-        }; // SPIInfo <0>
-
-    #if defined(HAS_SPI1)
-        template<>
-        struct SPIInfo<1>
-        {
-            static constexpr bool exists = true;
-            // static constexpr Spi * const spi_fn() { return SPI1_DONT_CONFLICT.value(); }
-            static constexpr auto const spi = SPI1_Peripheral;
-            static constexpr uint32_t peripheralId = ID_SPI1;
-            static constexpr IRQn_Type spiIRQ = SPI1_IRQn;
-        }; // SPIInfo <1>
-    #endif
-
-    }; // Motate::SPI_internal
-
-    // We're deducing if there's a SPI0 and it has a PDC
-    // Notice that this relies on defines set up in SamCommon.h
-    #if defined(HAS_SPI0)
-
-    #if defined(CAN_SPI_PDC_DMA)
-
-    #else
-    // if !defined(CAN_SPI_PDC_DMA)
-    #pragma mark DMA_XDMAC SPI implementation
-
-    template<uint8_t spiPeripheralNumber>
-    struct DMA_XDMAC_hardware<Spi*, spiPeripheralNumber> : Motate::SPI_internal::SPIInfo<spiPeripheralNumber>
-    {
-        using SPI_internal::SPIInfo<spiPeripheralNumber>::spi;
-        auto peripheralId() const { return SPI_internal::SPIInfo<spiPeripheralNumber>::peripheralId; }
-        typedef char* buffer_t;
-    };
-
-    template<uint8_t spiPeripheralNumber>
-    struct DMA_XDMAC_TX_hardware<Spi*, spiPeripheralNumber> : virtual DMA_XDMAC_hardware<Spi*, spiPeripheralNumber>, virtual DMA_XDMAC_common {
-        using DMA_XDMAC_hardware<Spi*, spiPeripheralNumber>::spi;
-        using DMA_XDMAC_hardware<Spi*, spiPeripheralNumber>::peripheralId;
-
-        static constexpr uint8_t const xdmaTxPeripheralId()
-        {
-            switch (spiPeripheralNumber) {
-                case (0): return 1;
-                case (1): return 3;
-            };
-            return 0;
-        };
-        static constexpr uint8_t const xdmaTxChannelNumber()
-        {
-            switch (spiPeripheralNumber) {
-                case (0): return  18;
-                case (1): return  20;
-            };
-            return 0;
-        };
-        static constexpr XdmacChid * const xdmaTxChannel()
-        {
-            return xdma()->XDMAC_CHID + xdmaTxChannelNumber();
-        };
-        static constexpr volatile void * const xdmaPeripheralTxAddress()
-        {
-            return &spi->SPI_TDR;
-        };
-    };
-
-    template<uint8_t spiPeripheralNumber>
-    struct DMA_XDMAC_RX_hardware<Spi*, spiPeripheralNumber> : virtual DMA_XDMAC_hardware<Spi*, spiPeripheralNumber>, virtual DMA_XDMAC_common {
-        using DMA_XDMAC_hardware<Spi*, spiPeripheralNumber>::spi;
-        using DMA_XDMAC_hardware<Spi*, spiPeripheralNumber>::peripheralId;
-
-        static constexpr uint8_t const xdmaRxPeripheralId()
-        {
-            switch (spiPeripheralNumber) {
-                case (0): return 2;
-                case (1): return 4;
-            };
-            return 0;
-        };
-        static constexpr uint8_t const xdmaRxChannelNumber()
-        {
-            switch (spiPeripheralNumber) {
-                case (0): return 19;
-                case (1): return 21;
-            };
-            return 0;
-        };
-        static constexpr XdmacChid * const xdmaRxChannel()
-        {
-            return xdma()->XDMAC_CHID + xdmaRxChannelNumber();
-        };
-        static constexpr volatile void * const xdmaPeripheralRxAddress()
-        {
-            return &spi->SPI_RDR;
-        };
-    };
-
-    // Construct a DMA specialization that uses the PDC
-    template<uint8_t periph_num>
-    struct DMA<Spi*, periph_num> : DMA_XDMAC_RX<Spi*, periph_num>, DMA_XDMAC_TX<Spi*, periph_num> {
-        // nothing to do here, except for a constxpr constructor
-        constexpr DMA(const std::function<void(uint16_t)> &handler) : DMA_XDMAC_RX<Spi*, periph_num>{handler}, DMA_XDMAC_TX<Spi*, periph_num>{handler} {};
-
-        using DMA_XDMAC_common::xdma;
-        using DMA_XDMAC_RX<Spi*, periph_num>::xdmaRxChannelNumber;
-        using DMA_XDMAC_TX<Spi*, periph_num>::xdmaTxChannelNumber;
-
-        void setInterrupts(const uint16_t interrupts) const
-        {
-            DMA_XDMAC_common::setInterrupts(interrupts);
-
-            if (interrupts != Interrupt::Off) {
-                if (interrupts & Interrupt::OnTxTransferDone) {
-                    DMA_XDMAC_TX<Spi*, periph_num>::startTxDoneInterrupts();
-                } else {
-                    DMA_XDMAC_TX<Spi*, periph_num>::stopTxDoneInterrupts();
-                }
-
-                if (interrupts & Interrupt::OnRxTransferDone) {
-                    DMA_XDMAC_RX<Spi*, periph_num>::startRxDoneInterrupts();
-                } else {
-                    DMA_XDMAC_RX<Spi*, periph_num>::stopRxDoneInterrupts();
-                }
-            } else {
-                DMA_XDMAC_TX<Spi*, periph_num>::stopTxDoneInterrupts();
-                DMA_XDMAC_RX<Spi*, periph_num>::stopRxDoneInterrupts();
-
-            }
-        };
-
-        void reset() const {
-            DMA_XDMAC_TX<Spi*, periph_num>::resetTX();
-            DMA_XDMAC_RX<Spi*, periph_num>::resetRX();
-        };
-
-        void enable() const {
-            xdma()->XDMAC_GE = (XDMAC_GIE_IE0 << xdmaRxChannelNumber()) | (XDMAC_GIE_IE0 << xdmaTxChannelNumber());
-        }
-
-        void disable() const
-        {
-            xdma()->XDMAC_GD = (XDMAC_GID_ID0 << xdmaRxChannelNumber()) | (XDMAC_GID_ID0 << xdmaRxChannelNumber());
-        };
-    };
-    #endif // defined(CAN_SPI_PDC_DMA)
-    #endif // SPI + XDMAC
-
-    #undef HAS_SPI1
-    #undef HAS_SPI0
-
 
     template<int8_t spiPeripheralNumber>
-    struct _SPIHardware : Motate::SPI_internal::SPIInfo<spiPeripheralNumber>
+    struct _TWIHardware
     {
-        static_assert(Motate::SPI_internal::SPIInfo<spiPeripheralNumber>::exists,
-                "Only _SPIHardware<0> or _SPIHardware<1> is valid on this processor.");
+#if !defined(HAS_SPI1)
+        static_assert(spiPeripheralNumber == 0,
+                      "Only _TWIHardware<0> is valid on this processor.");
+        static constexpr uint32_t peripheralId() {
+            return ID_SPI0;
+        };
+        static constexpr IRQn_Type spiIRQ() {
+            return SPI0_IRQn;
+        };
+#else
+        static_assert((spiPeripheralNumber == 0) || (spiPeripheralNumber == 1),
+                      "Only _TWIHardware<0> or _TWIHardware<1> is valid on this processor.");
 
-        using Motate::SPI_internal::SPIInfo<spiPeripheralNumber>::spi;
-        using Motate::SPI_internal::SPIInfo<spiPeripheralNumber>::peripheralId;
-        using Motate::SPI_internal::SPIInfo<spiPeripheralNumber>::spiIRQ;
+        constexpr uint32_t peripheralId() {
+            return (spiPeripheralNumber == 0) ? ID_SPI0 : ID_SPI1;
+        };
+        constexpr IRQn_Type spiIRQ() {
+            return (spiPeripheralNumber == 0) ? SPI0_IRQn : SPI1_IRQn;
+        };
+#endif
+
+        constexpr Spi * const spi() {
+            return Motate::spi(spiPeripheralNumber);
+        };
         const uint8_t spiPeripheralNum = spiPeripheralNumber;
 
-        typedef _SPIHardware<spiPeripheralNumber> this_type_t;
+        typedef _TWIHardware<spiPeripheralNumber> this_type_t;
 
-        std::function<void(uint16_t)> _spiInterruptHandler;
+        std::function<void(uint16_t)> _TWIInterruptHandler;
 
 #ifndef CAN_SPI_PDC_DMA
-        DMA<Spi *, spiPeripheralNumber> dma_ {_spiInterruptHandler};
+        DMA<Spi *, spiPeripheralNumber> dma_ {_TWIInterruptHandler};
         constexpr const DMA<Spi *, spiPeripheralNumber> *dma() { return &dma_; };
 #endif
 
-        static std::function<void()> _spiInterruptHandlerJumper;
-        _SPIHardware() {
-            SamCommon::enablePeripheralClock(peripheralId);
+        static std::function<void()> _TWIInterruptHandlerJumper;
+        _TWIHardware() {
+            SamCommon::enablePeripheralClock(peripheralId());
 
             // Softare reset of SPI module
-            spi->SPI_CR = SPI_CR_SWRST;
+            spi()->SPI_CR = SPI_CR_SWRST;
             disable();
         };
 
@@ -288,24 +94,24 @@ namespace Motate {
 //            inited = true;
 
             // Set last transfer
-            spi->SPI_CR = SPI_CR_LASTXFER;
+            spi()->SPI_CR = SPI_CR_LASTXFER;
 
             // Set Mode Register to Master mode
-            spi->SPI_MR |= SPI_MR_MSTR;
+            spi()->SPI_MR |= SPI_MR_MSTR;
 
             // Mode Fault Detection Disabled
-            spi->SPI_MR |= SPI_MR_MODFDIS;
+            spi()->SPI_MR |= SPI_MR_MODFDIS;
 
             // Ensure Fixed Peripheral Select
-            spi->SPI_MR &= (~SPI_MR_PS);
+            spi()->SPI_MR &= (~SPI_MR_PS);
 
             // Disable all interrupts
-            spi->SPI_IDR = 0x7FF;
+            spi()->SPI_IDR = 0x7FF;
 
             // setup interrupt handlers BEFORE setting up DMA, in case it causes an interrupt
-            _spiInterruptHandlerJumper = [&]() {
-                if (_spiInterruptHandler) {
-                    _spiInterruptHandler(getInterruptCause());
+            _TWIInterruptHandlerJumper = [&]() {
+                if (_TWIInterruptHandler) {
+                    _TWIInterruptHandler(getInterruptCause());
                 } else {
 #if IN_DEBUGGER == 1
                     __asm__("BKPT");
@@ -315,15 +121,15 @@ namespace Motate {
 
 #ifdef CAN_SPI_PDC_DMA
             // Reset the PDC
-            spi->SPI_PTCR = SPI_PTCR_RXTDIS | SPI_PTCR_TXTDIS;
-            spi->SPI_RPR = 0;
-            spi->SPI_RCR = 0;
-            spi->SPI_TPR = 0;
-            spi->SPI_TCR = 0;
-            spi->SPI_RNPR = 0;
-            spi->SPI_RNCR = 0;
-            spi->SPI_TNPR = 0;
-            spi->SPI_TNCR = 0;
+            spi()->SPI_PTCR = SPI_PTCR_RXTDIS | SPI_PTCR_TXTDIS;
+            spi()->SPI_RPR = 0;
+            spi()->SPI_RCR = 0;
+            spi()->SPI_TPR = 0;
+            spi()->SPI_TCR = 0;
+            spi()->SPI_RNPR = 0;
+            spi()->SPI_RNCR = 0;
+            spi()->SPI_TNPR = 0;
+            spi()->SPI_TNCR = 0;
 #else
             dma()->reset();
 #endif
@@ -332,18 +138,18 @@ namespace Motate {
         // This is to be called by the device, once it detects a "decoded" CS pin
         void setUsingCSDecoder(bool decoder) {
             if (decoder) {
-                spi->SPI_MR |= SPI_MR_PCSDEC;
+                spi()->SPI_MR |= SPI_MR_PCSDEC;
             } else {
-                spi->SPI_MR &= ~SPI_MR_PCSDEC;
+                spi()->SPI_MR &= ~SPI_MR_PCSDEC;
             }
         }
 
         void enable() {
-            spi->SPI_CR = SPI_CR_SPIEN ;
+            spi()->SPI_CR = SPI_CR_SPIEN ;
         };
 
         void disable() {
-            spi->SPI_CR = SPI_CR_SPIDIS;
+            spi()->SPI_CR = SPI_CR_SPIDIS;
         };
 
         void deassert() {
@@ -352,11 +158,11 @@ namespace Motate {
 
         bool setChannel(const uint8_t channel) {
             // if we are transmitting, we cannot switch
-            while (!(spi->SPI_SR & SPI_SR_TXEMPTY)) {
+            while (!(spi()->SPI_SR & SPI_SR_TXEMPTY)) {
                 ;
             }
 
-            spi->SPI_MR = (spi->SPI_MR & ~SPI_MR_PCS_Msk) | SPI_MR_PCS(channel);
+            spi()->SPI_MR = (spi()->SPI_MR & ~SPI_MR_PCS_Msk) | SPI_MR_PCS(channel);
 
             enable();
             return true;
@@ -366,7 +172,7 @@ namespace Motate {
             // We derive the baud from the master clock with a divider.
             // We want the closest match *below* the value asked for. It's safer to bee too slow.
             uint32_t new_otions = 0;
-            uint32_t old_options = spi->SPI_CSR[channel];
+            uint32_t old_options = spi()->SPI_CSR[channel];
 
             uint32_t divider = SamCommon::getPeripheralClockFreq() / baud;
             if (divider > 255) {
@@ -460,9 +266,9 @@ namespace Motate {
             }
 
             // Always use the larger delay
-            uint32_t old_dlybcs = ((spi->SPI_MR & SPI_MR_DLYBCS_Msk) >> SPI_MR_DLYBCS_Pos);
+            uint32_t old_dlybcs = ((spi()->SPI_MR & SPI_MR_DLYBCS_Msk) >> SPI_MR_DLYBCS_Pos);
             if ( old_dlybcs < dlybcs ) {
-                spi->SPI_MR = (spi->SPI_MR & ~SPI_MR_DLYBCS_Msk) | SPI_MR_DLYBCS(dlybcs);
+                spi()->SPI_MR = (spi()->SPI_MR & ~SPI_MR_DLYBCS_Msk) | SPI_MR_DLYBCS(dlybcs);
             }
 
 
@@ -489,23 +295,23 @@ namespace Motate {
             // We'll drive CS low after we're done, so we always want this:
             new_otions |= SPI_CSR_CSAAT;
 
-            spi->SPI_CSR[channel] = new_otions;
+            spi()->SPI_CSR[channel] = new_otions;
         };
 
         /* TEMPORARILY REMOVING DIRECT READ/WRITE/TRANSFER. Can be brought back later */
 #if 0
         static int16_t read(const bool lastXfer = false, uint8_t toSendAsNoop = 0) {
-            if (!(spi->SPI_SR & SPI_SR_RDRF)) {
-                if (spi->SPI_SR & SPI_SR_TXEMPTY) {
-                    spi->SPI_TDR = toSendAsNoop;
+            if (!(spi()->SPI_SR & SPI_SR_RDRF)) {
+                if (spi()->SPI_SR & SPI_SR_TXEMPTY) {
+                    spi()->SPI_TDR = toSendAsNoop;
                     if (lastXfer) {
-                        spi->SPI_CR = SPI_CR_LASTXFER;
+                        spi()->SPI_CR = SPI_CR_LASTXFER;
                     }
                 }
                 return -1;
             }
 
-            return spi->SPI_RDR;
+            return spi()->SPI_RDR;
         }
 
         static int16_t write(uint8_t value, const bool lastXfer = false) {
@@ -515,20 +321,20 @@ namespace Motate {
         };
 
         static int16_t write(uint8_t value, int16_t &readValue, const bool lastXfer = false) {
-            while (!(spi->SPI_SR & SPI_SR_TDRE)) {;}
+            while (!(spi()->SPI_SR & SPI_SR_TDRE)) {;}
 
-            if (spi->SPI_SR & SPI_SR_RDRF) {
-                readValue = spi->SPI_RDR;
+            if (spi()->SPI_SR & SPI_SR_RDRF) {
+                readValue = spi()->SPI_RDR;
             } else {
                 readValue = -1;
             }
 
-            if (spi->SPI_SR & SPI_SR_TDRE) {
+            if (spi()->SPI_SR & SPI_SR_TDRE) {
 
-                spi->SPI_TDR = value;
+                spi()->SPI_TDR = value;
 
                 if (lastXfer) {
-                    spi->SPI_CR = SPI_CR_LASTXFER;
+                    spi()->SPI_CR = SPI_CR_LASTXFER;
                 }
 
                 return 1;
@@ -546,25 +352,25 @@ namespace Motate {
             // NOTE: Assumes we DON'T have an external decoder/multiplexer!
             data_with_flags |= SPI_TDR_PCS(~(1<< channel));
 
-            while (!(spi->SPI_SR & SPI_SR_TDRE))
+            while (!(spi()->SPI_SR & SPI_SR_TDRE))
                 ;
-            spi->SPI_TDR = data_with_flags;
+            spi()->SPI_TDR = data_with_flags;
 
-            while (!(spi->SPI_SR & SPI_SR_RDRF))
+            while (!(spi()->SPI_SR & SPI_SR_RDRF))
                 ;
 
-            uint16_t outdata = spi->SPI_RDR;
+            uint16_t outdata = spi()->SPI_RDR;
             return outdata;
         };
 #endif // temporarily removed read/write/transfer
 
 
         void setInterruptHandler(std::function<void(uint16_t)> &&handler) {
-            _spiInterruptHandler = std::move(handler);
+            _TWIInterruptHandler = std::move(handler);
         }
 
         uint16_t getInterruptCause() {
-            uint16_t status = SPIInterrupt::Unknown;
+            uint16_t status = TWIInterrupt::Unknown;
 
             // Notes from experience:
             // This processor will sometimes allow one of these bits to be set,
@@ -574,71 +380,71 @@ namespace Motate {
             // calls for that interrupt before considering it as a possible interrupt
             // source. This should be a best practice anyway, really. -Giseburt
 
-            auto SPI_SR_hold = spi->SPI_SR;
-            auto SPI_IMR_hold = spi->SPI_IMR;
+            auto SPI_SR_hold = spi()->SPI_SR;
+            auto SPI_IMR_hold = spi()->SPI_IMR;
 
             if ((SPI_IMR_hold & SPI_IMR_TDRE) && (SPI_SR_hold & SPI_SR_TDRE))
             {
-                status |= SPIInterrupt::OnTxReady;
+                status |= TWIInterrupt::OnTxReady;
             }
             if ((SPI_IMR_hold & SPI_IMR_RDRF) && (SPI_SR_hold & SPI_SR_RDRF))
             {
-                status |= SPIInterrupt::OnRxReady;
+                status |= TWIInterrupt::OnRxReady;
             }
 #ifdef CAN_SPI_PDC_DMA
             if ((SPI_IMR_hold & SPI_IMR_TXBUFE) && (SPI_SR_hold & SPI_SR_TXBUFE))
             {
-                status |= SPIInterrupt::OnTxTransferDone;
+                status |= TWIInterrupt::OnTxTransferDone;
             }
             if ((SPI_IMR_hold & SPI_IMR_RXBUFF) && (SPI_SR_hold & SPI_SR_RXBUFF))
             {
-                status |= SPIInterrupt::OnRxTransferDone;
+                status |= TWIInterrupt::OnRxTransferDone;
             }
 #else
             if (dma()->inTxBufferEmptyInterrupt())
             {
-                status |= SPIInterrupt::OnTxTransferDone;
+                status |= TWIInterrupt::OnTxTransferDone;
             }
             if (dma()->inRxBufferFullInterrupt())
             {
-                status |= SPIInterrupt::OnRxTransferDone;
+                status |= TWIInterrupt::OnRxTransferDone;
             }
 #endif
             return status;
         }
 
         void setInterrupts(const uint16_t interrupts) {
-            if (interrupts != SPIInterrupt::Off) {
+            if (interrupts != TWIInterrupt::Off) {
 
-                if (interrupts & SPIInterrupt::OnTxReady) {
-                    spi->SPI_IER = SPI_IER_TDRE;
+                if (interrupts & TWIInterrupt::OnTxReady) {
+                    spi()->SPI_IER = SPI_IER_TDRE;
                 } else {
-                    spi->SPI_IDR = SPI_IDR_TDRE;
+                    spi()->SPI_IDR = SPI_IDR_TDRE;
                 }
-                if (interrupts & SPIInterrupt::OnRxReady) {
-                    spi->SPI_IER = SPI_IER_RDRF;
+                if (interrupts & TWIInterrupt::OnRxReady) {
+                    spi()->SPI_IER = SPI_IER_RDRF;
                 } else {
-                    spi->SPI_IDR = SPI_IDR_RDRF;
+                    spi()->SPI_IDR = SPI_IDR_RDRF;
                 }
 
 #ifdef CAN_SPI_PDC_DMA
-                if (interrupts & SPIInterrupt::OnTxTransferDone) {
-                    spi->SPI_IER = SPI_IER_TXBUFE;
+                if (interrupts & TWIInterrupt::OnTxTransferDone) {
+                    spi()->SPI_IER = SPI_IER_TXBUFE;
                 } else {
-                    spi->SPI_IDR = SPI_IDR_TXBUFE;
+                    spi()->SPI_IDR = SPI_IDR_TXBUFE;
                 }
-                if (interrupts & SPIInterrupt::OnRxTransferDone) {
-                    spi->SPI_IER = SPI_IER_RXBUFF;
+                if (interrupts & TWIInterrupt::OnRxTransferDone) {
+                    spi()->SPI_IER = SPI_IER_RXBUFF;
                 } else {
-                    spi->SPI_IDR = SPI_IDR_RXBUFF;
+                    spi()->SPI_IDR = SPI_IDR_RXBUFF;
                 }
 #else
-                if (interrupts & SPIInterrupt::OnRxTransferDone) {
+                if (interrupts & TWIInterrupt::OnRxTransferDone) {
                     dma()->startRxDoneInterrupts();
                 } else {
                     dma()->stopRxDoneInterrupts();
                 }
-                if (interrupts & SPIInterrupt::OnTxTransferDone) {
+                if (interrupts & TWIInterrupt::OnTxTransferDone) {
                     dma()->startTxDoneInterrupts();
                 } else {
                     dma()->stopTxDoneInterrupts();
@@ -646,106 +452,106 @@ namespace Motate {
 #endif
 
                 /* Set interrupt priority */
-                if (interrupts & SPIInterrupt::PriorityHighest) {
-                    NVIC_SetPriority(spiIRQ, 0);
+                if (interrupts & TWIInterrupt::PriorityHighest) {
+                    NVIC_SetPriority(spiIRQ(), 0);
                 }
-                else if (interrupts & SPIInterrupt::PriorityHigh) {
-                    NVIC_SetPriority(spiIRQ, 1);
+                else if (interrupts & TWIInterrupt::PriorityHigh) {
+                    NVIC_SetPriority(spiIRQ(), 1);
                 }
-                else if (interrupts & SPIInterrupt::PriorityMedium) {
-                    NVIC_SetPriority(spiIRQ, 2);
+                else if (interrupts & TWIInterrupt::PriorityMedium) {
+                    NVIC_SetPriority(spiIRQ(), 2);
                 }
-                else if (interrupts & SPIInterrupt::PriorityLow) {
-                    NVIC_SetPriority(spiIRQ, 3);
+                else if (interrupts & TWIInterrupt::PriorityLow) {
+                    NVIC_SetPriority(spiIRQ(), 3);
                 }
-                else if (interrupts & SPIInterrupt::PriorityLowest) {
-                    NVIC_SetPriority(spiIRQ, 4);
+                else if (interrupts & TWIInterrupt::PriorityLowest) {
+                    NVIC_SetPriority(spiIRQ(), 4);
                 }
 
-                NVIC_EnableIRQ(spiIRQ);
+                NVIC_EnableIRQ(spiIRQ());
             } else {
 
-                NVIC_DisableIRQ(spiIRQ);
+                NVIC_DisableIRQ(spiIRQ());
             }
         };
 
 #ifdef CAN_SPI_PDC_DMA
         void _enableOnTXTransferDoneInterrupt() {
-            spi->SPI_IER = SPI_IER_TXBUFE;
+            spi()->SPI_IER = SPI_IER_TXBUFE;
         };
 
         void _disableOnTXTransferDoneInterrupt() {
-            spi->SPI_IDR = SPI_IDR_TXBUFE;
+            spi()->SPI_IDR = SPI_IDR_TXBUFE;
         };
 
         void _enableOnRXTransferDoneInterrupt() {
-            spi->SPI_IER = SPI_IER_RXBUFF;
+            spi()->SPI_IER = SPI_IER_RXBUFF;
         };
 
         void _disableOnRXTransferDoneInterrupt() {
-            spi->SPI_IDR = SPI_IDR_RXBUFF;
+            spi()->SPI_IDR = SPI_IDR_RXBUFF;
         };
 
         uint8_t getMessageSlotsAvailable() {
             uint8_t count = 0;
-            if (spi->SPI_RCR > 0) { count++; }
-            if (spi->SPI_NRCR > 0) { count++; }
+            if (spi()->SPI_RCR > 0) { count++; }
+            if (spi()->SPI_NRCR > 0) { count++; }
             return count;
         };
 
         // start transfer of message
         bool startTransfer(uint8_t *tx_buffer, uint8_t *rx_buffer, uint16_t size) {
             // We need to clear the read buffer or it won't clock anything...
-            if (spi->SPI_SR & SPI_SR_RDRF) {
-                /*uint16_t dont_care =*/ spi->SPI_RDR;
+            if (spi()->SPI_SR & SPI_SR_RDRF) {
+                /*uint16_t dont_care =*/ spi()->SPI_RDR;
             }
 
-            if ((spi->SPI_RCR == 0) && (spi->SPI_TCR == 0)) {
-                spi->SPI_PTCR = SPI_PTCR_RXTDIS | SPI_PTCR_TXTDIS;
+            if ((spi()->SPI_RCR == 0) && (spi()->SPI_TCR == 0)) {
+                spi()->SPI_PTCR = SPI_PTCR_RXTDIS | SPI_PTCR_TXTDIS;
 
                 uint32_t PTCR_prep = 0;
 
                 // setup immediate PDC transfer
                 if (rx_buffer != nullptr) {
-                    spi->SPI_RPR = (uint32_t)rx_buffer;
-                    spi->SPI_RCR = size;
+                    spi()->SPI_RPR = (uint32_t)rx_buffer;
+                    spi()->SPI_RCR = size;
                     _enableOnRXTransferDoneInterrupt();
                     PTCR_prep = SPI_PTCR_RXTEN;
                 } else {
-                    spi->SPI_RPR = 0;
-                    spi->SPI_RCR = 0;
+                    spi()->SPI_RPR = 0;
+                    spi()->SPI_RCR = 0;
 //                    _toss_next_read = true;
                 }
                 if (tx_buffer != nullptr) {
-                    spi->SPI_TPR = (uint32_t)tx_buffer;
-                    spi->SPI_TCR = size;
+                    spi()->SPI_TPR = (uint32_t)tx_buffer;
+                    spi()->SPI_TCR = size;
 //                    _enableOnTXTransferDoneInterrupt();
                     PTCR_prep |= SPI_PTCR_TXTEN;
                 } else {
-                    spi->SPI_TPR = 0;
-                    spi->SPI_TCR = 0;
+                    spi()->SPI_TPR = 0;
+                    spi()->SPI_TCR = 0;
                 }
 
                 // enable both transfers - we use zero size to diable, but this
                 // allows the next transfer to be of a different direction set
-                spi->SPI_PTCR = PTCR_prep;
+                spi()->SPI_PTCR = PTCR_prep;
                 return true;
             }
-//            else if ((spi->SPI_RNCR == 0) && (spi->SPI_TNCR == 0)) {
+//            else if ((spi()->SPI_RNCR == 0) && (spi()->SPI_TNCR == 0)) {
 //                // setup next PDC transfer
 //                if (rx_buffer != nullptr) {
-//                    spi->SPI_RNPR = (uint32_t)rx_buffer;
-//                    spi->SPI_RNCR = size;
+//                    spi()->SPI_RNPR = (uint32_t)rx_buffer;
+//                    spi()->SPI_RNCR = size;
 //                } else {
-//                    spi->SPI_RNPR = 0;
-//                    spi->SPI_RNCR = 0;
+//                    spi()->SPI_RNPR = 0;
+//                    spi()->SPI_RNCR = 0;
 //                }
 //                if (tx_buffer != nullptr) {
-//                    spi->SPI_TNPR = (uint32_t)tx_buffer;
-//                    spi->SPI_TNCR = size;
+//                    spi()->SPI_TNPR = (uint32_t)tx_buffer;
+//                    spi()->SPI_TNCR = size;
 //                } else {
-//                    spi->SPI_TNPR = 0;
-//                    spi->SPI_TNCR = 0;
+//                    spi()->SPI_TNPR = 0;
+//                    spi()->SPI_TNCR = 0;
 //                    // HMM, how to handle _toss_next_read here?
 //                }
 //
@@ -832,13 +638,13 @@ namespace Motate {
         SPIMOSIPin<spiMOSIPinNumber> mosiPin;
         SPISCKPin<spiSCKSPinNumber> sckPin;
 
-        static _SPIHardware< misoPin::spiNum > hardware;
+        static _TWIHardware< misoPin::spiNum > hardware;
         static const uint8_t spiPeripheralNum() { return csPinType::moduleId; };
         static const uint8_t spiChannelNumber() { return SPIChipSelectPin<spiCSPinNumber>::csOffset; };
 
-        static Spi * const spi { return hardware.spi; };
-        static const uint32_t peripheralId { return hardware.peripheralId; };
-        static const IRQn_Type spiIRQ { return hardware.spiIRQ; };
+        static Spi * const spi() { return hardware.spi(); };
+        static const uint32_t peripheralId() { return hardware.peripheralId(); };
+        static const IRQn_Type spiIRQ() { return hardware.spiIRQ(); };
 
 
 
@@ -861,7 +667,7 @@ namespace Motate {
 //            else if (divider < 1)
 //                divider = 1;
 //
-//            spi->SPI_CSR[spiChannelNumber()] = (options & (SPI_CSR_NCPHA | SPI_CSR_CPOL | SPI_CSR_BITS_Msk)) | SPI_CSR_SCBR(divider) | SPI_CSR_DLYBCT(1) | SPI_CSR_CSAAT;
+//            spi()->SPI_CSR[spiChannelNumber()] = (options & (SPI_CSR_NCPHA | SPI_CSR_CPOL | SPI_CSR_BITS_Msk)) | SPI_CSR_SCBR(divider) | SPI_CSR_DLYBCT(1) | SPI_CSR_CSAAT;
 //
 //            // Should be a non-op for already-enabled devices.
 //            hardware.enable();
@@ -873,7 +679,7 @@ namespace Motate {
         };
 
 //        uint16_t getOptions() {
-//            return spi->SPI_CSR[spiChannelNumber()]/* & (SPI_CSR_NCPHA | SPI_CSR_CPOL | SPI_CSR_BITS_Msk)*/;
+//            return spi()->SPI_CSR[spiChannelNumber()]/* & (SPI_CSR_NCPHA | SPI_CSR_CPOL | SPI_CSR_BITS_Msk)*/;
 //        };
 
         int16_t readByte(const bool lastXfer = false, uint8_t toSendAsNoop = 0) {
@@ -1023,7 +829,7 @@ namespace Motate {
 
     // SPIGetHardware is just a pass-through for now
     template <pin_number spiMISOPinNumber, pin_number spiMOSIPinNumber, pin_number spiSCKPinNumber>
-    using SPIGetHardware = _SPIHardware<SPIMISOPin<spiMISOPinNumber>::spiNum>;
+    using SPIGetHardware = _TWIHardware<SPIMISOPin<spiMISOPinNumber>::spiNum>;
 }
 
-#endif /* end of include guard: SAMSPI_H_ONCE */
+#endif /* end of include guard: SAMTWI_H_ONCE */

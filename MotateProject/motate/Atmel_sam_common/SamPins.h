@@ -1115,6 +1115,35 @@ namespace Motate {
         };
 
 
+#pragma mark TWI Pins support
+    /**************************************************
+     *
+     * TWI PIN METADATA and wiring: specializes TWISCKPin / TWISDAPin
+     *
+     * Provides: _MAKE_MOTATE_TWI_SCK_PIN
+     *           _MAKE_MOTATE_TWI_SDA_PIN
+     *
+     **************************************************/
+
+
+    #define _MAKE_MOTATE_TWI_SCK_PIN(registerChar, registerPin, twiNumber, peripheralAorB)\
+        template<>\
+        struct TWISCKPin< ReversePinLookup<registerChar, registerPin>::number > : ReversePinLookup<registerChar, registerPin> {\
+            TWISCKPin() : ReversePinLookup<registerChar, registerPin>{kPeripheral ## peripheralAorB} {};\
+            static constexpr bool is_real = true; \
+            static constexpr uint8_t twiNum = twiNumber; \
+        };
+
+
+    #define _MAKE_MOTATE_TWI_SDA_PIN(registerChar, registerPin, twiNumber, peripheralAorB)\
+        template<>\
+        struct TWISDAPin< ReversePinLookup<registerChar, registerPin>::number > : ReversePinLookup<registerChar, registerPin> {\
+            TWISDAPin() : ReversePinLookup<registerChar, registerPin>{kPeripheral ## peripheralAorB} {};\
+            static constexpr bool is_real = true; \
+            static constexpr uint8_t twiNum = twiNumber; \
+        };
+
+
 #pragma mark UART / USART Pin support
     /**************************************************
      *

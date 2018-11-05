@@ -1,8 +1,8 @@
 /*
-  MotateSPI.hpp - SPI Library for the Motate system
+  MotateTWI.hpp - TWI/I2C Library for the Motate system
   http://github.com/synthetos/motate/
 
-  Copyright (c) 2013-2018 Robert Giseburt
+  Copyright (c) 2018 Robert Giseburt
 
 	This file is part of the Motate Library.
 
@@ -27,8 +27,8 @@
 	OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef MOTATESPI_H_ONCE
-#define MOTATESPI_H_ONCE
+#ifndef MOTATETWI_H_ONCE
+#define MOTATETWI_H_ONCE
 
 #include <cinttypes>
 #include "MotateCommon.h"
@@ -40,107 +40,53 @@
  *
  * The processor specific parts MUST define:
  *
- * template<pin_number spiMISOPinNumber, pin_number spiMOSIPinNumber, pin_number spiSCKPinNumber>
- *   using SPIGetHardware<spiMISOPinNumber, spiMOSIPinNumber, spiSCKPinNumber> = ...
- *
- * Whatever type that returns must also be defined, such as:
- *
- * template<uint8_t uartPeripheralNumber> struct _SPIHardware
-
- * Using the wikipedia deifinition of "normal phase," see:
- *   http://en.wikipedia.org/wiki/Serial_Peripheral_Interface_Bus#Clock_polarity_and_phase
- * Wikipedia, in turn, sites Freescale's SPI Block Guide:
- *   http://www.ee.nmt.edu/~teare/ee308l/datasheets/S12SPIV3.pdf
-
- *
+ * template<pin_number twiSCKPinNumber, pin_number twiSDAPinNumber> using TWIGetHardware<twiSCKPinNumber, twiSDAPinNumber> =
+ *  and whatever type that returns, such as:
+ * template<uint8_t peripheralNumber> struct _TWIHardware
  *
  */
 
 namespace Motate {
-    enum SPIDeviceMode {
-
-        // Polarity: 1 bit
-        kSPIPolarityNormal     = 0<<0,
-        kSPIPolarityReversed   = 1<<0,
-
-        // Using the wikipedia deifinition of "normal phase," see:
-        //   http://en.wikipedia.org/wiki/Serial_Peripheral_Interface_Bus#Clock_polarity_and_phase
-        // Wikipedia, in turn, sites Freescale's SPI Block Guide:
-        //   http://www.ee.nmt.edu/~teare/ee308l/datasheets/S12SPIV3.pdf
-
-        // This makes the Phase flag INVERTED from that of the SAM3X/A datasheet.
-        // Phase: 1 bit
-        kSPIClockPhaseNormal   = 0<<1,
-        kSPIClockPhaseReversed = 1<<1,
-
-        // Using the wikipedia/freescale mode numbers (and the SAM3X/A datashgeet agrees).
-        // The arduino mode settings appear to mirror that of wikipedia as well,
-        //  so we should all be in agreement here.
-
-        // kSPIMode0 - data are captured on the clock's rising edge (low→high transition) and data is output on a falling edge (high→low clock transition)
-        kSPIMode0              = kSPIPolarityNormal   | kSPIClockPhaseNormal,
-        // kSPIMode1 - data are captured on the clock's falling edge and data is output on a rising edge.
-        kSPIMode1              = kSPIPolarityNormal   | kSPIClockPhaseReversed,
-        // kSPIMode2 - data are captured on clock's falling edge and data is output on a rising edge.
-        kSPIMode2              = kSPIPolarityReversed | kSPIClockPhaseNormal,
-        // kSPIMode3 - data are captured on clock's rising edge and data is output on a falling edge.
-        kSPIMode3              = kSPIPolarityReversed | kSPIClockPhaseReversed,
-
-        // Transfer Size: 4 bits
-        kSPI8Bit               = 0 << 2,
-        kSPI9Bit               = 1 << 2,
-        kSPI10Bit              = 2 << 2,
-        kSPI11Bit              = 3 << 2,
-        kSPI12Bit              = 4 << 2,
-        kSPI13Bit              = 5 << 2,
-        kSPI14Bit              = 6 << 2,
-        kSPI15Bit              = 7 << 2,
-        kSPI16Bit              = 8 << 2,
-        kSPIBitsMask         = 0xf << 2
+    enum TWIDeviceMode {
+        // Address Size
+        kTWI7BitAddress        = 0 << 2,
+        kTWI10BitAddress       = 1 << 2
     }; // SPIDeviceMode
 
-//    enum SPIBusMode {
-//        // External CS Decoder: 1 bit
-//        kSPICSDirectSelectiopn  = 0 << 0;
-//        kSPICSExternalDecoder   = 1 << 0;
-//    }; // SPIBusMode
-
-
-    struct SPIInterrupt : Interrupt {
+    struct TWIInterrupt : Interrupt {
     };
-
 
 } // namespace Motate
 
-#include <ProcessorSPI.h>
+#include <ProcessorTWI.h>
 
 namespace Motate {
 
 
-#pragma mark SPIBusDeviceBase
+#pragma mark TWIBusDeviceBase
     /**************************************************
      *
-     * SPI Bus Device Base, a base class for a member of an SPI Bus
+     * TWI Bus Device Base, a base class for a member of a TWI Bus
      *
      **************************************************/
 
-    struct SPIMessage;
+    struct TWIMessage;
 
-    struct SPIBusDeviceBase
+    struct TWIBusDeviceBase
     {
         // store a link to the next device on the bus (maintained by the Bus)
-        SPIBusDeviceBase *_next_device = 0;
+        TWIBusDeviceBase *_next_device = 0;
 
         // set device options
-        virtual void setOptions(const uint32_t baud, const uint16_t options, uint32_t min_between_cs_delay_ns, uint32_t cs_to_sck_delay_ns, uint32_t between_word_delay_ns) {};
+        // virtual void setOptions() {};
         // queue message
-        virtual void queueMessage(SPIMessage *msg) {};
+        virtual void queueMessage(TWIMessage *msg) {};
         // return a value that can be used by hardware to select this device
-        virtual uint32_t getChannel() { return 0; };
+        virtual uint32_t getAddress() { return 0; };
     };
 
     // useful verbose enums
-    struct SPIMessage
+    struct TWIMessage
     {
         enum {
             RemainAsserted = false,
@@ -166,18 +112,15 @@ namespace Motate {
         bool immediate_ends_transaction; // allows changing ends_transaction from the callback
 
 
-        SPIBusDeviceBase *device;
-        SPIMessage * volatile next_message;
+        TWIBusDeviceBase *device;
+        TWIMessage * volatile next_message;
 
         std::function<void(void)> message_done_callback;
         volatile State state = State::Idle;
 
+        TWIMessage() {};
 
-        SPIMessage() {};
-//        SPIMessage(std::function<void(void)>&& callback) : message_done_callback{std::move(callback)} {};
-//        SPIMessage(std::function<void(void)> callback) : message_done_callback{callback} {};
-
-        SPIMessage *setup(uint8_t *new_tx_buffer, uint8_t *new_rx_buffer, const uint16_t new_size, const bool new_deassert_after, const bool new_ends_transaction) {
+        TWIMessage *setup(uint8_t *new_tx_buffer, uint8_t *new_rx_buffer, const uint16_t new_size, const bool new_deassert_after, const bool new_ends_transaction) {
             tx_buffer = new_tx_buffer;
             rx_buffer = new_rx_buffer;
             size = new_size;
@@ -189,58 +132,49 @@ namespace Motate {
         }
     };
 
-    // attach device to spi bus
-
-#pragma mark SPIBus
+#pragma mark TWIBus
     /**************************************************
      *
      * SPI Bus with arbitration
      *
      **************************************************/
 
-    template<pin_number spiMISOPinNumber, pin_number spiMOSIPinNumber, pin_number spiSCKPinNumber, service_call_number svcCallNum>
-    struct SPIBus
+    template<pin_number twiSCKPinNumber, pin_number twiSDAPinNumber, service_call_number svcCallNum>
+    struct TWIBus
     {
+        // Note these asserts will need to be revisited if we make a bit-banged TWI
+        static_assert(IsTWISCKPin<twiSCKPinNumber>(),
+                      "TWI SCK Pin is not on a hardware TWI.");
 
-        static_assert(IsSPIMISOPin<spiMISOPinNumber>(),
-                      "SPI MISO Pin is not on a hardware SPI.");
+        static_assert(IsTWISDAPin<twiSDAPinNumber>(),
+                      "TWI SDA Pin is not on a hardware TWI.");
 
-        static_assert(IsSPIMOSIPin<spiMOSIPinNumber>(),
-                      "SPI MOSI Pin is not on a hardware SPI.");
+        static_assert((TWISCKPin<twiSCKPinNumber>::twiNum == TWISDAPin<twiSDAPinNumber>::twiNum),
+                      "TWI SCK and SDA pins are not all on the same TWI hardware peripheral.");
 
-        static_assert(IsSPISCKPin<spiSCKPinNumber>(),
-                      "SPI SCK Pin is not on a hardware SPI.");
+        TWISCKPin<twiSCKPinNumber> sckPin {};
+        TWISDAPin<twiSDAPinNumber> sdaPin {};
 
-        static_assert((SPIMISOPin<spiMISOPinNumber>::spiNum == SPIMOSIPin<spiMOSIPinNumber>::spiNum) &&
-                      (SPIMOSIPin<spiMOSIPinNumber>::spiNum == SPISCKPin<spiSCKPinNumber>::spiNum) &&
-                      (SPIMISOPin<spiMISOPinNumber>::spiNum == SPISCKPin<spiSCKPinNumber>::spiNum),
-                      "SPI MISO, MOSI, and SCK pins are not all on the same SPI hardware peripheral.");
-
-        SPIMISOPin<spiMISOPinNumber> misoPin {};
-        SPIMOSIPin<spiMOSIPinNumber> mosiPin {};
-        SPISCKPin<spiSCKPinNumber> sckPin {};
-
-        SPIGetHardware<spiMISOPinNumber, spiMOSIPinNumber, spiSCKPinNumber> hardware;
+        TWIGetHardware<twiSCKPinNumber, twiSDAPinNumber> hardware;
 
         ServiceCall<svcCallNum> message_manager;
 
-
-        SPIBusDeviceBase *_first_device, *_current_transaction_device;
-        SPIMessage * volatile _first_message;//, *_last_message;
+        TWIBusDeviceBase *_first_device, *_current_transaction_device;
+        TWIMessage * volatile _first_message;//, *_last_message;
 
         volatile bool sending = false; // as long as this is true, sendNextMessage() does nothing
 
-        SPIBus() : hardware{} {
+        TWIBus() : hardware{} {
         }
 
-        void addDevice(SPIBusDeviceBase *new_next) {
+        void addDevice(TWIBusDeviceBase *new_next) {
             if (_first_device == nullptr) {
                 _first_device = new_next;
                 return;
             }
 
-            SPIBusDeviceBase *walker = nullptr;
-            SPIBusDeviceBase *walker_next = _first_device;
+            TWIBusDeviceBase *walker = nullptr;
+            TWIBusDeviceBase *walker_next = _first_device;
             while (walker_next != nullptr) {
                 if (new_next == walker_next) { return; }
 
@@ -250,7 +184,7 @@ namespace Motate {
             walker->_next_device = new_next;
         }
 
-        void removeDevice(SPIBusDeviceBase *old) {
+        void removeDevice(TWIBusDeviceBase *old) {
             if (_first_device == nullptr) {return;}
 
             if (_first_device == old) {
@@ -258,8 +192,8 @@ namespace Motate {
                 return;
             }
 
-            SPIBusDeviceBase *walker = _first_device;
-            SPIBusDeviceBase *walker_next = _first_device->_next_device;
+            TWIBusDeviceBase *walker = _first_device;
+            TWIBusDeviceBase *walker_next = _first_device->_next_device;
             while (walker_next != nullptr) {
                 if (walker_next == old) {
                     // WARNING: Assumes walker_next (a.k.a. old) still has a valid _next_device
@@ -286,7 +220,7 @@ namespace Motate {
             // ask the hardware to init
             hardware.init();
             hardware.setInterruptHandler([&](uint16_t interruptCause) { // use a closure
-                this->spiInterruptHandler(interruptCause);
+                this->twiInterruptHandler(interruptCause);
             });
             hardware.setInterrupts(kInterruptPriorityLow); // enable interrupts and set the priority
             hardware.enable();
@@ -300,21 +234,21 @@ namespace Motate {
 
         void sendNextMessageActual() {
             if (sending) { return; }
-            while (_first_message && (SPIMessage::State::Done == _first_message->state)) {
+            while (_first_message && (TWIMessage::State::Done == _first_message->state)) {
                 auto done_message = _first_message;
                 _first_message = _first_message->next_message;
                 done_message->next_message = nullptr;
             }
             if (_first_message == nullptr) { return;}
-            if (SPIMessage::State::Sending == _first_message->state) { return; }
+            if (TWIMessage::State::Sending == _first_message->state) { return; }
 
             if (_current_transaction_device != nullptr) {
                 // the next message we send must be from the _current_transaction_device
                 if (!(_first_message->device == _current_transaction_device)) {
                     // now we'll make a pass throught the messages, looking for one
                     // for the _current_transaction_device
-                    SPIMessage *previous_message = _first_message;
-                    SPIMessage *walker_message = _first_message->next_message;
+                    TWIMessage *previous_message = _first_message;
+                    TWIMessage *walker_message = _first_message->next_message;
 
                     while (walker_message != nullptr) {
                         if (walker_message->device == _current_transaction_device) {
@@ -337,19 +271,19 @@ namespace Motate {
             }
 
 #ifdef IN_DEBUGGER
-            if (SPIMessage::State::Setup != _first_message->state) {
+            if (TWIMessage::State::Setup != _first_message->state) {
                 __asm__("BKPT"); // SPI about to send non-Setup message
             }
 #endif
 
             sending = true;
-            _first_message->state = SPIMessage::State::Sending;
+            _first_message->state = TWIMessage::State::Sending;
             _current_transaction_device = _first_message->device;
             hardware.setChannel(_current_transaction_device->getChannel());
             hardware.startTransfer(_first_message->tx_buffer, _first_message->rx_buffer, _first_message->size);
         }
 
-        void spiInterruptHandler(uint16_t interruptCause) {
+        void twiInterruptHandler(uint16_t interruptCause) {
             // This bears stating, even though it's somewhat obvious:
             // This entire function is in an interrupt (higher priority) context, and will occasionally
             // interupt other code that interacts with the same structures.
@@ -387,13 +321,13 @@ namespace Motate {
                 // _first_message is done sending.
                 // Go ahead and pop it from the list and reset (partially)
                 auto this_message = _first_message;
-                while (this_message && (SPIMessage::State::Done == this_message->state)) {
+                while (this_message && (TWIMessage::State::Done == this_message->state)) {
                     this_message = this_message->next_message;
                 }
 
-                if (this_message && (SPIMessage::State::Sending == this_message->state)) {
+                if (this_message && (TWIMessage::State::Sending == this_message->state)) {
                     // Then grab the (only) Sending message and mark it Done, then call it's done callback.
-                    this_message->state = SPIMessage::State::Done;
+                    this_message->state = TWIMessage::State::Done;
 
                     // Set the values for *this* message before the callback, so
                     // the callback can re-queue with different values AND tell us
@@ -431,23 +365,22 @@ namespace Motate {
         };
 
 
-#pragma mark SPIBusDevice (inside SPIBus)
+#pragma mark TWIBusDevice (inside TWIBus)
         /**************************************************
          *
-         * SPI Bus Device, a member of an SPI Bus.
+         * TWI Bus Device, a member of an TWI Bus.
          *
          **************************************************/
 
-        struct SPIBusDevice : SPIBusDeviceBase
+        struct TWIBusDevice : TWIBusDeviceBase
         {
-            // Since we are defining this INSIDE the SPIBus struct, we'll use SPIBus internals liberally
-            SPIBus<spiMISOPinNumber, spiMOSIPinNumber, spiSCKPinNumber, svcCallNum> * const _spi_bus;
+            // Since we are defining this INSIDE the TWIBus struct, we'll use TWIBus internals liberally
+            TWIBus<twiSCKPinNumber, twiSDAPinNumber, svcCallNum> * const _spi_bus;
 
-            uint32_t _cs_number; // the chip select number
-            uint32_t _cs_value;  // the internal value to give the hardware to select the right chip
+            uint32_t _twi_address; // the chip select number
 
             template <typename chipSelectType>
-            constexpr SPIBusDevice(SPIBus<spiMISOPinNumber, spiMOSIPinNumber, spiSCKPinNumber, svcCallNum> *parent_bus, const chipSelectType &cs, const uint32_t baud, const uint16_t options, uint32_t min_between_cs_delay_ns, uint32_t cs_to_sck_delay_ns, uint32_t between_word_delay_ns) : _spi_bus {parent_bus}
+            constexpr TWIBusDevice(TWIBus<spiMISOPinNumber, spiMOSIPinNumber, spiSCKPinNumber, svcCallNum> *parent_bus, const chipSelectType &cs, const uint32_t baud, const uint16_t options, uint32_t min_between_cs_delay_ns, uint32_t cs_to_sck_delay_ns, uint32_t between_word_delay_ns) : _spi_bus {parent_bus}
             {
                 _cs_number = cs.csNumber;
                 _cs_value  = cs.csValue;
@@ -459,15 +392,15 @@ namespace Motate {
             };
 
             // prevent copying or deleting
-            SPIBusDevice(const SPIBusDevice&) = delete;
+            TWIBusDevice(const TWIBusDevice&) = delete;
 
             // update the bus upon deletion
-            ~SPIBusDevice() {
+            ~TWIBusDevice() {
                 _spi_bus->removeDevice(this);
             };
 
             // build move constructor
-            SPIBusDevice(SPIBusDevice&& other) : _spi_bus{other._spi_bus}, _cs_number{other._cs_number}, _cs_value{other._cs_value} {
+            TWIBusDevice(TWIBusDevice&& other) : _spi_bus{other._spi_bus}, _cs_number{other._cs_number}, _cs_value{other._cs_value} {
                 // since we just changed addresses, we'll let the old one deregister, but we must register this one
                 _spi_bus->addDevice(this);
             };
@@ -478,14 +411,14 @@ namespace Motate {
             };
 
             // queue message
-            void queueMessage (SPIMessage *msg) override {
+            void queueMessage (TWIMessage *msg) override {
                 msg->device = this;
                 if (_spi_bus->_first_message == nullptr) {
                     _spi_bus->_first_message = msg;
                     //_spi_bus->_last_message = msg;
                 }
                 else {
-                    SPIMessage *walker_message = _spi_bus->_first_message;
+                    TWIMessage *walker_message = _spi_bus->_first_message;
                     while ((walker_message != msg) && (walker_message->next_message != nullptr)) {
                         walker_message = walker_message->next_message;
                     }
@@ -507,7 +440,7 @@ namespace Motate {
         };
 
         template <typename chipSelectType>
-        constexpr SPIBusDevice getDevice(chipSelectType &&cs, const uint32_t baud, const uint16_t options, uint32_t min_between_cs_delay_ns, uint32_t cs_to_sck_delay_ns, uint32_t between_word_delay_ns)
+        constexpr TWIBusDevice getDevice(chipSelectType &&cs, const uint32_t baud, const uint16_t options, uint32_t min_between_cs_delay_ns, uint32_t cs_to_sck_delay_ns, uint32_t between_word_delay_ns)
         {
             return {this, std::move(cs), baud, options, min_between_cs_delay_ns, cs_to_sck_delay_ns, between_word_delay_ns};
         }
@@ -534,7 +467,7 @@ namespace Motate {
 //        }
 
 
-    }; // SPIBus
+    }; // TWIBus
 
 } // namespace Motate
-#endif /* end of include guard: MOTATESPI_H_ONCE */
+#endif /* end of include guard: MOTATETWI_H_ONCE */
