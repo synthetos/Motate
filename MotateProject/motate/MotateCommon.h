@@ -30,6 +30,8 @@
 #ifndef MOTATECOMMON_H_ONCE
 #define MOTATECOMMON_H_ONCE
 
+#include <cstdint>
+
 // NOTE: This file should not have any non-system #includes, to avoid additional dependencies.
 
 namespace Motate {
@@ -59,6 +61,28 @@ namespace Motate {
         static constexpr uint16_t PriorityLow       = 1<<8;
         static constexpr uint16_t PriorityLowest    = 1<<9;
     };
+
+
+    // The problem, in a nutshell:
+    // 1) We have a define that looks like:
+    //   #define UART       ((Uart   *)0x400E0800U)
+    // 2) We want a constexpr varuable of that value
+    // 3) The C-style cast becomes a reintepret_cast<>, which is not allowed
+    //    (see https://en.cppreference.com/w/cpp/language/constant_expression#Converted_constant_expression)
+    // 4)
+
+    template<class T>
+    struct RegisterPtr {
+        const std::intptr_t val;
+        constexpr RegisterPtr(const std::intptr_t i) : val{i} {};
+        constexpr T const value() { return reinterpret_cast<T>(val); }
+        constexpr T const operator->() const { return reinterpret_cast<T>(val); }
+        constexpr operator T const() const { return reinterpret_cast<T>(val); }
+    };
+
+    template<class T>
+    constexpr RegisterPtr<T> makeRegisterPtr(const T i) { return {reinterpret_cast<std::intptr_t> (i)}; };
+
 } // namespace Motate
 
 #endif //MOTATECOMMON_H_ONCE

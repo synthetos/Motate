@@ -57,6 +57,12 @@ namespace Motate {
     //   SAMS70 (and family).
 
 
+// Deduce if we have PDC in any of the variuos peripherals
+#if defined(PDC_UART0) || defined(PDC_TWI0)
+    #define HAS_PDC
+#endif
+
+
 // PDC peripherals -- if we have a PDC (deduced using PERIPH_PTSR_RXTEN)
 #ifdef HAS_PDC
 
@@ -264,180 +270,6 @@ namespace Motate {
         }
     };
 
-
-// We're deducing if there's a USART and it has a PDC
-// Notice that this relies on defines set up in SamCommon.h
-#ifdef HAS_PDC_USART0
-
-#pragma mark DMA_PDC Usart implementation
-
-    template<uint8_t uartPeripheralNumber>
-    struct DMA_PDC_hardware<Usart*, uartPeripheralNumber>
-    {
-        // this is identical to in SamUART
-        static constexpr Usart * const usart()
-        {
-            return (uartPeripheralNumber == 0) ? USART0 : USART1;
-        };
-
-        static constexpr Pdc * const pdc()
-        {
-            return (uartPeripheralNumber == 0) ? PDC_USART0 : PDC_USART1;
-        };
-
-        typedef char* buffer_t ;
-
-        void startRxDoneInterrupts(const bool include_next = false) const {
-            usart()->US_IER = include_next ? US_IER_RXBUFF : US_IER_ENDRX;
-        };
-        void stopRxDoneInterrupts(const bool include_next = false) const {
-            usart()->US_IDR = include_next ? US_IDR_RXBUFF : US_IDR_ENDRX;
-        };
-        void startTxDoneInterrupts(const bool include_next = true) const {
-            usart()->US_IER = include_next ? US_IER_TXBUFE : US_IDR_ENDTX;
-        };
-        void stopTxDoneInterrupts(const bool include_next = true) const {
-            usart()->US_IDR = include_next ? US_IDR_TXBUFE : US_IDR_ENDTX;
-        };
-
-        int16_t readByte() const {
-            if (!(usart()->US_CSR & US_CSR_RXRDY)) { return -1; }
-            return (usart()->US_RHR & US_RHR_RXCHR_Msk);
-        }
-
-        bool inRxBufferFullInterrupt() const
-        {
-            // we check if the interupt is enabled, then read it if it is
-            if ((usart()->US_IMR & US_IMR_RXBUFF) &&
-                (usart()->US_CSR & US_CSR_RXBUFF)
-                )
-            {
-                return true;
-            }
-            if ((usart()->US_IMR & US_IMR_ENDRX) &&
-                (usart()->US_CSR & US_CSR_ENDRX)
-                )
-            {
-                return true;
-            }
-            return false;
-        }
-
-        bool inTxBufferEmptyInterrupt() const
-        {
-            // we check if the interupt is enabled, then read it if it is
-            if ((usart()->US_IMR & US_IMR_TXBUFE) &&
-                (usart()->US_CSR & US_CSR_TXBUFE)
-                )
-            {
-                return true;
-            }
-            if ((usart()->US_IMR & US_IMR_ENDTX) &&
-                (usart()->US_CSR & US_CSR_ENDTX)
-                )
-            {
-                return true;
-            }
-            return false;
-        }
-    };
-
-    // Construct a DMA specialization that uses the PDC
-    template<uint8_t periph_num>
-    struct DMA<Usart*, periph_num> : DMA_PDC<Usart*, periph_num> {
-        // nothing to do here, except for a constxpr constructor
-        // we take the handler, but we don't actually handle interrupts for the peripheral
-        // so we ignore it
-        constexpr DMA(const std::function<void(uint16_t)> &handler) : DMA_PDC<Usart*, periph_num>{} {};
-    };
-#endif // USART + PDC
-
-// We're deducing if there's a UART and it has a PDC
-// Notice that this relies on defines set up in SamCommon.h
-#ifdef HAS_PDC_UART0
-
-#pragma mark DMA_PDC Usart implementation
-
-    template<uint8_t uartPeripheralNumber>
-    struct DMA_PDC_hardware<Uart*, uartPeripheralNumber> {
-        static constexpr Uart * const uart()
-        {
-            return (uartPeripheralNumber == 0) ? UART0 : UART1;
-        };
-
-        typedef char* buffer_t ;
-
-        static constexpr Pdc * const pdc()
-        {
-            return (uartPeripheralNumber == 0) ? PDC_UART0 : PDC_UART1;
-        };
-
-        void startRxDoneInterrupts(const bool include_next = false) const {
-            uart()->UART_IER = include_next ? UART_IER_RXBUFF : UART_IER_ENDRX;
-        };
-        void stopRxDoneInterrupts(const bool include_next = false) const {
-            uart()->UART_IDR = include_next ? UART_IDR_RXBUFF : UART_IDR_ENDRX;
-        };
-        void startTxDoneInterrupts(const bool include_next = true) const {
-            uart()->UART_IER = include_next ? UART_IER_TXBUFE : UART_IER_ENDTX;
-        };
-        void stopTxDoneInterrupts(const bool include_next = true) const {
-            uart()->UART_IDR = include_next ? UART_IDR_TXBUFE : UART_IDR_ENDTX;
-        };
-
-        int16_t readByte() const {
-            if (!(uart()->UART_SR & UART_SR_RXRDY)) { return -1; }
-            return (uart()->UART_RHR & UART_RHR_RXCHR_Msk);
-        }
-
-        bool inRxBufferFullInterrupt() const
-        {
-            // we check if the interupt is enabled, then read it if it is
-            if ((uart()->UART_IMR & UART_IMR_RXBUFF) &&
-                (uart()->UART_SR & UART_SR_RXBUFF)
-                )
-            {
-                return true;
-            }
-            if ((uart()->UART_IMR & UART_IMR_ENDRX) &&
-                (uart()->UART_SR & UART_SR_ENDRX)
-                )
-            {
-                return true;
-            }
-
-            return false;
-        }
-
-        bool inTxBufferEmptyInterrupt() const
-        {
-            // we check if the interupt is enabled, then read it if it is
-            if ((uart()->UART_IMR & UART_IMR_TXBUFE) &&
-                (uart()->UART_SR & UART_SR_TXBUFE)
-                )
-            {
-                return true;
-            }
-            if ((uart()->UART_IMR & UART_IMR_ENDTX) &&
-                (uart()->UART_SR & UART_SR_ENDTX)
-                )
-            {
-                return true;
-            }
-            return false;
-        }
-    };
-
-    // Construct a DMA specialization that uses the PDC
-    template<uint8_t periph_num>
-    struct DMA<Uart*, periph_num> : DMA_PDC<Uart*, periph_num> {
-        // nothing to do here, except for a constxpr constructor
-        // we take the handler, but we don't actually handle interrupts for the peripheral
-        // so we ignore it
-        constexpr DMA(const std::function<void(uint16_t)> &handler) : DMA_PDC<Uart*, periph_num>{} {};
-    };
-#endif // UART + PDC
-
 #endif // if has PDC
 
 
@@ -465,7 +297,7 @@ namespace Motate {
     };
 
     struct DMA_XDMAC_common {
-        static constexpr uint32_t peripheralId() { return ID_XDMAC; };
+        static constexpr uint32_t peripheralId { ID_XDMAC };
         static Xdmac * const xdma() { return XDMAC; };
         static constexpr IRQn_Type xdmaIRQ() { return XDMAC_IRQn; };
 
@@ -574,7 +406,7 @@ namespace Motate {
         void resetTX() const
         {
             // init is called once after reset, so clean up after a reset
-            SamCommon::enablePeripheralClock(peripheralId());
+            SamCommon::enablePeripheralClock(peripheralId);
 
             // disable the channels
             disableTx();
@@ -723,7 +555,7 @@ namespace Motate {
         void resetRX() const
         {
             // init is called once after reset, so clean up after a reset
-            SamCommon::enablePeripheralClock(peripheralId());
+            SamCommon::enablePeripheralClock(peripheralId);
 
             // disable the channels
             disableRx();

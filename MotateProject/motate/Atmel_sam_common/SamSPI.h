@@ -40,99 +40,91 @@
 
 namespace Motate {
     namespace SPI_internal {
-        template<class T, const intptr_t val>
-        struct deregister {
-            static constexpr T const value() { return reinterpret_cast<T>(val); }
-            constexpr deregister() {};
-            constexpr T const operator->() const { return reinterpret_cast<T>(val); }
-            constexpr operator T const() const { return reinterpret_cast<T>(val); }
-        };
+        template<int8_t spiPeripheralNumber>
+        struct SPIInfo {
+            static constexpr bool exists = false;
+        }; // SPIInfo <generic>
+
 
         #if defined(SPI)
             #define CAN_SPI_PDC_DMA 1
+            // We have to strip the address off in static context, outsie a structure declaration
+            static const std::intptr_t _SPI0_address {(std::intptr_t)(SPI)};
 
-            // This is for the Sam4e
-            Spi * const SPI0_DONT_CONFLICT = static_cast<Spi *>(SPI);
+            template<>
+            struct SPIInfo<0>
+            {
+                static constexpr bool exists = true;
+                using type = decltype(SPI);
+                static const intptr_t address = _SPI0_address;
+
+                static constexpr RegisterPtr<type> spi { address };
+                static constexpr uint32_t peripheralId = ID_SPI;
+                static constexpr IRQn_Type IRQ = SPI_IRQn;
+            }; // SPIInfo <0>
             #undef SPI
-            Spi * const SPI0_Peripheral = SPI0_DONT_CONFLICT;
-            constexpr uint16_t const ID_SPI0_DONT_CONFLICT = ID_SPI;
-
             #undef ID_SPI
-            constexpr uint16_t const ID_SPI0 = ID_SPI0_DONT_CONFLICT;
-            constexpr IRQn_Type SPI0_IRQn = SPI_IRQn;
+            #undef SPI_IRQn
 
-            #define HAS_SPI0
             // This define is because, on this processor, they chose to call it "SPI_Handler" instead
             // and saves an ifdef and duplicated code in the SamSPI.cpp
             #define SPI0_Handler SPI_Handler
         #elif defined(SPI0)
             // This is for the Sam3x and SamS70
-            static const intptr_t SPI0_DONT_CONFLICT {(intptr_t)SPI0};
+            // We have to strip the address off in static context, outsie a structure declaration
+            static const std::intptr_t _SPI0_address {(std::intptr_t)(SPI0)};
+
+            template<>
+            struct SPIInfo<0>
+            {
+                static constexpr bool exists = true;
+                static constexpr std::intptr_t address {_SPI0_address};
+                using type = decltype(SPI0);
+
+                static constexpr RegisterPtr<type> spi { address };
+                static constexpr uint32_t peripheralId = ID_SPI0;
+                static constexpr IRQn_Type IRQ = SPI0_IRQn;
+            }; // SPIInfo <0>
+
             #undef SPI0
-            constexpr deregister<Spi *, SPI0_DONT_CONFLICT> SPI0_Peripheral;
-
-            constexpr uint16_t const ID_SPI0_DONT_CONFLICT = ID_SPI0;
             #undef ID_SPI0
-            constexpr uint16_t const ID_SPI0 = ID_SPI0_DONT_CONFLICT;
-
-            #define HAS_SPI0
+            #undef SPI0_IRQn
         #endif
 
         #if defined(SPI1)
             // This is for the Sam3x and SamS70
-            static const intptr_t SPI1_DONT_CONFLICT {(intptr_t)SPI1};
+            // We have to strip the address off in static context, outsie a structure declaration
+            static const std::intptr_t _SPI1_address {(std::intptr_t)(SPI1)};
+
+            template<>
+            struct SPIInfo<1>
+            {
+                static constexpr bool exists = true;
+                static constexpr std::intptr_t address {_SPI1_address};
+                using type = decltype(SPI1);
+
+                static constexpr RegisterPtr<type> spi { address };
+                static constexpr uint32_t peripheralId = ID_SPI1;
+                static constexpr IRQn_Type IRQ = SPI1_IRQn;
+            }; // SPIInfo <0>
+
             #undef SPI1
-            constexpr deregister<Spi *, SPI1_DONT_CONFLICT> SPI1_Peripheral;
-
-            constexpr uint16_t const ID_SPI1_DONT_CONFLICT = ID_SPI1;
             #undef ID_SPI1
-            constexpr uint16_t const ID_SPI1 = ID_SPI1_DONT_CONFLICT;
-
-            #define HAS_SPI1
+            #undef SPI1_IRQn
         #endif
-
-        template<int8_t spiPeripheralNumber>
-        struct SPIInfo {}; // SPIInfo <generic>
-
-        template<>
-        struct SPIInfo<0>
-        {
-            static constexpr bool exists = true;
-            // static constexpr Spi * const spi_fn() { return SPI0_DONT_CONFLICT.value(); }
-            static constexpr auto spi = SPI0_Peripheral;
-            static constexpr uint32_t peripheralId = ID_SPI0;
-            static constexpr IRQn_Type spiIRQ = SPI0_IRQn;
-        }; // SPIInfo <0>
-
-    #if defined(HAS_SPI1)
-        template<>
-        struct SPIInfo<1>
-        {
-            static constexpr bool exists = true;
-            // static constexpr Spi * const spi_fn() { return SPI1_DONT_CONFLICT.value(); }
-            static constexpr auto const spi = SPI1_Peripheral;
-            static constexpr uint32_t peripheralId = ID_SPI1;
-            static constexpr IRQn_Type spiIRQ = SPI1_IRQn;
-        }; // SPIInfo <1>
-    #endif
-
     }; // Motate::SPI_internal
 
     // We're deducing if there's a SPI0 and it has a PDC
-    // Notice that this relies on defines set up in SamCommon.h
-    #if defined(HAS_SPI0)
-
     #if defined(CAN_SPI_PDC_DMA)
 
     #else
-    // if !defined(CAN_SPI_PDC_DMA)
     #pragma mark DMA_XDMAC SPI implementation
 
     template<uint8_t spiPeripheralNumber>
     struct DMA_XDMAC_hardware<Spi*, spiPeripheralNumber> : Motate::SPI_internal::SPIInfo<spiPeripheralNumber>
     {
         using SPI_internal::SPIInfo<spiPeripheralNumber>::spi;
-        auto peripheralId() const { return SPI_internal::SPIInfo<spiPeripheralNumber>::peripheralId; }
+        static constexpr auto peripheralId = SPI_internal::SPIInfo<spiPeripheralNumber>::peripheralId;
         typedef char* buffer_t;
     };
 
@@ -245,7 +237,6 @@ namespace Motate {
             xdma()->XDMAC_GD = (XDMAC_GID_ID0 << xdmaRxChannelNumber()) | (XDMAC_GID_ID0 << xdmaRxChannelNumber());
         };
     };
-    #endif // defined(CAN_SPI_PDC_DMA)
     #endif // SPI + XDMAC
 
     #undef HAS_SPI1
@@ -260,7 +251,7 @@ namespace Motate {
 
         using Motate::SPI_internal::SPIInfo<spiPeripheralNumber>::spi;
         using Motate::SPI_internal::SPIInfo<spiPeripheralNumber>::peripheralId;
-        using Motate::SPI_internal::SPIInfo<spiPeripheralNumber>::spiIRQ;
+        static constexpr auto spiIRQ = Motate::SPI_internal::SPIInfo<spiPeripheralNumber>::IRQ;
         const uint8_t spiPeripheralNum = spiPeripheralNumber;
 
         typedef _SPIHardware<spiPeripheralNumber> this_type_t;

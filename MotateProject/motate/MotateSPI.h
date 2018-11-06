@@ -116,7 +116,6 @@ namespace Motate {
 
 namespace Motate {
 
-
 #pragma mark SPIBusDeviceBase
     /**************************************************
      *
