@@ -140,7 +140,8 @@ namespace Motate {
 #undef _TC//(t,c)
 #undef _PWM//(c)
 
-    //    // SPI Pin assignements
+    //
+    // SPI Pin assignements
     _MAKE_MOTATE_SPI_CS_PIN('A', 31, /* SPINum:*/ 0, /* Peripheral:*/ A, /* CS Index:*/ 1);
 #ifdef PIOB
     _MAKE_MOTATE_SPI_CS_PIN('B',  2, /* SPINum:*/ 0, /* Peripheral:*/ D, /* CS Index:*/ 0);
@@ -217,6 +218,7 @@ namespace Motate {
     _MAKE_MOTATE_UART_CTS_PIN( 'D',  19, /* UART number: */ 2, /* Peripheral */ B);
 #endif // PIOD
 
+    //
     // ADC Pin assignments
 
     _MAKE_MOTATE_ADC_PIN('A', 17, /* AFEC: */0, /* ADC number:*/  6);
@@ -249,6 +251,24 @@ namespace Motate {
     _MAKE_MOTATE_ADC_PIN('E',  3, /* AFEC: */1, /* ADC number:*/ 10);
     _MAKE_MOTATE_ADC_PIN('E',  4, /* AFEC: */0, /* ADC number:*/  4);
     _MAKE_MOTATE_ADC_PIN('E',  5, /* AFEC: */0, /* ADC number:*/  3);
+#endif
+
+    //
+    // TWI/I2C Pin assignments
+
+    _MAKE_MOTATE_TWI_SCK_PIN('A', 4, /* TWIHS: */0, /* Peripheral: */A);
+    _MAKE_MOTATE_TWI_SDA_PIN('A', 3, /* TWIHS: */0, /* Peripheral: */A);
+#ifdef PIOB
+    _MAKE_MOTATE_TWI_SCK_PIN('B', 5, /* TWIHS: */1, /* Peripheral: */A);
+    _MAKE_MOTATE_TWI_SDA_PIN('B', 4, /* TWIHS: */1, /* Peripheral: */A);
+#endif
+#ifdef PIOC
+#endif
+#ifdef PIOD
+    _MAKE_MOTATE_TWI_SCK_PIN('D',28, /* TWIHS: */2, /* Peripheral: */C);
+    _MAKE_MOTATE_TWI_SDA_PIN('D',27, /* TWIHS: */2, /* Peripheral: */C);
+#endif
+#ifdef PIOE
 #endif
 
 // Clock outputs (LIKELY WRONG)

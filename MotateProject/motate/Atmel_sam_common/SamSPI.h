@@ -35,7 +35,6 @@
 
 #include "MotatePins.h"
 #include "SamCommon.h"
-#include "SamDMA.h"
 #include <type_traits>
 
 #include "SamSPIInternal.h"
@@ -45,22 +44,20 @@ namespace Motate {
     template<int8_t spiPeripheralNumber>
     struct _SPIHardware : Motate::SPI_internal::SPIInfo<spiPeripheralNumber>
     {
-        static_assert(Motate::SPI_internal::SPIInfo<spiPeripheralNumber>::exists,
+        using this_type_t = _SPIHardware<spiPeripheralNumber>;
+        using info = Motate::SPI_internal::SPIInfo<spiPeripheralNumber>;
+
+        static_assert(info::exists,
                 "Only _SPIHardware<0> or _SPIHardware<1> is valid on this processor.");
 
-        using Motate::SPI_internal::SPIInfo<spiPeripheralNumber>::spi;
-        using Motate::SPI_internal::SPIInfo<spiPeripheralNumber>::peripheralId;
-        static constexpr auto spiIRQ = Motate::SPI_internal::SPIInfo<spiPeripheralNumber>::IRQ;
-        const uint8_t spiPeripheralNum = spiPeripheralNumber;
+        using info::spi;
+        using info::peripheralId;
+        static constexpr auto spiIRQ = info::IRQ;
+        static constexpr auto spiPeripheralNum = spiPeripheralNumber;
 
-        typedef _SPIHardware<spiPeripheralNumber> this_type_t;
+        std::function<void(Interrupt::Type)> _spiInterruptHandler;
 
-        std::function<void(uint16_t)> _spiInterruptHandler;
-
-#ifndef CAN_SPI_PDC_DMA
-        DMA<Spi *, spiPeripheralNumber> dma_ {_spiInterruptHandler};
-        constexpr const DMA<Spi *, spiPeripheralNumber> *dma() { return &dma_; };
-#endif
+        DMA<SPI_tag, spiPeripheralNumber> dma {_spiInterruptHandler};
 
         static std::function<void()> _spiInterruptHandlerJumper;
         _SPIHardware() {
@@ -72,11 +69,6 @@ namespace Motate {
         };
 
         void init() {
-//            static bool inited = false;
-//            if (inited)
-//                return;
-//            inited = true;
-
             // Set last transfer
             spi->SPI_CR = SPI_CR_LASTXFER;
 
@@ -103,20 +95,7 @@ namespace Motate {
                 }
             };
 
-#ifdef CAN_SPI_PDC_DMA
-            // Reset the PDC
-            spi->SPI_PTCR = SPI_PTCR_RXTDIS | SPI_PTCR_TXTDIS;
-            spi->SPI_RPR = 0;
-            spi->SPI_RCR = 0;
-            spi->SPI_TPR = 0;
-            spi->SPI_TCR = 0;
-            spi->SPI_RNPR = 0;
-            spi->SPI_RNCR = 0;
-            spi->SPI_TNPR = 0;
-            spi->SPI_TNCR = 0;
-#else
-            dma()->reset();
-#endif
+            dma.reset();
         };
 
         // This is to be called by the device, once it detects a "decoded" CS pin
@@ -349,12 +328,12 @@ namespace Motate {
 #endif // temporarily removed read/write/transfer
 
 
-        void setInterruptHandler(std::function<void(uint16_t)> &&handler) {
+        void setInterruptHandler(std::function<void(Interrupt::Type)> &&handler) {
             _spiInterruptHandler = std::move(handler);
         }
 
-        uint16_t getInterruptCause() {
-            uint16_t status = SPIInterrupt::Unknown;
+        Interrupt::Type getInterruptCause() {
+            Interrupt::Type status = SPIInterrupt::Unknown;
 
             // Notes from experience:
             // This processor will sometimes allow one of these bits to be set,
@@ -375,29 +354,19 @@ namespace Motate {
             {
                 status |= SPIInterrupt::OnRxReady;
             }
-#ifdef CAN_SPI_PDC_DMA
-            if ((SPI_IMR_hold & SPI_IMR_TXBUFE) && (SPI_SR_hold & SPI_SR_TXBUFE))
+
+            if (dma.inTxBufferEmptyInterrupt())
             {
                 status |= SPIInterrupt::OnTxTransferDone;
             }
-            if ((SPI_IMR_hold & SPI_IMR_RXBUFF) && (SPI_SR_hold & SPI_SR_RXBUFF))
+            if (dma.inRxBufferFullInterrupt())
             {
                 status |= SPIInterrupt::OnRxTransferDone;
             }
-#else
-            if (dma()->inTxBufferEmptyInterrupt())
-            {
-                status |= SPIInterrupt::OnTxTransferDone;
-            }
-            if (dma()->inRxBufferFullInterrupt())
-            {
-                status |= SPIInterrupt::OnRxTransferDone;
-            }
-#endif
             return status;
         }
 
-        void setInterrupts(const uint16_t interrupts) {
+        void setInterrupts(const Interrupt::Type interrupts) {
             if (interrupts != SPIInterrupt::Off) {
 
                 if (interrupts & SPIInterrupt::OnTxReady) {
@@ -411,29 +380,16 @@ namespace Motate {
                     spi->SPI_IDR = SPI_IDR_RDRF;
                 }
 
-#ifdef CAN_SPI_PDC_DMA
-                if (interrupts & SPIInterrupt::OnTxTransferDone) {
-                    spi->SPI_IER = SPI_IER_TXBUFE;
-                } else {
-                    spi->SPI_IDR = SPI_IDR_TXBUFE;
-                }
                 if (interrupts & SPIInterrupt::OnRxTransferDone) {
-                    spi->SPI_IER = SPI_IER_RXBUFF;
+                    dma.startRxDoneInterrupts();
                 } else {
-                    spi->SPI_IDR = SPI_IDR_RXBUFF;
-                }
-#else
-                if (interrupts & SPIInterrupt::OnRxTransferDone) {
-                    dma()->startRxDoneInterrupts();
-                } else {
-                    dma()->stopRxDoneInterrupts();
+                    dma.stopRxDoneInterrupts();
                 }
                 if (interrupts & SPIInterrupt::OnTxTransferDone) {
-                    dma()->startTxDoneInterrupts();
+                    dma.startTxDoneInterrupts();
                 } else {
-                    dma()->stopTxDoneInterrupts();
+                    dma.stopTxDoneInterrupts();
                 }
-#endif
 
                 /* Set interrupt priority */
                 if (interrupts & SPIInterrupt::PriorityHighest) {
@@ -459,147 +415,58 @@ namespace Motate {
             }
         };
 
-#ifdef CAN_SPI_PDC_DMA
         void _enableOnTXTransferDoneInterrupt() {
-            spi->SPI_IER = SPI_IER_TXBUFE;
+            dma.startTxDoneInterrupts();
         };
 
         void _disableOnTXTransferDoneInterrupt() {
-            spi->SPI_IDR = SPI_IDR_TXBUFE;
+            dma.stopTxDoneInterrupts();
         };
 
         void _enableOnRXTransferDoneInterrupt() {
-            spi->SPI_IER = SPI_IER_RXBUFF;
+            dma.startRxDoneInterrupts();
         };
 
         void _disableOnRXTransferDoneInterrupt() {
-            spi->SPI_IDR = SPI_IDR_RXBUFF;
+            dma.stopRxDoneInterrupts();
         };
 
         uint8_t getMessageSlotsAvailable() {
             uint8_t count = 0;
-            if (spi->SPI_RCR > 0) { count++; }
-            if (spi->SPI_NRCR > 0) { count++; }
-            return count;
-        };
-
-        // start transfer of message
-        bool startTransfer(uint8_t *tx_buffer, uint8_t *rx_buffer, uint16_t size) {
-            // We need to clear the read buffer or it won't clock anything...
-            if (spi->SPI_SR & SPI_SR_RDRF) {
-                /*uint16_t dont_care =*/ spi->SPI_RDR;
-            }
-
-            if ((spi->SPI_RCR == 0) && (spi->SPI_TCR == 0)) {
-                spi->SPI_PTCR = SPI_PTCR_RXTDIS | SPI_PTCR_TXTDIS;
-
-                uint32_t PTCR_prep = 0;
-
-                // setup immediate PDC transfer
-                if (rx_buffer != nullptr) {
-                    spi->SPI_RPR = (uint32_t)rx_buffer;
-                    spi->SPI_RCR = size;
-                    _enableOnRXTransferDoneInterrupt();
-                    PTCR_prep = SPI_PTCR_RXTEN;
-                } else {
-                    spi->SPI_RPR = 0;
-                    spi->SPI_RCR = 0;
-//                    _toss_next_read = true;
-                }
-                if (tx_buffer != nullptr) {
-                    spi->SPI_TPR = (uint32_t)tx_buffer;
-                    spi->SPI_TCR = size;
-//                    _enableOnTXTransferDoneInterrupt();
-                    PTCR_prep |= SPI_PTCR_TXTEN;
-                } else {
-                    spi->SPI_TPR = 0;
-                    spi->SPI_TCR = 0;
-                }
-
-                // enable both transfers - we use zero size to diable, but this
-                // allows the next transfer to be of a different direction set
-                spi->SPI_PTCR = PTCR_prep;
-                return true;
-            }
-//            else if ((spi->SPI_RNCR == 0) && (spi->SPI_TNCR == 0)) {
-//                // setup next PDC transfer
-//                if (rx_buffer != nullptr) {
-//                    spi->SPI_RNPR = (uint32_t)rx_buffer;
-//                    spi->SPI_RNCR = size;
-//                } else {
-//                    spi->SPI_RNPR = 0;
-//                    spi->SPI_RNCR = 0;
-//                }
-//                if (tx_buffer != nullptr) {
-//                    spi->SPI_TNPR = (uint32_t)tx_buffer;
-//                    spi->SPI_TNCR = size;
-//                } else {
-//                    spi->SPI_TNPR = 0;
-//                    spi->SPI_TNCR = 0;
-//                    // HMM, how to handle _toss_next_read here?
-//                }
-//
-//                // current transfer should already be enabled...
-//                return true;
-//            }
-
-            // We didn't set anything up...
-            return false;
-        }
-#else
-        void _enableOnTXTransferDoneInterrupt() {
-            dma()->startTxDoneInterrupts();
-        };
-
-        void _disableOnTXTransferDoneInterrupt() {
-            dma()->stopTxDoneInterrupts();
-        };
-
-        void _enableOnRXTransferDoneInterrupt() {
-            dma()->startRxDoneInterrupts();
-        };
-
-        void _disableOnRXTransferDoneInterrupt() {
-            dma()->stopRxDoneInterrupts();
-        };
-
-        uint8_t getMessageSlotsAvailable() {
-            uint8_t count = 0;
-            if (dma()->doneWriting() && dma()->doneReading()) { count++; }
-//            if (dma()->doneWritingNext()) { count++; }
+            if (dma.doneWriting() && dma.doneReading()) { count++; }
+//            if (dma.doneWritingNext()) { count++; }
             return count;
         };
 
         bool doneWriting() {
-            return dma()->doneWriting();
+            return dma.doneWriting();
         };
         bool doneReading() {
-            return dma()->doneReading();
+            return dma.doneReading();
         };
 
         // start transfer of message
         bool startTransfer(uint8_t *tx_buffer, uint8_t *rx_buffer, uint16_t size) {
             bool is_setup = false;
-            dma()->setInterrupts(Interrupt::Off);
+            dma.setInterrupts(Interrupt::Off);
             if (rx_buffer != nullptr) {
                 const bool handle_interrupts = false;
                 const bool include_next = false;
-                is_setup = dma()->startRXTransfer(rx_buffer, size, handle_interrupts, include_next);
+                is_setup = dma.startRXTransfer(rx_buffer, size, handle_interrupts, include_next);
                 if (!is_setup) { return false; } // fail early
             }
             if (tx_buffer != nullptr) {
                 const bool handle_interrupts = false;
                 const bool include_next = false;
-                is_setup = dma()->startTXTransfer(tx_buffer, size, handle_interrupts, include_next);
+                is_setup = dma.startTXTransfer(tx_buffer, size, handle_interrupts, include_next);
             }
             if (is_setup) {
                 enable();
-                //dma()->enable();
-                dma()->setInterrupts(Interrupt::OnTxTransferDone | Interrupt::OnRxTransferDone);
+                //dma.enable();
+                dma.setInterrupts(Interrupt::OnTxTransferDone | Interrupt::OnRxTransferDone);
             }
             return is_setup;
         }
-#endif // CAN_SPI_PDC_DMA
 
         // abort transfer of message
         // TODO
@@ -607,148 +474,6 @@ namespace Motate {
         // get transfer status
         // TODO
     };
-
-#if 0
-    pin_number _default_MISOPinNumber = ReversePinLookup<'A', 25>::number;
-    pin_number _default_MOSIPinNumber = ReversePinLookup<'A', 26>::number;
-    pin_number _default_SCKPinNumber = ReversePinLookup<'A', 27>::number;
-
-    template<int8_t spiCSPinNumber, int8_t spiMISOPinNumber=_default_MISOPinNumber, int8_t spiMOSIPinNumber=_default_MOSIPinNumber, int8_t spiSCKSPinNumber=_default_SCKPinNumber>
-    struct SPI {
-        typedef SPIChipSelectPin<spiCSPinNumber> csPinType;
-        csPinType csPin;
-
-        SPIMISOPin<spiMISOPinNumber> misoPin;
-        SPIMOSIPin<spiMOSIPinNumber> mosiPin;
-        SPISCKPin<spiSCKSPinNumber> sckPin;
-
-        static _SPIHardware< misoPin::spiNum > hardware;
-        static const uint8_t spiPeripheralNum() { return csPinType::moduleId; };
-        static const uint8_t spiChannelNumber() { return SPIChipSelectPin<spiCSPinNumber>::csOffset; };
-
-        static Spi * const spi { return hardware.spi; };
-        static const uint32_t peripheralId { return hardware.peripheralId; };
-        static const IRQn_Type spiIRQ { return hardware.spiIRQ; };
-
-
-
-        SPI(const uint32_t baud = 4000000, const uint16_t options = kSPI8Bit | kSPIMode0) {
-            hardware.init();
-            init(baud, options, /*fromConstructor =*/ true);
-        };
-
-        void init(const uint32_t baud, const uint16_t options, const bool fromConstructor=false) {
-            setOptions(baud, options, fromConstructor);
-        };
-
-//        void setOptions(const uint32_t baud, const uint16_t options, const bool fromConstructor=false) {
-//            // We derive the baud from the master clock with a divider.
-//            // We want the closest match *below* the value asked for. It's safer to bee too slow.
-//
-//            uint16_t divider = SystemCoreClock / baud;
-//            if (divider > 255)
-//                divider = 255;
-//            else if (divider < 1)
-//                divider = 1;
-//
-//            spi->SPI_CSR[spiChannelNumber()] = (options & (SPI_CSR_NCPHA | SPI_CSR_CPOL | SPI_CSR_BITS_Msk)) | SPI_CSR_SCBR(divider) | SPI_CSR_DLYBCT(1) | SPI_CSR_CSAAT;
-//
-//            // Should be a non-op for already-enabled devices.
-//            hardware.enable();
-//
-//        };
-
-        bool setChannel() {
-            return hardware.setChannel(spiChannelNumber());
-        };
-
-//        uint16_t getOptions() {
-//            return spi->SPI_CSR[spiChannelNumber()]/* & (SPI_CSR_NCPHA | SPI_CSR_CPOL | SPI_CSR_BITS_Msk)*/;
-//        };
-
-        int16_t readByte(const bool lastXfer = false, uint8_t toSendAsNoop = 0) {
-            return hardware.read(lastXfer, toSendAsNoop);
-        };
-
-        // WARNING: Currently only reads in bytes. For more-that-byte size data, we'll need another call.
-        int16_t read(const uint8_t *buffer, const uint16_t length) {
-            if (!setChannel())
-                return -1;
-
-
-            int16_t total_read = 0;
-            int16_t to_read = length;
-            const uint8_t *read_ptr = buffer;
-
-            bool lastXfer = false;
-
-            // BLOCKING!!
-            while (to_read > 0) {
-
-                if (to_read == 1)
-                    lastXfer = true;
-
-                int16_t ret = read(lastXfer);
-
-                if (ret >= 0) {
-                    *read_ptr++ = ret;
-                    total_read++;
-                    to_read--;
-                }
-            };
-
-            return total_read;
-        };
-
-        int16_t writeByte(uint16_t data, const bool lastXfer = false) {
-            return hardware.write(data, lastXfer);
-        };
-
-        int16_t writeByte(uint8_t data, int16_t &readValue, const bool lastXfer = false) {
-            return hardware.write(data, lastXfer);
-        };
-
-        void flush() {
-            hardware.disable();
-            hardware.enable();
-        };
-
-        // WARNING: Currently only writes in bytes. For more-that-byte size data, we'll need another call.
-        int16_t write(const uint8_t *data, const uint16_t length, bool autoFlush = true) {
-            if (!setChannel())
-                return -1;
-
-            int16_t total_written = 0;
-            const uint8_t *out_buffer = data;
-            int16_t to_write = length;
-
-            bool lastXfer = false;
-
-            // BLOCKING!!
-            do {
-                if (autoFlush && to_write == 1)
-                    lastXfer = true;
-
-                int16_t ret = write(*out_buffer, lastXfer);
-
-                if (ret > 0) {
-                    out_buffer++;
-                    total_written++;
-                    to_write--;
-                }
-            } while (to_write);
-
-            // HACK! Autoflush forced...
-            if (autoFlush && total_written > 0)
-                flush();
-
-            return total_written;
-        }
-    };
-
-#endif
-
-
 
     template <pin_number csBit0PinNumber, pin_number csBit1PinNumber, pin_number csBit2PinNumber, pin_number csBit3PinNumber>
     struct SPIChipSelectPinMux {

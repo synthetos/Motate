@@ -68,19 +68,6 @@ namespace Motate {
             };
             return 0;
         };
-        static constexpr uint8_t const xdmaTxChannelNumber()
-        {
-            switch (uartPeripheralNumber) {
-                case (0): return  0;
-                case (1): return  2;
-                case (2): return  4;
-            };
-            return 0;
-        };
-        static constexpr XdmacChid * const xdmaTxChannel()
-        {
-            return xdma()->XDMAC_CHID + xdmaTxChannelNumber();
-        };
         static constexpr void * const xdmaPeripheralTxAddress()
         {
             return &usart()->US_THR;
@@ -100,19 +87,6 @@ namespace Motate {
             };
             return 0;
         };
-        static constexpr uint8_t const xdmaRxChannelNumber()
-        {
-            switch (uartPeripheralNumber) {
-                case (0): return  1;
-                case (1): return  3;
-                case (2): return  5;
-            };
-            return 0;
-        };
-        static constexpr XdmacChid * const xdmaRxChannel()
-        {
-            return xdma()->XDMAC_CHID + xdmaRxChannelNumber();
-        };
         static constexpr void * const xdmaPeripheralRxAddress()
         {
             return &usart()->US_RHR;
@@ -123,9 +97,9 @@ namespace Motate {
     template<uint8_t periph_num>
     struct DMA<Usart*, periph_num> : virtual DMA_XDMAC_RX<Usart*, periph_num>, virtual DMA_XDMAC_TX<Usart*, periph_num> {
         // nothing to do here, except for a constxpr constructor
-        constexpr DMA(const std::function<void(uint16_t)> &handler) : DMA_XDMAC_RX<Usart*, periph_num>{handler}, DMA_XDMAC_TX<Usart*, periph_num>{handler} {};
+        constexpr DMA(const std::function<void(Interrupt::Type)> &handler) : DMA_XDMAC_RX<Usart*, periph_num>{handler}, DMA_XDMAC_TX<Usart*, periph_num>{handler} {};
 
-        void setInterrupts(const uint16_t interrupts) const
+        void setInterrupts(const Interrupt::Type interrupts) const
         {
             DMA_XDMAC_common::setInterrupts(interrupts);
 
@@ -185,21 +159,6 @@ namespace Motate {
             };
             return 0;
         };
-        static constexpr uint8_t const xdmaTxChannelNumber()
-        {
-            switch (uartPeripheralNumber) {
-                case (0): return  6;
-                case (1): return  8;
-                case (2): return 10;
-                case (3): return 12;
-                case (4): return 14;
-            };
-            return 0;
-        };
-        static constexpr XdmacChid * const xdmaTxChannel()
-        {
-            return xdma()->XDMAC_CHID + xdmaTxChannelNumber();
-        };
         static constexpr volatile void * const xdmaPeripheralTxAddress()
         {
             return &uart()->UART_THR;
@@ -222,21 +181,6 @@ namespace Motate {
             };
             return 0;
         };
-        static constexpr uint8_t const xdmaRxChannelNumber()
-        {
-            switch (uartPeripheralNumber) {
-                case (0): return  7;
-                case (1): return  9;
-                case (2): return 11;
-                case (3): return 13;
-                case (4): return 15;
-            };
-            return 0;
-        };
-        static constexpr XdmacChid * const xdmaRxChannel()
-        {
-            return xdma()->XDMAC_CHID + xdmaRxChannelNumber();
-        };
         static constexpr volatile void * const xdmaPeripheralRxAddress()
         {
             return &uart()->UART_RHR;
@@ -247,9 +191,9 @@ namespace Motate {
     template<uint8_t periph_num>
     struct DMA<Uart*, periph_num> : DMA_XDMAC_RX<Uart*, periph_num>, DMA_XDMAC_TX<Uart*, periph_num> {
         // nothing to do here, except for a constxpr constructor
-        constexpr DMA(const std::function<void(uint16_t)> &handler) : DMA_XDMAC_RX<Uart*, periph_num>{handler}, DMA_XDMAC_TX<Uart*, periph_num>{handler} {};
+        constexpr DMA(const std::function<void(Interrupt::Type)> &handler) : DMA_XDMAC_RX<Uart*, periph_num>{handler}, DMA_XDMAC_TX<Uart*, periph_num>{handler} {};
 
-        void setInterrupts(const uint16_t interrupts) const
+        void setInterrupts(const Interrupt::Type interrupts) const
         {
             DMA_XDMAC_common::setInterrupts(interrupts);
 
@@ -356,7 +300,7 @@ namespace Motate {
         // nothing to do here, except for a constxpr constructor
         // we take the handler, but we don't actually handle interrupts for the peripheral
         // so we ignore it
-        constexpr DMA(const std::function<void(uint16_t)> &handler) : DMA_PDC<Usart*, periph_num>{} {};
+        constexpr DMA(const std::function<void(Interrupt::Type)> &handler) : DMA_PDC<Usart*, periph_num>{} {};
     };
 #endif // USART + PDC
 
@@ -364,7 +308,7 @@ namespace Motate {
 // Notice that this relies on defines set up in SamCommon.h
 #ifdef HAS_PDC_UART0
 
-#pragma mark DMA_PDC Usart implementation
+#pragma mark DMA_PDC Uart implementation
 
     template<uint8_t uartPeripheralNumber>
     struct DMA_PDC_hardware<Uart*, uartPeripheralNumber> {
@@ -442,7 +386,7 @@ namespace Motate {
         // nothing to do here, except for a constxpr constructor
         // we take the handler, but we don't actually handle interrupts for the peripheral
         // so we ignore it
-        constexpr DMA(const std::function<void(uint16_t)> &handler) : DMA_PDC<Uart*, periph_num>{} {};
+        constexpr DMA(const std::function<void(Interrupt::Type)> &handler) : DMA_PDC<Uart*, periph_num>{} {};
     };
 #endif // UART + PDC
 } // namespace Motate

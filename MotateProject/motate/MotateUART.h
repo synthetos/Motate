@@ -73,37 +73,10 @@ namespace Motate {
     struct UARTInterrupt : Interrupt {
         /* These are for internal use only: */
         static constexpr uint16_t OnCTSChanged      = 1<<10;
-        
     };
 } // namespace Motate
 
-#ifdef __AVR_XMEGA__
-
-#include <Atmel_XMega/XMegaUART.h>
-
-#else
-
-#ifdef __AVR__
-#include <Atmel_avr/AvrUART.h>
-#endif
-
-#endif
-
-#if defined(__SAM3X8E__) || defined(__SAM3X8C__)
-#include <SamUART.h>
-#endif
-
-#if defined(__SAM4E8E__) || defined(__SAM4E16E__) || defined(__SAM4E8C__) || defined(__SAM4E16C__)
-#include <SamUART.h>
-#endif
-
-#if defined(__SAMS70N19__) || defined(__SAMS70N20__) || defined(__SAMS70N21__)
-#include <SamUART.h>
-#endif
-
-#if defined(__KL05Z__)
-#include <Freescale_klxx/KL05ZUART.h>
-#endif
+#include <ProcessorUART.h>
 
 namespace Motate {
 
@@ -416,7 +389,7 @@ namespace Motate {
             if (interruptCause & UARTInterrupt::OnRxTransferDone) {
                 _transactionEnded();
             }
-            
+
             if (interruptCause & UARTInterrupt::OnCTSChanged) {
                 if (!isRealAndCorrectCTSPin<ctsPinNumber, rxPinNumber>()) {
                     if (isConnected()) {
@@ -440,7 +413,7 @@ namespace Motate {
                 }
             }
         };
-        
+
     };
 
 }

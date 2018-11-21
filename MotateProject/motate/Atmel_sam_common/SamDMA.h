@@ -30,10 +30,8 @@
 // These two go outside the guard, so they can happen even though they
 // (eventually) include this file.
 //#include "MotateUART.h" // pull in definitions of UART enums
-//#include "MotateTimers.h" // pull in definitions of PWM enums
 #include "SamCommon.h" // pull in defines and fix them
 #include "MotateCommon.h"
-
 
 #ifndef SAMDMA_H_ONCE
 #define SAMDMA_H_ONCE
@@ -47,6 +45,9 @@ namespace Motate {
     template<typename periph_t, uint8_t periph_num>
     struct DMA {
         DMA() = delete; // this prevents accidental direct instantiation
+        template<typename... T>
+        DMA(T...) {}; // this prevents accidental direct instantiation
+        static constexpr bool exists = false;
     };
 
 
@@ -92,7 +93,7 @@ namespace Motate {
         typedef typename _hw::buffer_t buffer_t;
 
         // We don't handle interrupts here, but this is part of the interface, so we silently deal with it
-        void setInterrupts(const uint16_t interrupts) const {
+        void setInterrupts(const Interrupt::Type interrupts) const {
             stopRxDoneInterrupts();
             stopTxDoneInterrupts();
         };
@@ -168,7 +169,6 @@ namespace Motate {
 
             if (doneReading()) {
                 if (handle_interrupts) { stopRxDoneInterrupts(); }
-//                disableRx(); // make it stand still first
 
                 setRx(buffer, length);
 
@@ -301,21 +301,13 @@ namespace Motate {
         static Xdmac * const xdma() { return XDMAC; };
         static constexpr IRQn_Type xdmaIRQ() { return XDMAC_IRQn; };
 
-        void setInterrupts(const uint16_t interrupts) const
+        void setInterrupts(const Interrupt::Type interrupts) const
         {
-            if (interrupts != Interrupt::Off) {
-//                if (interrupts & Interrupt::OnTxTransferDone) {
-//                    startTxDoneInterrupts();
-//                } else {
-//                    stopTxDoneInterrupts();
-//                }
-//
-//                if (interrupts & Interrupt::OnRxTransferDone) {
-//                    startRxDoneInterrupts();
-//                } else {
-//                    stopRxDoneInterrupts();
-//                }
+            // Once it's known that interrupts are required, always have them on
+            NVIC_EnableIRQ(xdmaIRQ());
 
+            if (interrupts != Interrupt::Off) {
+                // Subobjects must handle Interrupt::OnTxTransferDone and Interrupt::OnRxTransferDone
 
                 /* Set interrupt priority */
                 if (interrupts & Interrupt::PriorityHighest) {
@@ -333,40 +325,44 @@ namespace Motate {
                 else if (interrupts & Interrupt::PriorityLowest) {
                     NVIC_SetPriority(xdmaIRQ(), 4);
                 }
-
-                NVIC_EnableIRQ(xdmaIRQ());
-            } else {
-
-                NVIC_DisableIRQ(xdmaIRQ());
             }
         };
 
     };
 
     struct _XDMAInterrupt {
-        const uint32_t channel_mask; // Pin uses "mask" so we use a different name. "pc" for pinChange
         const std::function<void(void)> interrupt_handler;
-        _XDMAInterrupt *next;
+        uint8_t                         channel_num;
+        uint32_t                        channel_mask;
+        _XDMAInterrupt*                 next;
 
-        _XDMAInterrupt(const _XDMAInterrupt &) = delete; // delete the copy constructor, we only allow moves
+        _XDMAInterrupt(const _XDMAInterrupt&) = delete;             // delete the copy constructor, we only allow moves
         _XDMAInterrupt &operator=(const _XDMAInterrupt &) = delete; // delete the assigment operator, we only allow moves
 
         // Note we MOVE this interrupt function...
-        _XDMAInterrupt(const uint32_t _channel_num, const std::function<void(void)> &&_interrupt, _XDMAInterrupt *&_first) : channel_mask{(uint32_t)(1<<_channel_num)}, interrupt_handler{std::move(_interrupt)}, next{nullptr}
-        {
-            if (interrupt_handler) { // std::function returns false if the function isn't valid
+        _XDMAInterrupt(const std::function<void(void)>&& _interrupt,
+                       _XDMAInterrupt*&                  _first)
+            : interrupt_handler{std::move(_interrupt)}, next{nullptr} {
+            if (interrupt_handler) {  // std::function returns false if the function isn't valid
                 if (_first == nullptr) {
                     _first = this;
+                    channel_num = 0;
+                    channel_mask = (uint32_t)(1 << channel_num);
                     return;
                 }
 
-                _XDMAInterrupt *i = _first;
+                _XDMAInterrupt* i = _first;
                 while (i->next != nullptr) {
                     i = i->next;
+                    channel_num = std::max(channel_num, i->channel_num);
                 }
-                i->next = this;
+                ++channel_num;
+                i->next      = this;
+                channel_mask = (uint32_t)(1 << channel_num);
             }
         };
+
+        uint8_t getChannel() const { return channel_num; }
     };
 
     extern _XDMAInterrupt *_first_xdmac_interrupt;
@@ -382,8 +378,8 @@ namespace Motate {
 
         using _hw::xdma;
         using _hw::xdmaTxPeripheralId;
-        using _hw::xdmaTxChannelNumber;
-        using _hw::xdmaTxChannel;
+        // using _hw::xdmaTxChannelNumber;
+        // using _hw::xdmaTxChannel;
         using _hw::xdmaPeripheralTxAddress;
         using _hw::xdmaIRQ;
         using _hw::peripheralId;
@@ -392,16 +388,27 @@ namespace Motate {
         static constexpr uint32_t buffer_width = std::alignment_of< typename std::remove_pointer<buffer_t>::type >::value;
 
 
-        const std::function<void(uint16_t)> &_xdmaInterruptHandler;
+        const std::function<void(Interrupt::Type)> &_xdmaInterruptHandler;
 
-        _XDMAInterrupt _tx_interrupt {xdmaTxChannelNumber(), [&](){
-            if (_xdmaInterruptHandler) {
-                _xdmaInterruptHandler(Interrupt::OnTxTransferDone);
-            }
-        }, _first_xdmac_interrupt};
+        _XDMAInterrupt _tx_interrupt{[&]() {
+                                         if (_xdmaInterruptHandler) {
+                                             auto CIS_hold = xdmaTxChannel()->XDMAC_CIS;
+                                             Interrupt::Type cause;
+                                             if (CIS_hold & XDMAC_CIS_BIS) { cause |= Interrupt::OnTxTransferDone; }
+                                             if (CIS_hold & XDMAC_CIS_WBEIS) { cause |= Interrupt::OnTxError; }
+                                             _xdmaInterruptHandler(cause);
+                                         }
+                                     },
+                                     _first_xdmac_interrupt};
+
+        const uint8_t xdmaTxChannelNumber() const { return _tx_interrupt.getChannel(); }
+        XdmacChid * const xdmaTxChannel() const
+        {
+            return xdma()->XDMAC_CHID + xdmaTxChannelNumber();
+        };
 
         // we'll hold a reference to the handler, the peripheral owns the one it's passing
-        constexpr DMA_XDMAC_TX(const std::function<void(uint16_t)> &handler) : _xdmaInterruptHandler{handler} {};
+        constexpr DMA_XDMAC_TX(const std::function<void(Interrupt::Type)> &handler) : _xdmaInterruptHandler{handler} {};
 
         void resetTX() const
         {
@@ -514,8 +521,8 @@ namespace Motate {
         };
 
 
-        void startTxDoneInterrupts() const { xdmaTxChannel()->XDMAC_CIE = XDMAC_CIE_BIE; };
-        void stopTxDoneInterrupts() const { xdmaTxChannel()->XDMAC_CID = XDMAC_CID_BID; };
+        void startTxDoneInterrupts() const { xdmaTxChannel()->XDMAC_CIE = XDMAC_CIE_BIE | XDMAC_CIE_WBIE; };
+        void stopTxDoneInterrupts() const { xdmaTxChannel()->XDMAC_CID = XDMAC_CID_BID | XDMAC_CID_WBEID; };
 
         // XDMAC_Handler is handled with _tx_interrupt and _rx_interupt. They use
         // the std::function _xdmaInterruptHandler, which get's set by the peripheral
@@ -533,8 +540,8 @@ namespace Motate {
 
         using _hw::xdma;
         using _hw::xdmaRxPeripheralId;
-        using _hw::xdmaRxChannelNumber;
-        using _hw::xdmaRxChannel;
+        // using _hw::xdmaRxChannelNumber;
+        // using _hw::xdmaRxChannel;
         using _hw::xdmaPeripheralRxAddress;
         using _hw::xdmaIRQ;
         using _hw::peripheralId;
@@ -542,15 +549,22 @@ namespace Motate {
         typedef typename _hw::buffer_t buffer_t;
         static constexpr uint32_t buffer_width = std::alignment_of< typename std::remove_pointer<buffer_t>::type >::value;
 
-        const std::function<void(uint16_t)> &_xdmaInterruptHandler;
+        const std::function<void(Interrupt::Type)> &_xdmaInterruptHandler;
 
-        _XDMAInterrupt _rx_interrupt {xdmaRxChannelNumber(), [&](){
-            if (_xdmaInterruptHandler) {
-                _xdmaInterruptHandler(Interrupt::OnRxTransferDone);
-            }
-        }, _first_xdmac_interrupt};
+        _XDMAInterrupt _rx_interrupt{[&]() {
+                                         if (_xdmaInterruptHandler) {
+                                             _xdmaInterruptHandler(Interrupt::OnRxTransferDone);
+                                         }
+                                     },
+                                     _first_xdmac_interrupt};
 
-        constexpr DMA_XDMAC_RX(const std::function<void(uint16_t)> &handler) : _xdmaInterruptHandler{handler} {};
+        const uint8_t xdmaRxChannelNumber() const { return _rx_interrupt.getChannel(); }
+        XdmacChid * const xdmaRxChannel() const
+        {
+            return xdma()->XDMAC_CHID + xdmaRxChannelNumber();
+        };
+
+        constexpr DMA_XDMAC_RX(const std::function<void(Interrupt::Type)> &handler) : _xdmaInterruptHandler{handler} {};
 
         void resetRX() const
         {
@@ -706,88 +720,6 @@ namespace Motate {
         // and must always return false
         constexpr bool inRxBufferFullInterrupt() const { return false; };
     };
-
-
-// We're deducing if there's a UART and it has a PDC
-// Notice that this relies on defines set up in SamCommon.h
-#if defined(PWM1)
-#pragma mark DMA_XDMAC PWM implementation
-
-    template<uint8_t timerNum>
-    struct DMA_XDMAC_hardware<Pwm*, timerNum>
-    {
-        static constexpr Pwm * const pwm() {
-            if (timerNum < 8) { return PWM0; }
-            else              { return PWM1; }
-        };
-        static constexpr PwmCh_num * const pwmChan()
-        {
-            if (timerNum < 8) { return PWM0->PWM_CH_NUM + timerNum; }
-            else              { return PWM1->PWM_CH_NUM + (timerNum-8); }
-        };
-
-        typedef uint16_t* buffer_t;
-    };
-
-    template<uint8_t timerNum>
-    struct DMA_XDMAC_TX_hardware<Pwm*, timerNum> : virtual DMA_XDMAC_hardware<Pwm*, timerNum>, virtual DMA_XDMAC_common {
-        using DMA_XDMAC_hardware<Pwm*, timerNum>::pwm;
-
-        static constexpr uint8_t const xdmaTxPeripheralId()
-        {
-            if (timerNum < 8) { return 13; }
-            else              { return 39; }
-        };
-        static constexpr uint8_t const xdmaTxChannelNumber()
-        {
-            switch (timerNum) {
-                case (0): return  16;
-                case (1): return  17;
-            };
-            return 0;
-        };
-        static constexpr XdmacChid * const xdmaTxChannel()
-        {
-            return xdma()->XDMAC_CHID + xdmaTxChannelNumber();
-        };
-        static constexpr volatile void * const xdmaPeripheralTxAddress()
-        {
-            return &(pwm()->PWM_DMAR);
-        };
-    };
-
-    // Construct a DMA specialization that uses the PDC
-    template<uint8_t periph_num>
-    struct DMA<Pwm*, periph_num> : DMA_XDMAC_TX<Pwm*, periph_num> {
-        // nothing to do here, except for a constxpr constructor
-        constexpr DMA(const std::function<void(uint16_t)> &handler) : DMA_XDMAC_TX<Pwm*, periph_num>{handler} {};
-
-        void setInterrupts(const uint16_t interrupts) const
-        {
-            DMA_XDMAC_common::setInterrupts(interrupts);
-
-            if (interrupts != Interrupt::Off) {
-                if (interrupts & Interrupt::OnTxTransferDone) {
-                    DMA_XDMAC_TX<Pwm*, periph_num>::startTxDoneInterrupts();
-                } else {
-                    DMA_XDMAC_TX<Pwm*, periph_num>::stopTxDoneInterrupts();
-                }
-
-//                if (interrupts & Interrupt::OnRxTransferDone) {
-//                    startRxDoneInterrupts();
-//                } else {
-//                    stopRxDoneInterrupts();
-//                }
-            }
-        };
-
-
-        void reset() const {
-            DMA_XDMAC_TX<Pwm*, periph_num>::resetTX();
-        };
-
-    };
-#endif // PWM + XDMAC
 
 } // namespace Motate
 

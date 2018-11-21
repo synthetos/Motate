@@ -40,32 +40,34 @@ namespace Motate {
     //volatile uint32_t _internal_pendsv_handler_number = 0;
     ServiceCallEvent * volatile ServiceCallEvent::_first_service_call = nullptr;
 
-    // We'll support just ten for now. These take up space when not using LTO.
-    template<> void ServiceCall<  0 >::interrupt() __attribute__ ((weak));
-    template<> void ServiceCall<  0 >::interrupt() {;}
-    //template<> uint32_t ServiceCall<  0 >::_interrupt_level = 0;
-    //template<> std::function<void(void)> ServiceCall<  0 >::_altInterruptHandler {};
+    // // We'll support just ten for now. These take up space when not using LTO.
+    // template<> void ServiceCall<  0 >::interrupt() __attribute__ ((weak));
+    // template<> void ServiceCall<  0 >::interrupt() {;}
+    // //template<> uint32_t ServiceCall<  0 >::_interrupt_level = 0;
+    // //template<> std::function<void(void)> ServiceCall<  0 >::_altInterruptHandler {};
 
-    template<> void ServiceCall<  1 >::interrupt() __attribute__ ((weak));
-    template<> void ServiceCall<  1 >::interrupt() {;}
-    //template<> uint32_t ServiceCall<  1 >::_interrupt_level = 0;
-    //template<> std::function<void(void)> ServiceCall<  1 >::_altInterruptHandler {};
+    // template<> void ServiceCall<  1 >::interrupt() __attribute__ ((weak));
+    // template<> void ServiceCall<  1 >::interrupt() {;}
+    // //template<> uint32_t ServiceCall<  1 >::_interrupt_level = 0;
+    // //template<> std::function<void(void)> ServiceCall<  1 >::_altInterruptHandler {};
 
-    template<> void ServiceCall<  2 >::interrupt() __attribute__ ((weak));
-    template<> void ServiceCall<  2 >::interrupt() {;}
-    //template<> uint32_t ServiceCall<  2 >::_interrupt_level = 0;
-    //template<> std::function<void(void)> ServiceCall<  2 >::_altInterruptHandler {};
+    // template<> void ServiceCall<  2 >::interrupt() __attribute__ ((weak));
+    // template<> void ServiceCall<  2 >::interrupt() {;}
+    // //template<> uint32_t ServiceCall<  2 >::_interrupt_level = 0;
+    // //template<> std::function<void(void)> ServiceCall<  2 >::_altInterruptHandler {};
 
-    template<> void ServiceCall<  3 >::interrupt() __attribute__ ((weak));
-    template<> void ServiceCall<  3 >::interrupt() {;}
-    //template<> uint32_t ServiceCall<  3 >::_interrupt_level = 0;
-    //template<> std::function<void(void)> ServiceCall<  3 >::_altInterruptHandler {};
+    // template<> void ServiceCall<  3 >::interrupt() __attribute__ ((weak));
+    // template<> void ServiceCall<  3 >::interrupt() {;}
+    // //template<> uint32_t ServiceCall<  3 >::_interrupt_level = 0;
+    // //template<> std::function<void(void)> ServiceCall<  3 >::_altInterruptHandler {};
 
-    //template<> void ServiceCall<  4 >::interrupt() __attribute__ ((weak));
-    //template<> uint32_t ServiceCall<  4 >::_interrupt_level = 0;
-    //template<> std::function<void(void)> ServiceCall<  4 >::_altInterruptHandler {};
+    // template<> void ServiceCall<  4 >::interrupt() __attribute__ ((weak));
+    // template<> void ServiceCall<  4 >::interrupt() {;}
+    // //template<> uint32_t ServiceCall<  4 >::_interrupt_level = 0;
+    // //template<> std::function<void(void)> ServiceCall<  4 >::_altInterruptHandler {};
 
-    //template<> void ServiceCall<  5 >::interrupt() __attribute__ ((weak));
+    // template<> void ServiceCall<  5 >::interrupt() __attribute__ ((weak));
+    // template<> void ServiceCall<  5 >::interrupt() {;}
     //template<> uint32_t ServiceCall<  5 >::_interrupt_level = 0;
     //template<> std::function<void(void)> ServiceCall<  5 >::_altInterruptHandler {};
 

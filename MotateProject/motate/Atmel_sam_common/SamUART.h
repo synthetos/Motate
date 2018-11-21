@@ -116,7 +116,7 @@ namespace Motate {
 
         static constexpr const uint8_t uartPeripheralNum=uartPeripheralNumber;
 
-        std::function<void(uint16_t)> _uartInterruptHandler;
+        std::function<void(Interrupt::Type)> _uartInterruptHandler;
 
         DMA<Usart *, uartPeripheralNumber> dma_ {_uartInterruptHandler};
         constexpr const DMA<Usart *, uartPeripheralNumber> *dma() { return &dma_; };
@@ -204,7 +204,7 @@ namespace Motate {
 
         };
 
-        void setInterrupts(const uint16_t interrupts) {
+        void setInterrupts(const Interrupt::Type interrupts) {
             if (interrupts != UARTInterrupt::Off) {
 
                 if (interrupts & UARTInterrupt::OnRxDone) {
@@ -254,7 +254,7 @@ namespace Motate {
             }
         };
 
-        void setInterruptHandler(std::function<void(uint16_t)> &&handler) {
+        void setInterruptHandler(std::function<void(Interrupt::Type)> &&handler) {
             _uartInterruptHandler = std::move(handler);
         }
 
@@ -298,8 +298,8 @@ namespace Motate {
             }
         };
 
-        static uint16_t getInterruptCause() { // __attribute__ (( noinline ))
-            uint16_t status = UARTInterrupt::Unknown;
+        static Interrupt::Type getInterruptCause() { // __attribute__ (( noinline ))
+            Interrupt::Type status = UARTInterrupt::Unknown;
 
             // Notes from experience:
             // This processor will sometimes allow one of these bits to be set,
@@ -417,7 +417,7 @@ namespace Motate {
 
         static constexpr const uint8_t uartPeripheralNum=uartPeripheralNumber;
 
-        std::function<void(uint16_t)> _uartInterruptHandler;
+        std::function<void(Interrupt::Type)> _uartInterruptHandler;
 
         DMA<Uart *, uartPeripheralNumber> dma_ {_uartInterruptHandler};
         constexpr const DMA<Uart *, uartPeripheralNumber> *dma() { return &dma_; };
@@ -497,7 +497,7 @@ namespace Motate {
 
         };
 
-        void setInterrupts(const uint16_t interrupts) {
+        void setInterrupts(const Interrupt::Type interrupts) {
             if (interrupts != UARTInterrupt::Off) {
 
                 if (interrupts & UARTInterrupt::OnRxDone) {
@@ -537,7 +537,7 @@ namespace Motate {
             }
         };
 
-        void setInterruptHandler(std::function<void(uint16_t)> &&handler) {
+        void setInterruptHandler(std::function<void(Interrupt::Type)> &&handler) {
             _uartInterruptHandler = std::move(handler);
         }
 
@@ -579,8 +579,8 @@ namespace Motate {
             }
         };
 
-        uint16_t getInterruptCause() { // __attribute__ (( noinline ))
-            uint16_t status = UARTInterrupt::Unknown;
+        Interrupt::Type getInterruptCause() { // __attribute__ (( noinline ))
+            Interrupt::Type status = UARTInterrupt::Unknown;
 
             // Notes from experience:
             // This processor will sometimes allow one of these bits to be set,

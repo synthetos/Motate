@@ -239,7 +239,7 @@ namespace Motate {
             if (_callback) {
                 _callback();
             } else {
-                interrupt();
+                // interrupt();
             }
 
             _debug_print_num(); svc_call_debug("🎉\n");
@@ -251,7 +251,7 @@ namespace Motate {
 
         // This is called *ONLY* from the handler (in the .cpp file)
         void _call_from_handler() {
-            if (_first_service_call != nullptr) {
+            while (_first_service_call != nullptr) {
                 auto _service_call = _first_service_call;
                 {
                     SamCommon::InterruptDisabler disabler;
@@ -287,7 +287,7 @@ namespace Motate {
 
         virtual void _debug_print_num() {;};
 
-        virtual void interrupt() {;};
+        // virtual void interrupt() {;};
     };
 
     template <service_call_number svcNumber>
@@ -357,7 +357,7 @@ namespace Motate {
         //};
 
         // Override this to implement this call
-        void interrupt() override;
+        // void interrupt() override;
     };
 }
 

@@ -298,23 +298,28 @@ const DeviceVectors exception_table = {
 void Reset_Handler(void)
 {
     /* Set the Main STACK Pointer to DTCM stack section */
-//    __DSB();
-//    __ISB();
-//    __set_MSP( (uint32_t)(&_estack) ) ;
-//    __DSB();
-//    __ISB();
+    //    __DSB();
+    //    __ISB();
+    //    __set_MSP( (uint32_t)(&_estack) ) ;
+    //    __DSB();
+    //    __ISB();
 
 
 #ifdef ENABLE_TCM
 #warning Enabling TCM!
     // Enable ICache and DCache, since we are controlling where RAM goes
-//    SCB_EnableICache();
-//    SCB_EnableDCache();
-//
+//     SCB_EnableICache();
+//     SCB_EnableDCache();
 
     // Check TCM is enabled, if not, set it and reset
+    __DSB();
+    __ISB();
     EFC->EEFC_FCR = (EEFC_FCR_FKEY_PASSWD | EEFC_FCR_FCMD_GGPB);
+    __DSB();
+    __ISB();
     uint32_t gpnvm = EFC->EEFC_FRR;
+    __DSB();
+    __ISB();
 
     if ((gpnvm & (0b11 << 7)) != (0b10 << 7)) {
         // Configure TCM sizes to : 128 kB ITCM - 128 kB DTCM
@@ -330,9 +335,12 @@ void Reset_Handler(void)
         // wait for it to apply
         while ((EFC->EEFC_FSR & EEFC_FSR_FRDY) == 0);
 
+        // we can't reset while still resetting
+        while (RSTC->RSTC_SR & RSTC_SR_SRCMP) { ; }
+
         // reset
         RSTC->RSTC_CR = RSTC_CR_KEY_PASSWD | RSTC_CR_PROCRST; // reset everything
-//        while (1);
+       while (1);
     }
 
     // Enable ITCM and DTCM
@@ -386,7 +394,11 @@ void Reset_Handler(void)
 
         /* Set the vector table base address */
         pSrc = (uint32_t *) & _sfixed;
+    __DSB();
+    __ISB();
         SCB->VTOR = ((uint32_t) pSrc & SCB_VTOR_TBLOFF_Msk);
+    __DSB();
+    __ISB();
 
 
 

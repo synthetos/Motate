@@ -49,26 +49,19 @@ namespace Motate::UART_internal {
     // This is for the Sam4e
     #define HAS_UART0
 
-    // We have to strip the address off in static context, outsie a structure declaration
-    static const std::intptr_t _UART0_address {(std::intptr_t)(UART0)};
-    #ifdef PDC_UART0
-        static const std::intptr_t _PDC_UART0_address {(std::intptr_t)(PDC_UART0)};
-    #endif
-
     template<>
     struct UARTInfo<0>
     {
         static constexpr bool exists = true;
-        using type = decltype(UART0);
-        static const intptr_t address = (intptr_t)_UART0_address;
 
-        static constexpr RegisterPtr<type> uart { address };
+        static constexpr RegisterPtr<SEPARATE_OFF_CAST(UART0)> uart { };
+
         static constexpr uint32_t peripheralId = ID_UART0;
         static constexpr IRQn_Type IRQ = UART0_IRQn;
 
         #ifdef PDC_UART0
         static constexpr bool has_pdc = true;
-        static constexpr RegisterPtr<Pdc *> pdc { _PDC_UART0_address };
+        static constexpr RegisterPtr<SEPARATE_OFF_CAST(PDC_UART0)> pdc { };
         #endif  // PDC_UART0
     }; // UARTInfo <0>
     #undef UART0
@@ -79,27 +72,19 @@ namespace Motate::UART_internal {
     #ifdef UART
     // This is for the Sam3x
 
-    // We have to strip the address off in static context, outsie a structure declaration
-    // NOTE: We homogenize, and move the names UART -> UART0
-    static const std::intptr_t _UART0_address {(std::intptr_t)(UART)};
-    #ifdef PDC_UART
-        static const std::intptr_t _PDC_UART0_address {(std::intptr_t)(PDC_UART)};
-    #endif
-
     template<>
     struct UARTInfo<0>
     {
         static constexpr bool exists = true;
-        using type = decltype(UART);
-        static const intptr_t address = (intptr_t)_UART0_address;
 
-        static constexpr RegisterPtr<type> uart { address };
+        static constexpr RegisterPtr<SEPARATE_OFF_CAST(UART)> uart { };
+
         static constexpr uint32_t peripheralId = ID_UART;
         static constexpr IRQn_Type IRQ = UART_IRQn;
 
         #ifdef PDC_UART0
         static constexpr bool has_pdc = true;
-        static constexpr RegisterPtr<Pdc *> pdc { _PDC_UART0_address };
+        static constexpr RegisterPtr<SEPARATE_OFF_CAST(PDC_UART)> pdc { };
         #endif  // PDC_UART0
     }; // UARTInfo <0>
     #undef UART
@@ -110,27 +95,20 @@ namespace Motate::UART_internal {
     #endif  // ifdef UART0 (else)
 
     #ifdef UART1
-    // We have to strip the address off in static context, outsie a structure declaration
-    static const std::intptr_t _UART1_address {(std::intptr_t)(UART1)};
-    #ifdef PDC_UART1
-        static const std::intptr_t _PDC_UART1_address {(std::intptr_t)(PDC_UART1)};
-    #endif
-
     template<>
     struct UARTInfo<1>
     {
         static constexpr bool exists = true;
-        using type = decltype(UART1);
-        static const intptr_t address = (intptr_t)_UART1_address;
 
-        static constexpr RegisterPtr<type> uart { address };
+        static constexpr RegisterPtr<SEPARATE_OFF_CAST(UART1)> uart { };
+
         static constexpr uint32_t peripheralId = ID_UART1;
         static constexpr IRQn_Type IRQ = UART1_IRQn;
 
         #ifdef PDC_UART1
         static constexpr bool has_pdc = true;
-        static constexpr RegisterPtr<Pdc *> pdc { _PDC_UART1_address };
-        #endif  // PDC_UART0
+        static constexpr RegisterPtr<SEPARATE_OFF_CAST(PDC_UART1)> pdc { };
+        #endif  // PDC_UART1
     }; // UARTInfo <1>
     #undef UART1
     #undef ID_UART1
@@ -138,26 +116,19 @@ namespace Motate::UART_internal {
     #endif // UART1
 
     #ifdef UART2
-    // We have to strip the address off in static context, outsie a structure declaration
-    static const std::intptr_t _UART2_address {(std::intptr_t)(UART2)};
-    #ifdef PDC_UART2
-        static const std::intptr_t _PDC_UART2_address {(std::intptr_t)(PDC_UART2)};
-    #endif
-
     template<>
     struct UARTInfo<2>
     {
         static constexpr bool exists = true;
-        using type = decltype(UART2);
-        static const intptr_t address = (intptr_t)_UART2_address;
 
-        static constexpr RegisterPtr<type> uart { address };
+        static constexpr RegisterPtr<SEPARATE_OFF_CAST(UART2)> uart { };
+
         static constexpr uint32_t peripheralId = ID_UART2;
         static constexpr IRQn_Type IRQ = UART2_IRQn;
 
         #ifdef PDC_UART2
         static constexpr bool has_pdc = true;
-        static constexpr RegisterPtr<Pdc *> pdc { _PDC_UART2_address };
+        static constexpr RegisterPtr<SEPARATE_OFF_CAST(PDC_UART2)> pdc { };
         #endif  // PDC_UART2
     }; // UARTInfo <2>
     #undef UART2
@@ -166,26 +137,19 @@ namespace Motate::UART_internal {
     #endif // UART2
 
     #ifdef UART3
-    // We have to strip the address off in static context, outsie a structure declaration
-    static const std::intptr_t _UART3_address {(std::intptr_t)(UART3)};
-    #ifdef PDC_UART3
-        static const std::intptr_t _PDC_UART3_address {(std::intptr_t)(PDC_UART3)};
-    #endif
-
     template<>
     struct UARTInfo<3>
     {
         static constexpr bool exists = true;
-        using type = decltype(UART3);
-        static const intptr_t address = (intptr_t)_UART3_address;
 
-        static constexpr RegisterPtr<type> uart { address };
+        static constexpr RegisterPtr<SEPARATE_OFF_CAST(UART3)> uart { };
+
         static constexpr uint32_t peripheralId = ID_UART3;
         static constexpr IRQn_Type IRQ = UART3_IRQn;
 
         #ifdef PDC_UART3
         static constexpr bool has_pdc = true;
-        static constexpr RegisterPtr<Pdc *> pdc { _PDC_UART3_address };
+        static constexpr RegisterPtr<SEPARATE_OFF_CAST(PDC_UART3)> pdc { };
         #endif  // PDC_UART3
     }; // UARTInfo <3>
     #undef UART3
@@ -194,26 +158,19 @@ namespace Motate::UART_internal {
     #endif // UART3
 
     #ifdef UART4
-    // We have to strip the address off in static context, outsie a structure declaration
-    static const std::intptr_t _UART4_address {(std::intptr_t)(UART4)};
-    #ifdef PDC_UART4
-        static const std::intptr_t _PDC_UART4_address {(std::intptr_t)(PDC_UART4)};
-    #endif
-
     template<>
     struct UARTInfo<4>
     {
         static constexpr bool exists = true;
-        using type = decltype(UART4);
-        static const intptr_t address = (intptr_t)_UART4_address;
 
-        static constexpr RegisterPtr<type> uart { address };
+        static constexpr RegisterPtr<SEPARATE_OFF_CAST(UART4)> uart { };
+
         static constexpr uint32_t peripheralId = ID_UART4;
         static constexpr IRQn_Type IRQ = UART4_IRQn;
 
         #ifdef PDC_UART4
         static constexpr bool has_pdc = true;
-        static constexpr RegisterPtr<Pdc *> pdc { _PDC_UART4_address };
+        static constexpr RegisterPtr<SEPARATE_OFF_CAST(PDC_UART4)> pdc { };
         #endif  // PDC_UART4
     }; // UARTInfo <4>
     #undef UART4
@@ -241,26 +198,19 @@ namespace Motate::UART_internal {
 
 
     #ifdef USART0
-    // We have to strip the address off in static context, outsie a structure declaration
-    static const std::intptr_t _USART0_address {(std::intptr_t)(USART0)};
-    #ifdef PDC_USART0
-        static const std::intptr_t _PDC_USART0_address {(std::intptr_t)(PDC_USART0)};
-    #endif
-
     template<>
     struct USARTInfo<0>
     {
         static constexpr bool exists = true;
-        using type = decltype(USART0);
-        static const intptr_t address = (intptr_t)_USART0_address;
 
-        static constexpr RegisterPtr<type> usart { address };
+        static constexpr RegisterPtr<SEPARATE_OFF_CAST(USART0)> usart { };
+
         static constexpr uint32_t peripheralId = ID_USART0;
         static constexpr IRQn_Type IRQ = USART0_IRQn;
 
         #ifdef PDC_USART0
         static constexpr bool has_pdc = true;
-        static constexpr RegisterPtr<Pdc *> pdc { _PDC_USART0_address };
+        static constexpr RegisterPtr<SEPARATE_OFF_CAST(PDC_USART0)> pdc { };
         #endif  // PDC_USART0
     }; // USARTInfo <0>
     #undef USART0
@@ -270,26 +220,20 @@ namespace Motate::UART_internal {
 
 
     #ifdef USART1
-    // We have to strip the address off in static context, outsie a structure declaration
-    static const std::intptr_t _USART1_address {(std::intptr_t)(USART1)};
-    #ifdef PDC_USART1
-        static const std::intptr_t _PDC_USART1_address {(std::intptr_t)(PDC_USART1)};
-    #endif
 
     template<>
     struct USARTInfo<1>
     {
         static constexpr bool exists = true;
-        using type = decltype(USART1);
-        static const intptr_t address = (intptr_t)_USART1_address;
 
-        static constexpr RegisterPtr<type> usart { address };
+        static constexpr RegisterPtr<SEPARATE_OFF_CAST(USART1)> usart { };
+
         static constexpr uint32_t peripheralId = ID_USART1;
         static constexpr IRQn_Type IRQ = USART1_IRQn;
 
         #ifdef PDC_USART1
         static constexpr bool has_pdc = true;
-        static constexpr RegisterPtr<Pdc *> pdc { _PDC_USART1_address };
+        static constexpr RegisterPtr<SEPARATE_OFF_CAST(PDC_USART1)> pdc { };
         #endif  // PDC_USART1
     }; // USARTInfo <1>
     #undef USART1
@@ -298,40 +242,23 @@ namespace Motate::UART_internal {
     #endif  // ifdef USART1
 
     #ifdef USART2
-    // We have to strip the address off in static context, outsie a structure declaration
-    static const std::intptr_t _USART2_address {(std::intptr_t)(USART2)};
-    #ifdef PDC_USART2
-        static const std::intptr_t _PDC_USART2_address {(std::intptr_t)(PDC_USART2)};
-    #endif
-
     template<>
     struct USARTInfo<2>
     {
         static constexpr bool exists = true;
-        using type = decltype(USART2);
-        static const intptr_t address = (intptr_t)_USART2_address;
 
-        static constexpr RegisterPtr<type> usart { address };
+        static constexpr RegisterPtr<SEPARATE_OFF_CAST(USART2)> usart { };
+
         static constexpr uint32_t peripheralId = ID_USART2;
         static constexpr IRQn_Type IRQ = USART2_IRQn;
 
         #ifdef PDC_USART2
         static constexpr bool has_pdc = true;
-        static constexpr RegisterPtr<Pdc *> pdc { _PDC_USART2_address };
+        static constexpr RegisterPtr<SEPARATE_OFF_CAST(PDC_USART2)> pdc { };
         #endif  // PDC_USART2
     }; // USARTInfo <2>
     #undef USART2
     #undef ID_USART2
     #undef PDC_USART2
     #endif // USART2
-
-    static constexpr Usart * const usart(const uint8_t usartPeripheralNumber)
-    {
-        switch (usartPeripheralNumber) {
-            case (0): return USARTInfo<0>::usart;
-            case (1): return USARTInfo<1>::usart;
-            case (2): return USARTInfo<2>::usart;
-        };
-        return nullptr;
-    };
 } // namespace Motate::UART_internal

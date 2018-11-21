@@ -41,7 +41,9 @@ extern "C" void XDMAC_Handler(void)
     uint32_t imr = XDMAC->XDMAC_GIM;
     while (current != nullptr) {
         if ((imr & current->channel_mask) && (isr & current->channel_mask)) {
-            current->interrupt_handler();
+            // if (current->interrupt_handler) {
+                current->interrupt_handler();
+            // }
         }
         current = current->next;
     }

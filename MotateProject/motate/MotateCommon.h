@@ -36,52 +36,120 @@
 
 namespace Motate {
     struct Interrupt {
-        static constexpr uint16_t Off              = 0;
+        using Type                    = uint16_t;
+        static constexpr Type Off = 0;
         /* Alias for "off" to make more sense
          when returned from setInterruptPending(). */
-        static constexpr uint16_t Unknown           = 0;
+        static constexpr Type Unknown = 0;
 
-        static constexpr uint16_t OnTxReady         = 1<<1;
-        static constexpr uint16_t OnTransmitReady   = 1<<1;
-        static constexpr uint16_t OnTxDone          = 1<<1;
-        static constexpr uint16_t OnTransmitDone    = 1<<1;
+        // TxRead means more data *can* be sent
+        static constexpr Type OnTxReady       = 1 << 1;
+        static constexpr Type OnTransmitReady = 1 << 1;
+        // TxDone means all data requested to be sent has been
+        static constexpr Type OnTxDone       = 1 << 2;
+        static constexpr Type OnTransmitDone = 1 << 2;
+        // TxError means a miscellaneous tx error
+        static constexpr Type OnTxError       = 1 << 3;
+        static constexpr Type OnTransmitError = 1 << 3;
 
-        static constexpr uint16_t OnRxReady         = 1<<2;
-        static constexpr uint16_t OnReceiveReady    = 1<<2;
-        static constexpr uint16_t OnRxDone          = 1<<2;
-        static constexpr uint16_t OnReceiveDone     = 1<<2;
+        static constexpr Type OnRxReady      = 1 << 4;
+        static constexpr Type OnReceiveReady = 1 << 4;
+        static constexpr Type OnRxDone       = 1 << 5;
+        static constexpr Type OnReceiveDone  = 1 << 5;
 
-        static constexpr uint16_t OnTxTransferDone  = 1<<3;
-        static constexpr uint16_t OnRxTransferDone  = 1<<4;
+        static constexpr Type OnRxError      = 1 << 6;
+        static constexpr Type OnReceiveError = 1 << 6;
+
+        static constexpr Type OnTxTransferDone = 1 << 7;
+        static constexpr Type OnRxTransferDone = 1 << 8;
+
+        // Leave bits 9-10 for use in child classes
 
         /* Set priority levels here as well: */
-        static constexpr uint16_t PriorityHighest   = 1<<5;
-        static constexpr uint16_t PriorityHigh      = 1<<6;
-        static constexpr uint16_t PriorityMedium    = 1<<7;
-        static constexpr uint16_t PriorityLow       = 1<<8;
-        static constexpr uint16_t PriorityLowest    = 1<<9;
+        static constexpr Type PriorityHighest = 1 << 11;
+        static constexpr Type PriorityHigh    = 1 << 12;
+        static constexpr Type PriorityMedium  = 1 << 13;
+        static constexpr Type PriorityLow     = 1 << 14;
+        static constexpr Type PriorityLowest  = 1 << 15;
+    };
+
+    class InterruptCause {
+        protected:
+
+        Interrupt::Type value_;
+
+        public:
+         InterruptCause(const Interrupt::Type& c = 0) : value_{c} { ; }
+
+         void clear() { value_ = 0; }
+
+         bool isEmpty() const { return 0 == value_; }
+
+         bool isTxReady() const { return value_ & Interrupt::OnTxReady; }
+         void setTxReady() { value_ |= Interrupt::OnTxReady; }
+         void clearTxReady() { value_ &= ~Interrupt::OnTxReady; }
+
+         bool isTxDone() const { return value_ & Interrupt::OnTxDone; }
+         void setTxDone() { value_ |= Interrupt::OnTxDone; }
+         void clearTxDone() { value_ &= ~Interrupt::OnTxDone; }
+
+         bool isTxError() const { return value_ & Interrupt::OnTxError; }
+         void setTxError() { value_ |= Interrupt::OnTxError; }
+         void clearTxError() { value_ &= ~Interrupt::OnTxError; }
+
+         bool isRxReady() const { return value_ & Interrupt::OnRxReady; }
+         void setRxReady() { value_ |= Interrupt::OnRxReady; }
+         void clearRxReady() { value_ &= ~Interrupt::OnRxReady; }
+
+         bool isRxError() const { return value_ & Interrupt::OnRxError; }
+         void setRxError() { value_ |= Interrupt::OnRxError; }
+         void clearRxError() { value_ &= ~Interrupt::OnRxError; }
+
+         bool isTxTransferDone() const { return value_ & Interrupt::OnTxTransferDone; }
+         void setTxTransferDone() { value_ |= Interrupt::OnTxTransferDone; }
+         void clearTxTransferDone() { value_ &= ~Interrupt::OnTxTransferDone; }
+
+         bool isRxTransferDone() const { return value_ & Interrupt::OnRxTransferDone; }
+         void setRxTransferDone() { value_ |= Interrupt::OnRxTransferDone; }
+         void clearRxTransferDone() { value_ &= ~Interrupt::OnRxTransferDone; }
     };
 
 
     // The problem, in a nutshell:
-    // 1) We have a define that looks like:
+    // * We have a define that looks like:
     //   #define UART       ((Uart   *)0x400E0800U)
-    // 2) We want a constexpr varuable of that value
-    // 3) The C-style cast becomes a reintepret_cast<>, which is not allowed
+    // * We want a constexpr variable of that value
+    // * The C-style cast becomes a reintepret_cast<>, which is not allowed in a constexpr variable
     //    (see https://en.cppreference.com/w/cpp/language/constant_expression#Converted_constant_expression)
-    // 4)
+    // * We can cast in a constexpr function, however
+    // 1) We need to strip the cast off, so that we can make a std::intptr_t variable of just the address
+    // 2) Then we store that in an object that has a constexpr function operator overload for that type
+    // 3) We can then store that object in a constexpr variable
 
-    template<class T>
+    // Use STRIP_OFF_CAST(x) where x is a define that looks like ((Xxx *)0xDEADBEEFU)
+    // The path looks like this:
+    // #define BEEF0 ((Xxx *)0xDEADBEEFU)
+    // constexpr std::intptr_t Beef0_addr = STRIP_OFF_CAST(BEEF0);
+    // becomes: constexpr std::intptr_t Beef0_addr = _STRIP_LEVEL_I((Xxx *)0xDEADBEEFU);
+    // becomes: constexpr std::intptr_t Beef0_addr = _STRIP_CAST_OFF(Xxx *)0xDEADBEEFU;
+    // becomes: constexpr std::intptr_t Beef0_addr = 0xDEADBEEFU;
+    #define _STRIP_CAST_OFF(x)
+    #define _STRIP_LEVEL_I(x) _STRIP_CAST_OFF x
+    #define STRIP_OFF_CAST(x) _STRIP_LEVEL_I x
+
+    // Now if we want the output to be the type, a comma, then the value, we use:
+    // constexpr RegisterPtr<SEPARATE_OFF_CAST(BEEF0)> Beef0_reg;
+    // becomes: constexpr RegisterPtr<Xxx *, 0xDEADBEEFU> Beef0_reg;
+    #define _SEPARATE_CAST_OFF(x) x ,
+    #define _SEPARATE_LEVEL_I(x) _SEPARATE_CAST_OFF x
+    #define SEPARATE_OFF_CAST(x) _SEPARATE_LEVEL_I x
+
+    template<class T, std::intptr_t val>
     struct RegisterPtr {
-        const std::intptr_t val;
-        constexpr RegisterPtr(const std::intptr_t i) : val{i} {};
-        constexpr T const value() { return reinterpret_cast<T>(val); }
+        constexpr T const value() const { return reinterpret_cast<T>(val); }
         constexpr T const operator->() const { return reinterpret_cast<T>(val); }
         constexpr operator T const() const { return reinterpret_cast<T>(val); }
     };
-
-    template<class T>
-    constexpr RegisterPtr<T> makeRegisterPtr(const T i) { return {reinterpret_cast<std::intptr_t> (i)}; };
 
 } // namespace Motate
 

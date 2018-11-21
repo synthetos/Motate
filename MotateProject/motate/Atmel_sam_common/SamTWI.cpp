@@ -28,33 +28,33 @@
 
  */
 
-// #include "MotateTWI.h"
+#include "MotateTWI.h"
 
-// namespace Motate {
-//     template<> std::function<void()> _SPIHardware<0>::_spiInterruptHandlerJumper {};
-// #if defined(HAS_SPI1)
-//     template<> std::function<void()> _SPIHardware<1>::_spiInterruptHandlerJumper {};
-// #endif // HAS_SPI1
-// }
+namespace Motate {
+    template<> std::function<void()> _TWIHardware<0u>::_twiInterruptHandlerJumper {};
+    #ifdef HAS_TWIHS1
+    template<> std::function<void()> _TWIHardware<1u>::_twiInterruptHandlerJumper {};
+    #endif
+}
 
-// extern "C" void SPI0_Handler(void)  {
-//     if (Motate::_SPIHardware<0u>::_spiInterruptHandlerJumper) {
-//         Motate::_SPIHardware<0u>::_spiInterruptHandlerJumper();
-//         return;
-//     }
-// #if IN_DEBUGGER == 1
-//     __asm__("BKPT");
-// #endif
-// }
+extern "C" void TWIHS0_Handler(void)  {
+    if (Motate::_TWIHardware<0u>::_twiInterruptHandlerJumper) {
+        Motate::_TWIHardware<0u>::_twiInterruptHandlerJumper();
+        return;
+    }
+#if IN_DEBUGGER == 1
+    __asm__("BKPT");
+#endif
+}
 
-// #if defined(HAS_SPI1)
-// extern "C" void SPI1_Handler(void)  {
-//     if (Motate::_SPIHardware<1u>::_spiInterruptHandlerJumper) {
-//         Motate::_SPIHardware<1u>::_spiInterruptHandlerJumper();
-//         return;
-//     }
-// #if IN_DEBUGGER == 1
-//     __asm__("BKPT");
-// #endif
-// }
-// #endif // HAS_SPI1
+#ifdef HAS_TWIHS1
+extern "C" void TWIHS1_Handler(void)  {
+    if (Motate::_TWIHardware<1u>::_twiInterruptHandlerJumper) {
+        Motate::_TWIHardware<1u>::_twiInterruptHandlerJumper();
+        return;
+    }
+#if IN_DEBUGGER == 1
+    __asm__("BKPT");
+#endif
+}
+#endif

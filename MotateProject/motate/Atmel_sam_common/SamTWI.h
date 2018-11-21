@@ -35,342 +35,183 @@
 
 #include "MotatePins.h"
 #include "SamCommon.h"
-#include "SamDMA.h"
 #include <type_traits>
+
+#include "SamTWIInternal.h"
+#include "SamTWIDMA.h"
+
+//NOTE: Currently only supporting master mode!!
 
 namespace Motate {
 
-    template<int8_t spiPeripheralNumber>
-    struct _TWIHardware
+    template<int8_t twiPeripheralNumber>
+    struct _TWIHardware : public Motate::TWI_internal::TWIInfo<twiPeripheralNumber>
     {
-#if !defined(HAS_SPI1)
-        static_assert(spiPeripheralNumber == 0,
-                      "Only _TWIHardware<0> is valid on this processor.");
-        static constexpr uint32_t peripheralId() {
-            return ID_SPI0;
-        };
-        static constexpr IRQn_Type spiIRQ() {
-            return SPI0_IRQn;
-        };
-#else
-        static_assert((spiPeripheralNumber == 0) || (spiPeripheralNumber == 1),
-                      "Only _TWIHardware<0> or _TWIHardware<1> is valid on this processor.");
+        using this_type_t = _TWIHardware<twiPeripheralNumber>;
+        using info = Motate::TWI_internal::TWIInfo<twiPeripheralNumber>;
+        static constexpr auto twiPeripheralNum = twiPeripheralNumber;
 
-        constexpr uint32_t peripheralId() {
-            return (spiPeripheralNumber == 0) ? ID_SPI0 : ID_SPI1;
-        };
-        constexpr IRQn_Type spiIRQ() {
-            return (spiPeripheralNumber == 0) ? SPI0_IRQn : SPI1_IRQn;
-        };
-#endif
+        static_assert(info::exists,
+                "Using an unsupported TWI peripheral for this processor.");
 
-        constexpr Spi * const spi() {
-            return Motate::spi(spiPeripheralNumber);
-        };
-        const uint8_t spiPeripheralNum = spiPeripheralNumber;
+        using info::twi;
+        using info::peripheralId;
+        using info::IRQ;
 
-        typedef _TWIHardware<spiPeripheralNumber> this_type_t;
+        std::function<void(const TWIInterruptCause&)> _TWIInterruptHandler;
 
-        std::function<void(uint16_t)> _TWIInterruptHandler;
+        std::function<void(Interrupt::Type)> _TWIDMAInterruptHandler;
+        static std::function<void(void)> _twiInterruptHandlerJumper;
 
-#ifndef CAN_SPI_PDC_DMA
-        DMA<Spi *, spiPeripheralNumber> dma_ {_TWIInterruptHandler};
-        constexpr const DMA<Spi *, spiPeripheralNumber> *dma() { return &dma_; };
-#endif
+        DMA<TWI_tag, twiPeripheralNumber> dma{_TWIDMAInterruptHandler};
 
-        static std::function<void()> _TWIInterruptHandlerJumper;
-        _TWIHardware() {
-            SamCommon::enablePeripheralClock(peripheralId());
+        _TWIHardware() : _TWIDMAInterruptHandler{[&](Interrupt::Type hint){ this->handleInterrupts(hint); }} {
+            _twiInterruptHandlerJumper = [&]() { this->handleInterrupts(); };
+            SamCommon::enablePeripheralClock(peripheralId);
 
-            // Softare reset of SPI module
-            spi()->SPI_CR = SPI_CR_SWRST;
+            // read the status register (Microchip says so)
+            twi->TWIHS_SR;
+
+            // Softare reset of TWI module
+            twi->TWIHS_CR = TWIHS_CR_SWRST;
+
             disable();
-        };
+        }
 
         void init() {
-//            static bool inited = false;
-//            if (inited)
-//                return;
-//            inited = true;
+            dma.reset();
 
-            // Set last transfer
-            spi()->SPI_CR = SPI_CR_LASTXFER;
+            // enable();
 
-            // Set Mode Register to Master mode
-            spi()->SPI_MR |= SPI_MR_MSTR;
+            setSpeed(); // use default fast I2C
 
-            // Mode Fault Detection Disabled
-            spi()->SPI_MR |= SPI_MR_MODFDIS;
+            // always have IRQs enabled for TWI, lowest priority
+            setInterrupts(TWIInterrupt::PriorityLowest);
+        }
 
-            // Ensure Fixed Peripheral Select
-            spi()->SPI_MR &= (~SPI_MR_PS);
+        void handleInterrupts(Interrupt::Type hint = 0) {
+            auto interruptCause = getInterruptCause(hint);
 
-            // Disable all interrupts
-            spi()->SPI_IDR = 0x7FF;
+            // note that interruptCause may change in prehandleInterrupt!
+            prehandleInterrupt(interruptCause);
+            // if we ended up handling them, we're done here
+            if (interruptCause.isEmpty()) { return; }
 
-            // setup interrupt handlers BEFORE setting up DMA, in case it causes an interrupt
-            _TWIInterruptHandlerJumper = [&]() {
-                if (_TWIInterruptHandler) {
-                    _TWIInterruptHandler(getInterruptCause());
-                } else {
-#if IN_DEBUGGER == 1
-                    __asm__("BKPT");
-#endif
-                }
-            };
-
-#ifdef CAN_SPI_PDC_DMA
-            // Reset the PDC
-            spi()->SPI_PTCR = SPI_PTCR_RXTDIS | SPI_PTCR_TXTDIS;
-            spi()->SPI_RPR = 0;
-            spi()->SPI_RCR = 0;
-            spi()->SPI_TPR = 0;
-            spi()->SPI_TCR = 0;
-            spi()->SPI_RNPR = 0;
-            spi()->SPI_RNCR = 0;
-            spi()->SPI_TNPR = 0;
-            spi()->SPI_TNCR = 0;
-#else
-            dma()->reset();
-#endif
-        };
-
-        // This is to be called by the device, once it detects a "decoded" CS pin
-        void setUsingCSDecoder(bool decoder) {
-            if (decoder) {
-                spi()->SPI_MR |= SPI_MR_PCSDEC;
+            if (_TWIInterruptHandler) {
+                _TWIInterruptHandler(interruptCause);
             } else {
-                spi()->SPI_MR &= ~SPI_MR_PCSDEC;
+                #if IN_DEBUGGER == 1
+                __asm__("BKPT");
+                #endif
             }
         }
 
         void enable() {
-            spi()->SPI_CR = SPI_CR_SPIEN ;
-        };
-
-        void disable() {
-            spi()->SPI_CR = SPI_CR_SPIDIS;
-        };
-
-        void deassert() {
-            disable();
+            twi->TWIHS_CR = TWIHS_CR_MSEN;
         }
 
-        bool setChannel(const uint8_t channel) {
-            // if we are transmitting, we cannot switch
-            while (!(spi()->SPI_SR & SPI_SR_TXEMPTY)) {
-                ;
+        void disable() {
+            twi->TWIHS_CR = TWIHS_CR_SVDIS;
+            twi->TWIHS_CR = TWIHS_CR_MSDIS;
+        }
+
+        bool setAddress(const TWIAddress& address, const TWIInternalAddress& internal_address) {
+            // check for transmitting?
+
+            uint8_t  adjusted_address = 0;
+            uint32_t adjusted_internal_address = 0;
+            uint8_t  adjusted_internal_address_size = 0;
+
+            if (TWIDeviceAddressSize::k10Bit == address.size) {
+                if (internal_address.size > TWIInternalAddressSize::k2Bytes) {
+                    return false; // we only support 3 total bytes of internal address
+                }
+                // top two bits (xx) of the 10-bit address ORd with special code 0b011110xx go into the device address
+                adjusted_address = 0b01111000 | ((address.address >> 8) & 0b11);
+                adjusted_internal_address = (address.address & 0xFF) | ((internal_address.address & 0xFFFF) << 8);
+                adjusted_internal_address_size = (uint8_t)internal_address.size + 1;
+            } else {
+                // 7 bit address
+                adjusted_address = 0x7F & address.address;
+                adjusted_internal_address = (internal_address.address & 0xFFFFFF);
+                adjusted_internal_address_size = (uint8_t)internal_address.size;
             }
 
-            spi()->SPI_MR = (spi()->SPI_MR & ~SPI_MR_PCS_Msk) | SPI_MR_PCS(channel);
+            twi->TWIHS_MMR = TWIHS_MMR_DADR(adjusted_address) | TWIHS_MMR_IADRSZ(adjusted_internal_address_size);
+            twi->TWIHS_IADR = TWIHS_IADR_IADR(adjusted_internal_address);
 
             enable();
             return true;
         }
 
-        void setChannelOptions(const uint8_t channel, const uint32_t baud, const uint16_t options, uint32_t min_between_cs_delay_ns, uint32_t cs_to_sck_delay_ns, uint32_t between_word_delay_ns) {
-            // We derive the baud from the master clock with a divider.
-            // We want the closest match *below* the value asked for. It's safer to bee too slow.
-            uint32_t new_otions = 0;
-            uint32_t old_options = spi()->SPI_CSR[channel];
+        /* Low level time limit of I2C Fast Mode. */
+        static constexpr uint32_t LOW_LEVEL_TIME_LIMIT   = 384000;
+        static constexpr uint32_t I2C_FAST_MODE_SPEED    = 400000;
+        static constexpr uint32_t TWIHS_CLK_DIVIDER      = 2;
+        static constexpr uint32_t TWIHS_CLK_CALC_ARGU    = 3;
+        static constexpr uint32_t TWIHS_CLK_DIV_MAX      = 0xFF;
+        static constexpr uint32_t TWIHS_CLK_DIV_MIN      = 7;
 
-            uint32_t divider = SamCommon::getPeripheralClockFreq() / baud;
-            if (divider > 255) {
-                divider = 255;
-            } else if (divider < 1) {
-                divider = 1;
+        void setSpeed(const uint32_t speed = I2C_FAST_MODE_SPEED) {
+            uint32_t ckdiv = 0;
+            uint32_t c_lh_div;
+            uint32_t cldiv, chdiv;
+            auto periph_clock = SamCommon::getPeripheralClockFreq();
+
+            /* High-Speed can be only used in slave mode, 400k is the max speed allowed for master */
+            if (speed > I2C_FAST_MODE_SPEED) {
+                return;//FAIL;
             }
 
-            uint32_t old_divider = (old_options & SPI_CSR_SCBR_Msk) >> SPI_CSR_SCBR_Pos;
-            divider = std::max(old_divider, divider); // this gives the slowest rate of the old or new setting
-            new_otions |= SPI_CSR_SCBR(divider);
+            /* Low level time not less than 1.3us of I2C Fast Mode. */
+            if (speed > LOW_LEVEL_TIME_LIMIT) {
+                /* Low level of time fixed for 1.3us. */
+                cldiv = periph_clock / (LOW_LEVEL_TIME_LIMIT * TWIHS_CLK_DIVIDER) - TWIHS_CLK_CALC_ARGU;
+                chdiv = periph_clock / ((speed + (speed - LOW_LEVEL_TIME_LIMIT)) * TWIHS_CLK_DIVIDER) - TWIHS_CLK_CALC_ARGU;
 
-            // We can't really mix these ... they must already be compatible
-            // But if we are using a debugger we can throw a wrench in and catch it
-#if IN_DEBUGGER == 1
-            uint32_t old_polarity = (old_options & SPI_CSR_CPOL);
-            if ((old_divider != 0) && (!!(options & kSPIPolarityReversed) != !!old_polarity)) {
-                __asm__("BKPT"); // two SPI devices sharing config have different polarity!
-            }
-#endif
-            if (options & kSPIPolarityReversed) {
-                new_otions |= SPI_CSR_CPOL;
-            }
-
-            // We can't really mix these ... they must already be compatible
-            // But if we are using a debugger we can throw a wrench in and catch it
-#if IN_DEBUGGER == 1
-            uint32_t old_phase = (old_options & SPI_CSR_NCPHA);
-            if ((old_divider != 0) && (!!(options & kSPIClockPhaseReversed) != !!old_phase)) {
-                __asm__("BKPT"); // two SPI devices sharing config have different phases!
-            }
-#endif
-            if (options & kSPIClockPhaseReversed) {
-                new_otions |= SPI_CSR_NCPHA;
-            }
-
-            switch (options & kSPIBitsMask) {
-                case kSPI9Bit:
-                    new_otions |= SPI_CSR_BITS_9_BIT;
-                    break;
-                case kSPI10Bit:
-                    new_otions |= SPI_CSR_BITS_10_BIT;
-                    break;
-                case kSPI11Bit:
-                    new_otions |= SPI_CSR_BITS_11_BIT;
-                    break;
-                case kSPI12Bit:
-                    new_otions |= SPI_CSR_BITS_12_BIT;
-                    break;
-                case kSPI13Bit:
-                    new_otions |= SPI_CSR_BITS_13_BIT;
-                    break;
-                case kSPI14Bit:
-                    new_otions |= SPI_CSR_BITS_14_BIT;
-                    break;
-                case kSPI15Bit:
-                    new_otions |= SPI_CSR_BITS_15_BIT;
-                    break;
-                case kSPI16Bit:
-                    new_otions |= SPI_CSR_BITS_16_BIT;
-                    break;
-
-                case kSPI8Bit:
-                default:
-                    new_otions |= SPI_CSR_BITS_8_BIT;
-                    break;
-            }
-
-#if IN_DEBUGGER == 1
-            uint32_t old_bits = (old_options & SPI_CSR_BITS_Msk);
-            if ((old_divider != 0) && ((options & SPI_CSR_BITS_Msk) != old_bits)) {
-                __asm__("BKPT"); // two SPI devices have different bit-lengths!
-            }
-#endif
-
-            // min_between_cs_delay_ns = DLYBCS
-            // cs_to_sck_delay_ns = DLYBS
-            // between_word_delay_ns = DLYBCT
-
-            // these are in mupliples of MCLK (master clock, a.k.a. SystemCoreClock)
-            // we want to round up, not down, so we divide by 100,000,000 instead of
-            // 1,000,000,000, then add 5 and then further divide by 10.
-
-            uint32_t dlybcs = (((min_between_cs_delay_ns*SamCommon::getPeripheralClockFreq())/100000000)+5)/10;
-
-            if (dlybcs > 0xff) {
-                // Break into the debugger
-#if IN_DEBUGGER == 1
-                __asm__("BKPT"); // SPI dlybcs is too high!
-#endif
-            }
-
-            // Always use the larger delay
-            uint32_t old_dlybcs = ((spi()->SPI_MR & SPI_MR_DLYBCS_Msk) >> SPI_MR_DLYBCS_Pos);
-            if ( old_dlybcs < dlybcs ) {
-                spi()->SPI_MR = (spi()->SPI_MR & ~SPI_MR_DLYBCS_Msk) | SPI_MR_DLYBCS(dlybcs);
-            }
-
-
-            uint32_t dlybs = (((cs_to_sck_delay_ns*SamCommon::getPeripheralClockFreq())/100000000)+5)/10;
-            if (dlybs > 0xff) {
-                // Break into the debugger
-#if IN_DEBUGGER == 1
-                __asm__("BKPT"); // SPI dlybs is too high!
-#endif
-            }
-            uint32_t old_dlybs = (old_options & SPI_CSR_SCBR_Msk) >> SPI_CSR_SCBR_Pos;
-            new_otions |= SPI_CSR_DLYBS(std::max(dlybs, old_dlybs));
-
-            uint32_t dlybct = (((between_word_delay_ns*SamCommon::getPeripheralClockFreq())/100000000)+5)/10;
-            if (dlybct > 0xff) {
-                // Break into the debugger
-#if IN_DEBUGGER == 1
-                __asm__("BKPT"); // SPI dlybct is too high!
-#endif
-            }
-            uint32_t old_dlybct = (old_options & SPI_CSR_DLYBCT_Msk) >> SPI_CSR_DLYBCT_Pos;
-            new_otions |= SPI_CSR_DLYBCT(std::max(dlybct, old_dlybct));
-
-            // We'll drive CS low after we're done, so we always want this:
-            new_otions |= SPI_CSR_CSAAT;
-
-            spi()->SPI_CSR[channel] = new_otions;
-        };
-
-        /* TEMPORARILY REMOVING DIRECT READ/WRITE/TRANSFER. Can be brought back later */
-#if 0
-        static int16_t read(const bool lastXfer = false, uint8_t toSendAsNoop = 0) {
-            if (!(spi()->SPI_SR & SPI_SR_RDRF)) {
-                if (spi()->SPI_SR & SPI_SR_TXEMPTY) {
-                    spi()->SPI_TDR = toSendAsNoop;
-                    if (lastXfer) {
-                        spi()->SPI_CR = SPI_CR_LASTXFER;
-                    }
+                /* cldiv must fit in 8 bits, ckdiv must fit in 3 bits */
+                while ((cldiv > TWIHS_CLK_DIV_MAX) && (ckdiv < TWIHS_CLK_DIV_MIN)) {
+                    /* Increase clock divider */
+                    ckdiv++;
+                    /* Divide cldiv value */
+                    cldiv /= TWIHS_CLK_DIVIDER;
                 }
-                return -1;
-            }
+                /* chdiv must fit in 8 bits, ckdiv must fit in 3 bits */
+                while ((chdiv > TWIHS_CLK_DIV_MAX) && (ckdiv < TWIHS_CLK_DIV_MIN)) {
+                    /* Increase clock divider */
+                    ckdiv++;
+                    /* Divide cldiv value */
+                    chdiv /= TWIHS_CLK_DIVIDER;
+                }
 
-            return spi()->SPI_RDR;
+                /* set clock waveform generator register */
+                twi->TWIHS_CWGR =
+                        TWIHS_CWGR_CLDIV(cldiv) | TWIHS_CWGR_CHDIV(chdiv) |
+                        TWIHS_CWGR_CKDIV(ckdiv);
+            } else {
+                c_lh_div = periph_clock / (speed * TWIHS_CLK_DIVIDER) - TWIHS_CLK_CALC_ARGU;
+
+                /* cldiv must fit in 8 bits, ckdiv must fit in 3 bits */
+                while ((c_lh_div > TWIHS_CLK_DIV_MAX) && (ckdiv < TWIHS_CLK_DIV_MIN)) {
+                    /* Increase clock divider */
+                    ckdiv++;
+                    /* Divide cldiv value */
+                    c_lh_div /= TWIHS_CLK_DIVIDER;
+                }
+
+                /* set clock waveform generator register */
+                twi->TWIHS_CWGR =
+                        TWIHS_CWGR_CLDIV(c_lh_div) | TWIHS_CWGR_CHDIV(c_lh_div) |
+                        TWIHS_CWGR_CKDIV(ckdiv);
+            }
         }
 
-        static int16_t write(uint8_t value, const bool lastXfer = false) {
-            int16_t throw_away;
-            // Let's see what the optimizer does with this...
-            return write(value, throw_away, lastXfer);
-        };
-
-        static int16_t write(uint8_t value, int16_t &readValue, const bool lastXfer = false) {
-            while (!(spi()->SPI_SR & SPI_SR_TDRE)) {;}
-
-            if (spi()->SPI_SR & SPI_SR_RDRF) {
-                readValue = spi()->SPI_RDR;
-            } else {
-                readValue = -1;
-            }
-
-            if (spi()->SPI_SR & SPI_SR_TDRE) {
-
-                spi()->SPI_TDR = value;
-
-                if (lastXfer) {
-                    spi()->SPI_CR = SPI_CR_LASTXFER;
-                }
-
-                return 1;
-            }
-
-            return -1;
-        };
-
-        int16_t transmit(uint8_t channel, const uint16_t data, const bool lastXfer = false) {
-            uint32_t data_with_flags = data;
-
-            if (lastXfer)
-                data_with_flags |= SPI_TDR_LASTXFER;
-
-            // NOTE: Assumes we DON'T have an external decoder/multiplexer!
-            data_with_flags |= SPI_TDR_PCS(~(1<< channel));
-
-            while (!(spi()->SPI_SR & SPI_SR_TDRE))
-                ;
-            spi()->SPI_TDR = data_with_flags;
-
-            while (!(spi()->SPI_SR & SPI_SR_RDRF))
-                ;
-
-            uint16_t outdata = spi()->SPI_RDR;
-            return outdata;
-        };
-#endif // temporarily removed read/write/transfer
-
-
-        void setInterruptHandler(std::function<void(uint16_t)> &&handler) {
+        void setInterruptHandler(std::function<void(const TWIInterruptCause&)> &&handler) {
             _TWIInterruptHandler = std::move(handler);
         }
 
-        uint16_t getInterruptCause() {
-            uint16_t status = TWIInterrupt::Unknown;
+        TWIInterruptCause getInterruptCause(Interrupt::Type hint = 0) {
+            TWIInterruptCause status;
 
             // Notes from experience:
             // This processor will sometimes allow one of these bits to be set,
@@ -380,242 +221,370 @@ namespace Motate {
             // calls for that interrupt before considering it as a possible interrupt
             // source. This should be a best practice anyway, really. -Giseburt
 
-            auto SPI_SR_hold = spi()->SPI_SR;
-            auto SPI_IMR_hold = spi()->SPI_IMR;
+            auto TWI_SR_hold = twi->TWIHS_SR;
+            auto TWI_IMR_hold = twi->TWIHS_IMR;
 
-            if ((SPI_IMR_hold & SPI_IMR_TDRE) && (SPI_SR_hold & SPI_SR_TDRE))
+            if (TWI_SR_hold & TWIHS_SR_TXRDY)
             {
-                status |= TWIInterrupt::OnTxReady;
+                status.setTxReady();
+                if ((TWI_IMR_hold & TWIHS_IMR_TXCOMP) && (TWI_SR_hold & TWIHS_SR_TXCOMP))
+                {
+                    status.setTxDone();
+                }
             }
-            if ((SPI_IMR_hold & SPI_IMR_RDRF) && (SPI_SR_hold & SPI_SR_RDRF))
+            if (TWI_SR_hold & TWIHS_SR_RXRDY)
             {
-                status |= TWIInterrupt::OnRxReady;
+                status.setRxReady();
             }
-#ifdef CAN_SPI_PDC_DMA
-            if ((SPI_IMR_hold & SPI_IMR_TXBUFE) && (SPI_SR_hold & SPI_SR_TXBUFE))
+            if (TWI_SR_hold & TWIHS_SR_NACK)
             {
-                status |= TWIInterrupt::OnTxTransferDone;
+                status.setNACK();
             }
-            if ((SPI_IMR_hold & SPI_IMR_RXBUFF) && (SPI_SR_hold & SPI_SR_RXBUFF))
+
+
+            if ((hint & Interrupt::OnTxTransferDone))
             {
-                status |= TWIInterrupt::OnRxTransferDone;
+                status.setTxTransferDone();
             }
-#else
-            if (dma()->inTxBufferEmptyInterrupt())
+            if ((hint & Interrupt::OnRxTransferDone))
             {
-                status |= TWIInterrupt::OnTxTransferDone;
+                status.setRxTransferDone();
             }
-            if (dma()->inRxBufferFullInterrupt())
+            if ((hint & Interrupt::OnTxError))
             {
-                status |= TWIInterrupt::OnRxTransferDone;
+                status.setTxError();
             }
-#endif
+            if ((hint & Interrupt::OnRxError))
+            {
+                status.setRxError();
+            }
+
+
             return status;
         }
 
-        void setInterrupts(const uint16_t interrupts) {
+        void enableOnTXReadyInterrupt() {
+            twi->TWIHS_IER = TWIHS_IER_TXRDY;
+        }
+        void disableOnTXReadyInterrupt() {
+            twi->TWIHS_IDR = TWIHS_IDR_TXRDY;
+        }
+
+        void enableOnNACKInterrupt() {
+            twi->TWIHS_IER = TWIHS_IER_NACK;
+        }
+        void disableOnNACKInterrupt() {
+            twi->TWIHS_IDR = TWIHS_IDR_NACK;
+        }
+
+
+        void enableOnTXDoneInterrupt() {
+            twi->TWIHS_IER = TWIHS_IER_TXCOMP;
+        }
+        void disableOnTXDoneInterrupt() {
+            twi->TWIHS_IDR = TWIHS_IDR_TXCOMP;
+        }
+
+        void enableOnRXReadyInterrupt() {
+            twi->TWIHS_IER = TWIHS_IER_RXRDY;
+        }
+        void disableOnRXReadyInterrupt() {
+            twi->TWIHS_IDR = TWIHS_IDR_RXRDY;
+        }
+
+
+        void setInterrupts(const Interrupt::Type interrupts) {
             if (interrupts != TWIInterrupt::Off) {
 
                 if (interrupts & TWIInterrupt::OnTxReady) {
-                    spi()->SPI_IER = SPI_IER_TDRE;
+                    enableOnTXReadyInterrupt();
                 } else {
-                    spi()->SPI_IDR = SPI_IDR_TDRE;
+                    disableOnTXReadyInterrupt();
                 }
-                if (interrupts & TWIInterrupt::OnRxReady) {
-                    spi()->SPI_IER = SPI_IER_RDRF;
+                if (interrupts & TWIInterrupt::OnTxDone) {
+                    enableOnTXDoneInterrupt();
                 } else {
-                    spi()->SPI_IDR = SPI_IDR_RDRF;
+                    disableOnTXDoneInterrupt();
                 }
 
-#ifdef CAN_SPI_PDC_DMA
-                if (interrupts & TWIInterrupt::OnTxTransferDone) {
-                    spi()->SPI_IER = SPI_IER_TXBUFE;
+                if (interrupts & TWIInterrupt::OnNACK) {
+                    enableOnNACKInterrupt();
                 } else {
-                    spi()->SPI_IDR = SPI_IDR_TXBUFE;
+                    disableOnNACKInterrupt();
                 }
+
+                if (interrupts & TWIInterrupt::OnRxReady) {
+                    enableOnRXReadyInterrupt();
+                } else {
+                    disableOnRXReadyInterrupt();
+                }
+
                 if (interrupts & TWIInterrupt::OnRxTransferDone) {
-                    spi()->SPI_IER = SPI_IER_RXBUFF;
+                    dma.startRxDoneInterrupts();
                 } else {
-                    spi()->SPI_IDR = SPI_IDR_RXBUFF;
-                }
-#else
-                if (interrupts & TWIInterrupt::OnRxTransferDone) {
-                    dma()->startRxDoneInterrupts();
-                } else {
-                    dma()->stopRxDoneInterrupts();
+                    dma.stopRxDoneInterrupts();
                 }
                 if (interrupts & TWIInterrupt::OnTxTransferDone) {
-                    dma()->startTxDoneInterrupts();
+                    dma.startTxDoneInterrupts();
                 } else {
-                    dma()->stopTxDoneInterrupts();
+                    dma.stopTxDoneInterrupts();
                 }
-#endif
 
                 /* Set interrupt priority */
                 if (interrupts & TWIInterrupt::PriorityHighest) {
-                    NVIC_SetPriority(spiIRQ(), 0);
+                    NVIC_SetPriority(IRQ, 0);
                 }
                 else if (interrupts & TWIInterrupt::PriorityHigh) {
-                    NVIC_SetPriority(spiIRQ(), 1);
+                    NVIC_SetPriority(IRQ, 1);
                 }
                 else if (interrupts & TWIInterrupt::PriorityMedium) {
-                    NVIC_SetPriority(spiIRQ(), 2);
+                    NVIC_SetPriority(IRQ, 2);
                 }
                 else if (interrupts & TWIInterrupt::PriorityLow) {
-                    NVIC_SetPriority(spiIRQ(), 3);
+                    NVIC_SetPriority(IRQ, 3);
                 }
                 else if (interrupts & TWIInterrupt::PriorityLowest) {
-                    NVIC_SetPriority(spiIRQ(), 4);
+                    NVIC_SetPriority(IRQ, 4);
                 }
 
-                NVIC_EnableIRQ(spiIRQ());
+                // Always have IRQs enabled for TWI
+                NVIC_EnableIRQ(IRQ);
             } else {
-
-                NVIC_DisableIRQ(spiIRQ());
+                // Always have IRQs enabled for TWI
+                //NVIC_DisableIRQ(IRQ);
             }
-        };
-
-#ifdef CAN_SPI_PDC_DMA
-        void _enableOnTXTransferDoneInterrupt() {
-            spi()->SPI_IER = SPI_IER_TXBUFE;
-        };
-
-        void _disableOnTXTransferDoneInterrupt() {
-            spi()->SPI_IDR = SPI_IDR_TXBUFE;
-        };
-
-        void _enableOnRXTransferDoneInterrupt() {
-            spi()->SPI_IER = SPI_IER_RXBUFF;
-        };
-
-        void _disableOnRXTransferDoneInterrupt() {
-            spi()->SPI_IDR = SPI_IDR_RXBUFF;
-        };
-
-        uint8_t getMessageSlotsAvailable() {
-            uint8_t count = 0;
-            if (spi()->SPI_RCR > 0) { count++; }
-            if (spi()->SPI_NRCR > 0) { count++; }
-            return count;
-        };
-
-        // start transfer of message
-        bool startTransfer(uint8_t *tx_buffer, uint8_t *rx_buffer, uint16_t size) {
-            // We need to clear the read buffer or it won't clock anything...
-            if (spi()->SPI_SR & SPI_SR_RDRF) {
-                /*uint16_t dont_care =*/ spi()->SPI_RDR;
-            }
-
-            if ((spi()->SPI_RCR == 0) && (spi()->SPI_TCR == 0)) {
-                spi()->SPI_PTCR = SPI_PTCR_RXTDIS | SPI_PTCR_TXTDIS;
-
-                uint32_t PTCR_prep = 0;
-
-                // setup immediate PDC transfer
-                if (rx_buffer != nullptr) {
-                    spi()->SPI_RPR = (uint32_t)rx_buffer;
-                    spi()->SPI_RCR = size;
-                    _enableOnRXTransferDoneInterrupt();
-                    PTCR_prep = SPI_PTCR_RXTEN;
-                } else {
-                    spi()->SPI_RPR = 0;
-                    spi()->SPI_RCR = 0;
-//                    _toss_next_read = true;
-                }
-                if (tx_buffer != nullptr) {
-                    spi()->SPI_TPR = (uint32_t)tx_buffer;
-                    spi()->SPI_TCR = size;
-//                    _enableOnTXTransferDoneInterrupt();
-                    PTCR_prep |= SPI_PTCR_TXTEN;
-                } else {
-                    spi()->SPI_TPR = 0;
-                    spi()->SPI_TCR = 0;
-                }
-
-                // enable both transfers - we use zero size to diable, but this
-                // allows the next transfer to be of a different direction set
-                spi()->SPI_PTCR = PTCR_prep;
-                return true;
-            }
-//            else if ((spi()->SPI_RNCR == 0) && (spi()->SPI_TNCR == 0)) {
-//                // setup next PDC transfer
-//                if (rx_buffer != nullptr) {
-//                    spi()->SPI_RNPR = (uint32_t)rx_buffer;
-//                    spi()->SPI_RNCR = size;
-//                } else {
-//                    spi()->SPI_RNPR = 0;
-//                    spi()->SPI_RNCR = 0;
-//                }
-//                if (tx_buffer != nullptr) {
-//                    spi()->SPI_TNPR = (uint32_t)tx_buffer;
-//                    spi()->SPI_TNCR = size;
-//                } else {
-//                    spi()->SPI_TNPR = 0;
-//                    spi()->SPI_TNCR = 0;
-//                    // HMM, how to handle _toss_next_read here?
-//                }
-//
-//                // current transfer should already be enabled...
-//                return true;
-//            }
-
-            // We didn't set anything up...
-            return false;
         }
-#else
-        void _enableOnTXTransferDoneInterrupt() {
-            dma()->startTxDoneInterrupts();
-        };
 
-        void _disableOnTXTransferDoneInterrupt() {
-            dma()->stopTxDoneInterrupts();
-        };
+        // void _enableOnTXTransferDoneInterrupt() {
+        //     dma.startTxDoneInterrupts();
+        // }
 
-        void _enableOnRXTransferDoneInterrupt() {
-            dma()->startRxDoneInterrupts();
-        };
+        // void _disableOnTXTransferDoneInterrupt() {
+        //     dma.stopTxDoneInterrupts();
+        // }
 
-        void _disableOnRXTransferDoneInterrupt() {
-            dma()->stopRxDoneInterrupts();
-        };
+        // void _enableOnRXTransferDoneInterrupt() {
+        //     dma.startRxDoneInterrupts();
+        // }
+
+        // void _disableOnRXTransferDoneInterrupt() {
+        //     dma.stopRxDoneInterrupts();
+        // }
 
         uint8_t getMessageSlotsAvailable() {
             uint8_t count = 0;
-            if (dma()->doneWriting() && dma()->doneReading()) { count++; }
-//            if (dma()->doneWritingNext()) { count++; }
+            if (dma.doneWriting() && dma.doneReading()) { count++; }
+            // if (dma.doneWritingNext()) { count++; }
             return count;
-        };
+        }
 
         bool doneWriting() {
-            return dma()->doneWriting();
-        };
+            return dma.doneWriting();
+        }
         bool doneReading() {
-            return dma()->doneReading();
-        };
+            return dma.doneReading();
+        }
+
+        enum class InternalState {
+            Idle,
+
+            TXDMAStarted,
+            TXWaitingForTXReady1,
+            TXWaitingForTXReady2,
+            TXError,
+
+            RXDMAStarted,
+            RXWaitingForRXReady,
+            RXWaitingForLastChar,
+            RXError,
+        } state_ = InternalState::Idle;
+
+        uint8_t *local_buffer_ptr = nullptr;
 
         // start transfer of message
-        bool startTransfer(uint8_t *tx_buffer, uint8_t *rx_buffer, uint16_t size) {
-            bool is_setup = false;
-            dma()->setInterrupts(Interrupt::Off);
-            if (rx_buffer != nullptr) {
-                const bool handle_interrupts = false;
-                const bool include_next = false;
-                is_setup = dma()->startRXTransfer(rx_buffer, size, handle_interrupts, include_next);
-                if (!is_setup) { return false; } // fail early
+        bool startTransfer(uint8_t *buffer, const uint16_t size, const bool is_rx) {
+            if ((buffer == nullptr) || (state_ != InternalState::Idle) || (size == 0)) { return false; }
+            local_buffer_ptr = nullptr;
+
+            bool dma_is_setup = false;
+            dma.setInterrupts(Interrupt::Off);
+            if (is_rx) {
+                // tell the peripheral that we're reading
+                twi->TWIHS_MMR |= TWIHS_MMR_MREAD;
+
+                if (size > 2) {
+                    const bool handle_interrupts = true;
+                    const bool include_next = false;
+
+                    local_buffer_ptr = buffer + (size-2);
+                    state_ = InternalState::RXDMAStarted;
+
+                    // Note we set size to size-2 since we have to handle the last two characters "manually"
+                    // This happens in prehandleInterrupt()
+                    dma_is_setup = dma.startRXTransfer(buffer, size-2, handle_interrupts, include_next);
+                    if (!dma_is_setup) { return false; } // fail early
+                }
+                else {
+                    local_buffer_ptr = buffer;
+                    state_ = (size == 2) ? InternalState::RXWaitingForRXReady : InternalState::RXWaitingForLastChar;
+                    if (size == 1) {
+                        // if there is only one character to read, set the flag to send the STOP ater we get it
+                        twi->TWIHS_CR = TWIHS_CR_STOP;
+                    }
+                    enableOnRXReadyInterrupt();
+                }
+                // twi->TWIHS_CR = TWIHS_CR_START;
             }
-            if (tx_buffer != nullptr) {
-                const bool handle_interrupts = false;
-                const bool include_next = false;
-                is_setup = dma()->startTXTransfer(tx_buffer, size, handle_interrupts, include_next);
+            else {
+                // tell the peripheral that we're writing
+                // twi->TWIHS_MMR &= ~TWIHS_MMR_MREAD;
+
+                // TX
+                if (size > 1) {
+                    const bool handle_interrupts = true;
+                    const bool include_next = false;
+
+                    local_buffer_ptr = buffer + (size-1);
+                    state_ = InternalState::TXDMAStarted;
+
+                    enableOnTXDoneInterrupt();
+                    enableOnNACKInterrupt();
+
+                    // Note we set size to size-1 since we have to handle the last character "manually"
+                    // This happens in prehandleInterrupt()
+                    dma_is_setup = dma.startTXTransfer(buffer, size-1, handle_interrupts, include_next);
+                    if (!dma_is_setup) { return false; } // fail early
+                }
+                else {
+                    local_buffer_ptr = buffer;
+                    state_ = InternalState::TXWaitingForTXReady1;
+                    enableOnTXReadyInterrupt();
+                }
+                // twi->TWIHS_CR = TWIHS_CR_START;
             }
-            if (is_setup) {
-                enable();
-                //dma()->enable();
-                dma()->setInterrupts(Interrupt::OnTxTransferDone | Interrupt::OnRxTransferDone);
-            }
-            return is_setup;
+
+            // enable();
+
+            return true;
         }
-#endif // CAN_SPI_PDC_DMA
+
+
+        void prehandleInterrupt(TWIInterruptCause &cause) {
+            if (cause.isRxError()) {
+                state_ = InternalState::RXError;
+            }
+
+            if (cause.isTxError()) {
+                state_ = InternalState::TXError;
+            }
+
+            // NACK cases
+            if (cause.isNACK() & (state_ == InternalState::RXError || state_ == InternalState::TXError)) {
+                disableOnRXReadyInterrupt();
+                disableOnTXReadyInterrupt();
+
+                disableOnNACKInterrupt();
+
+                // Problem: How to tell how much, if anything, was transmitted?
+                state_ = InternalState::Idle;
+
+                dma.disable();
+                dma.stopRxDoneInterrupts();
+                dma.stopTxDoneInterrupts();
+
+                return;
+            }
+
+            // RX cases
+            if (InternalState::RXDMAStarted == state_ && cause.isRxTransferDone()) {
+                cause.clearRxTransferDone(); // stop this from being propagated
+                // At this point we've recieved all but the last two characters
+                // Now we wait for the next-to-last character to come in, read it into the buffer, and set the STOP bit
+                state_ = InternalState::RXWaitingForRXReady;
+
+                // If we don't already have an RXReady, set the interrupt for it
+                if (!cause.isRxReady()) { enableOnRXReadyInterrupt(); }
+            } // no else here!
+
+            if (InternalState::RXWaitingForRXReady == state_ && cause.isRxReady()) {
+                cause.clearRxReady(); // stop this from being propagated
+                // At this point we've recieved the next-to-last character, but haven't read it yet
+                // Now we set the STOP bit, ...
+                twi->TWIHS_CR = TWIHS_CR_STOP;
+
+                // ... prepare to wait for the last character
+                state_ = InternalState::RXWaitingForLastChar;
+                enableOnRXReadyInterrupt();
+
+                /// ... then finally read the next-to-last char.
+                *local_buffer_ptr = (uint8_t)twi->TWIHS_RHR;
+                ++local_buffer_ptr;
+
+                return; // there's nothing more we can do here, save time
+            }
+
+            if (InternalState::RXWaitingForLastChar == state_ && cause.isRxReady()) {
+                // we want isRxReady to be propagated
+                cause.setRxTransferDone(); // And now we push that the rx transfer is done
+
+                // At this point we've recieved last character, but haven't read it yet
+                *local_buffer_ptr = (uint8_t)twi->TWIHS_RHR;
+                local_buffer_ptr = nullptr;
+
+                // Finsih the state machine, and stop the interrupts
+                state_ = InternalState::Idle;
+                disableOnRXReadyInterrupt();
+                disableOnNACKInterrupt();
+
+                return; // there's nothing more we can do here, save time
+            }
+
+
+            // TX cases
+            if (InternalState::TXDMAStarted == state_ && cause.isTxDone()) {
+                cause.clearTxDone(); // stop this from being propagated
+            }
+            if (InternalState::TXDMAStarted == state_ && cause.isTxTransferDone()) {
+                cause.clearTxTransferDone(); // stop this from being propagated
+                // At this point DMA has sent all but the last character to the TWI
+                // Now we wait for the TWI hardware to indicate it's ready for another character
+                // which may have already happened
+                state_ = InternalState::TXWaitingForTXReady1;
+                dma.stopTxDoneInterrupts();
+                dma.disable();
+
+                // If we don't already have an TXReady, set the interrupt for it
+                if (!cause.isTxReady()) { enableOnTXReadyInterrupt(); }
+            } // no else here!
+
+            if (InternalState::TXWaitingForTXReady1 == state_ && cause.isTxReady()) {
+                cause.clearTxReady(); // stop this from being propagated
+
+                // At this point we've sent the next-to-last character,
+                // now put the last char in the hold register, ...
+                twi->TWIHS_THR = *local_buffer_ptr;
+                local_buffer_ptr = nullptr;
+
+                // ... and set the STOP bit, ...
+                twi->TWIHS_CR = TWIHS_CR_STOP;
+
+                // ... and move the state machine along.
+                state_ = InternalState::TXWaitingForTXReady2;
+                enableOnTXReadyInterrupt();
+
+                return; // there's nothing more we can do here, save time
+            }
+
+            if (InternalState::TXWaitingForTXReady2 == state_ && cause.isTxReady()) {
+                // we want isTxReady to be propagated
+                cause.setTxTransferDone(); // And now we push that the tx transfer is done
+
+                // Finish up the state machine.
+                state_ = InternalState::Idle;
+                disableOnTXReadyInterrupt();
+                disableOnNACKInterrupt();
+            }
+        }
 
         // abort transfer of message
         // TODO
@@ -624,212 +593,10 @@ namespace Motate {
         // TODO
     };
 
-#if 0
-    pin_number _default_MISOPinNumber = ReversePinLookup<'A', 25>::number;
-    pin_number _default_MOSIPinNumber = ReversePinLookup<'A', 26>::number;
-    pin_number _default_SCKPinNumber = ReversePinLookup<'A', 27>::number;
+    // TWIGetHardware is just a pass-through for now
+    template <pin_number twiSCKPinNumber, pin_number twiSDAPinNumber>
+    using TWIGetHardware = _TWIHardware<TWISCKPin<twiSCKPinNumber>::twiNum>;
 
-    template<int8_t spiCSPinNumber, int8_t spiMISOPinNumber=_default_MISOPinNumber, int8_t spiMOSIPinNumber=_default_MOSIPinNumber, int8_t spiSCKSPinNumber=_default_SCKPinNumber>
-    struct SPI {
-        typedef SPIChipSelectPin<spiCSPinNumber> csPinType;
-        csPinType csPin;
-
-        SPIMISOPin<spiMISOPinNumber> misoPin;
-        SPIMOSIPin<spiMOSIPinNumber> mosiPin;
-        SPISCKPin<spiSCKSPinNumber> sckPin;
-
-        static _TWIHardware< misoPin::spiNum > hardware;
-        static const uint8_t spiPeripheralNum() { return csPinType::moduleId; };
-        static const uint8_t spiChannelNumber() { return SPIChipSelectPin<spiCSPinNumber>::csOffset; };
-
-        static Spi * const spi() { return hardware.spi(); };
-        static const uint32_t peripheralId() { return hardware.peripheralId(); };
-        static const IRQn_Type spiIRQ() { return hardware.spiIRQ(); };
-
-
-
-        SPI(const uint32_t baud = 4000000, const uint16_t options = kSPI8Bit | kSPIMode0) {
-            hardware.init();
-            init(baud, options, /*fromConstructor =*/ true);
-        };
-
-        void init(const uint32_t baud, const uint16_t options, const bool fromConstructor=false) {
-            setOptions(baud, options, fromConstructor);
-        };
-
-//        void setOptions(const uint32_t baud, const uint16_t options, const bool fromConstructor=false) {
-//            // We derive the baud from the master clock with a divider.
-//            // We want the closest match *below* the value asked for. It's safer to bee too slow.
-//
-//            uint16_t divider = SystemCoreClock / baud;
-//            if (divider > 255)
-//                divider = 255;
-//            else if (divider < 1)
-//                divider = 1;
-//
-//            spi()->SPI_CSR[spiChannelNumber()] = (options & (SPI_CSR_NCPHA | SPI_CSR_CPOL | SPI_CSR_BITS_Msk)) | SPI_CSR_SCBR(divider) | SPI_CSR_DLYBCT(1) | SPI_CSR_CSAAT;
-//
-//            // Should be a non-op for already-enabled devices.
-//            hardware.enable();
-//
-//        };
-
-        bool setChannel() {
-            return hardware.setChannel(spiChannelNumber());
-        };
-
-//        uint16_t getOptions() {
-//            return spi()->SPI_CSR[spiChannelNumber()]/* & (SPI_CSR_NCPHA | SPI_CSR_CPOL | SPI_CSR_BITS_Msk)*/;
-//        };
-
-        int16_t readByte(const bool lastXfer = false, uint8_t toSendAsNoop = 0) {
-            return hardware.read(lastXfer, toSendAsNoop);
-        };
-
-        // WARNING: Currently only reads in bytes. For more-that-byte size data, we'll need another call.
-        int16_t read(const uint8_t *buffer, const uint16_t length) {
-            if (!setChannel())
-                return -1;
-
-
-            int16_t total_read = 0;
-            int16_t to_read = length;
-            const uint8_t *read_ptr = buffer;
-
-            bool lastXfer = false;
-
-            // BLOCKING!!
-            while (to_read > 0) {
-
-                if (to_read == 1)
-                    lastXfer = true;
-
-                int16_t ret = read(lastXfer);
-
-                if (ret >= 0) {
-                    *read_ptr++ = ret;
-                    total_read++;
-                    to_read--;
-                }
-            };
-
-            return total_read;
-        };
-
-        int16_t writeByte(uint16_t data, const bool lastXfer = false) {
-            return hardware.write(data, lastXfer);
-        };
-
-        int16_t writeByte(uint8_t data, int16_t &readValue, const bool lastXfer = false) {
-            return hardware.write(data, lastXfer);
-        };
-
-        void flush() {
-            hardware.disable();
-            hardware.enable();
-        };
-
-        // WARNING: Currently only writes in bytes. For more-that-byte size data, we'll need another call.
-        int16_t write(const uint8_t *data, const uint16_t length, bool autoFlush = true) {
-            if (!setChannel())
-                return -1;
-
-            int16_t total_written = 0;
-            const uint8_t *out_buffer = data;
-            int16_t to_write = length;
-
-            bool lastXfer = false;
-
-            // BLOCKING!!
-            do {
-                if (autoFlush && to_write == 1)
-                    lastXfer = true;
-
-                int16_t ret = write(*out_buffer, lastXfer);
-
-                if (ret > 0) {
-                    out_buffer++;
-                    total_written++;
-                    to_write--;
-                }
-            } while (to_write);
-
-            // HACK! Autoflush forced...
-            if (autoFlush && total_written > 0)
-                flush();
-
-            return total_written;
-        }
-    };
-
-#endif
-
-
-
-    template <pin_number csBit0PinNumber, pin_number csBit1PinNumber, pin_number csBit2PinNumber, pin_number csBit3PinNumber>
-    struct SPIChipSelectPinMux {
-        // These pins may be null, but if they're not, they must be valid CS pins
-        static_assert(SPIChipSelectPin<csBit0PinNumber>::is_real || Pin<csBit0PinNumber>::isNull(),
-                      "SPIChipSelectPinMux bit 0 pin is not on a real CS pin.");
-        static_assert(SPIChipSelectPin<csBit1PinNumber>::is_real || Pin<csBit1PinNumber>::isNull(),
-                      "SPIChipSelectPinMux bit 0 pin is not on a real CS pin.");
-        static_assert(SPIChipSelectPin<csBit2PinNumber>::is_real || Pin<csBit2PinNumber>::isNull(),
-                      "SPIChipSelectPinMux bit 0 pin is not on a real CS pin.");
-        static_assert(SPIChipSelectPin<csBit3PinNumber>::is_real || Pin<csBit3PinNumber>::isNull(),
-                      "SPIChipSelectPinMux bit 0 pin is not on a real CS pin.");
-
-        struct _dummyCSPin { static constexpr uint8_t csNumber = 0; };
-
-        template<pin_number n>
-        using dummyOrCSPin = typename std::conditional<SPIChipSelectPin<n>::is_real, SPIChipSelectPin<n>, _dummyCSPin>::type;
-
-        // create and initialize the CS pins we use
-        dummyOrCSPin<csBit0PinNumber> bit0Pin;
-        dummyOrCSPin<csBit1PinNumber> bit1Pin;
-        dummyOrCSPin<csBit2PinNumber> bit2Pin;
-        dummyOrCSPin<csBit3PinNumber> bit3Pin;
-
-        typedef SPIChipSelectPinMux<csBit0PinNumber, csBit1PinNumber, csBit2PinNumber, csBit3PinNumber> type;
-
-        constexpr uint8_t computeCsValue(uint8_t cs) {
-            uint8_t csValue = 0;
-            if (cs & (1<<0)) { csValue |= (1<<bit0Pin.csNumber); }
-            if (cs & (1<<1)) { csValue |= (1<<bit1Pin.csNumber); }
-            if (cs & (1<<2)) { csValue |= (1<<bit2Pin.csNumber); }
-            if (cs & (1<<3)) { csValue |= (1<<bit3Pin.csNumber); }
-            return csValue;
-        };
-
-        // Now provide a subobject that offers corect csNumber and csValue for each muxed output
-        // We have three names that are confusing:
-
-        // cs = the number we're going to call this one externally, using the order of the bits we provided
-        //  IOW, cs of 3  is what you get when bit0Pin and bit1Pin are HIGH
-
-        // csNumber = the internal cs number used by the hardware. All cs where csNumber is the same MUST share settings.
-        // csValue  = the internal value provided to the spi hardware (PCS for the Sam chips)
-        struct SPIChipSelect {
-            const uint8_t csValue;
-            const uint8_t csNumber;
-            const bool usesDecoder = true;
-
-            SPIChipSelect(SPIChipSelectPinMux * const pm, const uint8_t cs) : csValue{pm->computeCsValue(cs)}, csNumber {(uint8_t)(csValue >> 2)} {
-            };
-
-            // delete copy constructor
-            SPIChipSelect(const SPIChipSelect &) = delete;
-
-            // build move constructor
-            SPIChipSelect(SPIChipSelect && other) : csValue{other.csValue}, csNumber{other.csNumber} {};
-        };
-
-        constexpr SPIChipSelect getCS(const uint8_t cs) { return {this, cs}; };
-    };
-
-
-    // SPIGetHardware is just a pass-through for now
-    template <pin_number spiMISOPinNumber, pin_number spiMOSIPinNumber, pin_number spiSCKPinNumber>
-    using SPIGetHardware = _TWIHardware<SPIMISOPin<spiMISOPinNumber>::spiNum>;
-}
+} // namespace Motate
 
 #endif /* end of include guard: SAMTWI_H_ONCE */

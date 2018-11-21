@@ -108,8 +108,6 @@ namespace Motate {
 
     struct SPIInterrupt : Interrupt {
     };
-
-
 } // namespace Motate
 
 #include <ProcessorSPI.h>

@@ -518,7 +518,7 @@ $(DEPDIR) $(BIN):
 # Best to start the server with make ... debugjs first, then run make ... debugj
 .PHONY: debugj debuggyj debugjs debugjs2 debugj-kill debugj-murder
 debugjs2:
-	JLinkGDBServer -device "${JLINK_DEVICE}" -log jlinkgdbserver.log -silent -halt -if SWD &
+	JLinkGDBServer -device "${JLINK_DEVICE}" -log jlinkgdbserver.log -silent -halt -vd -if SWD -excdbg 4 -nogui -speed 2000 -ir
 
 debugjs:
 	$(MAKE) debugjs2 &

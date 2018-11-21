@@ -32,9 +32,9 @@
 
 #include "sam.h"
 #include "SamCommon.h"
-#ifndef PWM_PTCR_TXTEN
-#include "SamDMA.h"
-#endif
+
+#include "SamTimersDMA.h"
+
 #include <functional> // for std::function and related
 #include <type_traits> // for std::extent and std::alignment_of
 
@@ -771,7 +771,7 @@ namespace Motate {
 #endif
 
 #ifndef PWM_PTCR_TXTEN
-        DMA<Pwm *, peripheral_num> dma_ { nullptr }; // nullptr instead of the handler
+        DMA<Pwm *, peripheral_num> dma_ { }; // nullptr instead of the handler
         constexpr const DMA<Pwm *, peripheral_num> *dma() { return &dma_; };
 #endif
 

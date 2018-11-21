@@ -44,17 +44,13 @@ namespace Motate::SPI_internal {
 
     #if defined(SPI)
         #define CAN_SPI_PDC_DMA 1
-        // We have to strip the address off in static context, outsie a structure declaration
-        static const std::intptr_t _SPI0_address {(std::intptr_t)(SPI)};
-
         template<>
         struct SPIInfo<0>
         {
             static constexpr bool exists = true;
-            using type = decltype(SPI);
-            static const intptr_t address = _SPI0_address;
 
-            static constexpr RegisterPtr<type> spi { address };
+            static constexpr RegisterPtr<SEPARATE_OFF_CAST(SPI)> spi { };
+
             static constexpr uint32_t peripheralId = ID_SPI;
             static constexpr IRQn_Type IRQ = SPI_IRQn;
         }; // SPIInfo <0>
@@ -67,17 +63,13 @@ namespace Motate::SPI_internal {
         #define SPI0_Handler SPI_Handler
     #elif defined(SPI0)
         // This is for the Sam3x and SamS70
-        // We have to strip the address off in static context, outsie a structure declaration
-        static const std::intptr_t _SPI0_address {(std::intptr_t)(SPI0)};
-
         template<>
         struct SPIInfo<0>
         {
             static constexpr bool exists = true;
-            static constexpr std::intptr_t address {_SPI0_address};
-            using type = decltype(SPI0);
 
-            static constexpr RegisterPtr<type> spi { address };
+            static constexpr RegisterPtr<SEPARATE_OFF_CAST(SPI0)> spi { };
+
             static constexpr uint32_t peripheralId = ID_SPI0;
             static constexpr IRQn_Type IRQ = SPI0_IRQn;
         }; // SPIInfo <0>
@@ -89,17 +81,13 @@ namespace Motate::SPI_internal {
 
     #if defined(SPI1)
         // This is for the Sam3x and SamS70
-        // We have to strip the address off in static context, outsie a structure declaration
-        static const std::intptr_t _SPI1_address {(std::intptr_t)(SPI1)};
-
         template<>
         struct SPIInfo<1>
         {
             static constexpr bool exists = true;
-            static constexpr std::intptr_t address {_SPI1_address};
-            using type = decltype(SPI1);
 
-            static constexpr RegisterPtr<type> spi { address };
+            static constexpr RegisterPtr<SEPARATE_OFF_CAST(SPI1)> spi { };
+
             static constexpr uint32_t peripheralId = ID_SPI1;
             static constexpr IRQn_Type IRQ = SPI1_IRQn;
         }; // SPIInfo <0>
@@ -107,5 +95,8 @@ namespace Motate::SPI_internal {
         #undef SPI1
         #undef ID_SPI1
         #undef SPI1_IRQn
+
+        // for the sake of the cpp file to define the handlers
+        #define HAS_SPI1
     #endif
 }; // Motate::SPI_internal
