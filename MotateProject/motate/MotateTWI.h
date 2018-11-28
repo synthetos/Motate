@@ -294,7 +294,8 @@ struct TWIBus {
 
         // So, we have to be careful not to move something out from under the other code.
 
-        if (interruptCause.isTxTransferDone() || interruptCause.isRxTransferDone()) {
+        if (interruptCause.isTxTransferDone() || interruptCause.isRxTransferDone() || interruptCause.isNACK() ||
+            interruptCause.isRxError() || interruptCause.isTxError()) {
             // Check that we're done with all transmission...
             if (!hardware.doneReading()) {
                 return;
@@ -324,7 +325,8 @@ struct TWIBus {
                 //   keep sending at true to prevent issues.
 
                 if (this_message->message_done_callback) {
-                    this_message->message_done_callback(!interruptCause.isNACK());
+                    this_message->message_done_callback(
+                        !(interruptCause.isNACK() || interruptCause.isRxError() || interruptCause.isTxError()));
                 }
             }
             sending = false;  // we can now allow more sending

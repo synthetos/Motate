@@ -115,6 +115,9 @@ namespace Motate {
             twi->TWIHS_CR = TWIHS_CR_MSDIS;
         }
 
+        uint32_t internal_address_value_ = 0;
+        uint8_t  internal_address_to_send_;
+
         bool setAddress(const TWIAddress& address, const TWIInternalAddress& internal_address) {
             // check for transmitting?
 
@@ -137,8 +140,14 @@ namespace Motate {
                 adjusted_internal_address_size = (uint8_t)internal_address.size;
             }
 
-            twi->TWIHS_MMR = TWIHS_MMR_DADR(adjusted_address) | TWIHS_MMR_IADRSZ(adjusted_internal_address_size);
-            twi->TWIHS_IADR = TWIHS_IADR_IADR(adjusted_internal_address);
+            // twi->TWIHS_MMR = TWIHS_MMR_DADR(adjusted_address) | TWIHS_MMR_IADRSZ(adjusted_internal_address_size);
+            // twi->TWIHS_IADR = TWIHS_IADR_IADR(adjusted_internal_address);
+
+            twi->TWIHS_MMR = TWIHS_MMR_DADR(adjusted_address) | TWIHS_MMR_IADRSZ(0);
+            twi->TWIHS_IADR = TWIHS_IADR_IADR(0);
+
+            internal_address_value_   = adjusted_internal_address;
+            internal_address_to_send_ = adjusted_internal_address_size;
 
             enable();
             return true;
@@ -388,23 +397,26 @@ namespace Motate {
         enum class InternalState {
             Idle,
 
+            TXSendingInternalAdddress,
             TXDMAStarted,
             TXWaitingForTXReady1,
             TXWaitingForTXReady2,
             TXError,
 
+            RXSendingInternalAdddress,
             RXDMAStarted,
             RXWaitingForRXReady,
             RXWaitingForLastChar,
             RXError,
         } state_ = InternalState::Idle;
 
-        uint8_t *local_buffer_ptr = nullptr;
+        uint8_t *local_buffer_ptr_ = nullptr;
+        uint16_t local_buffer_size_ = 0;
 
         // start transfer of message
         bool startTransfer(uint8_t *buffer, const uint16_t size, const bool is_rx) {
             if ((buffer == nullptr) || (state_ != InternalState::Idle) || (size == 0)) { return false; }
-            local_buffer_ptr = nullptr;
+            local_buffer_ptr_ = nullptr;
 
             bool dma_is_setup = false;
             dma.setInterrupts(Interrupt::Off);
@@ -416,7 +428,7 @@ namespace Motate {
                     const bool handle_interrupts = true;
                     const bool include_next = false;
 
-                    local_buffer_ptr = buffer + (size-2);
+                    local_buffer_ptr_ = buffer + (size-2);
                     state_ = InternalState::RXDMAStarted;
 
                     // Note we set size to size-2 since we have to handle the last two characters "manually"
@@ -425,7 +437,7 @@ namespace Motate {
                     if (!dma_is_setup) { return false; } // fail early
                 }
                 else {
-                    local_buffer_ptr = buffer;
+                    local_buffer_ptr_ = buffer;
                     state_ = (size == 2) ? InternalState::RXWaitingForRXReady : InternalState::RXWaitingForLastChar;
                     if (size == 1) {
                         // if there is only one character to read, set the flag to send the STOP ater we get it
@@ -436,31 +448,15 @@ namespace Motate {
                 // twi->TWIHS_CR = TWIHS_CR_START;
             }
             else {
-                // tell the peripheral that we're writing
-                // twi->TWIHS_MMR &= ~TWIHS_MMR_MREAD;
-
                 // TX
-                if (size > 1) {
-                    const bool handle_interrupts = true;
-                    const bool include_next = false;
+                state_ = InternalState::TXSendingInternalAdddress;
 
-                    local_buffer_ptr = buffer + (size-1);
-                    state_ = InternalState::TXDMAStarted;
+                local_buffer_ptr_ = buffer;
+                local_buffer_size_ = size;
 
-                    enableOnTXDoneInterrupt();
-                    enableOnNACKInterrupt();
-
-                    // Note we set size to size-1 since we have to handle the last character "manually"
-                    // This happens in prehandleInterrupt()
-                    dma_is_setup = dma.startTXTransfer(buffer, size-1, handle_interrupts, include_next);
-                    if (!dma_is_setup) { return false; } // fail early
-                }
-                else {
-                    local_buffer_ptr = buffer;
-                    state_ = InternalState::TXWaitingForTXReady1;
-                    enableOnTXReadyInterrupt();
-                }
-                // twi->TWIHS_CR = TWIHS_CR_START;
+                enableOnTXReadyInterrupt();
+                enableOnTXDoneInterrupt();
+                enableOnNACKInterrupt();
             }
 
             // enable();
@@ -472,6 +468,7 @@ namespace Motate {
         void prehandleInterrupt(TWIInterruptCause &cause) {
             if (cause.isRxError()) {
                 state_ = InternalState::RXError;
+
             }
 
             if (cause.isTxError()) {
@@ -479,16 +476,17 @@ namespace Motate {
             }
 
             // NACK cases
-            if (cause.isNACK() & (state_ == InternalState::RXError || state_ == InternalState::TXError)) {
+            if (cause.isNACK() || state_ == InternalState::RXError || state_ == InternalState::TXError) {
                 disableOnRXReadyInterrupt();
+
                 disableOnTXReadyInterrupt();
+                disableOnTXDoneInterrupt();
 
                 disableOnNACKInterrupt();
 
                 // Problem: How to tell how much, if anything, was transmitted?
                 state_ = InternalState::Idle;
 
-                dma.disable();
                 dma.stopRxDoneInterrupts();
                 dma.stopTxDoneInterrupts();
 
@@ -517,8 +515,8 @@ namespace Motate {
                 enableOnRXReadyInterrupt();
 
                 /// ... then finally read the next-to-last char.
-                *local_buffer_ptr = (uint8_t)twi->TWIHS_RHR;
-                ++local_buffer_ptr;
+                *local_buffer_ptr_ = (uint8_t)twi->TWIHS_RHR;
+                ++local_buffer_ptr_;
 
                 return; // there's nothing more we can do here, save time
             }
@@ -528,8 +526,8 @@ namespace Motate {
                 cause.setRxTransferDone(); // And now we push that the rx transfer is done
 
                 // At this point we've recieved last character, but haven't read it yet
-                *local_buffer_ptr = (uint8_t)twi->TWIHS_RHR;
-                local_buffer_ptr = nullptr;
+                *local_buffer_ptr_ = (uint8_t)twi->TWIHS_RHR;
+                local_buffer_ptr_ = nullptr;
 
                 // Finsih the state machine, and stop the interrupts
                 state_ = InternalState::Idle;
@@ -537,14 +535,52 @@ namespace Motate {
                 disableOnNACKInterrupt();
 
                 return; // there's nothing more we can do here, save time
+
             }
 
 
             // TX cases
-            if (InternalState::TXDMAStarted == state_ && cause.isTxDone()) {
+            if (InternalState::TXSendingInternalAdddress == state_ &&
+                (cause.isTxDone() || cause.isTxReady())) {
+
+                // tell the peripheral that we're writing
+                twi->TWIHS_MMR &= ~TWIHS_MMR_MREAD;
+
+                cause.clearTxReady(); // stop this from being propagated
+                cause.clearTxDone();
+
+                // At this point there are zero or more internal address bytes to send
+                if (internal_address_to_send_ > 0) {
+                    --internal_address_to_send_;
+                    twi->TWIHS_THR = (internal_address_value_ >> (internal_address_to_send_ * 8)) & 0xFF;
+
+                } else {
+                    if (local_buffer_size_ > 1) {
+                        const bool handle_interrupts = true;
+                        const bool include_next      = false;
+
+                        enableOnTXDoneInterrupt();
+                        enableOnNACKInterrupt();
+
+                        // Note we set size to size-1 since we have to handle the last character "manually"
+                        // This happens in prehandleInterrupt()
+                        bool dma_is_setup = dma.startTXTransfer(local_buffer_ptr_, local_buffer_size_ - 1, handle_interrupts, include_next);
+                        if (!dma_is_setup) {
+                            return;
+                        }  // fail early
+
+                        local_buffer_ptr_  = local_buffer_ptr_ + (local_buffer_size_ - 1);
+                        local_buffer_size_ = 1;
+                        state_             = InternalState::TXDMAStarted;
+                    } else {
+                        state_            = InternalState::TXWaitingForTXReady1;
+                        enableOnTXReadyInterrupt();
+                    }
+                }
+            } // no else here!
+
+            if (InternalState::TXDMAStarted == state_ && (cause.isTxDone() || cause.isTxTransferDone())) {
                 cause.clearTxDone(); // stop this from being propagated
-            }
-            if (InternalState::TXDMAStarted == state_ && cause.isTxTransferDone()) {
                 cause.clearTxTransferDone(); // stop this from being propagated
                 // At this point DMA has sent all but the last character to the TWI
                 // Now we wait for the TWI hardware to indicate it's ready for another character
@@ -557,13 +593,18 @@ namespace Motate {
                 if (!cause.isTxReady()) { enableOnTXReadyInterrupt(); }
             } // no else here!
 
+            if (InternalState::TXWaitingForTXReady1 == state_ && (cause.isTxDone() || cause.isTxTransferDone())) {
+                cause.clearTxDone(); // stop this from being propagated
+                cause.clearTxTransferDone(); // stop this from being propagated
+            } // no else here!
+
             if (InternalState::TXWaitingForTXReady1 == state_ && cause.isTxReady()) {
                 cause.clearTxReady(); // stop this from being propagated
 
                 // At this point we've sent the next-to-last character,
                 // now put the last char in the hold register, ...
-                twi->TWIHS_THR = *local_buffer_ptr;
-                local_buffer_ptr = nullptr;
+                twi->TWIHS_THR = *local_buffer_ptr_;
+                local_buffer_ptr_ = nullptr;
 
                 // ... and set the STOP bit, ...
                 twi->TWIHS_CR = TWIHS_CR_STOP;
@@ -582,6 +623,7 @@ namespace Motate {
                 // Finish up the state machine.
                 state_ = InternalState::Idle;
                 disableOnTXReadyInterrupt();
+                disableOnTXDoneInterrupt();
                 disableOnNACKInterrupt();
             }
         }

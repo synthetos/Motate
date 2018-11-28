@@ -394,7 +394,8 @@ namespace Motate {
                                          if (_xdmaInterruptHandler) {
                                              auto CIS_hold = xdmaTxChannel()->XDMAC_CIS;
                                              Interrupt::Type cause;
-                                             if (CIS_hold & XDMAC_CIS_BIS) { cause |= Interrupt::OnTxTransferDone; }
+                                             if (CIS_hold & XDMAC_CIS_BIS) { cause
+                                             = Interrupt::OnTxTransferDone; }
                                              if (CIS_hold & XDMAC_CIS_WBEIS) { cause |= Interrupt::OnTxError; }
                                              _xdmaInterruptHandler(cause);
                                          }
