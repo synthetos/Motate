@@ -122,7 +122,6 @@ struct TWIMessage {
 
     enum class Direction { kTX, kRX };
 
-
     uint8_t* buffer = nullptr;
     uint16_t size   = 0;
 
@@ -335,6 +334,29 @@ struct TWIBus {
         }
     };
 
+    void queueAndSendMessage(TWIMessage* msg) {
+        if (_first_message == nullptr) {
+            _first_message = msg;
+        } else {
+            TWIMessage* message_walker = _first_message;
+            while ((message_walker != msg) && (message_walker->next_message != nullptr)) {
+                message_walker = message_walker->next_message;
+            }
+
+            if (message_walker != msg) {
+                message_walker->next_message = msg;
+            }
+        }
+
+        // Either we just queued the first message, OR we *might* have
+        // just queued a message for the current transaction
+        // that has stalled, waiting for more messages.
+
+        // In either case, we want to:
+        sendNextMessage();
+    };
+
+
 
 #pragma mark TWIBusDevice (inside TWIBus)
     /**************************************************
@@ -346,6 +368,8 @@ struct TWIBus {
     struct TWIBusDevice : TWIBusDeviceBase {
         // Since we are defining this INSIDE the TWIBus struct, we'll use TWIBus internals liberally
         bus_type* const _twi_bus;
+
+        using parent_type = bus_type;
 
         TWIAddress _twi_address;  // the address of this device
 
@@ -360,43 +384,22 @@ struct TWIBus {
         // update the bus upon deletion
         ~TWIBusDevice() { _twi_bus->removeDevice(this); };
 
-        // // build move constructor
-        // TWIBusDevice(TWIBusDevice&& other) : _twi_bus{other._twi_bus}, _cs_number{other._cs_number},
-        // _cs_value{other._cs_value} {
-        //     // since we just changed addresses, we'll let the old one deregister, but we must register this one
-        //     _twi_bus->addDevice(this);
-        // };
-
         TWIBusDevice(TWIBusDevice&& other) = delete;
 
         // queue message
         void queueMessage(TWIMessage* msg) override {
             msg->device = this;
-            if (_twi_bus->_first_message == nullptr) {
-                _twi_bus->_first_message = msg;
-                //_twi_bus->_last_message = msg;
-            } else {
-                TWIMessage* walker_message = _twi_bus->_first_message;
-                while ((walker_message != msg) && (walker_message->next_message != nullptr)) {
-                    walker_message = walker_message->next_message;
-                }
-
-                if (walker_message != msg) {
-                    walker_message->next_message = msg;
-                }
-            }
-
-            // Either we just queued the first message, OR we *might* have
-            // just queued a message for the current transaction
-            // that has stalled, waiting for more messages.
-
-            // In either case, we want to:
-            _twi_bus->sendNextMessage();
+            _twi_bus->queueAndSendMessage(msg);
         };
 
         const TWIAddress& getAddress() const override { return _twi_address; };
+
+        bus_type* const getBus() const { return _twi_bus; };
     };
 
+    using Device_t = TWIBusDevice;
+
+    // TWIBusDevice factory on TWIBus
     constexpr TWIBusDevice getDevice(const TWIAddress&& address) { return {this, std::move(address)}; }
 };  // TWIBus
 

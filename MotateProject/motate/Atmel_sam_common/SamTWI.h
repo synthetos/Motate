@@ -140,14 +140,11 @@ namespace Motate {
                 adjusted_internal_address_size = (uint8_t)internal_address.size;
             }
 
-            // twi->TWIHS_MMR = TWIHS_MMR_DADR(adjusted_address) | TWIHS_MMR_IADRSZ(adjusted_internal_address_size);
-            // twi->TWIHS_IADR = TWIHS_IADR_IADR(adjusted_internal_address);
+            twi->TWIHS_MMR = TWIHS_MMR_DADR(adjusted_address) | TWIHS_MMR_IADRSZ(adjusted_internal_address_size);
+            twi->TWIHS_IADR = TWIHS_IADR_IADR(adjusted_internal_address);
 
-            twi->TWIHS_MMR = TWIHS_MMR_DADR(adjusted_address) | TWIHS_MMR_IADRSZ(0);
-            twi->TWIHS_IADR = TWIHS_IADR_IADR(0);
-
-            internal_address_value_   = adjusted_internal_address;
-            internal_address_to_send_ = adjusted_internal_address_size;
+            internal_address_value_   = 0;
+            internal_address_to_send_ = 0;
 
             enable();
             return true;
@@ -397,13 +394,15 @@ namespace Motate {
         enum class InternalState {
             Idle,
 
-            TXSendingInternalAdddress,
+            TXReadyToSendFirstByte,
+            TXSendingFirstByte,
             TXDMAStarted,
             TXWaitingForTXReady1,
             TXWaitingForTXReady2,
             TXError,
 
-            RXSendingInternalAdddress,
+            RXReadyToReadFirstByte,
+            RXReadingFirstByte,
             RXDMAStarted,
             RXWaitingForRXReady,
             RXWaitingForLastChar,
@@ -418,44 +417,47 @@ namespace Motate {
             if ((buffer == nullptr) || (state_ != InternalState::Idle) || (size == 0)) { return false; }
             local_buffer_ptr_ = nullptr;
 
-            bool dma_is_setup = false;
             dma.setInterrupts(Interrupt::Off);
             if (is_rx) {
+                local_buffer_ptr_ = buffer;
+                local_buffer_size_ = size;
+
                 // tell the peripheral that we're reading
+                // (Note that internall address mode MIGHT actually write first!)
                 twi->TWIHS_MMR |= TWIHS_MMR_MREAD;
 
-                if (size > 2) {
-                    const bool handle_interrupts = true;
-                    const bool include_next = false;
+                if (local_buffer_size_ == 1) {
+                    // If this is the only character to read, tell it to NACK at the end of this read
+                    // and tart the reading transaction
+                    twi->TWIHS_CR = TWIHS_CR_START | TWIHS_CR_STOP;
 
-                    local_buffer_ptr_ = buffer + (size-2);
-                    state_ = InternalState::RXDMAStarted;
+                    // "last char" is the only char
+                    state_ = InternalState::RXWaitingForLastChar;
 
-                    // Note we set size to size-2 since we have to handle the last two characters "manually"
-                    // This happens in prehandleInterrupt()
-                    dma_is_setup = dma.startRXTransfer(buffer, size-2, handle_interrupts, include_next);
-                    if (!dma_is_setup) { return false; } // fail early
+                } else if (local_buffer_size_ > 2) {
+                    // Start the reading transaction
+                    twi->TWIHS_CR = TWIHS_CR_START;
+
+                    state_ = InternalState::RXReadingFirstByte;
+
+                } else { // local_buffer_size_ == 2
+                    // Start the reading transaction
+                    twi->TWIHS_CR = TWIHS_CR_START;
+
+                    state_ = InternalState::RXWaitingForRXReady; // this will pick up below
                 }
-                else {
-                    local_buffer_ptr_ = buffer;
-                    state_ = (size == 2) ? InternalState::RXWaitingForRXReady : InternalState::RXWaitingForLastChar;
-                    if (size == 1) {
-                        // if there is only one character to read, set the flag to send the STOP ater we get it
-                        twi->TWIHS_CR = TWIHS_CR_STOP;
-                    }
-                    enableOnRXReadyInterrupt();
-                }
-                // twi->TWIHS_CR = TWIHS_CR_START;
+
+                enableOnRXReadyInterrupt();
+                enableOnNACKInterrupt();
             }
             else {
                 // TX
-                state_ = InternalState::TXSendingInternalAdddress;
+                state_ = InternalState::TXReadyToSendFirstByte;
 
                 local_buffer_ptr_ = buffer;
                 local_buffer_size_ = size;
 
                 enableOnTXReadyInterrupt();
-                enableOnTXDoneInterrupt();
                 enableOnNACKInterrupt();
             }
 
@@ -468,7 +470,6 @@ namespace Motate {
         void prehandleInterrupt(TWIInterruptCause &cause) {
             if (cause.isRxError()) {
                 state_ = InternalState::RXError;
-
             }
 
             if (cause.isTxError()) {
@@ -494,6 +495,56 @@ namespace Motate {
             }
 
             // RX cases
+            if (InternalState::RXReadingFirstByte == state_ && cause.isRxReady()) {
+                if (local_buffer_size_ > 2) {
+                    cause.clearRxReady(); // stop this from being propagated
+
+                    // From SAM E70/S70/V70/V71 Family Eratta:
+                    //  If TCM accesses are generated through the AHBS port of the core, only 32-bit accesses are supported.
+                    //  Accesses that are not 32-bit aligned may overwrite bytes at the beginning and at the end of 32-bit words.
+                    // Workaround
+                    //  The user application must use 32-bit aligned buffers and buffers with a size of a multiple of 4 bytes when
+                    //  transferring data to or from the TCM through the AHBS port of the core.
+
+                    // Nothing to be done about the scribble of data at the end, other than oversize the buffers accordingly.
+
+                    // But to handle the beginning alignment, read unaligned bytes manally
+
+                    if ((std::intptr_t)local_buffer_ptr_ & 0b11) {
+                        *local_buffer_ptr_ = twi->TWIHS_RHR;
+                        ++local_buffer_ptr_;
+                        --local_buffer_size_;
+
+                        // now leave, and at the next RxReady, we'll be back here
+                        return;
+                    }
+
+                    // The first byte to read is in the RHR register, and DMA will grab it first
+                    const bool handle_interrupts = true;
+                    const bool include_next = false;
+
+                    state_ = InternalState::RXDMAStarted;
+
+                    // Note we set size to size-2 since we have to handle the last two characters "manually"
+                    // This happens in prehandleInterrupt()
+                    bool dma_is_setup = dma.startRXTransfer(local_buffer_ptr_, local_buffer_size_-2, handle_interrupts, include_next);
+                    if (!dma_is_setup) {
+                        state_ = InternalState::Idle;
+                        cause.setRxError();
+                        return;
+                    }  // fail early
+
+                    local_buffer_ptr_ = local_buffer_ptr_ + (local_buffer_size_-2);
+                }
+                else {
+                    state_ = (local_buffer_size_ == 2) ? InternalState::RXWaitingForRXReady : InternalState::RXWaitingForLastChar;
+                    if (local_buffer_size_ == 1) {
+                        // if there is only one character left to read, set the flag to send the STOP ater we get it
+                        twi->TWIHS_CR = TWIHS_CR_STOP;
+                    }
+                }
+            } // no else here!
+
             if (InternalState::RXDMAStarted == state_ && cause.isRxTransferDone()) {
                 cause.clearRxTransferDone(); // stop this from being propagated
                 // At this point we've recieved all but the last two characters
@@ -519,7 +570,7 @@ namespace Motate {
                 ++local_buffer_ptr_;
 
                 return; // there's nothing more we can do here, save time
-            }
+            } // no else here!
 
             if (InternalState::RXWaitingForLastChar == state_ && cause.isRxReady()) {
                 // we want isRxReady to be propagated
@@ -536,46 +587,52 @@ namespace Motate {
 
                 return; // there's nothing more we can do here, save time
 
-            }
+            } // no else here!
 
 
             // TX cases
-            if (InternalState::TXSendingInternalAdddress == state_ &&
-                (cause.isTxDone() || cause.isTxReady())) {
-
+            if (InternalState::TXReadyToSendFirstByte == state_ && cause.isTxReady()) {
                 // tell the peripheral that we're writing
                 twi->TWIHS_MMR &= ~TWIHS_MMR_MREAD;
 
-                cause.clearTxReady(); // stop this from being propagated
-                cause.clearTxDone();
+                if (local_buffer_size_ > 2) {
+                    cause.clearTxReady(); // stop this from being propagated
 
-                // At this point there are zero or more internal address bytes to send
-                if (internal_address_to_send_ > 0) {
-                    --internal_address_to_send_;
-                    twi->TWIHS_THR = (internal_address_value_ >> (internal_address_to_send_ * 8)) & 0xFF;
+                    state_ = InternalState::TXSendingFirstByte;
+                    twi->TWIHS_THR = *local_buffer_ptr_;
+                    ++local_buffer_ptr_;
+                    --local_buffer_size_;
 
+                    return; // nothing more to do, leave now
                 } else {
-                    if (local_buffer_size_ > 1) {
-                        const bool handle_interrupts = true;
-                        const bool include_next      = false;
+                    state_ = InternalState::TXWaitingForTXReady1; // this will pick up below
+                }
+            } // no else here!
 
-                        enableOnTXDoneInterrupt();
-                        enableOnNACKInterrupt();
+            if (InternalState::TXSendingFirstByte == state_ && cause.isTxReady()) {
+                if (local_buffer_size_ > 1) {
+                    const bool handle_interrupts = true;
+                    const bool include_next      = false;
 
-                        // Note we set size to size-1 since we have to handle the last character "manually"
-                        // This happens in prehandleInterrupt()
-                        bool dma_is_setup = dma.startTXTransfer(local_buffer_ptr_, local_buffer_size_ - 1, handle_interrupts, include_next);
-                        if (!dma_is_setup) {
-                            return;
-                        }  // fail early
+                    enableOnTXDoneInterrupt();
+                    enableOnNACKInterrupt();
 
-                        local_buffer_ptr_  = local_buffer_ptr_ + (local_buffer_size_ - 1);
-                        local_buffer_size_ = 1;
-                        state_             = InternalState::TXDMAStarted;
-                    } else {
-                        state_            = InternalState::TXWaitingForTXReady1;
-                        enableOnTXReadyInterrupt();
-                    }
+                    // Note we set size to size-1 since we have to handle the last character "manually"
+                    // This happens in prehandleInterrupt()
+                    bool dma_is_setup =
+                        dma.startTXTransfer(local_buffer_ptr_, local_buffer_size_ - 1, handle_interrupts, include_next);
+                    if (!dma_is_setup) {
+                        state_ = InternalState::Idle;
+                        cause.setTxError();
+                        return;
+                    }  // fail early
+
+                    local_buffer_ptr_  = local_buffer_ptr_ + (local_buffer_size_ - 1);
+                    local_buffer_size_ = 1;
+                    state_             = InternalState::TXDMAStarted;
+                } else {
+                    state_ = InternalState::TXWaitingForTXReady1;
+                    enableOnTXReadyInterrupt();
                 }
             } // no else here!
 
@@ -614,7 +671,7 @@ namespace Motate {
                 enableOnTXReadyInterrupt();
 
                 return; // there's nothing more we can do here, save time
-            }
+            } // no else here!
 
             if (InternalState::TXWaitingForTXReady2 == state_ && cause.isTxReady()) {
                 // we want isTxReady to be propagated
