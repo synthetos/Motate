@@ -31,6 +31,7 @@
 #define MOTATETWI_H_ONCE
 
 #include <cinttypes>
+#include <atomic>
 #include "MotateCommon.h"
 #include "MotateServiceCall.h"
 
@@ -125,15 +126,15 @@ struct TWIMessage {
     uint8_t* buffer = nullptr;
     uint16_t size   = 0;
 
-    TWIBusDeviceBase* device          = nullptr;
-    TWIMessage* volatile next_message = nullptr;
-    Instruction instruction           = Instruction::kNormal;
-    Direction   direction             = Direction::kTX;
+    TWIBusDeviceBase*        device                = nullptr;
+    std::atomic<TWIMessage*> next_message          = nullptr;
+    Instruction              instruction           = Instruction::kNormal;
+    Direction                direction             = Direction::kTX;
 
     TWIInternalAddress internal_address;
 
     std::function<void(bool)> message_done_callback;
-    volatile State            state = State::kIdle;
+    std::atomic<State>        state = State::kIdle;
 
     TWIMessage(){};
 
@@ -143,6 +144,13 @@ struct TWIMessage {
                const TWIInternalAddress&& new_ia           = {},
                const Instruction          new_instruction  = Instruction::kNormal,
                TWIMessage* const          new_next_message = nullptr) {
+
+        if (state != State::kIdle && state != State::kDone) {
+            #ifdef IN_DEBUGGER
+            __asm__("BKPT");  // about to send non-Setup message
+            #endif
+            // We're about to lose a message!
+        }
         buffer       = new_buffer;
         direction    = new_direction;
         size         = new_size;
@@ -181,9 +189,9 @@ struct TWIBus {
     ServiceCall<svcCallNum> message_manager;
 
     TWIBusDeviceBase *_first_device, *_current_transaction_device;
-    TWIMessage* volatile _first_message;  //, *_last_message;
+    std::atomic<TWIMessage*> _first_message, _last_message;
 
-    volatile bool sending = false;  // as long as this is true, sendNextMessage() does nothing
+    std::atomic<bool> sending = false;  // as long as this is true, sendNextMessage() does nothing
 
     TWIBus() : hardware{} {}
 
@@ -256,34 +264,32 @@ struct TWIBus {
     }
 
     void sendNextMessageActual() {
-        if (sending) {
+        if (sending.load(std::memory_order_acquire)) {
             return;
         }
-        while (_first_message && (TWIMessage::State::kDone == _first_message->state)) {
-            auto done_message          = _first_message;
-            _first_message             = _first_message->next_message;
-            done_message->next_message = nullptr;
-        }
-
-        if (_first_message == nullptr) {
+        // We'll load this atomically, ensuring to get a fresh copy,
+        // and cache a local copy to work on for the rest of this routine
+        // (if it changes, somethng went wrong here.)
+        auto first_message = _first_message.load(std::memory_order_acquire);
+        if (first_message == nullptr) {
             return;
         }
-        if (TWIMessage::State::kSending == _first_message->state) {
+        if (TWIMessage::State::kSending == first_message->state) {
             return;
         }
 
 #ifdef IN_DEBUGGER
-        if (TWIMessage::State::kSetup != _first_message->state) {
-            __asm__("BKPT");  // SPI about to send non-Setup message
+        if (TWIMessage::State::kSetup != first_message->state) {
+            __asm__("BKPT");  // about to send non-Setup message
         }
 #endif
 
         sending                     = true;
-        _first_message->state       = TWIMessage::State::kSending;
-        _current_transaction_device = _first_message->device;
-        hardware.setAddress(_current_transaction_device->getAddress(), _first_message->internal_address);
-        hardware.startTransfer(_first_message->buffer, _first_message->size,
-                               _first_message->direction == TWIMessage::Direction::kRX);
+        first_message->state        = TWIMessage::State::kSending;
+        _current_transaction_device = first_message->device;
+        hardware.setAddress(_current_transaction_device->getAddress(), first_message->internal_address);
+        hardware.startTransfer(first_message->buffer, first_message->size,
+                               first_message->direction == TWIMessage::Direction::kRX);
     }
 
     void twiInterruptHandler(const TWIInterruptCause& interruptCause) {
@@ -296,64 +302,87 @@ struct TWIBus {
         if (interruptCause.isTxTransferDone() || interruptCause.isRxTransferDone() || interruptCause.isNACK() ||
             interruptCause.isRxError() || interruptCause.isTxError()) {
             // Check that we're done with all transmission...
-            if (!hardware.doneReading()) {
-                return;
-            }
-            if (!hardware.doneWriting()) {
-                return;
-            }
+            // if (!hardware.doneReading()) {
+            //     return;
+            // }
+            // if (!hardware.doneWriting()) {
+            //     return;
+            // }
 
+            // _first_message is done sending, cache the pointer itself and manipulate it
+            auto this_message = _first_message.load(std::memory_order_acquire);
 #ifdef IN_DEBUGGER
-            if (nullptr == _first_message) {
+            if (nullptr == this_message) {
                 __asm__("BKPT");  // no first message!?
+                return;
             }
 #endif
+            // Update the state
+            this_message->state.store(TWIMessage::State::kDone, std::memory_order_release);
 
-            // _first_message is done sending.
-            // Go ahead and pop it from the list and reset (partially)
-            auto this_message = _first_message;
-            while (this_message && (TWIMessage::State::kDone == this_message->state)) {
-                this_message = this_message->next_message;
+            // IMPORTANT NOTE: the callback may call sendNextMessage(), so we
+            //   keep sending at true to prevent issues.
+
+            // Pop _first_message off
+
+            // // Atomically set the new _first_message to the next message (may be nullptr)
+            // _first_message.store(this_message->next_message.load(std::memory_order_acquire), std::memory_order_release);
+
+            // Use Compare-And-Store (CAS) to atomically change _first_message safely
+            while(!_first_message.compare_exchange_weak(this_message, this_message->next_message, std::memory_order_release)) {
+                ;
             }
 
-            if (this_message && (TWIMessage::State::kSending == this_message->state)) {
-                // Then grab the (only) Sending message and mark it Done, then call it's done callback.
-                this_message->state = TWIMessage::State::kDone;
+            // Use Compare-And-Store (CAS) to atomically change _last_message safely
+            // This will ONLY change _last_message IF _last_message==this_message.
+            // If it fails, this_message will be set to the value found at _last_message,
+            // so be careful to either not use this_message anymore or know it may have changed!
+            // _last_message.compare_exchange_weak(this_message, this_message->next_message, std::memory_order_release);
 
-                // IMPORTANT NOTE: the callback may call sendNextMessage(), so we
-                //   keep sending at true to prevent issues.
+            this_message->next_message.store(nullptr, std::memory_order_release);
 
-                if (this_message->message_done_callback) {
-                    this_message->message_done_callback(
-                        !(interruptCause.isNACK() || interruptCause.isRxError() || interruptCause.isTxError()));
-                }
+            if (this_message->message_done_callback) {
+                this_message->message_done_callback(
+                    !(interruptCause.isNACK() || interruptCause.isRxError() || interruptCause.isTxError()));
             }
-            sending = false;  // we can now allow more sending
+
+            sending.store(false, std::memory_order_release);  // we can now allow more sending
+
             // sendNextMessageActual();
             message_manager.call();
         }
     };
 
-    void queueAndSendMessage(TWIMessage* msg) {
-        if (_first_message == nullptr) {
-            _first_message = msg;
+    void queueAndSendMessage(TWIMessage* new_message) {
+        // TWIMessage* old_last_message = _last_message.load(std::memory_order_release);
+
+        // // the result of this next line is that:
+        // // 1- _last_message is set to new_message
+        // // 2- old_last_message is set to the previous value of _last_message
+        // while(!_last_message.compare_exchange_weak(old_last_message, new_message, std::memory_order_release)) { ; }
+
+        // // now we can safely set this:
+        // old_last_message->next_message = new_message;
+
+        // // And to carefully set _first_message, we'll store a temporary nullptr
+        // TWIMessage* null_temp = nullptr;
+        // // Then, IF _first_message matches nullptr, it'll set it to the new_message
+        // _first_message.compare_exchange_weak(null_temp, new_message, std::memory_order_release);
+
+        TWIMessage* message_walker = _first_message.load(std::memory_order_acquire);
+
+        // If _first_message != nullptr or we can't set it to new_message...
+        if (message_walker != nullptr ||
+            !_first_message.compare_exchange_weak(message_walker, new_message, std::memory_order_release)) {
+            TWIMessage* next_message = message_walker;
+            while (next_message) {
+                message_walker = next_message;
+                next_message   = message_walker->next_message.load(std::memory_order_acquire);
+            }
+            message_walker->next_message.store(new_message, std::memory_order_release);
         } else {
-            TWIMessage* message_walker = _first_message;
-            while ((message_walker != msg) && (message_walker->next_message != nullptr)) {
-                message_walker = message_walker->next_message;
-            }
-
-            if (message_walker != msg) {
-                message_walker->next_message = msg;
-            }
+            sendNextMessage();
         }
-
-        // Either we just queued the first message, OR we *might* have
-        // just queued a message for the current transaction
-        // that has stalled, waiting for more messages.
-
-        // In either case, we want to:
-        sendNextMessage();
     };
 
 

@@ -43,25 +43,25 @@ namespace Motate {
         static constexpr Type Unknown = 0;
 
         // TxRead means more data *can* be sent
-        static constexpr Type OnTxReady       = 1 << 1;
-        static constexpr Type OnTransmitReady = 1 << 1;
+        static constexpr Type OnTxReady       = 1 << 0;
+        static constexpr Type OnTransmitReady = 1 << 0;
         // TxDone means all data requested to be sent has been
-        static constexpr Type OnTxDone       = 1 << 2;
-        static constexpr Type OnTransmitDone = 1 << 2;
+        static constexpr Type OnTxDone       = 1 << 1;
+        static constexpr Type OnTransmitDone = 1 << 1;
         // TxError means a miscellaneous tx error
-        static constexpr Type OnTxError       = 1 << 3;
-        static constexpr Type OnTransmitError = 1 << 3;
+        static constexpr Type OnTxError       = 1 << 2;
+        static constexpr Type OnTransmitError = 1 << 2;
 
-        static constexpr Type OnRxReady      = 1 << 4;
-        static constexpr Type OnReceiveReady = 1 << 4;
-        static constexpr Type OnRxDone       = 1 << 5;
-        static constexpr Type OnReceiveDone  = 1 << 5;
+        static constexpr Type OnRxReady      = 1 << 3;
+        static constexpr Type OnReceiveReady = 1 << 3;
+        static constexpr Type OnRxDone       = 1 << 4;
+        static constexpr Type OnReceiveDone  = 1 << 4;
 
-        static constexpr Type OnRxError      = 1 << 6;
-        static constexpr Type OnReceiveError = 1 << 6;
+        static constexpr Type OnRxError      = 1 << 5;
+        static constexpr Type OnReceiveError = 1 << 5;
 
-        static constexpr Type OnTxTransferDone = 1 << 7;
-        static constexpr Type OnRxTransferDone = 1 << 8;
+        static constexpr Type OnTxTransferDone = 1 << 6;
+        static constexpr Type OnRxTransferDone = 1 << 7;
 
         // Leave bits 9-10 for use in child classes
 
@@ -76,42 +76,57 @@ namespace Motate {
     class InterruptCause {
         protected:
 
-        Interrupt::Type value_;
+        union {
+            Interrupt::Type value_;
+#ifdef IN_DEBUGGER
+            struct {
+                uint16_t tx_ready : 1;
+                uint16_t tx_done : 1;
+                uint16_t tx_err : 1;
 
-        public:
-         InterruptCause(const Interrupt::Type& c = 0) : value_{c} { ; }
+                uint16_t rx_ready : 1;
+                uint16_t rx_done : 1;
+                uint16_t rx_err : 1;
 
-         void clear() { value_ = 0; }
+                uint16_t tx_trans_done : 1;
+                uint16_t rx_trans_done : 1;
+            };
+#endif
+        };
+       public:
+        InterruptCause(const Interrupt::Type& c = 0) : value_{c} { ; }
 
-         bool isEmpty() const { return 0 == value_; }
+        void clear() { value_ = 0; }
 
-         bool isTxReady() const { return value_ & Interrupt::OnTxReady; }
-         void setTxReady() { value_ |= Interrupt::OnTxReady; }
-         void clearTxReady() { value_ &= ~Interrupt::OnTxReady; }
+        bool isEmpty() const { return 0 == value_; }
 
-         bool isTxDone() const { return value_ & Interrupt::OnTxDone; }
-         void setTxDone() { value_ |= Interrupt::OnTxDone; }
-         void clearTxDone() { value_ &= ~Interrupt::OnTxDone; }
+        bool isTxReady() const { return value_ & Interrupt::OnTxReady; }
+        void setTxReady() { value_ |= Interrupt::OnTxReady; }
+        void clearTxReady() { value_ &= ~Interrupt::OnTxReady; }
 
-         bool isTxError() const { return value_ & Interrupt::OnTxError; }
-         void setTxError() { value_ |= Interrupt::OnTxError; }
-         void clearTxError() { value_ &= ~Interrupt::OnTxError; }
+        bool isTxDone() const { return value_ & Interrupt::OnTxDone; }
+        void setTxDone() { value_ |= Interrupt::OnTxDone; }
+        void clearTxDone() { value_ &= ~Interrupt::OnTxDone; }
 
-         bool isRxReady() const { return value_ & Interrupt::OnRxReady; }
-         void setRxReady() { value_ |= Interrupt::OnRxReady; }
-         void clearRxReady() { value_ &= ~Interrupt::OnRxReady; }
+        bool isTxError() const { return value_ & Interrupt::OnTxError; }
+        void setTxError() { value_ |= Interrupt::OnTxError; }
+        void clearTxError() { value_ &= ~Interrupt::OnTxError; }
 
-         bool isRxError() const { return value_ & Interrupt::OnRxError; }
-         void setRxError() { value_ |= Interrupt::OnRxError; }
-         void clearRxError() { value_ &= ~Interrupt::OnRxError; }
+        bool isRxReady() const { return value_ & Interrupt::OnRxReady; }
+        void setRxReady() { value_ |= Interrupt::OnRxReady; }
+        void clearRxReady() { value_ &= ~Interrupt::OnRxReady; }
 
-         bool isTxTransferDone() const { return value_ & Interrupt::OnTxTransferDone; }
-         void setTxTransferDone() { value_ |= Interrupt::OnTxTransferDone; }
-         void clearTxTransferDone() { value_ &= ~Interrupt::OnTxTransferDone; }
+        bool isRxError() const { return value_ & Interrupt::OnRxError; }
+        void setRxError() { value_ |= Interrupt::OnRxError; }
+        void clearRxError() { value_ &= ~Interrupt::OnRxError; }
 
-         bool isRxTransferDone() const { return value_ & Interrupt::OnRxTransferDone; }
-         void setRxTransferDone() { value_ |= Interrupt::OnRxTransferDone; }
-         void clearRxTransferDone() { value_ &= ~Interrupt::OnRxTransferDone; }
+        bool isTxTransferDone() const { return value_ & Interrupt::OnTxTransferDone; }
+        void setTxTransferDone() { value_ |= Interrupt::OnTxTransferDone; }
+        void clearTxTransferDone() { value_ &= ~Interrupt::OnTxTransferDone; }
+
+        bool isRxTransferDone() const { return value_ & Interrupt::OnRxTransferDone; }
+        void setRxTransferDone() { value_ |= Interrupt::OnRxTransferDone; }
+        void clearRxTransferDone() { value_ &= ~Interrupt::OnRxTransferDone; }
     };
 
 

@@ -45,9 +45,9 @@
 namespace Motate {
 
     template<int8_t twiPeripheralNumber>
-    struct _TWIHardware : public Motate::TWI_internal::TWIInfo<twiPeripheralNumber>
+    struct TWIHardware_ : public Motate::TWI_internal::TWIInfo<twiPeripheralNumber>
     {
-        using this_type_t = _TWIHardware<twiPeripheralNumber>;
+        using this_type_t = TWIHardware_<twiPeripheralNumber>;
         using info = Motate::TWI_internal::TWIInfo<twiPeripheralNumber>;
         static constexpr auto twiPeripheralNum = twiPeripheralNumber;
 
@@ -58,15 +58,15 @@ namespace Motate {
         using info::peripheralId;
         using info::IRQ;
 
-        std::function<void(const TWIInterruptCause&)> _TWIInterruptHandler;
+        std::function<void(const TWIInterruptCause&)> TWIInterruptHandler_;
 
-        std::function<void(Interrupt::Type)> _TWIDMAInterruptHandler;
-        static std::function<void(void)> _twiInterruptHandlerJumper;
+        std::function<void(Interrupt::Type)> TWIDMAInterruptHandler_;
+        static std::function<void(void)> twiInterruptHandlerJumper_;
 
-        DMA<TWI_tag, twiPeripheralNumber> dma{_TWIDMAInterruptHandler};
+        DMA<TWI_tag, twiPeripheralNumber> dma{TWIDMAInterruptHandler_};
 
-        _TWIHardware() : _TWIDMAInterruptHandler{[&](Interrupt::Type hint){ this->handleInterrupts(hint); }} {
-            _twiInterruptHandlerJumper = [&]() { this->handleInterrupts(); };
+        TWIHardware_() : TWIDMAInterruptHandler_{[&](Interrupt::Type hint){ this->handleInterrupts(hint); }} {
+            twiInterruptHandlerJumper_ = [&]() { this->handleInterrupts(); };
             SamCommon::enablePeripheralClock(peripheralId);
 
             // read the status register (Microchip says so)
@@ -95,10 +95,10 @@ namespace Motate {
             // note that interruptCause may change in prehandleInterrupt!
             prehandleInterrupt(interruptCause);
             // if we ended up handling them, we're done here
-            if (interruptCause.isEmpty()) { return; }
+            if (interruptCause.isEmpty() || state_ != InternalState::Idle ) { return; }
 
-            if (_TWIInterruptHandler) {
-                _TWIInterruptHandler(interruptCause);
+            if (TWIInterruptHandler_) {
+                TWIInterruptHandler_(interruptCause);
             } else {
                 #if IN_DEBUGGER == 1
                 __asm__("BKPT");
@@ -213,7 +213,7 @@ namespace Motate {
         }
 
         void setInterruptHandler(std::function<void(const TWIInterruptCause&)> &&handler) {
-            _TWIInterruptHandler = std::move(handler);
+            TWIInterruptHandler_ = std::move(handler);
         }
 
         TWIInterruptCause getInterruptCause(Interrupt::Type hint = 0) {
@@ -226,6 +226,27 @@ namespace Motate {
             // The simple but unfortunate fix is to verify that the Interrupt Mask
             // calls for that interrupt before considering it as a possible interrupt
             // source. This should be a best practice anyway, really. -Giseburt
+
+            // If there's a hint, then this is coming from the DMA
+            // Since this is a different interrupt handler for the DMA and the TWI,
+            // if there is a hint, ONLY return the values for the DMA
+
+            if (hint) {
+                if ((hint & Interrupt::OnTxTransferDone)) {
+                    status.setTxTransferDone();
+                }
+                if ((hint & Interrupt::OnRxTransferDone)) {
+                    status.setRxTransferDone();
+                }
+                if ((hint & Interrupt::OnTxError)) {
+                    status.setTxError();
+                }
+                if ((hint & Interrupt::OnRxError)) {
+                    status.setRxError();
+                }
+
+                return status;
+            }
 
             auto TWI_SR_hold = twi->TWIHS_SR;
             auto TWI_IMR_hold = twi->TWIHS_IMR;
@@ -246,25 +267,6 @@ namespace Motate {
             {
                 status.setNACK();
             }
-
-
-            if ((hint & Interrupt::OnTxTransferDone))
-            {
-                status.setTxTransferDone();
-            }
-            if ((hint & Interrupt::OnRxTransferDone))
-            {
-                status.setRxTransferDone();
-            }
-            if ((hint & Interrupt::OnTxError))
-            {
-                status.setTxError();
-            }
-            if ((hint & Interrupt::OnRxError))
-            {
-                status.setRxError();
-            }
-
 
             return status;
         }
@@ -291,12 +293,16 @@ namespace Motate {
             twi->TWIHS_IDR = TWIHS_IDR_TXCOMP;
         }
 
+        bool isTxReady() { return !!(twi->TWIHS_SR & TWIHS_SR_TXRDY); }
+
         void enableOnRXReadyInterrupt() {
             twi->TWIHS_IER = TWIHS_IER_RXRDY;
         }
         void disableOnRXReadyInterrupt() {
             twi->TWIHS_IDR = TWIHS_IDR_RXRDY;
         }
+
+        bool isRxReady() { return !!(twi->TWIHS_SR & TWIHS_SR_RXRDY); }
 
 
         void setInterrupts(const Interrupt::Type interrupts) {
@@ -361,19 +367,19 @@ namespace Motate {
             }
         }
 
-        // void _enableOnTXTransferDoneInterrupt() {
+        // void enableOnTXTransferDoneInterrupt_() {
         //     dma.startTxDoneInterrupts();
         // }
 
-        // void _disableOnTXTransferDoneInterrupt() {
+        // void disableOnTXTransferDoneInterrupt_() {
         //     dma.stopTxDoneInterrupts();
         // }
 
-        // void _enableOnRXTransferDoneInterrupt() {
+        // void enableOnRXTransferDoneInterrupt_() {
         //     dma.startRxDoneInterrupts();
         // }
 
-        // void _disableOnRXTransferDoneInterrupt() {
+        // void disableOnRXTransferDoneInterrupt_() {
         //     dma.stopRxDoneInterrupts();
         // }
 
@@ -494,10 +500,29 @@ namespace Motate {
                 return;
             }
 
+            // Spurious interrupt
+            if (InternalState::Idle == state_) {
+                #if IN_DEBUGGER == 1
+                __asm__("BKPT");
+                #endif
+                disableOnRXReadyInterrupt();
+
+                disableOnTXReadyInterrupt();
+                disableOnTXDoneInterrupt();
+
+                dma.stopRxDoneInterrupts();
+                dma.stopTxDoneInterrupts();
+
+                cause.clear();
+                return;
+            }
+
             // RX cases
             if (InternalState::RXReadingFirstByte == state_ && cause.isRxReady()) {
                 if (local_buffer_size_ > 2) {
                     cause.clearRxReady(); // stop this from being propagated
+
+                    disableOnRXReadyInterrupt();
 
                     // From SAM E70/S70/V70/V71 Family Eratta:
                     //  If TCM accesses are generated through the AHBS port of the core, only 32-bit accesses are supported.
@@ -551,11 +576,17 @@ namespace Motate {
                 // Now we wait for the next-to-last character to come in, read it into the buffer, and set the STOP bit
                 state_ = InternalState::RXWaitingForRXReady;
 
+                dma.stopRxDoneInterrupts();
+                dma.disable();
+
                 // If we don't already have an RXReady, set the interrupt for it
-                if (!cause.isRxReady()) { enableOnRXReadyInterrupt(); }
+                if (!isRxReady()) {
+                    enableOnRXReadyInterrupt();
+                    return;
+                }
             } // no else here!
 
-            if (InternalState::RXWaitingForRXReady == state_ && cause.isRxReady()) {
+            if (InternalState::RXWaitingForRXReady == state_ && (isRxReady() || cause.isRxReady())) {
                 cause.clearRxReady(); // stop this from being propagated
                 // At this point we've recieved the next-to-last character, but haven't read it yet
                 // Now we set the STOP bit, ...
@@ -573,7 +604,7 @@ namespace Motate {
             } // no else here!
 
             if (InternalState::RXWaitingForLastChar == state_ && cause.isRxReady()) {
-                // we want isRxReady to be propagated
+                cause.clearRxReady(); // stop this from being propagated
                 cause.setRxTransferDone(); // And now we push that the rx transfer is done
 
                 // At this point we've recieved last character, but haven't read it yet
@@ -614,7 +645,7 @@ namespace Motate {
                     const bool handle_interrupts = true;
                     const bool include_next      = false;
 
-                    enableOnTXDoneInterrupt();
+                    // enableOnTXDoneInterrupt();
                     enableOnNACKInterrupt();
 
                     // Note we set size to size-1 since we have to handle the last character "manually"
@@ -647,7 +678,10 @@ namespace Motate {
                 dma.disable();
 
                 // If we don't already have an TXReady, set the interrupt for it
-                if (!cause.isTxReady()) { enableOnTXReadyInterrupt(); }
+                if (!isTxReady()) {
+                    enableOnTXReadyInterrupt();
+                    return;
+                }
             } // no else here!
 
             if (InternalState::TXWaitingForTXReady1 == state_ && (cause.isTxDone() || cause.isTxTransferDone())) {
@@ -655,7 +689,7 @@ namespace Motate {
                 cause.clearTxTransferDone(); // stop this from being propagated
             } // no else here!
 
-            if (InternalState::TXWaitingForTXReady1 == state_ && cause.isTxReady()) {
+            if (InternalState::TXWaitingForTXReady1 == state_ && (isTxReady() || cause.isTxReady())) {
                 cause.clearTxReady(); // stop this from being propagated
 
                 // At this point we've sent the next-to-last character,
@@ -694,7 +728,7 @@ namespace Motate {
 
     // TWIGetHardware is just a pass-through for now
     template <pin_number twiSCKPinNumber, pin_number twiSDAPinNumber>
-    using TWIGetHardware = _TWIHardware<TWISCKPin<twiSCKPinNumber>::twiNum>;
+    using TWIGetHardware = TWIHardware_<TWISCKPin<twiSCKPinNumber>::twiNum>;
 
 } // namespace Motate
 
