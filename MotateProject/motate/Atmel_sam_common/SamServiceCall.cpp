@@ -38,7 +38,7 @@ extern "C" {
 
 namespace Motate {
     //volatile uint32_t _internal_pendsv_handler_number = 0;
-    ServiceCallEvent * volatile ServiceCallEvent::_first_service_call = nullptr;
+    std::atomic<ServiceCallEvent *> ServiceCallEvent::_first_service_call = nullptr;
 
     // // We'll support just ten for now. These take up space when not using LTO.
     // template<> void ServiceCall<  0 >::interrupt() __attribute__ ((weak));
@@ -125,6 +125,6 @@ if (Motate::_internal_pendsv_handler_number == n) {\
 void PendSV_Handler() {
     Motate::SamCommon::sync();
     if (Motate::ServiceCallEvent::_first_service_call) {
-        Motate::ServiceCallEvent::_first_service_call->_call_from_handler();
+        Motate::ServiceCallEvent::_first_service_call.load()->_call_from_handler();
     }
 }

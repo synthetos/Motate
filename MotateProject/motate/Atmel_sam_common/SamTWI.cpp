@@ -31,15 +31,15 @@
 #include "MotateTWI.h"
 
 namespace Motate {
-    template<> std::function<void()> TWIHardware_<0u>::twiInterruptHandlerJumper_ {};
+    template<> TWIHardware_<0u>* TWIHardware_<0u>::twiInterruptHandler_ = nullptr;
     #ifdef HAS_TWIHS1
-    template<> std::function<void()> TWIHardware_<1u>::twiInterruptHandlerJumper_ {};
+    template<> TWIHardware_<1u>* TWIHardware_<1u>::twiInterruptHandler_ = nullptr;
     #endif
 }
 
 extern "C" void TWIHS0_Handler(void)  {
-    if (Motate::TWIHardware_<0u>::twiInterruptHandlerJumper_) {
-        Motate::TWIHardware_<0u>::twiInterruptHandlerJumper_();
+    if (Motate::TWIHardware_<0u>::twiInterruptHandler_) {
+        Motate::TWIHardware_<0u>::twiInterruptHandler_->handleInterrupts();
         return;
     }
 #if IN_DEBUGGER == 1
@@ -49,8 +49,8 @@ extern "C" void TWIHS0_Handler(void)  {
 
 #ifdef HAS_TWIHS1
 extern "C" void TWIHS1_Handler(void)  {
-    if (Motate::TWIHardware_<1u>::twiInterruptHandlerJumper_) {
-        Motate::TWIHardware_<1u>::twiInterruptHandlerJumper_();
+    if (Motate::TWIHardware_<1u>::twiInterruptHandler_) {
+        Motate::TWIHardware_<1u>::twiInterruptHandler_->handleInterrupts();
         return;
     }
 #if IN_DEBUGGER == 1

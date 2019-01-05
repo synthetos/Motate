@@ -196,7 +196,7 @@ namespace Motate {
      **************************************************/
 
     template<pin_number spiMISOPinNumber, pin_number spiMOSIPinNumber, pin_number spiSCKPinNumber, service_call_number svcCallNum>
-    struct SPIBus
+    struct SPIBus : virtual ServiceCallEventHandler
     {
 
         static_assert(IsSPIMISOPin<spiMISOPinNumber>(),
@@ -275,9 +275,7 @@ namespace Motate {
         // This must be called later, outside of the contructors, to ensure that all dependencies are contructed.
         void init() {
             // setup message_manager system call handler and priority
-            message_manager.setInterruptHandler([&]() {
-                this->sendNextMessageActual();
-            });
+            message_manager.setInterruptHandler(this);  // will call this->handleServiceCallEvent()
             message_manager.setInterrupts(kInterruptPriorityLow);
 
             // ask the hardware to init
@@ -295,7 +293,7 @@ namespace Motate {
             //sendNextMessageActual();
         }
 
-        void sendNextMessageActual() {
+        void handleServiceCallEvent() override {
             if (sending) { return; }
             while (_first_message && (SPIMessage::State::Done == _first_message->state)) {
                 auto done_message = _first_message;

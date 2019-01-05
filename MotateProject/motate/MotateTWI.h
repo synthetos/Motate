@@ -85,6 +85,10 @@ struct TWIInterruptCause : public InterruptCause {
     void clearNACK() { value_ &= ~TWIInterrupt::OnNACK; }
 };
 
+struct TWIInterruptHandler {
+    virtual void handleTWIInterrupt(const TWIInterruptCause& interruptCause);
+};
+
 }  // namespace Motate
 
 #include <ProcessorTWI.h>
@@ -144,8 +148,8 @@ struct TWIMessage {
                const TWIInternalAddress&& new_ia           = {},
                const Instruction          new_instruction  = Instruction::kNormal,
                TWIMessage* const          new_next_message = nullptr) {
-
-        if (state != State::kIdle && state != State::kDone) {
+        auto state_snapshot = state.load();
+        if (state_snapshot != State::kIdle && state_snapshot != State::kDone) {
             #ifdef IN_DEBUGGER
             __asm__("BKPT");  // about to send non-Setup message
             #endif
@@ -171,7 +175,7 @@ struct TWIMessage {
  **************************************************/
 
 template <pin_number twiSCKPinNumber, pin_number twiSDAPinNumber, service_call_number svcCallNum>
-struct TWIBus {
+struct TWIBus : virtual TWIInterruptHandler, virtual ServiceCallEventHandler {
     using bus_type = TWIBus<twiSCKPinNumber, twiSDAPinNumber, svcCallNum>;
     // Note these asserts will need to be revisited if we make a bit-banged TWI
     static_assert(IsTWISCKPin<twiSCKPinNumber>(), "TWI SCK Pin is not on a hardware TWI.");
@@ -244,14 +248,12 @@ struct TWIBus {
     // This must be called later, outside of the constructors, to ensure that all dependencies are constructed.
     void init() {
         // setup message_manager system call handler and priority
-        message_manager.setInterruptHandler([&]() { this->sendNextMessageActual(); });
-        message_manager.setInterrupts(kInterruptPriorityLow);
+        message_manager.setInterruptHandler(this);   // will call this->handleServiceCallEvent()
+        message_manager.setInterrupts(kInterruptPriorityLowest);
 
         // ask the hardware to init
         hardware.init();
-        hardware.setInterruptHandler([&](const TWIInterruptCause& interruptCause) {  // use a closure
-            this->twiInterruptHandler(interruptCause);
-        });
+        hardware.setInterruptHandler(this); // will call this->handleTWIInterrupt(...)
         hardware.setInterrupts(kInterruptPriorityLow);  // enable interrupts and set the priority
         // hardware.enable();
     };
@@ -263,8 +265,8 @@ struct TWIBus {
         // sendNextMessageActual();
     }
 
-    void sendNextMessageActual() {
-        if (sending.load(std::memory_order_acquire)) {
+    void handleServiceCallEvent() override {
+        if (sending.load()) {
             return;
         }
         // We'll load this atomically, ensuring to get a fresh copy,
@@ -274,92 +276,95 @@ struct TWIBus {
         if (first_message == nullptr) {
             return;
         }
-        if (TWIMessage::State::kSending == first_message->state) {
-            return;
-        }
-
 #ifdef IN_DEBUGGER
         if (TWIMessage::State::kSetup != first_message->state) {
             __asm__("BKPT");  // about to send non-Setup message
         }
 #endif
+        if (TWIMessage::State::kSending == first_message->state) {
+            return;
+        }
 
-        sending                     = true;
+        sending.store(true);
         first_message->state        = TWIMessage::State::kSending;
         _current_transaction_device = first_message->device;
         hardware.setAddress(_current_transaction_device->getAddress(), first_message->internal_address);
-        hardware.startTransfer(first_message->buffer, first_message->size,
-                               first_message->direction == TWIMessage::Direction::kRX);
+        if (!hardware.startTransfer(first_message->buffer, first_message->size,
+                                    first_message->direction == TWIMessage::Direction::kRX)) {
+            __asm__("BKPT");  // about to send non-Setup message
+        }
     }
 
-    void twiInterruptHandler(const TWIInterruptCause& interruptCause) {
+    void handleTWIInterrupt(const TWIInterruptCause& interruptCause) override {
         // This bears stating, even though it's somewhat obvious:
         // This entire function is in an interrupt (higher priority) context, and will occasionally
         // interupt other code that interacts with the same structures.
 
         // So, we have to be careful not to move something out from under the other code.
 
-        if (interruptCause.isTxTransferDone() || interruptCause.isRxTransferDone() || interruptCause.isNACK() ||
-            interruptCause.isRxError() || interruptCause.isTxError()) {
-            // Check that we're done with all transmission...
-            // if (!hardware.doneReading()) {
-            //     return;
-            // }
-            // if (!hardware.doneWriting()) {
-            //     return;
-            // }
-
-            // _first_message is done sending, cache the pointer itself and manipulate it
-            auto this_message = _first_message.load(std::memory_order_acquire);
-#ifdef IN_DEBUGGER
-            if (nullptr == this_message) {
-                __asm__("BKPT");  // no first message!?
-                return;
-            }
-#endif
-            // Update the state
-            this_message->state.store(TWIMessage::State::kDone, std::memory_order_release);
-
-            // IMPORTANT NOTE: the callback may call sendNextMessage(), so we
-            //   keep sending at true to prevent issues.
-
-            // Pop _first_message off
-
-            // // Atomically set the new _first_message to the next message (may be nullptr)
-            // _first_message.store(this_message->next_message.load(std::memory_order_acquire), std::memory_order_release);
-
-            // Use Compare-And-Store (CAS) to atomically change _first_message safely
-            while(!_first_message.compare_exchange_weak(this_message, this_message->next_message, std::memory_order_release)) {
-                ;
-            }
-
-            // Use Compare-And-Store (CAS) to atomically change _last_message safely
-            // This will ONLY change _last_message IF _last_message==this_message.
-            // If it fails, this_message will be set to the value found at _last_message,
-            // so be careful to either not use this_message anymore or know it may have changed!
-            // _last_message.compare_exchange_weak(this_message, this_message->next_message, std::memory_order_release);
-
-            this_message->next_message.store(nullptr, std::memory_order_release);
-
-            if (this_message->message_done_callback) {
-                this_message->message_done_callback(
-                    !(interruptCause.isNACK() || interruptCause.isRxError() || interruptCause.isTxError()));
-            }
-
-            sending.store(false, std::memory_order_release);  // we can now allow more sending
-
-            // sendNextMessageActual();
-            message_manager.call();
+        if (!(interruptCause.isTxTransferDone() || interruptCause.isRxTransferDone() || interruptCause.isNACK() ||
+            interruptCause.isRxError() || interruptCause.isTxError())) {
+            __asm__("BKPT");  // not actually done?
         }
+        // Check that we're done with all transmission...
+        // if (!hardware.doneReading()) {
+        //     return;
+        // }
+        // if (!hardware.doneWriting()) {
+        //     return;
+        // }
+
+        // _first_message is done sending, cache the pointer itself and manipulate it
+        auto this_message = _first_message.load();
+#ifdef IN_DEBUGGER
+        if (nullptr == this_message) {
+            __asm__("BKPT");  // no first message!?
+            return;
+        }
+#endif
+        // Update the state
+        this_message->state.store(TWIMessage::State::kDone);
+
+        // IMPORTANT NOTE: the callback may call sendNextMessage(), so we
+        //   keep sending at true to prevent issues.
+
+        // Pop _first_message off
+
+        // // Atomically set the new _first_message to the next message (may be nullptr)
+        // _first_message.store(this_message->next_message.load());
+
+        // Use Compare-And-Store (CAS) to atomically change _first_message safely
+        while(!_first_message.compare_exchange_weak(this_message, this_message->next_message)) {
+            __asm__("BKPT");  // missed the set!
+        }
+
+        // Use Compare-And-Store (CAS) to atomically change _last_message safely
+        // This will ONLY change _last_message IF _last_message==this_message.
+        // If it fails, this_message will be set to the value found at _last_message,
+        // so be careful to either not use this_message anymore or know it may have changed!
+        // _last_message.compare_exchange_weak(this_message, this_message->next_message);
+
+        this_message->next_message.store(nullptr);
+
+        if (this_message->message_done_callback) {
+            this_message->message_done_callback(
+                !(interruptCause.isNACK() || interruptCause.isRxError() || interruptCause.isTxError()));
+        } else {
+            __asm__("BKPT");  // no callback!?
+        }
+
+        sending.store(false);  // we can now allow more sending
+
+        sendNextMessage();
     };
 
     void queueAndSendMessage(TWIMessage* new_message) {
-        // TWIMessage* old_last_message = _last_message.load(std::memory_order_release);
+        // TWIMessage* old_last_message = _last_message.load();
 
         // // the result of this next line is that:
         // // 1- _last_message is set to new_message
         // // 2- old_last_message is set to the previous value of _last_message
-        // while(!_last_message.compare_exchange_weak(old_last_message, new_message, std::memory_order_release)) { ; }
+        // while(!_last_message.compare_exchange_weak(old_last_message, new_message)) { ; }
 
         // // now we can safely set this:
         // old_last_message->next_message = new_message;
@@ -367,22 +372,22 @@ struct TWIBus {
         // // And to carefully set _first_message, we'll store a temporary nullptr
         // TWIMessage* null_temp = nullptr;
         // // Then, IF _first_message matches nullptr, it'll set it to the new_message
-        // _first_message.compare_exchange_weak(null_temp, new_message, std::memory_order_release);
+        // _first_message.compare_exchange_weak(null_temp, new_message);
 
-        TWIMessage* message_walker = _first_message.load(std::memory_order_acquire);
+        TWIMessage* message_walker = _first_message.load();
 
         // If _first_message != nullptr or we can't set it to new_message...
         if (message_walker != nullptr ||
-            !_first_message.compare_exchange_weak(message_walker, new_message, std::memory_order_release)) {
+            !_first_message.compare_exchange_weak(message_walker, new_message)) {
             TWIMessage* next_message = message_walker;
             while (next_message) {
                 message_walker = next_message;
-                next_message   = message_walker->next_message.load(std::memory_order_acquire);
+                next_message   = message_walker->next_message.load();
             }
-            message_walker->next_message.store(new_message, std::memory_order_release);
-        } else {
-            sendNextMessage();
+            message_walker->next_message.store(new_message);
         }
+
+        sendNextMessage();
     };
 
 
