@@ -56,10 +56,10 @@ namespace Motate {
         return tempSize;
     }
 
-    extern "C" void USBHS_Handler() HOT_FUNC;
+    extern "C" void USBHS_Handler(void) HOT_FUNC;
 
     extern "C"
-    void USBHS_Handler() {
+    void USBHS_Handler(void) {
         USBDeviceHardware *hw = USBDeviceHardware::hw;
 
         // Check for and handle connect and disconnect

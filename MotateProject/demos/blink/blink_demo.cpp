@@ -2,13 +2,11 @@
 #include "MotateTimers.h"
 
 // This makes the Motate:: prefix unnecessary.
-using namespace Motate;
-
 /****** Create file-global objects ******/
 
-OutputPin<kLED1_PinNumber> led1_pin;
-OutputPin<kLED2_PinNumber> led2_pin;
-InputPin<kInput1_PinNumber> input_pin(kPullUp);
+OutputPin<Motate::kLED1_PinNumber> led1_pin;
+OutputPin<Motate::kLED2_PinNumber> led2_pin;
+InputPin<Motate::kInput1_PinNumber> input_pin(kPullUp);
 
 
 namespace Motate {

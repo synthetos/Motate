@@ -31,9 +31,6 @@
 #if defined(__AVR_XMEGA__)
 
 #include "Atmel_XMega/XMegaPins.h"
-
-using namespace Motate;
-
 // Here we define a MY_ISR, which is similar to the avrlibc ISR routine, except it does NOT
 // declare the function as 'signal', which will push/pop EVERY register for every ISR,
 // even if it does nothing.

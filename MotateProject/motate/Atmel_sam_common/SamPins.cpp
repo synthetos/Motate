@@ -29,9 +29,12 @@
 
 #include "MotatePins.h"
 
-using namespace Motate;
+using Motate::_pinChangeInterrupt;
+using Motate::ADC_Module;
+using Motate::PortHardware;
 
-template<> _pinChangeInterrupt * PortHardware<'A'>::_firstInterrupt = nullptr;
+template <>
+_pinChangeInterrupt* PortHardware<'A'>::_firstInterrupt = nullptr;
 extern "C" void PIOA_Handler(void) {
     uint32_t isr = PIOA->PIO_ISR;
 

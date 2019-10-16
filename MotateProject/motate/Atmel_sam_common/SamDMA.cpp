@@ -28,15 +28,12 @@
  */
 
 #include "SamDMA.h"
-
-using namespace Motate;
-
 #ifdef XDMAC
-_XDMAInterrupt *Motate::_first_xdmac_interrupt = nullptr;
+Motate::_XDMAInterrupt *Motate::_first_xdmac_interrupt = nullptr;
 
 extern "C" void XDMAC_Handler(void)
 {
-    _XDMAInterrupt *current = Motate::_first_xdmac_interrupt;
+   Motate::_XDMAInterrupt *current = Motate::_first_xdmac_interrupt;
     uint32_t isr = XDMAC->XDMAC_GIS;
     uint32_t imr = XDMAC->XDMAC_GIM;
     while (current != nullptr) {

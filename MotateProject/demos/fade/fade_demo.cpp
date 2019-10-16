@@ -31,13 +31,11 @@
 #include "MotateTimers.h"
 
 // This makes the Motate:: prefix unnecessary.
-using namespace Motate;
-
 /****** Create file-global objects ******/
 
-PWMOutputPin<kLED1_PinNumber> led1_pin(kPWMPinInverted);
-PWMOutputPin<kLED2_PinNumber> led2_pin(kPWMPinInverted);
-PWMOutputPin<kLED3_PinNumber> led3_pin(kPWMPinInverted);
+PWMOutputPin<Motate::kLED1_PinNumber> led1_pin(kPWMPinInverted);
+PWMOutputPin<Motate::kLED2_PinNumber> led2_pin(kPWMPinInverted);
+PWMOutputPin<Motate::kLED3_PinNumber> led3_pin(kPWMPinInverted);
 
 static const float change_per_cycle = 0.05;
 
@@ -105,8 +103,8 @@ void loop() {
         green_pwm_d = 0.0;
         blue_pwm_d = change_per_cycle;
     }
-    
+
     delay(100);
-    
+
     //	led1_pin.toggle();
 }

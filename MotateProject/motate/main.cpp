@@ -54,10 +54,7 @@ int main(void);
 // This is used by the anything that may generate a destructor:
 void* __dso_handle = nullptr;
 
-#ifdef __cplusplus
 extern "C"{
-#endif // __cplusplus
-
     // These routines are defined with C linkage:
 
     void _init() {
@@ -72,9 +69,7 @@ extern "C"{
         main();
     }
 
-#ifdef __cplusplus
 }
-#endif // __cplusplus
 
 #endif // __ARM__
 
