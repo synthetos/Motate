@@ -33,111 +33,155 @@
 #endif
 
 namespace Motate {
-    // Empty class to use as a tag for template specialization
-    struct TWI_tag {};
+// Empty class to use as a tag for template specialization
+struct TWI_tag {};
 
-    // We only support XDMAC DMA for now
-    #if defined (XDMAC)
-    #pragma mark DMA_XDMAC TWI implementation
+#if defined(XDMAC)
+#pragma mark DMA_XDMAC TWI implementation
 
-    template<uint8_t twiPeripheralNumber>
-    struct DMA_XDMAC_hardware<TWI_tag, twiPeripheralNumber> : TWI_internal::TWIInfo<twiPeripheralNumber>
-    {
-        using info = TWI_internal::TWIInfo<twiPeripheralNumber>;
-        using info::twi;
-        static constexpr auto peripheralId = info::peripheralId;
-        typedef char* buffer_t;
+template <uint8_t twiPeripheralNumber>
+struct DMA_XDMAC_hardware<TWI_tag, twiPeripheralNumber> : TWI_internal::TWIInfo<twiPeripheralNumber> {
+    using info = TWI_internal::TWIInfo<twiPeripheralNumber>;
+    using info::twi;
+    static constexpr auto peripheralId = info::peripheralId;
+    typedef char*         buffer_t;
+};
+
+template <uint8_t twiPeripheralNumber>
+struct DMA_XDMAC_TX_hardware<TWI_tag, twiPeripheralNumber> : virtual DMA_XDMAC_hardware<TWI_tag, twiPeripheralNumber>,
+                                                             virtual DMA_XDMAC_common {
+    using DMA_XDMAC_hardware<TWI_tag, twiPeripheralNumber>::twi;
+    using DMA_XDMAC_hardware<TWI_tag, twiPeripheralNumber>::peripheralId;
+
+    static constexpr uint8_t const xdmaTxPeripheralId() {
+        switch (twiPeripheralNumber) {
+            case (0): return 14;
+            case (1): return 16;
+            case (2): return 18;
+        };
+        return 0;
     };
+    static constexpr volatile void* const xdmaPeripheralTxAddress() { return &twi->TWIHS_THR; };
+};
 
-    template<uint8_t twiPeripheralNumber>
-    struct DMA_XDMAC_TX_hardware<TWI_tag, twiPeripheralNumber> : virtual DMA_XDMAC_hardware<TWI_tag, twiPeripheralNumber>, virtual DMA_XDMAC_common {
-        using DMA_XDMAC_hardware<TWI_tag, twiPeripheralNumber>::twi;
-        using DMA_XDMAC_hardware<TWI_tag, twiPeripheralNumber>::peripheralId;
+template <uint8_t twiPeripheralNumber>
+struct DMA_XDMAC_RX_hardware<TWI_tag, twiPeripheralNumber> : virtual DMA_XDMAC_hardware<TWI_tag, twiPeripheralNumber>,
+                                                             virtual DMA_XDMAC_common {
+    using DMA_XDMAC_hardware<TWI_tag, twiPeripheralNumber>::twi;
+    using DMA_XDMAC_hardware<TWI_tag, twiPeripheralNumber>::peripheralId;
 
-        static constexpr uint8_t const xdmaTxPeripheralId()
-        {
-            switch (twiPeripheralNumber) {
-                case (0): return 14;
-                case (1): return 16;
-                case (2): return 18;
-            };
-            return 0;
+    static constexpr uint8_t const xdmaRxPeripheralId() {
+        switch (twiPeripheralNumber) {
+            case (0): return 15;
+            case (1): return 17;
+            case (2): return 19;
         };
-        static constexpr volatile void * const xdmaPeripheralTxAddress()
-        {
-            return &twi->TWIHS_THR;
-        };
+        return 0;
     };
+    static constexpr volatile void* const xdmaPeripheralRxAddress() { return &twi->TWIHS_RHR; };
+};
 
-    template<uint8_t twiPeripheralNumber>
-    struct DMA_XDMAC_RX_hardware<TWI_tag, twiPeripheralNumber> : virtual DMA_XDMAC_hardware<TWI_tag, twiPeripheralNumber>, virtual DMA_XDMAC_common {
-        using DMA_XDMAC_hardware<TWI_tag, twiPeripheralNumber>::twi;
-        using DMA_XDMAC_hardware<TWI_tag, twiPeripheralNumber>::peripheralId;
+// Construct a DMA specialization that uses the XDMAC
+template <uint8_t periph_num>
+struct DMA<TWI_tag, periph_num> : DMA_XDMAC_RX<TWI_tag, periph_num>, DMA_XDMAC_TX<TWI_tag, periph_num> {
+    constexpr DMA(const std::function<void(Interrupt::Type)>& handler)
+        : DMA_XDMAC_RX<TWI_tag, periph_num>{handler}, DMA_XDMAC_TX<TWI_tag, periph_num>{handler} {};
 
-        static constexpr uint8_t const xdmaRxPeripheralId()
-        {
-            switch (twiPeripheralNumber) {
-                case (0): return 15;
-                case (1): return 17;
-                case (2): return 19;
-            };
-            return 0;
-        };
-        static constexpr volatile void * const xdmaPeripheralRxAddress()
-        {
-            return &twi->TWIHS_RHR;
-        };
-    };
+    // Merge the RX and TX channels here
+    using DMA_XDMAC_common::xdma;
+    using rx = DMA_XDMAC_RX<TWI_tag, periph_num>;
+    using tx = DMA_XDMAC_TX<TWI_tag, periph_num>;
+    using rx::xdmaRxChannelNumber;
+    using tx::xdmaTxChannelNumber;
 
-    // Construct a DMA specialization that uses the XDMAC
-    template<uint8_t periph_num>
-    struct DMA<TWI_tag, periph_num> : DMA_XDMAC_RX<TWI_tag, periph_num>, DMA_XDMAC_TX<TWI_tag, periph_num> {
-        // nothing to do here, except for a constxpr constructor
-        constexpr DMA(const std::function<void(Interrupt::Type)>& handler)
-            : DMA_XDMAC_RX<TWI_tag, periph_num>{handler}, DMA_XDMAC_TX<TWI_tag, periph_num>{handler} {};
+    void setInterrupts(const Interrupt::Type interrupts) const {
+        DMA_XDMAC_common::setInterrupts(interrupts);
 
-        using DMA_XDMAC_common::xdma;
-        using rx = DMA_XDMAC_RX<TWI_tag, periph_num>;
-        using tx = DMA_XDMAC_TX<TWI_tag, periph_num>;
-        using rx::xdmaRxChannelNumber;
-        using tx::xdmaTxChannelNumber;
-
-        void setInterrupts(const Interrupt::Type interrupts) const
-        {
-            DMA_XDMAC_common::setInterrupts(interrupts);
-
-            if (interrupts != Interrupt::Off) {
-                if (interrupts & Interrupt::OnTxTransferDone) {
-                    tx::startTxDoneInterrupts();
-                } else {
-                    tx::stopTxDoneInterrupts();
-                }
-
-                if (interrupts & Interrupt::OnRxTransferDone) {
-                    rx::startRxDoneInterrupts();
-                } else {
-                    rx::stopRxDoneInterrupts();
-                }
+        if (interrupts != Interrupt::Off) {
+            if (interrupts & Interrupt::OnTxTransferDone) {
+                tx::startTxDoneInterrupts();
             } else {
                 tx::stopTxDoneInterrupts();
-                rx::stopRxDoneInterrupts();
-
             }
-        };
 
-        void reset() const {
-            tx::resetTX();
-            rx::resetRX();
-        };
+            if (interrupts & Interrupt::OnRxTransferDone) {
+                rx::startRxDoneInterrupts();
+            } else {
+                rx::stopRxDoneInterrupts();
+            }
+        } else {
+            tx::stopTxDoneInterrupts();
+            rx::stopRxDoneInterrupts();
+        }
+    };
 
-        void enable() const {
-            xdma()->XDMAC_GE = (XDMAC_GIE_IE0 << rx::xdmaRxChannelNumber()) | (XDMAC_GIE_IE0 << tx::xdmaTxChannelNumber());
+    void reset() const {
+        tx::resetTX();
+        rx::resetRX();
+    };
+
+    void enable() const {
+        xdma()->XDMAC_GE = (XDMAC_GIE_IE0 << rx::xdmaRxChannelNumber()) | (XDMAC_GIE_IE0 << tx::xdmaTxChannelNumber());
+    }
+
+    void disable() const {
+        xdma()->XDMAC_GD = (XDMAC_GID_ID0 << rx::xdmaRxChannelNumber()) | (XDMAC_GID_ID0 << tx::xdmaTxChannelNumber());
+    };
+};
+#endif  // TWI + XDMAC
+
+#if defined(HAS_PDC_TWI)
+#pragma mark DMA_PDC TWI implementation
+
+template <uint8_t twiPeripheralNumber>
+struct DMA_PDC_hardware<TWI_tag, twiPeripheralNumber> : TWI_internal::TWIInfo<twiPeripheralNumber> {
+    using info = TWI_internal::TWIInfo<twiPeripheralNumber>;
+    using info::pdc;
+    using info::twi;
+    static constexpr auto peripheralId = info::peripheralId;
+    typedef char*         buffer_t;
+
+    void startRxDoneInterrupts(const bool include_next = false) const { info::enableOnRXReadyInterrupt(); }
+    void stopRxDoneInterrupts(const bool include_next = false) const { info::disableOnRXReadyInterrupt(); }
+    void startTxDoneInterrupts(const bool include_next = true) const { info::enableOnTXReadyInterrupt(); }
+    void stopTxDoneInterrupts(const bool include_next = true) const { info::disableOnTXReadyInterrupt(); }
+
+    int16_t readByte() const {
+        if (!twi->isRxReady()) {
+            return -1;
+        }
+        return twi->readByte();
+    }
+
+    bool inRxBufferFullInterrupt() const {
+        // we check if the interupt is enabled, then read it if it is
+        if (twi->isRxBufferFull()) {
+            return true;
+        }
+        if (twi->isRxBufferEnded()) {
+            return true;
         }
 
-        void disable() const
-        {
-            xdma()->XDMAC_GD = (XDMAC_GID_ID0 << rx::xdmaRxChannelNumber()) | (XDMAC_GID_ID0 << tx::xdmaTxChannelNumber());
-        };
-    };
-    #endif // TWI + XDMAC
-} //namespace Motate
+        return false;
+    }
+
+    bool inTxBufferEmptyInterrupt() const {
+        // we check if the interupt is enabled, then read it if it is
+        if (twi->isTxBufferEmpty()) {
+            return true;
+        }
+        if (twi->isTxBufferEnded()) {
+            return true;
+        }
+        return false;
+    }
+};
+
+// Construct a DMA specialization that uses the XDMAC
+template <uint8_t periph_num>
+struct DMA<TWI_tag, periph_num> : DMA_PDC<TWI_tag, periph_num> {
+    // nothing to do here, except for a constxpr constructor
+    constexpr DMA(const std::function<void(Interrupt::Type)>& handler) : DMA_PDC<TWI_tag, periph_num>{handler} {};
+};
+#endif  // TWI + PDC
+}  // namespace Motate

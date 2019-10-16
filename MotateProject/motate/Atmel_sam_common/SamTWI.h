@@ -69,20 +69,20 @@ struct TWIHardware_ : public Motate::TWI_internal::TWIInfo<twiPeripheralNumber> 
         SamCommon::enablePeripheralClock(peripheralId);
 
         // read the status register (Microchip says so)
-        twi->TWIHS_SR;
+        this->getSR();
 
         // Softare reset of TWI module
-        twi->TWIHS_CR = TWIHS_CR_SWRST;
+        this->resetModule();
 
-        disable();
+        this->disable();
     }
 
     void init() {
         dma.reset();
 
-        setSpeed();  // use default fast I2C
+        this->setSpeed();  // use default fast I2C
 
-        enable();
+        this->enable();
 
         // always have IRQs enabled for TWI, lowest priority
         setInterrupts(TWIInterrupt::PriorityLow);
@@ -91,13 +91,6 @@ struct TWIHardware_ : public Motate::TWI_internal::TWIInfo<twiPeripheralNumber> 
     void handleInterrupts(Interrupt::Type hint = 0) {
         auto interruptCause = getInterruptCause(hint);
         prehandleInterrupt(interruptCause);
-    }
-
-    void enable() { twi->TWIHS_CR = TWIHS_CR_MSEN; }
-
-    void disable() {
-        twi->TWIHS_CR = TWIHS_CR_SVDIS;
-        twi->TWIHS_CR = TWIHS_CR_MSDIS;
     }
 
     uint32_t internal_address_value_ = 0;
@@ -125,72 +118,13 @@ struct TWIHardware_ : public Motate::TWI_internal::TWIInfo<twiPeripheralNumber> 
             adjusted_internal_address_size = (uint8_t)internal_address.size;
         }
 
-        twi->TWIHS_MMR  = TWIHS_MMR_DADR(adjusted_address) | TWIHS_MMR_IADRSZ(adjusted_internal_address_size);
-        twi->TWIHS_IADR = TWIHS_IADR_IADR(adjusted_internal_address);
+        this->_setAddress(adjusted_address, adjusted_internal_address, adjusted_internal_address_size);
 
         internal_address_value_   = 0;
         internal_address_to_send_ = 0;
 
-        enable();
+        this->enable();
         return true;
-    }
-
-    /* Low level time limit of I2C Fast Mode. */
-    static constexpr uint32_t LOW_LEVEL_TIME_LIMIT = 384000;
-    static constexpr uint32_t I2C_FAST_MODE_SPEED  = 400000;
-    static constexpr uint32_t TWIHS_CLK_DIVIDER    = 2;
-    static constexpr uint32_t TWIHS_CLK_CALC_ARGU  = 3;
-    static constexpr uint32_t TWIHS_CLK_DIV_MAX    = 0xFF;
-    static constexpr uint32_t TWIHS_CLK_DIV_MIN    = 7;
-
-    void setSpeed(const uint32_t speed = I2C_FAST_MODE_SPEED) {
-        uint32_t ckdiv = 0;
-        uint32_t c_lh_div;
-        uint32_t cldiv, chdiv;
-        auto     periph_clock = SamCommon::getPeripheralClockFreq();
-
-        /* High-Speed can be only used in slave mode, 400k is the max speed allowed for master */
-        if (speed > I2C_FAST_MODE_SPEED) {
-            return;  // FAIL;
-        }
-
-        /* Low level time not less than 1.3us of I2C Fast Mode. */
-        if (speed > LOW_LEVEL_TIME_LIMIT) {
-            /* Low level of time fixed for 1.3us. */
-            cldiv = periph_clock / (LOW_LEVEL_TIME_LIMIT * TWIHS_CLK_DIVIDER) - TWIHS_CLK_CALC_ARGU;
-            chdiv = periph_clock / ((speed + (speed - LOW_LEVEL_TIME_LIMIT)) * TWIHS_CLK_DIVIDER) - TWIHS_CLK_CALC_ARGU;
-
-            /* cldiv must fit in 8 bits, ckdiv must fit in 3 bits */
-            while ((cldiv > TWIHS_CLK_DIV_MAX) && (ckdiv < TWIHS_CLK_DIV_MIN)) {
-                /* Increase clock divider */
-                ckdiv++;
-                /* Divide cldiv value */
-                cldiv /= TWIHS_CLK_DIVIDER;
-            }
-            /* chdiv must fit in 8 bits, ckdiv must fit in 3 bits */
-            while ((chdiv > TWIHS_CLK_DIV_MAX) && (ckdiv < TWIHS_CLK_DIV_MIN)) {
-                /* Increase clock divider */
-                ckdiv++;
-                /* Divide cldiv value */
-                chdiv /= TWIHS_CLK_DIVIDER;
-            }
-
-            /* set clock waveform generator register */
-            twi->TWIHS_CWGR = TWIHS_CWGR_CLDIV(cldiv) | TWIHS_CWGR_CHDIV(chdiv) | TWIHS_CWGR_CKDIV(ckdiv);
-        } else {
-            c_lh_div = periph_clock / (speed * TWIHS_CLK_DIVIDER) - TWIHS_CLK_CALC_ARGU;
-
-            /* cldiv must fit in 8 bits, ckdiv must fit in 3 bits */
-            while ((c_lh_div > TWIHS_CLK_DIV_MAX) && (ckdiv < TWIHS_CLK_DIV_MIN)) {
-                /* Increase clock divider */
-                ckdiv++;
-                /* Divide cldiv value */
-                c_lh_div /= TWIHS_CLK_DIVIDER;
-            }
-
-            /* set clock waveform generator register */
-            twi->TWIHS_CWGR = TWIHS_CWGR_CLDIV(c_lh_div) | TWIHS_CWGR_CHDIV(c_lh_div) | TWIHS_CWGR_CKDIV(ckdiv);
-        }
     }
 
     void setInterruptHandler(TWIInterruptHandler *handler) {
@@ -229,66 +163,47 @@ struct TWIHardware_ : public Motate::TWI_internal::TWIInfo<twiPeripheralNumber> 
             return status;
         }
 
-        auto TWI_SR_hold  = twi->TWIHS_SR;
-        // auto TWI_IMR_hold = twi->TWIHS_IMR;
+        auto TWI_SR_hold = this->getSR();
 
-        if (TWI_SR_hold & TWIHS_SR_TXRDY) {
+        if (this->isTxReady(TWI_SR_hold)) {
             status.setTxReady();
         }
-        if (TWI_SR_hold & TWIHS_SR_TXCOMP) {
+        if (this->isTxComp(TWI_SR_hold)) {
             status.setTxDone();
         }
-        if (TWI_SR_hold & TWIHS_SR_RXRDY) {
+        if (this->isRxReady(TWI_SR_hold)) {
             status.setRxReady();
         }
-        if (TWI_SR_hold & TWIHS_SR_NACK) {
+        if (this->isNack(TWI_SR_hold)) {
             status.setNACK();
         }
 
         return status;
     }
 
-    void enableOnTXReadyInterrupt() { twi->TWIHS_IER = TWIHS_IER_TXRDY; }
-    void disableOnTXReadyInterrupt() { twi->TWIHS_IDR = TWIHS_IDR_TXRDY; }
-
-    void enableOnNACKInterrupt() { twi->TWIHS_IER = TWIHS_IER_NACK; }
-    void disableOnNACKInterrupt() { twi->TWIHS_IDR = TWIHS_IDR_NACK; }
-
-
-    void enableOnTXDoneInterrupt() { twi->TWIHS_IER = TWIHS_IER_TXCOMP; }
-    void disableOnTXDoneInterrupt() { twi->TWIHS_IDR = TWIHS_IDR_TXCOMP; }
-
-    bool isTxReady() { return (twi->TWIHS_SR & TWIHS_SR_TXRDY); }
-
-    void enableOnRXReadyInterrupt() { twi->TWIHS_IER = TWIHS_IER_RXRDY; twi->TWIHS_IER = TWIHS_IER_RXRDY; }
-    void disableOnRXReadyInterrupt() { twi->TWIHS_IDR = TWIHS_IDR_RXRDY; }
-
-    bool isRxReady() { return (twi->TWIHS_SR & TWIHS_SR_RXRDY); }
-
-
     void setInterrupts(const Interrupt::Type interrupts) {
         if (interrupts != TWIInterrupt::Off) {
             if (interrupts & TWIInterrupt::OnTxReady) {
-                enableOnTXReadyInterrupt();
+                this->enableOnTXReadyInterrupt();
             } else {
-                disableOnTXReadyInterrupt();
+                this->disableOnTXReadyInterrupt();
             }
             if (interrupts & TWIInterrupt::OnTxDone) {
-                enableOnTXDoneInterrupt();
+                this->enableOnTXDoneInterrupt();
             } else {
-                disableOnTXDoneInterrupt();
+                this->disableOnTXDoneInterrupt();
             }
 
             if (interrupts & TWIInterrupt::OnNACK) {
-                enableOnNACKInterrupt();
+                this->enableOnNACKInterrupt();
             } else {
-                disableOnNACKInterrupt();
+                this->disableOnNACKInterrupt();
             }
 
             if (interrupts & TWIInterrupt::OnRxReady) {
-                enableOnRXReadyInterrupt();
+                this->enableOnRXReadyInterrupt();
             } else {
-                disableOnRXReadyInterrupt();
+                this->disableOnRXReadyInterrupt();
             }
 
             if (interrupts & TWIInterrupt::OnRxTransferDone) {
@@ -323,19 +238,19 @@ struct TWIHardware_ : public Motate::TWI_internal::TWIInfo<twiPeripheralNumber> 
         }
     }
 
-    // void enableOnTXTransferDoneInterrupt_() {
+    // void this->enableOnTXTransferDoneInterrupt_() {
     //     dma.startTxDoneInterrupts();
     // }
 
-    // void disableOnTXTransferDoneInterrupt_() {
+    // void this->disableOnTXTransferDoneInterrupt_() {
     //     dma.stopTxDoneInterrupts();
     // }
 
-    // void enableOnRXTransferDoneInterrupt_() {
+    // void this->enableOnRXTransferDoneInterrupt_() {
     //     dma.startRxDoneInterrupts();
     // }
 
-    // void disableOnRXTransferDoneInterrupt_() {
+    // void this->disableOnRXTransferDoneInterrupt_() {
     //     dma.stopRxDoneInterrupts();
     // }
 
@@ -393,32 +308,32 @@ struct TWIHardware_ : public Motate::TWI_internal::TWIInfo<twiPeripheralNumber> 
 
             // tell the peripheral that we're reading
             // (Note that internall address mode MIGHT actually write first!)
-            twi->TWIHS_MMR |= TWIHS_MMR_MREAD;
+            this->setReading();
 
             if (local_buffer_size_ == 1) {
                 // If this is the only character to read, tell it to NACK at the end of this read
                 // and tart the reading transaction
-                twi->TWIHS_CR = TWIHS_CR_START | TWIHS_CR_STOP;
+                this->setStartStop();
 
                 // "last char" is the only char
                 state_ = InternalState::RXWaitingForLastChar;
 
             } else if (local_buffer_size_ > 2) {
                 // Start the reading transaction
-                twi->TWIHS_CR = TWIHS_CR_START;
+                this->setStart();
 
                 state_ = InternalState::RXReadingFirstByte;
 
             } else {  // local_buffer_size_ == 2
                 // Start the reading transaction
-                twi->TWIHS_CR = TWIHS_CR_START;
+                this->setStart();
 
                 state_ = InternalState::RXWaitingForRXReady;  // this will pick up below
-                enableOnRXReadyInterrupt();
-                enableOnNACKInterrupt();
+                this->enableOnRXReadyInterrupt();
+                this->enableOnNACKInterrupt();
                 // return true;
             }
-            enableOnNACKInterrupt();
+            this->enableOnNACKInterrupt();
 
             TWIInterruptCause empty_cause;
             prehandleInterrupt(empty_cause);  // ignore return value
@@ -429,8 +344,8 @@ struct TWIHardware_ : public Motate::TWI_internal::TWIInfo<twiPeripheralNumber> 
             local_buffer_ptr_  = buffer;
             local_buffer_size_ = size;
 
-            enableOnTXReadyInterrupt();
-            enableOnNACKInterrupt();
+            this->enableOnTXReadyInterrupt();
+            this->enableOnNACKInterrupt();
         }
 
         // enable();
@@ -452,12 +367,12 @@ struct TWIHardware_ : public Motate::TWI_internal::TWIInfo<twiPeripheralNumber> 
         // NACK cases
         if (cause.isNACK() || state_ == InternalState::RXError || state_ == InternalState::TXError) {
             // __asm__("BKPT");
-            disableOnRXReadyInterrupt();
+            this->disableOnRXReadyInterrupt();
 
-            disableOnTXReadyInterrupt();
-            disableOnTXDoneInterrupt();
+            this->disableOnTXReadyInterrupt();
+            this->disableOnTXDoneInterrupt();
 
-            disableOnNACKInterrupt();
+            this->disableOnNACKInterrupt();
 
             // Problem: How to tell how much, if anything, was transmitted?
 
@@ -472,10 +387,10 @@ struct TWIHardware_ : public Motate::TWI_internal::TWIInfo<twiPeripheralNumber> 
             // #if IN_DEBUGGER == 1
             // __asm__("BKPT");
             // #endif
-            disableOnRXReadyInterrupt();
+            this->disableOnRXReadyInterrupt();
 
-            disableOnTXReadyInterrupt();
-            disableOnTXDoneInterrupt();
+            this->disableOnTXReadyInterrupt();
+            this->disableOnTXDoneInterrupt();
 
             dma.stopRxDoneInterrupts();
             dma.stopTxDoneInterrupts();
@@ -489,7 +404,7 @@ struct TWIHardware_ : public Motate::TWI_internal::TWIInfo<twiPeripheralNumber> 
             // NOTE: local_buffer_size_ > 2 for RXReadingFirstByte state to be set
             cause.clearRxReady();  // stop this from being propagated
 
-            disableOnRXReadyInterrupt();
+            this->disableOnRXReadyInterrupt();
 
             // From SAM E70/S70/V70/V71 Family Eratta:
             //  If TCM accesses are generated through the AHBS port of the core, only 32-bit accesses are supported.
@@ -504,7 +419,7 @@ struct TWIHardware_ : public Motate::TWI_internal::TWIInfo<twiPeripheralNumber> 
             // But to handle the beginning alignment, read unaligned bytes manally
 
             if ((std::intptr_t)local_buffer_ptr_ & 0b11) {
-                *local_buffer_ptr_ = twi->TWIHS_RHR;
+                *local_buffer_ptr_ = this->readByte();
                 ++local_buffer_ptr_;
                 --local_buffer_size_;
 
@@ -543,16 +458,16 @@ struct TWIHardware_ : public Motate::TWI_internal::TWIInfo<twiPeripheralNumber> 
             dma.stopRxDoneInterrupts();
             dma.disable();
 
-            enableOnRXReadyInterrupt();
+            this->enableOnRXReadyInterrupt();
             return false;
         }  // no else here!
 
         if (InternalState::RXWaitingForRXReady == state_) {
-            if (!isRxReady()) {
-                enableOnRXReadyInterrupt();
+            if (!this->isRxReady()) {
+                this->enableOnRXReadyInterrupt();
                 return false;
             }
-            // while (!isRxReady()) {
+            // while (!this->isRxReady()) {
             //     ;
             // }
             cause.clearRxReady();  // stop this from being propagated
@@ -560,10 +475,10 @@ struct TWIHardware_ : public Motate::TWI_internal::TWIInfo<twiPeripheralNumber> 
             // At this point we've recieved the next-to-last character, but haven't read it yet
 
             // Now we set the STOP bit, ...
-            twi->TWIHS_CR = TWIHS_CR_STOP;
+            this->setStop();
 
             /// ... read the next-to-last char .. .
-            *local_buffer_ptr_ = (uint8_t)twi->TWIHS_RHR;
+            *local_buffer_ptr_ = this->readByte();
             ++local_buffer_ptr_;
 
             // ... prepare to wait for the last character
@@ -571,36 +486,36 @@ struct TWIHardware_ : public Motate::TWI_internal::TWIInfo<twiPeripheralNumber> 
         }  // no else here!
 
         if (InternalState::RXWaitingForLastChar == state_) {
-            // if (!isRxReady()) {
-            //     enableOnRXReadyInterrupt();
+            // if (!this->isRxReady()) {
+            //     this->enableOnRXReadyInterrupt();
             //     return false;
             // }
-            while (!isRxReady()) { ; }
+            while (!this->isRxReady()) { ; }
 
             cause.clearRxReady();       // stop this from being propagated
             cause.setRxTransferDone();  // And now we push that the rx transfer is done
 
             // At this point we've recieved last character, but haven't read it yet
-            *local_buffer_ptr_ = (uint8_t)twi->TWIHS_RHR;
+            *local_buffer_ptr_ = this->readByte();
             local_buffer_ptr_  = nullptr;
 
             // Finsih the state machine, and stop the interrupts
             state_ = InternalState::RXDone;
-            disableOnRXReadyInterrupt();
-            disableOnNACKInterrupt();
+            this->disableOnRXReadyInterrupt();
+            this->disableOnNACKInterrupt();
         }  // no else here!
 
 
         // TX cases
         if (InternalState::TXReadyToSendFirstByte == state_ && cause.isTxReady()) {
             // tell the peripheral that we're writing
-            twi->TWIHS_MMR &= ~TWIHS_MMR_MREAD;
+            this->setWriting();
 
             if (local_buffer_size_ > 2) {
                 cause.clearTxReady();  // stop this from being propagated
 
                 state_         = InternalState::TXSendingFirstByte;
-                twi->TWIHS_THR = *local_buffer_ptr_;
+                this->transmitChar(*local_buffer_ptr_);
                 ++local_buffer_ptr_;
                 --local_buffer_size_;
 
@@ -613,12 +528,12 @@ struct TWIHardware_ : public Motate::TWI_internal::TWIInfo<twiPeripheralNumber> 
         if (InternalState::TXSendingFirstByte == state_ && cause.isTxReady()) {
             if (local_buffer_size_ > 1) {
                 cause.clearTxReady();  // stop this from being propagated
-                disableOnTXReadyInterrupt();
+                this->disableOnTXReadyInterrupt();
                 const bool handle_interrupts = true;
                 const bool include_next      = false;
 
-                // enableOnTXDoneInterrupt();
-                enableOnNACKInterrupt();
+                // this->enableOnTXDoneInterrupt();
+                this->enableOnNACKInterrupt();
 
                 // Note we set size to size-1 since we have to handle the last character "manually"
                 // This happens in prehandleInterrupt()
@@ -635,7 +550,7 @@ struct TWIHardware_ : public Motate::TWI_internal::TWIInfo<twiPeripheralNumber> 
                 state_             = InternalState::TXDMAStarted;
             } else {
                 state_ = InternalState::TXWaitingForTXReady1;
-                enableOnTXReadyInterrupt();
+                this->enableOnTXReadyInterrupt();
             }
         }  // no else here!
 
@@ -651,7 +566,7 @@ struct TWIHardware_ : public Motate::TWI_internal::TWIInfo<twiPeripheralNumber> 
 
             // If we don't already have an TXReady, set the interrupt for it
             // if (!isTxReady()) {
-            enableOnTXReadyInterrupt();
+            this->enableOnTXReadyInterrupt();
             // return;
             // }
         }  // no else here!
@@ -661,21 +576,21 @@ struct TWIHardware_ : public Motate::TWI_internal::TWIInfo<twiPeripheralNumber> 
             cause.clearTxTransferDone();  // stop this from being propagated
         }                                 // no else here!
 
-        if (InternalState::TXWaitingForTXReady1 == state_ && (isTxReady() || cause.isTxReady())) {
+        if (InternalState::TXWaitingForTXReady1 == state_ && (this->isTxReady() || cause.isTxReady())) {
             cause.clearTxReady();  // stop this from being propagated
-            disableOnTXReadyInterrupt();
+            this->disableOnTXReadyInterrupt();
 
             // At this point we've sent the next-to-last character,
             // ... set the STOP bit, ...
-            twi->TWIHS_CR = TWIHS_CR_STOP;
+            this->setStop();
 
             // ... and put the last char in the hold register, ...
-            twi->TWIHS_THR    = *local_buffer_ptr_;
+            this->transmitChar(*local_buffer_ptr_);
             local_buffer_ptr_ = nullptr;
 
             // ... and move the state machine along.
             state_ = InternalState::TXWaitingForTXReady2;
-            enableOnTXDoneInterrupt();
+            this->enableOnTXDoneInterrupt();
 
             // return; // there's nothing more we can do here, save time
         }  // no else here!
@@ -686,9 +601,9 @@ struct TWIHardware_ : public Motate::TWI_internal::TWIInfo<twiPeripheralNumber> 
 
             // Finish up the state machine.
             state_ = InternalState::TXDone;
-            disableOnTXReadyInterrupt();
-            disableOnTXDoneInterrupt();
-            disableOnNACKInterrupt();
+            this->disableOnTXReadyInterrupt();
+            this->disableOnTXDoneInterrupt();
+            this->disableOnNACKInterrupt();
         }
 
         if (state_ == InternalState::TXDone || state_ == InternalState::RXDone) {

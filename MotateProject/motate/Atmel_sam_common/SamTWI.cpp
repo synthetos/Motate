@@ -31,12 +31,15 @@
 #include "MotateTWI.h"
 
 namespace Motate {
+    #if defined(HAS_TWIHS0) || defined(HAS_TWI0)
     template<> TWIHardware_<0u>* TWIHardware_<0u>::twiInterruptHandler_ = nullptr;
-    #ifdef HAS_TWIHS1
+    #endif
+    #if defined(HAS_TWIHS1) || defined(HAS_TWI1)
     template<> TWIHardware_<1u>* TWIHardware_<1u>::twiInterruptHandler_ = nullptr;
     #endif
 }
 
+#ifdef HAS_TWIHS0
 extern "C" void TWIHS0_Handler(void)  {
     if (Motate::TWIHardware_<0u>::twiInterruptHandler_) {
         Motate::TWIHardware_<0u>::twiInterruptHandler_->handleInterrupts();
@@ -46,9 +49,34 @@ extern "C" void TWIHS0_Handler(void)  {
     __asm__("BKPT");
 #endif
 }
+#endif
 
 #ifdef HAS_TWIHS1
 extern "C" void TWIHS1_Handler(void)  {
+    if (Motate::TWIHardware_<1u>::twiInterruptHandler_) {
+        Motate::TWIHardware_<1u>::twiInterruptHandler_->handleInterrupts();
+        return;
+    }
+#if IN_DEBUGGER == 1
+    __asm__("BKPT");
+#endif
+}
+#endif
+
+#ifdef HAS_TWI0
+extern "C" void TWI0_Handler(void)  {
+    if (Motate::TWIHardware_<0u>::twiInterruptHandler_) {
+        Motate::TWIHardware_<0u>::twiInterruptHandler_->handleInterrupts();
+        return;
+    }
+#if IN_DEBUGGER == 1
+    __asm__("BKPT");
+#endif
+}
+#endif
+
+#ifdef HAS_TWI1
+extern "C" void TWI1_Handler(void)  {
     if (Motate::TWIHardware_<1u>::twiInterruptHandler_) {
         Motate::TWIHardware_<1u>::twiInterruptHandler_->handleInterrupts();
         return;

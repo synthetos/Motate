@@ -100,51 +100,51 @@ namespace Motate {
 
         void reset() const
         {
-            pdc()->PERIPH_PTCR = PERIPH_PTCR_RXTDIS | PERIPH_PTCR_TXTDIS; // disable all the things
-            pdc()->PERIPH_RPR = 0;
-            pdc()->PERIPH_RNPR = 0;
-            pdc()->PERIPH_RCR = 0;
-            pdc()->PERIPH_RNCR = 0;
-            pdc()->PERIPH_TPR = 0;
-            pdc()->PERIPH_TNPR = 0;
-            pdc()->PERIPH_TCR = 0;
-            pdc()->PERIPH_TNCR = 0;
+            pdc->PERIPH_PTCR = PERIPH_PTCR_RXTDIS | PERIPH_PTCR_TXTDIS; // disable all the things
+            pdc->PERIPH_RPR = 0;
+            pdc->PERIPH_RNPR = 0;
+            pdc->PERIPH_RCR = 0;
+            pdc->PERIPH_RNCR = 0;
+            pdc->PERIPH_TPR = 0;
+            pdc->PERIPH_TNPR = 0;
+            pdc->PERIPH_TCR = 0;
+            pdc->PERIPH_TNCR = 0;
         };
 
         void disableRx() const
         {
-            pdc()->PERIPH_PTCR = PERIPH_PTCR_RXTDIS; // disable for setup
+            pdc->PERIPH_PTCR = PERIPH_PTCR_RXTDIS; // disable for setup
         };
         void enableRx() const
         {
-            pdc()->PERIPH_PTCR = PERIPH_PTCR_RXTEN;  // enable
+            pdc->PERIPH_PTCR = PERIPH_PTCR_RXTEN;  // enable
         };
         void setRx(void * const buffer, const uint32_t length) const
         {
-            pdc()->PERIPH_RPR = (uint32_t)buffer;
-            pdc()->PERIPH_RCR = length;
+            pdc->PERIPH_RPR = (uint32_t)buffer;
+            pdc->PERIPH_RCR = length;
         };
         void setNextRx(void * const buffer, const uint32_t length) const
         {
-            pdc()->PERIPH_RNPR = (uint32_t)buffer;
-            pdc()->PERIPH_RNCR = length;
+            pdc->PERIPH_RNPR = (uint32_t)buffer;
+            pdc->PERIPH_RNCR = length;
         };
         void flushRead() const {
-            pdc()->PERIPH_RNCR = 0;
-            pdc()->PERIPH_RCR = 0;
+            pdc->PERIPH_RNCR = 0;
+            pdc->PERIPH_RCR = 0;
         };
         uint32_t leftToRead(bool include_next = false) const
         {
-            if (pdc()->PERIPH_RPR == 0) { return 0; }
+            if (pdc->PERIPH_RPR == 0) { return 0; }
             if (include_next) {
-                return pdc()->PERIPH_RCR + pdc()->PERIPH_RNCR;
+                return pdc->PERIPH_RCR + pdc->PERIPH_RNCR;
             }
-            return pdc()->PERIPH_RCR;
+            return pdc->PERIPH_RCR;
         };
         uint32_t leftToReadNext() const
         {
-            if (pdc()->PERIPH_RNPR == 0) { return 0; }
-            return pdc()->PERIPH_RNCR;
+            if (pdc->PERIPH_RNPR == 0) { return 0; }
+            return pdc->PERIPH_RNCR;
         };
         bool doneReading(bool include_next = false) const
         {
@@ -155,7 +155,7 @@ namespace Motate {
         };
         buffer_t getRXTransferPosition() const
         {
-            return (buffer_t)pdc()->PERIPH_RPR;
+            return (buffer_t)pdc->PERIPH_RPR;
         };
 
         // Bundle it all up
@@ -176,22 +176,22 @@ namespace Motate {
                 if (handle_interrupts) { startRxDoneInterrupts(); }
             }
             // check to see if they overlap, in which case we're extending the region
-            else if ((pdc()->PERIPH_RPR >= (uint32_t)buffer) &&
-                     (pdc()->PERIPH_RPR < ((uint32_t)buffer + length))
+            else if ((pdc->PERIPH_RPR >= (uint32_t)buffer) &&
+                     (pdc->PERIPH_RPR < ((uint32_t)buffer + length))
                     )
             {
                 if (handle_interrupts) { stopRxDoneInterrupts(); }
 
                 // they overlap, we need to compute the new length
-                decltype(pdc()->PERIPH_RPR) pos_save;
+                decltype(pdc->PERIPH_RPR) pos_save;
                 do {
-                    pos_save = pdc()->PERIPH_RPR;
+                    pos_save = pdc->PERIPH_RPR;
 
                     // new_length = (start_pos + length) - current_positon
-                    pdc()->PERIPH_RCR = ((uint32_t)buffer + length) - pos_save;
+                    pdc->PERIPH_RCR = ((uint32_t)buffer + length) - pos_save;
 
                     // catch rare case where it advances while we were computing
-                } while (pdc()->PERIPH_RPR > pos_save);
+                } while (pdc->PERIPH_RPR > pos_save);
 
                 enableRx();
                 if (handle_interrupts) { startRxDoneInterrupts(); }
@@ -208,32 +208,32 @@ namespace Motate {
 
         void disableTx() const
         {
-            pdc()->PERIPH_PTCR = PERIPH_PTCR_TXTDIS; // disable for setup
+            pdc->PERIPH_PTCR = PERIPH_PTCR_TXTDIS; // disable for setup
         };
         void enableTx() const
         {
-            pdc()->PERIPH_PTCR = PERIPH_PTCR_TXTEN;  // enable again
+            pdc->PERIPH_PTCR = PERIPH_PTCR_TXTEN;  // enable again
         };
         void setTx(void * const buffer, const uint32_t length) const
         {
-            pdc()->PERIPH_TPR = (uint32_t)buffer;
-            pdc()->PERIPH_TCR = length;
+            pdc->PERIPH_TPR = (uint32_t)buffer;
+            pdc->PERIPH_TCR = length;
         };
         void setNextTx(void * const buffer, const uint32_t length) const
         {
-            pdc()->PERIPH_TNPR = (uint32_t)buffer;
-            pdc()->PERIPH_TNCR = length;
+            pdc->PERIPH_TNPR = (uint32_t)buffer;
+            pdc->PERIPH_TNCR = length;
         };
         uint32_t leftToWrite(bool include_next = false) const
         {
             if (include_next) {
-                return pdc()->PERIPH_TCR + pdc()->PERIPH_TNCR;
+                return pdc->PERIPH_TCR + pdc->PERIPH_TNCR;
             }
-            return pdc()->PERIPH_TCR;
+            return pdc->PERIPH_TCR;
         };
         uint32_t leftToWriteNext() const
         {
-            return pdc()->PERIPH_TNCR;
+            return pdc->PERIPH_TNCR;
         };
         bool doneWriting(bool include_next = false) const
         {
@@ -245,7 +245,7 @@ namespace Motate {
         };
         buffer_t getTXTransferPosition() const
         {
-            return (buffer_t)pdc()->PERIPH_TPR;
+            return (buffer_t)pdc->PERIPH_TPR;
         };
 
 
@@ -471,8 +471,8 @@ namespace Motate {
         };
         void setNextTx(void * const buffer, const uint32_t length) const
         {
-            //            pdc()->PERIPH_TNPR = (uint32_t)buffer;
-            //            pdc()->PERIPH_TNCR = length;
+            //            pdc->PERIPH_TNPR = (uint32_t)buffer;
+            //            pdc->PERIPH_TNCR = length;
         };
         uint32_t leftToWrite(bool include_next = false) const
         {
@@ -484,7 +484,7 @@ namespace Motate {
         uint32_t leftToWriteNext() const
         {
             return 0;
-            //            return pdc()->PERIPH_TNCR;
+            //            return pdc->PERIPH_TNCR;
         };
         bool doneWriting(bool include_next = false) const
         {
@@ -626,8 +626,8 @@ namespace Motate {
         };
         void setNextRx(void * const buffer, const uint32_t length) const
         {
-            //            pdc()->PERIPH_RNPR = (uint32_t)buffer;
-            //            pdc()->PERIPH_RNCR = length;
+            //            pdc->PERIPH_RNPR = (uint32_t)buffer;
+            //            pdc->PERIPH_RNCR = length;
         };
         void flushRead() const
         {
@@ -644,7 +644,7 @@ namespace Motate {
         uint32_t leftToReadNext() const
         {
             return 0;
-            //            return pdc()->PERIPH_RNCR;
+            //            return pdc->PERIPH_RNCR;
         };
         bool doneReading(bool include_next = false) const
         {
