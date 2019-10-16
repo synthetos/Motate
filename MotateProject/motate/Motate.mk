@@ -385,15 +385,6 @@ LIBDIR   = $(patsubst %,-L%,$(DEVICE_LIB_DIRS) $(USER_LIB_DIRS))
 # Start of RULES
 #
 
-ifeq ($(VERBOSE),2)
-$(info DEVICE_INCLUDE_DIRS+USER_INCLUDE_DIRS:$(patsubst %,$(NEWLINE_TAB)%,$(DEVICE_INCLUDE_DIRS) $(USER_INCLUDE_DIRS)))
-$(info $(NEWLINE_ONLY)DEVICE_LIB_DIRS+USER_LIB_DIRS: $(patsubst %,$(NEWLINE_TAB)%,$(DEVICE_LIB_DIRS) $(USER_LIB_DIRS)))
-$(info $(NEWLINE_ONLY)SOURCE_DIRS: $(patsubst %,$(NEWLINE_TAB)%,$(SOURCE_DIRS)))
-$(info $(NEWLINE_ONLY)C_SOURCES: $(patsubst %,$(NEWLINE_TAB)%,$(C_SOURCES)))
-$(info $(NEWLINE_ONLY)CXX_SOURCES: $(patsubst %,$(NEWLINE_TAB)%,$(CXX_SOURCES)))
-$(info $(NEWLINE_ONLY)FIRST_LINK_SOURCES: $(patsubst %,$(NEWLINE_TAB)%,$(FIRST_LINK_SOURCES)))
-endif
-
 ifneq ("$(DEVICE_NEEDS_HEX)","")
 NEEDS_HEX = $(OUTPUT_BIN).hex
 endif
@@ -401,7 +392,19 @@ endif
 all: $(OUTPUT_BIN).elf $(NEEDS_HEX) $(SPECIAL_ATMEL_STUDIO_DEFAULT_TARGETS)
 	@echo $(START_BOLD)Build ${GIT_EXACT_VERSION} "${GIT_VERSION}"$(END_BOLD)
 
+ALL_OTHER_C_SOURCES :=
+ALL_OTHER_CXX_SOURCES :=
+
 $(eval $(DEVICE_RULES))
+
+ifeq ($(VERBOSE),2)
+$(info DEVICE_INCLUDE_DIRS+USER_INCLUDE_DIRS:$(patsubst %,$(NEWLINE_TAB)%,$(DEVICE_INCLUDE_DIRS) $(USER_INCLUDE_DIRS)))
+$(info $(NEWLINE_ONLY)DEVICE_LIB_DIRS+USER_LIB_DIRS: $(patsubst %,$(NEWLINE_TAB)%,$(DEVICE_LIB_DIRS) $(USER_LIB_DIRS)))
+$(info $(NEWLINE_ONLY)SOURCE_DIRS: $(patsubst %,$(NEWLINE_TAB)%,$(SOURCE_DIRS)))
+$(info $(NEWLINE_ONLY)C_SOURCES full: $(patsubst %,$(NEWLINE_TAB)%,$(ALL_OTHER_C_SOURCES) $(C_SOURCES)))
+$(info $(NEWLINE_ONLY)CXX_SOURCES full: $(patsubst %,$(NEWLINE_TAB)%,$(ALL_OTHER_CXX_SOURCES) $(CXX_SOURCES)))
+$(info $(NEWLINE_ONLY)FIRST_LINK_SOURCES: $(patsubst %,$(NEWLINE_TAB)%,$(FIRST_LINK_SOURCES)))
+endif
 
 # We use tools as a "macro" for dependencies later
 tools: | $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin
@@ -434,6 +437,7 @@ CPPFLAGS += $(DEBUG_SYMBOLS) -O$(OPTIMIZATION) $(INCLUDES) $(patsubst %,-D%,$(DE
 ASFLAGS  += $(DEBUG_SYMBOLS) -O$(OPTIMIZATION) $(INCLUDES) -D__ASSEMBLY__ $(patsubst %,-D%,$(DEVICE_DEFINES) $(USER_DEFINES))
 
 ifneq ("$(DEVICE_LINKER_SCRIPT)", "")
+
 LINKER_SCRIPT := $(DEVICE_LINKER_SCRIPT)
 LINKER_SCRIPT_TEXT = $(LINKER_SCRIPT)
 LINKER_SCRIPT_OPTION = -T"$(LINKER_SCRIPT)"
@@ -448,6 +452,50 @@ endif
 
 # Generate dependency information
 DEPFLAGS = -MMD -MF $(OBJ)/dep/$(@F).d -MT $(subst $(OUTDIR),$(OBJ),$@)
+UNITY_BUILD ?= 0
+ifeq ($(UNITY_BUILD),1)
+
+$(info Single Translation Unit Build (STUB, AKA Unity Build))
+
+# This little dance is to make the sources land in this order:
+# 1- Motate
+#    1.1- first-link then non-first-link
+# 2- Non-Motate
+#    2.1- first-link then non-first-link
+
+# The C sources have to be wrapped in extern "C" { ... } and can safely always go LAST, so we handle that as well.
+
+MOTATE_C_SOURCES := $(filter $(MOTATE_PATH)/%,$(filter $(FIRST_LINK_SOURCES), $(ALL_OTHER_C_SOURCES) $(C_SOURCES)) $(filter-out $(FIRST_LINK_SOURCES), $(ALL_OTHER_C_SOURCES) $(C_SOURCES)))
+NON_MOTATE_C_SOURCES := $(filter-out $(MOTATE_PATH)/%,$(filter $(FIRST_LINK_SOURCES), $(ALL_OTHER_C_SOURCES) $(C_SOURCES)) $(filter-out $(FIRST_LINK_SOURCES), $(ALL_OTHER_C_SOURCES) $(C_SOURCES)))
+MOTATE_CXX_SOURCES := $(filter $(MOTATE_PATH)/%,$(filter $(FIRST_LINK_SOURCES), $(ALL_OTHER_CXX_SOURCES) $(CXX_SOURCES)) $(filter-out $(FIRST_LINK_SOURCES), $(ALL_OTHER_CXX_SOURCES) $(CXX_SOURCES)))
+NON_MOTATE_CXX_SOURCES := $(filter-out $(MOTATE_PATH)/%,$(filter $(FIRST_LINK_SOURCES), $(ALL_OTHER_CXX_SOURCES) $(CXX_SOURCES)) $(filter-out $(FIRST_LINK_SOURCES), $(ALL_OTHER_CXX_SOURCES) $(CXX_SOURCES)))
+
+SORTED_C_SOURCES := $(MOTATE_C_SOURCES) $(NON_MOTATE_C_SOURCES)
+SORTED_CXX_SOURCES := $(MOTATE_CXX_SOURCES) $(NON_MOTATE_CXX_SOURCES)
+
+# Also of note are the calls to $(REC) which are to populate the compile_commands.json file, for intelligent IDE navigation
+
+$(OUTDIR)/all.cpp: $(ALL_OTHER_C_SOURCES) $(ALL_OTHER_CXX_SOURCES) $(C_SOURCES) $(CXX_SOURCES) | tools $(DEPDIR) $(BIN)
+	$(shell echo "#define SINGLE_TRANSLATION_BUILD" > $(OUTDIR)/all.cpp)
+	$(foreach f,$(SORTED_CXX_SOURCES),$(shell echo "#include \"../../$(f)\"" >> $(OUTDIR)/all.cpp ))
+	$(foreach f,$(SORTED_CXX_SOURCES),$(shell $(REC) $(realpath $(CWD)) $(realpath $(CWD)) $(f) $(CXX) "$(CPPFLAGS) $(DEPFLAGS) -xc++ -c -o $(f).o $(f)" ))
+	$(shell echo "extern \"C\" {" >> $(OUTDIR)/all.cpp)
+	$(foreach f,$(SORTED_C_SOURCES),$(shell echo "#include \"../../$(f)\"" >> $(OUTDIR)/all.cpp ))
+	$(foreach f,$(SORTED_C_SOURCES),$(shell $(REC) $(realpath $(CWD)) $(realpath $(CWD)) $(f) $(CC) "$(CFLAGS) $(DEPFLAGS) -c -o $(f).o $(f)" ))
+	$(shell echo "}" >> $(OUTDIR)/all.cpp)
+
+$(OUTPUT_BIN).elf: $(OUTDIR)/all.o $(ALL_ASM_OBJECTS) $(LINKER_SCRIPT) | $(ALL_OTHER_C_SOURCES) $(ALL_OTHER_CXX_SOURCES) $(C_SOURCES) $(CXX_SOURCES)
+	@echo $(START_BOLD)"Linking $(OUTPUT_BIN).elf" $(END_BOLD)
+	@echo $(START_BOLD)"Using linker script: $(LINKER_SCRIPT)" $(END_BOLD)
+	$(QUIET)$(CXX) $(LIB_PATH) $(LINKER_SCRIPT_OPTION) $(LIBDIR) -Wl,-Map,"$(OUTPUT_BIN).map" -o $@ $(LDFLAGS) $(LD_OPTIONAL) -Wl,--start-group $(OUTDIR)/all.o $(LIBS) -Wl,--end-group
+	@echo $(START_BOLD)"Exporting symbols $(OUTPUT_BIN).elf.txt" $(END_BOLD)
+	$(QUIET)$(NM) "$(OUTPUT_BIN).elf" >"$(OUTPUT_BIN).elf.txt"
+	@echo $(START_BOLD)"Making binary $(OUTPUT_BIN).bin" $(END_BOLD)
+	$(QUIET)$(OBJCOPY) -O binary "$(OUTPUT_BIN).elf" "$(OUTPUT_BIN).bin"
+	@echo "--- SIZE INFO ---"
+	$(QUIET)$(SIZE) "$(OUTPUT_BIN).elf"
+
+else
 
 $(OUTPUT_BIN).elf: $(ALL_C_OBJECTS) $(ALL_CXX_OBJECTS) $(ALL_ASM_OBJECTS) $(LINKER_SCRIPT)
 	@echo $(START_BOLD)"Linking $(OUTPUT_BIN).elf" $(END_BOLD)
@@ -459,6 +507,8 @@ $(OUTPUT_BIN).elf: $(ALL_C_OBJECTS) $(ALL_CXX_OBJECTS) $(ALL_ASM_OBJECTS) $(LINK
 	$(QUIET)$(OBJCOPY) -O binary "$(OUTPUT_BIN).elf" "$(OUTPUT_BIN).bin"
 	@echo "--- SIZE INFO ---"
 	$(QUIET)$(SIZE) "$(OUTPUT_BIN).elf"
+
+endif
 
 $(OUTPUT_BIN).hex: $(OUTPUT_BIN).elf
 	$(QUIET)$(OBJCOPY) -O ihex $(DEVICE_HEX_FLAGS) $< $@

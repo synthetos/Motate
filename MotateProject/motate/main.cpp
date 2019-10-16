@@ -43,31 +43,33 @@ namespace Motate {
 
 /******************** Initialization setup ************************/
 
-void setup() __attribute__ ((weak));
 
-extern void loop();
-
-int main(void);
+extern int main(void);
 
 #ifdef __ARM__
 
 // This is used by the anything that may generate a destructor:
 void* __dso_handle = nullptr;
 
+extern void loop();
+
 extern "C"{
     // These routines are defined with C linkage:
 
+    extern void setup() __attribute__ ((weak));
+
+    // called from inside __libc_init_array()
     void _init() {
         SystemInit();
     }
 
-    void __libc_init_array(void);
+    extern void __libc_init_array(void);
 
-    void _start() {
-        SystemInit();
-        __libc_init_array();
-        main();
-    }
+    // void _start() {
+    //     SystemInit();
+    //     __libc_init_array();
+    //     main();
+    // }
 
 }
 
@@ -79,10 +81,6 @@ extern "C"{
 
 void _system_init(void)
 {
-#ifdef __AVR__
-    SystemInit();
-#endif // __AVR__
-
     Motate::WatchDogTimer.disable();
 }
 

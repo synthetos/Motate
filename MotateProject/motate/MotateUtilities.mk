@@ -11,6 +11,10 @@ $(1)_C_SOURCES   := $(foreach dir,$($(1)_SOURCE_DIRS),$(wildcard $(dir)/*.c) )
 $(1)_CXX_SOURCES := $(foreach dir,$($(1)_SOURCE_DIRS),$(wildcard $(dir)/*.cpp) )
 $(1)_ASM_SOURCES := $(foreach dir,$($(1)_SOURCE_DIRS),$(wildcard $(dir)/*.s $(dir)/*.S) )
 
+ALL_OTHER_C_SOURCES += $$($(1)_C_SOURCES)
+ALL_OTHER_CXX_SOURCES += $$($(1)_CXX_SOURCES)
+ALL_OTHER_ASM_SOURCES += $$($(1)_ASM_SOURCES)
+
 $(1)_C_OBJECTS   := $$(addsuffix .o,$$(basename $$($(1)_C_SOURCES)))
 $(1)_CXX_OBJECTS := $$(addsuffix .o,$$(basename $$($(1)_CXX_SOURCES)))
 $(1)_ASM_OBJECTS := $$(addsuffix .o,$$(basename $$($(1)_ASM_SOURCES)))

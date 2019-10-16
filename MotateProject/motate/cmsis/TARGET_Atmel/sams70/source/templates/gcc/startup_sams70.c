@@ -42,6 +42,10 @@
  * Support and FAQ: visit <a href="http://www.atmel.com/design-support/">Atmel Support</a>
  */
 
+#ifdef __cplusplus
+ extern "C" {
+#endif
+
 #include "sams70.h"
 
 /* Initialize segments */
@@ -156,6 +160,7 @@ void PWM1_Handler   ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
 void SDRAMC_Handler ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
 #endif /* _SAMS70_SDRAMC_INSTANCE_ */
 void RSWDT_Handler  ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
+// #endif // SINGLE_TRANSLATION_BUILD
 
 /* Exception Table */
 __attribute__ ((section(".vectors")))
@@ -414,13 +419,13 @@ void Reset_Handler(void)
 #endif
 
     /* Initialize the C library */
-        __libc_init_array();
+    __libc_init_array();
 
-        /* Branch to main function */
-        main();
+    /* Branch to main function */
+    main();
 
-        /* Infinite loop */
-        while (1);
+    /* Infinite loop */
+    while (1);
 }
 
 /**
@@ -428,6 +433,9 @@ void Reset_Handler(void)
  */
 void Dummy_Handler(void)
 {
-        while (1) {
-        }
+    while (1) {}
 }
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
