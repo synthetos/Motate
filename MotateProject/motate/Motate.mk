@@ -465,12 +465,12 @@ $(info Single Translation Unit Build (STUB, AKA Unity Build))
 
 # The C sources have to be wrapped in extern "C" { ... } and can safely always go LAST, so we handle that as well.
 
-MOTATE_C_SOURCES := $(filter $(MOTATE_PATH)/%,$(filter $(FIRST_LINK_SOURCES), $(ALL_OTHER_C_SOURCES) $(C_SOURCES)) $(filter-out $(FIRST_LINK_SOURCES), $(ALL_OTHER_C_SOURCES) $(C_SOURCES)))
-NON_MOTATE_C_SOURCES := $(filter-out $(MOTATE_PATH)/%,$(filter $(FIRST_LINK_SOURCES), $(ALL_OTHER_C_SOURCES) $(C_SOURCES)) $(filter-out $(FIRST_LINK_SOURCES), $(ALL_OTHER_C_SOURCES) $(C_SOURCES)))
-MOTATE_CXX_SOURCES := $(filter $(MOTATE_PATH)/%,$(filter $(FIRST_LINK_SOURCES), $(ALL_OTHER_CXX_SOURCES) $(CXX_SOURCES)) $(filter-out $(FIRST_LINK_SOURCES), $(ALL_OTHER_CXX_SOURCES) $(CXX_SOURCES)))
-NON_MOTATE_CXX_SOURCES := $(filter-out $(MOTATE_PATH)/%,$(filter $(FIRST_LINK_SOURCES), $(ALL_OTHER_CXX_SOURCES) $(CXX_SOURCES)) $(filter-out $(FIRST_LINK_SOURCES), $(ALL_OTHER_CXX_SOURCES) $(CXX_SOURCES)))
+MOTATE_C_SOURCES := $(filter $(MOTATE_PATH)/%,$(filter-out $(FIRST_LINK_SOURCES), $(ALL_OTHER_C_SOURCES) $(C_SOURCES)) $(filter $(FIRST_LINK_SOURCES), $(ALL_OTHER_C_SOURCES) $(C_SOURCES)))
+NON_MOTATE_C_SOURCES := $(filter-out $(MOTATE_PATH)/%,$(filter-out $(FIRST_LINK_SOURCES), $(ALL_OTHER_C_SOURCES) $(C_SOURCES)) $(filter $(FIRST_LINK_SOURCES), $(ALL_OTHER_C_SOURCES) $(C_SOURCES)))
+MOTATE_CXX_SOURCES := $(filter $(MOTATE_PATH)/%,$(filter-out $(FIRST_LINK_SOURCES), $(ALL_OTHER_CXX_SOURCES) $(CXX_SOURCES)) $(filter $(FIRST_LINK_SOURCES), $(ALL_OTHER_CXX_SOURCES) $(CXX_SOURCES)))
+NON_MOTATE_CXX_SOURCES := $(filter-out $(MOTATE_PATH)/%,$(filter-out $(FIRST_LINK_SOURCES), $(ALL_OTHER_CXX_SOURCES) $(CXX_SOURCES)) $(filter $(FIRST_LINK_SOURCES), $(ALL_OTHER_CXX_SOURCES) $(CXX_SOURCES)))
 
-SORTED_C_SOURCES := $(MOTATE_C_SOURCES) $(NON_MOTATE_C_SOURCES)
+SORTED_C_SOURCES := $(filter-out $(LAST_C_SOURCES), $(MOTATE_C_SOURCES) $(NON_MOTATE_C_SOURCES)) $(LAST_C_SOURCES)
 SORTED_CXX_SOURCES := $(MOTATE_CXX_SOURCES) $(NON_MOTATE_CXX_SOURCES)
 
 # Also of note are the calls to $(REC) which are to populate the compile_commands.json file, for intelligent IDE navigation
