@@ -52,11 +52,10 @@ extern int main(void);
 void* __dso_handle = nullptr;
 
 extern void loop();
+void setup() __attribute__ ((weak));
 
 extern "C"{
     // These routines are defined with C linkage:
-
-    extern void setup() __attribute__ ((weak));
 
     // called from inside __libc_init_array()
     void _init() {

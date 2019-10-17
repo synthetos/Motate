@@ -178,17 +178,6 @@ namespace Motate::UART_internal {
     #undef PDC_UART4
     #endif // UART4
 
-    static constexpr Uart * const uart(const uint8_t uartPeripheralNumber) {
-        switch (uartPeripheralNumber) {
-            case (0): return UARTInfo<0>::uart;
-            case (1): return UARTInfo<1>::uart;
-            case (2): return UARTInfo<2>::uart;
-            case (3): return UARTInfo<3>::uart;
-            case (4): return UARTInfo<4>::uart;
-        };
-        return nullptr;
-    };
-
 #pragma mark USARTInfo<n> definitions
 
     template<int8_t usartPeripheralNumber>
