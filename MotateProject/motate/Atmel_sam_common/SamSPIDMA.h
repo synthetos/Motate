@@ -103,6 +103,7 @@ namespace Motate {
     };
 
     #elif defined (XDMAC)
+
     #pragma mark DMA_XDMAC SPI implementation
 
     template<uint8_t spiPeripheralNumber>
@@ -200,5 +201,107 @@ namespace Motate {
             xdma()->XDMAC_GD = (XDMAC_GID_ID0 << rx::xdmaRxChannelNumber()) | (XDMAC_GID_ID0 << tx::xdmaTxChannelNumber());
         };
     };
-    #endif // SPI + XDMAC
+
+    #elif defined (DMAC)
+
+    #pragma mark DMA_DMAC SPI implementation
+
+    template<uint8_t spiPeripheralNumber>
+    struct DMA_DMAC_hardware<SPI_tag, spiPeripheralNumber> : Motate::SPI_internal::SPIInfo<spiPeripheralNumber>
+    {
+        using SPI_internal::SPIInfo<spiPeripheralNumber>::spi;
+        static constexpr auto peripheralId = SPI_internal::SPIInfo<spiPeripheralNumber>::peripheralId;
+        typedef char* buffer_t;
+    };
+
+    template<uint8_t spiPeripheralNumber>
+    struct DMA_DMAC_TX_hardware<SPI_tag, spiPeripheralNumber> : virtual DMA_DMAC_hardware<SPI_tag, spiPeripheralNumber>, virtual DMA_DMAC_common {
+        using DMA_DMAC_hardware<SPI_tag, spiPeripheralNumber>::spi;
+        using DMA_DMAC_hardware<SPI_tag, spiPeripheralNumber>::peripheralId;
+
+        static constexpr uint8_t const dmacTxPeripheralId()
+        {
+            switch (spiPeripheralNumber) {
+                case (0): return 1;
+                case (1): return 5;
+            };
+            return 0;
+        };
+        static constexpr volatile void * const dmacPeripheralTxAddress()
+        {
+            return &spi->SPI_TDR;
+        };
+    };
+
+    template<uint8_t spiPeripheralNumber>
+    struct DMA_DMAC_RX_hardware<SPI_tag, spiPeripheralNumber> : virtual DMA_DMAC_hardware<SPI_tag, spiPeripheralNumber>, virtual DMA_DMAC_common {
+        using DMA_DMAC_hardware<SPI_tag, spiPeripheralNumber>::spi;
+        using DMA_DMAC_hardware<SPI_tag, spiPeripheralNumber>::peripheralId;
+
+        static constexpr uint8_t const dmacRxPeripheralId()
+        {
+            switch (spiPeripheralNumber) {
+                case (0): return 2;
+                case (1): return 6;
+            };
+            return 0;
+        };
+        static constexpr volatile void * const dmacPeripheralRxAddress()
+        {
+            return &spi->SPI_RDR;
+        };
+    };
+
+    // Construct a DMA specialization that uses the PDC
+    template<uint8_t periph_num>
+    struct DMA<SPI_tag, periph_num> : DMA_DMAC_RX<SPI_tag, periph_num>, DMA_DMAC_TX<SPI_tag, periph_num> {
+        // nothing to do here, except for a constxpr constructor
+        constexpr DMA(const std::function<void(Interrupt::Type)> &handler) : DMA_DMAC_RX<SPI_tag, periph_num>{handler}, DMA_DMAC_TX<SPI_tag, periph_num>{handler} {};
+
+        using DMA_DMAC_common::dmac;
+        using rx = DMA_DMAC_RX<SPI_tag, periph_num>;
+        using tx = DMA_DMAC_TX<SPI_tag, periph_num>;
+        using rx::dmacRxChannelNumber;
+        using tx::dmacTxChannelNumber;
+
+        void setInterrupts(const Interrupt::Type interrupts) const
+        {
+            DMA_DMAC_common::setInterrupts(interrupts);
+
+            if (interrupts != Interrupt::Off) {
+                if (interrupts & Interrupt::OnTxTransferDone) {
+                    tx::startTxDoneInterrupts();
+                } else {
+                    tx::stopTxDoneInterrupts();
+                }
+
+                if (interrupts & Interrupt::OnRxTransferDone) {
+                    rx::startRxDoneInterrupts();
+                } else {
+                    rx::stopRxDoneInterrupts();
+                }
+            } else {
+                tx::stopTxDoneInterrupts();
+                rx::stopRxDoneInterrupts();
+
+            }
+        };
+
+        void reset() const {
+            tx::resetTX();
+            rx::resetRX();
+        };
+
+        void enable() const {
+            tx::enableTX();
+            rx::enableRX();
+        }
+
+        void disable() const
+        {
+            tx::disableTX();
+            rx::disableRX();
+        };
+    };
+    #endif // SPI + DMAC
 } //namespace Motate
