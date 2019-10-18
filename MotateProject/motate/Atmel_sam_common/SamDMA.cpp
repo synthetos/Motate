@@ -28,6 +28,28 @@
  */
 
 #include "SamDMA.h"
+#ifdef DMAC
+Motate::_DMACInterrupt *Motate::_first_dmac_interrupt = nullptr;
+
+extern "C" void DMAC_Handler(void)
+{
+   Motate::_DMACInterrupt *current = Motate::_first_dmac_interrupt;
+    uint32_t isr = DMAC->DMAC_EBCISR;
+    uint32_t imr = DMAC->DMAC_EBCIMR;
+    while (current != nullptr) {
+        if ((imr & current->channel_mask) && (isr & current->channel_mask)) {
+            // if (current->interrupt_handler) {
+                current->interrupt_handler();
+            // }
+        }
+        current = current->next;
+    }
+
+    NVIC_ClearPendingIRQ(DMAC_IRQn);
+}
+
+#endif // DMAC
+
 #ifdef XDMAC
 Motate::_XDMAInterrupt *Motate::_first_xdmac_interrupt = nullptr;
 
