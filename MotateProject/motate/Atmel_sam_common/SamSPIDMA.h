@@ -288,19 +288,19 @@ namespace Motate {
         };
 
         void reset() const {
-            tx::resetTX();
-            rx::resetRX();
+            tx::resetTx();
+            rx::resetRx();
         };
 
         void enable() const {
-            tx::enableTX();
-            rx::enableRX();
+            tx::enableTx();
+            rx::enableRx();
         }
 
         void disable() const
         {
-            tx::disableTX();
-            rx::disableRX();
+            tx::disableTx();
+            rx::disableRx();
         };
     };
     #endif // SPI + DMAC

@@ -462,7 +462,7 @@ namespace Motate {
             }
             if (is_setup) {
                 enable();
-                //dma.enable();
+                dma.enable();
                 dma.setInterrupts(Interrupt::OnTxTransferDone | Interrupt::OnRxTransferDone);
             }
             return is_setup;

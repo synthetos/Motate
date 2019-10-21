@@ -39,7 +39,7 @@ extern "C" void DMAC_Handler(void)
     while (current != nullptr) {
         if ((imr & current->channel_mask) && (isr & current->channel_mask)) {
             // if (current->interrupt_handler) {
-                current->interrupt_handler();
+                current->interrupt_handler(isr);
             // }
         }
         current = current->next;

@@ -57,6 +57,18 @@ struct DMA_DMAC_common {
     static Dmac* const         dmac() { return DMAC; };
     static constexpr IRQn_Type dmacIRQ() { return DMAC_IRQn; };
 
+    DMA_DMAC_common() {
+        dmac()->DMAC_EN = (DMAC_EN_ENABLE);
+
+        SamCommon::enablePeripheralClock(peripheralId);
+
+        dmac()->DMAC_EN &= (~DMAC_EN_ENABLE);
+
+        dmac()->DMAC_GCFG = (dmac()->DMAC_GCFG & (~DMAC_GCFG_ARB_CFG)) | DMAC_GCFG_ARB_CFG_ROUND_ROBIN;
+
+        dmac()->DMAC_EN = (DMAC_EN_ENABLE);
+    }
+
     void setInterrupts(const Interrupt::Type interrupts) const {
         // Once it's known that interrupts are required, always have them on
         NVIC_EnableIRQ(dmacIRQ());
@@ -81,7 +93,7 @@ struct DMA_DMAC_common {
 };
 
 struct _DMACInterrupt {
-    const std::function<void(void)> interrupt_handler;
+    const std::function<void(uint32_t)> interrupt_handler;
     uint8_t                         channel_num;
     uint32_t                        channel_mask;
     _DMACInterrupt*                 next;
@@ -90,7 +102,7 @@ struct _DMACInterrupt {
     _DMACInterrupt& operator=(const _DMACInterrupt&) = delete;  // delete the assigment operator, we only allow moves
 
     // Note we MOVE construct this interrupt function...
-    _DMACInterrupt(const std::function<void(void)>&& _interrupt, _DMACInterrupt*& _first)
+    _DMACInterrupt(const std::function<void(uint32_t)>&& _interrupt, _DMACInterrupt*& _first)
         : interrupt_handler{std::move(_interrupt)}, next{nullptr} {
         if (interrupt_handler) {  // std::function returns false if the function isn't valid
             if (_first == nullptr) {
@@ -107,7 +119,7 @@ struct _DMACInterrupt {
             }
             ++channel_num;
             i->next      = this;
-            channel_mask = (uint32_t)(1 << channel_num);
+            channel_mask = (uint32_t)((DMAC_EBCISR_BTC0 | DMAC_EBCISR_CBTC0 | DMAC_EBCISR_ERR0) << channel_num);
         }
     };
 
@@ -136,14 +148,13 @@ struct DMA_DMAC_TX : virtual DMA_DMAC_TX_hardware<periph_t, periph_num> {
     typedef typename _hw::buffer_t buffer_t;
     static constexpr uint32_t buffer_width = std::alignment_of<typename std::remove_pointer<buffer_t>::type>::value;
 
-
     const std::function<void(Interrupt::Type)>& _dmaCInterruptHandler;
 
     _DMACInterrupt _tx_interrupt{
-        [&]() {
+        [&](uint32_t status) {
             Interrupt::Type cause;
             if (_dmaCInterruptHandler) {
-                auto status = dmac()->DMAC_EBCISR;
+                // auto status = dmac()->DMAC_EBCISR;
                 if (status & ((DMAC_EBCISR_BTC0 | DMAC_EBCISR_CBTC0) << _tx_interrupt.getChannel())) {
                     cause = Interrupt::OnTxTransferDone;
                 }
@@ -156,41 +167,34 @@ struct DMA_DMAC_TX : virtual DMA_DMAC_TX_hardware<periph_t, periph_num> {
         _first_dmac_interrupt};
 
     const uint8_t     dmacTxChannelNumber() const { return _tx_interrupt.getChannel(); }
-    DmacCh_num* const dmacTxChannel() const { return dmac()->DMAC_CH_NUM + dmacTxChannelNumber(); };
+    DmacCh_num* const dmacTxChannel() const { return &(dmac()->DMAC_CH_NUM[dmacTxChannelNumber()]); };
 
     // we'll hold a reference to the handler, the peripheral owns the one it's passing
     constexpr DMA_DMAC_TX(const std::function<void(Interrupt::Type)>& handler) : _dmaCInterruptHandler{handler} {};
 
-    void resetTX() const {
+    void resetTx() const {
         // init is called once after reset, so clean up after a reset
-        SamCommon::enablePeripheralClock(peripheralId);
 
         // disable the channels
         disableTx();
 
-        // Configure the Tx
-        // ASSUMPTIONS:
-        //  * Tx is memory to peripheral
-        //  * Not doing memory-to-memory or peripheral-to-peripheral (for now)
-        //  * Single Block, Single Microblock transfers (for now)
-        //  * All peripherals are using a FIFO for Rx and Tx
-        //
-        // If ANY of those assumptions are wrong, this code must change!!
+        dmacTxChannel()->DMAC_CFG = 0;  // because microchip does this
+        dmacTxChannel()->DMAC_CFG =
+            DMAC_CFG_DST_PER(dmacTxPeripheralId()) | DMAC_CFG_DST_H2SEL_HW | DMAC_CFG_SOD_ENABLE | DMAC_CFG_FIFOCFG_ALAP_CFG;
 
         // Configure Tx channel
-        dmacTxChannel()->DMAC_DSCR  = 0UL;
         dmacTxChannel()->DMAC_SADDR = 0UL;
         dmacTxChannel()->DMAC_DADDR = (uint32_t)dmacPeripheralTxAddress();
-        dmacTxChannel()->DMAC_CTRLA = DMAC_CTRLA_BTSIZE(0);                // set later in setTx(...)
-        dmacTxChannel()->DMAC_CTRLB = DMAC_CTRLB_SRC_DSCR_FETCH_DISABLE |  //
-                                      DMAC_CTRLB_DST_DSCR_FETCH_DISABLE |  //
-                                      DMAC_CTRLB_FC_MEM2PER_DMA_FC |       // memory->peripheral
-                                      DMAC_CTRLB_SRC_INCR_INCREMENTING |   // increment source address after each fetch
-                                      DMAC_CTRLB_DST_INCR_FIXED |          // destination address is fixed
-                                      // leave DMAC_CTRLB_IEN as 0 - we want an interrupt
-                                      0;  // for layout purposes
-
-        dmacTxChannel()->DMAC_CFG = DMAC_CFG_DST_PER(dmacTxPeripheralId()) | DMAC_CFG_DST_H2SEL_HW;
+        dmacTxChannel()->DMAC_CTRLA = DMAC_CTRLA_BTSIZE(0);  // set later in setTx(...)
+        dmacTxChannel()->DMAC_CTRLB =
+            DMAC_CTRLB_SRC_DSCR_FETCH_DISABLE |  // Buffer Descriptor Fetch operation is disabled for the source
+            DMAC_CTRLB_DST_DSCR_FETCH_DISABLE |  // Buffer Descriptor Fetch operation is disabled for the
+                                                 // destination
+            DMAC_CTRLB_FC_MEM2PER_DMA_FC |       // memory->peripheral
+            DMAC_CTRLB_SRC_INCR_INCREMENTING |   // increment source address after each fetch
+            DMAC_CTRLB_DST_INCR_FIXED |          // destination address is fixed
+            // leave DMAC_CTRLB_IEN as 0 - we want an interrupt
+            0;  // for layout purposes
 
         // enable interrupts for this channel
         dmac()->DMAC_EBCIER |= ((DMAC_EBCIER_BTC0 | DMAC_EBCIER_CBTC0 | DMAC_EBCIER_ERR0) << dmacTxChannelNumber());
@@ -199,6 +203,7 @@ struct DMA_DMAC_TX : virtual DMA_DMAC_TX_hardware<periph_t, periph_num> {
 
     void disableTx() const { dmac()->DMAC_CHDR = DMAC_CHDR_DIS0 << dmacTxChannelNumber(); };
     void enableTx() const { dmac()->DMAC_CHER = DMAC_CHER_ENA0 << dmacTxChannelNumber(); };
+
     void setTx(void* const buffer, const uint32_t length) const {
         dmacTxChannel()->DMAC_SADDR = (uint32_t)buffer;
         dmacTxChannel()->DMAC_CTRLA = DMAC_CTRLA_BTSIZE(length) | DMAC_CTRLA_SCSIZE_CHK_1 | DMAC_CTRLA_DCSIZE_CHK_1 |
@@ -219,7 +224,9 @@ struct DMA_DMAC_TX : virtual DMA_DMAC_TX_hardware<periph_t, periph_num> {
         return 0;
         //            return pdc->PERIPH_TNCR;
     };
-    bool     doneWriting(bool include_next = false) const { return leftToWrite(include_next) == 0; };
+    bool     doneWriting(bool include_next = false) const {
+        return dmac()->DMAC_CHSR & (DMAC_CHSR_EMPT0 << dmacTxChannelNumber());
+    };
     bool     doneWritingNext() const { return leftToWriteNext() == 0; };
     buffer_t getTXTransferPosition() const { return (buffer_t)dmacTxChannel()->DMAC_SADDR; };
 
@@ -280,7 +287,7 @@ struct DMA_DMAC_RX : virtual DMA_DMAC_RX_hardware<periph_t, periph_num> {
 
     const std::function<void(Interrupt::Type)>& _dmaCInterruptHandler;
 
-    _DMACInterrupt _rx_interrupt{[&]() {
+    _DMACInterrupt _rx_interrupt{[&](uint32_t status) {
                                      if (_dmaCInterruptHandler) {
                                          _dmaCInterruptHandler(Interrupt::OnRxTransferDone);
                                      }
@@ -288,13 +295,12 @@ struct DMA_DMAC_RX : virtual DMA_DMAC_RX_hardware<periph_t, periph_num> {
                                  _first_dmac_interrupt};
 
     const uint8_t     dmacRxChannelNumber() const { return _rx_interrupt.getChannel(); }
-    DmacCh_num* const dmacRxChannel() const { return dmac()->DMAC_CH_NUM + dmacRxChannelNumber(); };
+    DmacCh_num* const dmacRxChannel() const { return &(dmac()->DMAC_CH_NUM[dmacRxChannelNumber()]); };
 
     constexpr DMA_DMAC_RX(const std::function<void(Interrupt::Type)>& handler) : _dmaCInterruptHandler{handler} {};
 
-    void resetRX() const {
+    void resetRx() const {
         // init is called once after reset, so clean up after a reset
-        SamCommon::enablePeripheralClock(peripheralId);
 
         // disable the channels
         disableRx();
@@ -308,24 +314,26 @@ struct DMA_DMAC_RX : virtual DMA_DMAC_RX_hardware<periph_t, periph_num> {
         //
         // If ANY of those assumptions are wrong, this code must change!!
 
+        dmacRxChannel()->DMAC_CFG = 0;  // because microchip does this
+        dmacRxChannel()->DMAC_CFG =
+            DMAC_CFG_SRC_PER(dmacRxPeripheralId()) | DMAC_CFG_SRC_H2SEL_HW | DMAC_CFG_SOD_ENABLE | DMAC_CFG_FIFOCFG_ALAP_CFG;
+
         // Configure Rx channel
-        dmacRxChannel()->DMAC_DSCR  = 0UL;
         dmacRxChannel()->DMAC_SADDR = (uint32_t)dmacPeripheralRxAddress();
         dmacRxChannel()->DMAC_DADDR = 0;
-        dmacRxChannel()->DMAC_CTRLA = DMAC_CTRLA_BTSIZE(0);                // set later in setRx(...)
-        dmacRxChannel()->DMAC_CTRLB = DMAC_CTRLB_SRC_DSCR_FETCH_DISABLE |  //
-                                      DMAC_CTRLB_DST_DSCR_FETCH_DISABLE |  //
-                                      DMAC_CTRLB_FC_PER2MEM_DMA_FC |       // memory->peripheral
-                                      DMAC_CTRLB_SRC_INCR_FIXED |          // increment source address after each fetch
-                                      DMAC_CTRLB_DST_INCR_INCREMENTING |   // destination address is fixed
-                                      // leave DMAC_CTRLB_IEN as 0 - we want an interrupt
-                                      0;  // for layout purposes
-
-        dmacRxChannel()->DMAC_CFG = DMAC_CFG_DST_PER(dmacRxPeripheralId()) | DMAC_CFG_DST_H2SEL_HW;
+        dmacRxChannel()->DMAC_CTRLA = DMAC_CTRLA_BTSIZE(0);  // set later in setRx(...)
+        dmacRxChannel()->DMAC_CTRLB =
+            DMAC_CTRLB_SRC_DSCR_FETCH_DISABLE |  // Buffer Descriptor Fetch operation is disabled for the source
+            DMAC_CTRLB_DST_DSCR_FETCH_DISABLE |  // Buffer Descriptor Fetch operation is disabled for the
+                                                 // destination
+            DMAC_CTRLB_FC_PER2MEM_DMA_FC |       // peripheral->memory
+            DMAC_CTRLB_DST_INCR_INCREMENTING |   // increment destination address after each fetch
+            DMAC_CTRLB_SRC_INCR_FIXED |          // source address is fixed
+            // leave DMAC_CTRLB_IEN as 0 - we want an interrupt
+            0;  // for layout purposes
 
         // enable interrupts for this channel
         dmac()->DMAC_EBCIER |= ((DMAC_EBCIER_BTC0 | DMAC_EBCIER_CBTC0 | DMAC_EBCIER_ERR0) << dmacRxChannelNumber());
-
     };
 
     void disableRx() const { dmac()->DMAC_CHDR = DMAC_CHDR_DIS0 << dmacRxChannelNumber(); };
@@ -341,9 +349,7 @@ struct DMA_DMAC_RX : virtual DMA_DMAC_RX_hardware<periph_t, periph_num> {
         //            pdc->PERIPH_RNPR = (uint32_t)buffer;
         //            pdc->PERIPH_RNCR = length;
     };
-    void flushRead() const {
-        SamCommon::sync();
-    };
+    void     flushRead() const { SamCommon::sync(); };
     uint32_t leftToRead(bool include_next = false) const {
         //            if (include_next) {
         //            }
@@ -354,11 +360,9 @@ struct DMA_DMAC_RX : virtual DMA_DMAC_RX_hardware<periph_t, periph_num> {
         return 0;
         //            return pdc->PERIPH_RNCR;
     };
-    bool     doneReading(bool include_next = false) const { return leftToRead(include_next) == 0; };
+    bool     doneReading(bool include_next = false) const { return dmac()->DMAC_CHSR & (DMAC_CHSR_EMPT0 << dmacRxChannelNumber()); };
     bool     doneReadingNext() const { return leftToReadNext() == 0; };
-    buffer_t getRXTransferPosition() const {
-        return (buffer_t)dmacRxChannel()->DMAC_DADDR;
-    };
+    buffer_t getRXTransferPosition() const { return (buffer_t)dmacRxChannel()->DMAC_DADDR; };
 
 
     // Bundle it all up

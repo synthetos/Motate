@@ -155,7 +155,7 @@ namespace Motate {
         };
 
         uint8_t *tx_buffer;
-        uint8_t *rx_buffer; // "pointer to uint8_t that is const"
+        uint8_t *rx_buffer;
         uint16_t size;
         bool deassert_after;
         bool immediate_deassert_after; // allows changing deassert_after from the callback
