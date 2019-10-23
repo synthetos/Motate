@@ -195,7 +195,7 @@ namespace Motate {
      *
      **************************************************/
 
-    template<pin_number spiMISOPinNumber, pin_number spiMOSIPinNumber, pin_number spiSCKPinNumber, service_call_number svcCallNum>
+    template<pin_number spiMISOPinNumber, pin_number spiMOSIPinNumber, pin_number spiSCKPinNumber>
     struct SPIBus : virtual ServiceCallEventHandler
     {
 
@@ -219,7 +219,7 @@ namespace Motate {
 
         SPIGetHardware<spiMISOPinNumber, spiMOSIPinNumber, spiSCKPinNumber> hardware;
 
-        ServiceCall<svcCallNum> message_manager;
+        ServiceCall message_manager;
 
 
         SPIBusDeviceBase *_first_device, *_current_transaction_device;
@@ -436,13 +436,13 @@ namespace Motate {
         struct SPIBusDevice : SPIBusDeviceBase
         {
             // Since we are defining this INSIDE the SPIBus struct, we'll use SPIBus internals liberally
-            SPIBus<spiMISOPinNumber, spiMOSIPinNumber, spiSCKPinNumber, svcCallNum> * const _spi_bus;
+            SPIBus<spiMISOPinNumber, spiMOSIPinNumber, spiSCKPinNumber> * const _spi_bus;
 
             uint32_t _cs_number; // the chip select number
             uint32_t _cs_value;  // the internal value to give the hardware to select the right chip
 
             template <typename chipSelectType>
-            constexpr SPIBusDevice(SPIBus<spiMISOPinNumber, spiMOSIPinNumber, spiSCKPinNumber, svcCallNum> *parent_bus, const chipSelectType &cs, const uint32_t baud, const uint16_t options, uint32_t min_between_cs_delay_ns, uint32_t cs_to_sck_delay_ns, uint32_t between_word_delay_ns) : _spi_bus {parent_bus}
+            constexpr SPIBusDevice(SPIBus<spiMISOPinNumber, spiMOSIPinNumber, spiSCKPinNumber> *parent_bus, const chipSelectType &cs, const uint32_t baud, const uint16_t options, uint32_t min_between_cs_delay_ns, uint32_t cs_to_sck_delay_ns, uint32_t between_word_delay_ns) : _spi_bus {parent_bus}
             {
                 _cs_number = cs.csNumber;
                 _cs_value  = cs.csValue;

@@ -28,7 +28,7 @@
  */
 
 #include <sam.h>
-#include "SamServiceCall.h"
+#include "MotateServiceCall.h"
 #include "SamCommon.h"
 
 extern "C" {
