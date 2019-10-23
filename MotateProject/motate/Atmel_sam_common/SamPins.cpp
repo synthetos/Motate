@@ -29,9 +29,12 @@
 
 #include "MotatePins.h"
 
-using namespace Motate;
+using Motate::_pinChangeInterrupt;
+using Motate::ADC_Module;
+using Motate::PortHardware;
 
-template<> _pinChangeInterrupt * PortHardware<'A'>::_firstInterrupt = nullptr;
+template <>
+_pinChangeInterrupt* PortHardware<'A'>::_firstInterrupt = nullptr;
 extern "C" void PIOA_Handler(void) {
     uint32_t isr = PIOA->PIO_ISR;
 
@@ -104,56 +107,75 @@ extern "C" {
     void _null_adc_pin_interrupt() {};
 }
 
+#if defined(__SAM3X8E__) || defined(__SAM3X8C__)
 namespace Motate {
-    bool ADC_Module::inited_ = false;
-
-    template<> void ADCPin< LookupADCPinByADC< 0>::number >::interrupt() __attribute__ ((weak, alias("_null_adc_pin_interrupt")));
-    template<> void ADCPin< LookupADCPinByADC< 1>::number >::interrupt() __attribute__ ((weak, alias("_null_adc_pin_interrupt")));
-    template<> void ADCPin< LookupADCPinByADC< 2>::number >::interrupt() __attribute__ ((weak, alias("_null_adc_pin_interrupt")));
-    template<> void ADCPin< LookupADCPinByADC< 3>::number >::interrupt() __attribute__ ((weak, alias("_null_adc_pin_interrupt")));
-    template<> void ADCPin< LookupADCPinByADC< 4>::number >::interrupt() __attribute__ ((weak, alias("_null_adc_pin_interrupt")));
-    template<> void ADCPin< LookupADCPinByADC< 5>::number >::interrupt() __attribute__ ((weak, alias("_null_adc_pin_interrupt")));
-    template<> void ADCPin< LookupADCPinByADC< 6>::number >::interrupt() __attribute__ ((weak, alias("_null_adc_pin_interrupt")));
-    template<> void ADCPin< LookupADCPinByADC< 7>::number >::interrupt() __attribute__ ((weak, alias("_null_adc_pin_interrupt")));
-    template<> void ADCPin< LookupADCPinByADC< 8>::number >::interrupt() __attribute__ ((weak, alias("_null_adc_pin_interrupt")));
-    template<> void ADCPin< LookupADCPinByADC< 9>::number >::interrupt() __attribute__ ((weak, alias("_null_adc_pin_interrupt")));
-    template<> void ADCPin< LookupADCPinByADC<10>::number >::interrupt() __attribute__ ((weak, alias("_null_adc_pin_interrupt")));
-    template<> void ADCPin< LookupADCPinByADC<11>::number >::interrupt() __attribute__ ((weak, alias("_null_adc_pin_interrupt")));
-    template<> void ADCPin< LookupADCPinByADC<12>::number >::interrupt() __attribute__ ((weak, alias("_null_adc_pin_interrupt")));
-    template<> void ADCPin< LookupADCPinByADC<13>::number >::interrupt() __attribute__ ((weak, alias("_null_adc_pin_interrupt")));
-    template<> void ADCPin< LookupADCPinByADC<14>::number >::interrupt() __attribute__ ((weak, alias("_null_adc_pin_interrupt")));
+    bool ADC_Module::_inited = false;
+    _pinChangeInterrupt* ADC_Module::_firstInterrupt {};
 }
 
-extern "C" void ADC_Handler(void) {
+extern "C"
+void ADC_Handler(void) {
     uint32_t isr = ADC->ADC_ISR; // read it to clear the ISR
 
-//    uint32_t adc_value = ADC->ADC_LCDR;
-//    uint32_t adc_num  = (adc_value & ADC_LCDR_CHNB_Msk) >> ADC_LCDR_CHNB_Pos;
-//    adc_value = (adc_value & ADC_LCDR_LDATA_Msk) >> ADC_LCDR_LDATA_Pos;
+    _pinChangeInterrupt *current = ADC_Module::_firstInterrupt;
+    while (current != nullptr) {
+        if ((isr & current->pc_mask) && (current->interrupt_handler)) {
+            current->interrupt_handler();
+        }
+        current = current->next;
+    }
 
-#define _INTERNAL_MAKE_ADC_CHECK(num) \
-if (ADCPin< LookupADCPinByADC<num>::number >::interrupt) { \
-    if ((isr & LookupADCPinByADC<num>::adcMask)) { \
-        LookupADCPinByADC<num>::interrupt(); \
-    } \
-}
+    NVIC_ClearPendingIRQ(ADC_IRQn);
+} // ADC_Handler
 
-    _INTERNAL_MAKE_ADC_CHECK( 0)
-    _INTERNAL_MAKE_ADC_CHECK( 1)
-    _INTERNAL_MAKE_ADC_CHECK( 2)
-    _INTERNAL_MAKE_ADC_CHECK( 3)
-    _INTERNAL_MAKE_ADC_CHECK( 4)
-    _INTERNAL_MAKE_ADC_CHECK( 5)
-    _INTERNAL_MAKE_ADC_CHECK( 6)
-    _INTERNAL_MAKE_ADC_CHECK( 7)
-    _INTERNAL_MAKE_ADC_CHECK( 8)
-    _INTERNAL_MAKE_ADC_CHECK( 9)
-    _INTERNAL_MAKE_ADC_CHECK(10)
-    _INTERNAL_MAKE_ADC_CHECK(11)
-    _INTERNAL_MAKE_ADC_CHECK(12)
-    _INTERNAL_MAKE_ADC_CHECK(13)
-    _INTERNAL_MAKE_ADC_CHECK(14)
-
-//    NVIC_ClearPendingIRQ(ADC_IRQn);
-}
+#endif // sam3x
 #endif // ADC
+
+#ifdef AFEC0
+
+//extern "C" {
+//    void _null_adc_pin_interrupt() __attribute__ ((unused));
+//    void _null_adc_pin_interrupt() {};
+//}
+
+namespace Motate {
+    template<> bool ADC_Module<0l>::_inited = false;
+    template<> _pinChangeInterrupt* ADC_Module<0l>::_firstInterrupt {};
+
+    template<> bool ADC_Module<1l>::_inited = false;
+    template<> _pinChangeInterrupt* ADC_Module<1l>::_firstInterrupt {};
+}
+
+extern "C"
+void AFEC0_Handler(void) {
+    uint32_t isr = AFEC0->AFEC_ISR; // read it to clear the ISR
+
+    _pinChangeInterrupt *current = ADC_Module<0>::_firstInterrupt;
+    while (current != nullptr) {
+        if ((isr & current->pc_mask) && (current->interrupt_handler)) {
+            current->interrupt_handler();
+        }
+        current = current->next;
+    }
+
+    NVIC_ClearPendingIRQ(AFEC0_IRQn);
+} // AFEC0_Handler
+
+extern "C"
+void AFEC1_Handler(void) {
+    uint32_t isr = AFEC1->AFEC_ISR; // read it to clear the ISR
+
+    _pinChangeInterrupt *current = ADC_Module<1>::_firstInterrupt;
+    while (current != nullptr) {
+        if ((isr & current->pc_mask) && (current->interrupt_handler)) {
+            current->interrupt_handler();
+        }
+        current = current->next;
+    }
+
+    NVIC_ClearPendingIRQ(AFEC1_IRQn);
+} // AFEC1_Handler
+
+#undef _INTERNAL_MAKE_AFEC_CHECK
+
+#endif // AFEC0

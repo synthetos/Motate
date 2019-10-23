@@ -42,6 +42,10 @@
  * Support and FAQ: visit <a href="http://www.atmel.com/design-support/">Atmel Support</a>
  */
 
+#ifdef __cplusplus
+ extern "C" {
+#endif
+
 #include "sams70.h"
 
 /* Initialize segments */
@@ -54,6 +58,10 @@ extern uint32_t _szero;
 extern uint32_t _ezero;
 extern uint32_t _sstack;
 extern uint32_t _estack;
+#ifdef ENABLE_TCM
+extern char _itcm_lma, _sitcm, _eitcm;
+extern uint32_t _edtcm_stack;
+#endif
 
 /** \cond DOXYGEN_SHOULD_SKIP_THIS */
 int main(void);
@@ -152,13 +160,14 @@ void PWM1_Handler   ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
 void SDRAMC_Handler ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
 #endif /* _SAMS70_SDRAMC_INSTANCE_ */
 void RSWDT_Handler  ( void ) __attribute__ ((weak, alias("Dummy_Handler")));
+// #endif // SINGLE_TRANSLATION_BUILD
 
 /* Exception Table */
 __attribute__ ((section(".vectors")))
 const DeviceVectors exception_table = {
 
         /* Configure Initial Stack Pointer, using linker-generated symbols */
-        .pvStack = (void*) (&_estack),
+        .pvStack = (void*) (&_estack), // this appears to be ignored
 
         .pfnReset_Handler      = (void*) Reset_Handler,
         .pfnNMI_Handler        = (void*) NMI_Handler,
@@ -293,7 +302,85 @@ const DeviceVectors exception_table = {
  */
 void Reset_Handler(void)
 {
-        uint32_t *pSrc, *pDest;
+    /* Set the Main STACK Pointer to DTCM stack section */
+    //    __DSB();
+    //    __ISB();
+    //    __set_MSP( (uint32_t)(&_estack) ) ;
+    //    __DSB();
+    //    __ISB();
+
+
+#ifdef ENABLE_TCM
+#warning Enabling TCM!
+    // Enable ICache and DCache, since we are controlling where RAM goes
+//     SCB_EnableICache();
+//     SCB_EnableDCache();
+
+    // Check TCM is enabled, if not, set it and reset
+    __DSB();
+    __ISB();
+    EFC->EEFC_FCR = (EEFC_FCR_FKEY_PASSWD | EEFC_FCR_FCMD_GGPB);
+    __DSB();
+    __ISB();
+    uint32_t gpnvm = EFC->EEFC_FRR;
+    __DSB();
+    __ISB();
+
+    if ((gpnvm & (0b11 << 7)) != (0b10 << 7)) {
+        // Configure TCM sizes to : 128 kB ITCM - 128 kB DTCM
+        //EFC->EEFC_FCR = (EEFC_FCR_FKEY_PASSWD | EEFC_FCR_FCMD_SGPB | EEFC_FCR_FARG(7));
+        //EFC->EEFC_FCR = (EEFC_FCR_FKEY_PASSWD | EEFC_FCR_FCMD_SGPB | EEFC_FCR_FARG(8));
+
+        // Configure TCM sizes to : 64 kB ITCM - 64 kB DTCM
+        EFC->EEFC_FCR = (EEFC_FCR_FKEY_PASSWD | EEFC_FCR_FCMD_CGPB | EEFC_FCR_FARG(7));
+        // wait for it to apply
+        while ((EFC->EEFC_FSR & EEFC_FSR_FRDY) == 0);
+
+        EFC->EEFC_FCR = (EEFC_FCR_FKEY_PASSWD | EEFC_FCR_FCMD_SGPB | EEFC_FCR_FARG(8));
+        // wait for it to apply
+        while ((EFC->EEFC_FSR & EEFC_FSR_FRDY) == 0);
+
+        // we can't reset while still resetting
+        while (RSTC->RSTC_SR & RSTC_SR_SRCMP) { ; }
+
+        // reset
+        RSTC->RSTC_CR = RSTC_CR_KEY_PASSWD | RSTC_CR_PROCRST; // reset everything
+       while (1);
+    }
+
+    // Enable ITCM and DTCM
+    __DSB();
+    __ISB();
+    SCB->ITCMCR = (SCB_ITCMCR_EN_Msk | SCB_ITCMCR_RMW_Msk | SCB_ITCMCR_RETEN_Msk);
+    SCB->DTCMCR = (SCB_DTCMCR_EN_Msk | SCB_DTCMCR_RMW_Msk | SCB_DTCMCR_RETEN_Msk);
+    __DSB();
+    __ISB();
+
+    {
+        // copy code_TCM from flash to ITCM section
+        volatile char *dst = &_sitcm;
+        volatile char *src = &_itcm_lma;
+
+        while(dst < &_eitcm){
+            *dst++ = *src++;
+        }
+    }
+
+#else
+    // Configure TCM sizes to : 0 kB ITCM - 0 kB DTCM
+    EFC->EEFC_FCR = (EEFC_FCR_FKEY_PASSWD | EEFC_FCR_FCMD_CGPB | EEFC_FCR_FARG(7));
+    EFC->EEFC_FCR = (EEFC_FCR_FKEY_PASSWD | EEFC_FCR_FCMD_CGPB | EEFC_FCR_FARG(8));
+
+    // Disable ITCM and DTCM
+    __DSB();
+    __ISB();
+    SCB->ITCMCR &= ~(uint32_t)SCB_ITCMCR_EN_Msk;
+    SCB->DTCMCR &= ~(uint32_t)SCB_ITCMCR_EN_Msk;
+    __DSB();
+    __ISB();
+#endif
+
+    uint32_t *pSrc, *pDest;
 
         /* Initialize the relocate segment */
         pSrc = &_etext;
@@ -312,16 +399,33 @@ void Reset_Handler(void)
 
         /* Set the vector table base address */
         pSrc = (uint32_t *) & _sfixed;
+    __DSB();
+    __ISB();
         SCB->VTOR = ((uint32_t) pSrc & SCB_VTOR_TBLOFF_Msk);
+    __DSB();
+    __ISB();
 
-        /* Initialize the C library */
-        __libc_init_array();
 
-        /* Branch to main function */
-        main();
 
-        /* Infinite loop */
-        while (1);
+#if __FPU_USED
+#warning starting the FPU
+    /* Enable the FPU */
+    __DSB();
+    __ISB();
+    SCB->CPACR |= ((3UL << 10*2) |             /* set CP10 Full Access               */
+                   (3UL << 11*2)  );           /* set CP11 Full Access               */
+    __DSB();
+    __ISB();
+#endif
+
+    /* Initialize the C library */
+    __libc_init_array();
+
+    /* Branch to main function */
+    main();
+
+    /* Infinite loop */
+    while (1);
 }
 
 /**
@@ -329,6 +433,9 @@ void Reset_Handler(void)
  */
 void Dummy_Handler(void)
 {
-        while (1) {
-        }
+    while (1) {}
 }
+
+#ifdef __cplusplus
+} // extern "C"
+#endif

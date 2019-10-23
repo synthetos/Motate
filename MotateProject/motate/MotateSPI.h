@@ -2,7 +2,7 @@
   MotateSPI.hpp - SPI Library for the Motate system
   http://github.com/synthetos/motate/
 
-  Copyright (c) 2013 Robert Giseburt
+  Copyright (c) 2013-2018 Robert Giseburt
 
 	This file is part of the Motate Library.
 
@@ -40,21 +40,19 @@
  *
  * The processor specific parts MUST define:
  *
- * template<pin_number rxPinNumber, pin_number txPinNumber> using SPIGetHardware<rxPinNumber, txPinNumber> =
- *  and whatever type that returns, such as:
+ * template<pin_number spiMISOPinNumber, pin_number spiMOSIPinNumber, pin_number spiSCKPinNumber>
+ *   using SPIGetHardware<spiMISOPinNumber, spiMOSIPinNumber, spiSCKPinNumber> = ...
+ *
+ * Whatever type that returns must also be defined, such as:
+ *
  * template<uint8_t uartPeripheralNumber> struct _SPIHardware
- *
- * template<pin_number rtsPinNumber, pin_number rxPinNumber> constexpr const bool isRealAndCorrectSPICLKPin()
- * template<pin_number ctsPinNumber, pin_number rxPinNumber> constexpr const bool isRealAndCorrectSPIMISOPin()
- * template<pin_number ctsPinNumber, pin_number rxPinNumber> constexpr const bool isRealAndCorrectSPIMOSIPin()
- *
 
  * Using the wikipedia deifinition of "normal phase," see:
  *   http://en.wikipedia.org/wiki/Serial_Peripheral_Interface_Bus#Clock_polarity_and_phase
  * Wikipedia, in turn, sites Freescale's SPI Block Guide:
  *   http://www.ee.nmt.edu/~teare/ee308l/datasheets/S12SPIV3.pdf
 
- * 
+ *
  *
  */
 
@@ -110,40 +108,11 @@ namespace Motate {
 
     struct SPIInterrupt : Interrupt {
     };
-
-
 } // namespace Motate
 
-#ifdef __AVR_XMEGA__
-
-#include <Atmel_avr/AvrXSPI.h>
-
-#else
-
-#ifdef __AVR__
-#include <Atmel_avr/AvrSPI.h>
-#endif
-
-#endif
-
-#if defined(__SAM3X8E__) || defined(__SAM3X8C__)
-#include <SamSPI.h>
-#endif
-
-#if defined(__SAM4E8E__) || defined(__SAM4E16E__) || defined(__SAM4E8C__) || defined(__SAM4E16C__)
-#include <SamSPI.h>
-#endif
-
-#if defined(__SAMS70N19__) || defined(__SAMS70N20__) || defined(__SAMS70N21__)
-#include <SamSPI.h>
-#endif
-
-#if defined(__KL05Z__)
-#include <Freescale_klxx/KL05ZSPI.h>
-#endif
+#include <ProcessorSPI.h>
 
 namespace Motate {
-
 
 #pragma mark SPIBusDeviceBase
     /**************************************************
@@ -178,8 +147,15 @@ namespace Motate {
             EndTransaction = true
         };
 
+        enum class State {
+            Idle = 0,
+            Setup = 1,
+            Sending = 2,
+            Done = 3
+        };
+
         uint8_t *tx_buffer;
-        uint8_t *rx_buffer; // "pointer to uint8_t that is const"
+        uint8_t *rx_buffer;
         uint16_t size;
         bool deassert_after;
         bool immediate_deassert_after; // allows changing deassert_after from the callback
@@ -191,7 +167,7 @@ namespace Motate {
         SPIMessage * volatile next_message;
 
         std::function<void(void)> message_done_callback;
-        volatile bool sending = false;
+        volatile State state = State::Idle;
 
 
         SPIMessage() {};
@@ -204,6 +180,7 @@ namespace Motate {
             size = new_size;
             deassert_after = new_deassert_after;
             ends_transaction = new_ends_transaction;
+            state = State::Setup;
 
             return this;
         }
@@ -218,8 +195,8 @@ namespace Motate {
      *
      **************************************************/
 
-    template<pin_number spiMISOPinNumber, pin_number spiMOSIPinNumber, pin_number spiSCKPinNumber, service_call_number svcCallNum>
-    struct SPIBus
+    template<pin_number spiMISOPinNumber, pin_number spiMOSIPinNumber, pin_number spiSCKPinNumber>
+    struct SPIBus : virtual ServiceCallEventHandler
     {
 
         static_assert(IsSPIMISOPin<spiMISOPinNumber>(),
@@ -242,7 +219,7 @@ namespace Motate {
 
         SPIGetHardware<spiMISOPinNumber, spiMOSIPinNumber, spiSCKPinNumber> hardware;
 
-        ServiceCall<svcCallNum> message_manager;
+        ServiceCall message_manager;
 
 
         SPIBusDeviceBase *_first_device, *_current_transaction_device;
@@ -298,9 +275,7 @@ namespace Motate {
         // This must be called later, outside of the contructors, to ensure that all dependencies are contructed.
         void init() {
             // setup message_manager system call handler and priority
-            message_manager.setInterruptHandler([&]() {
-                this->sendNextMessageActual();
-            });
+            message_manager.setInterruptHandler(this);  // will call this->handleServiceCallEvent()
             message_manager.setInterrupts(kInterruptPriorityLow);
 
             // ask the hardware to init
@@ -318,10 +293,15 @@ namespace Motate {
             //sendNextMessageActual();
         }
 
-        void sendNextMessageActual() {
+        void handleServiceCallEvent() override {
             if (sending) { return; }
+            while (_first_message && (SPIMessage::State::Done == _first_message->state)) {
+                auto done_message = _first_message;
+                _first_message = _first_message->next_message;
+                done_message->next_message = nullptr;
+            }
             if (_first_message == nullptr) { return;}
-            if (_first_message->sending) { return; }
+            if (SPIMessage::State::Sending == _first_message->state) { return; }
 
             if (_current_transaction_device != nullptr) {
                 // the next message we send must be from the _current_transaction_device
@@ -351,8 +331,14 @@ namespace Motate {
                 }
             }
 
+#ifdef IN_DEBUGGER
+            if (SPIMessage::State::Setup != _first_message->state) {
+                __asm__("BKPT"); // SPI about to send non-Setup message
+            }
+#endif
+
             sending = true;
-            _first_message->sending = true;
+            _first_message->state = SPIMessage::State::Sending;
             _current_transaction_device = _first_message->device;
             hardware.setChannel(_current_transaction_device->getChannel());
             hardware.startTransfer(_first_message->tx_buffer, _first_message->rx_buffer, _first_message->size);
@@ -386,13 +372,23 @@ namespace Motate {
                 hardware._disableOnTXTransferDoneInterrupt();
                 hardware._disableOnRXTransferDoneInterrupt();
 
+
+#ifdef IN_DEBUGGER
+                if (nullptr == _first_message) {
+                    __asm__("BKPT"); // no first message!?
+                }
+#endif
+
                 // _first_message is done sending.
                 // Go ahead and pop it from the list and reset (partially)
-                if (_first_message) {
-                    auto this_message = _first_message;
-                    _first_message = this_message->next_message;
-                    this_message->next_message = nullptr;
-                    this_message->sending = false;
+                auto this_message = _first_message;
+                while (this_message && (SPIMessage::State::Done == this_message->state)) {
+                    this_message = this_message->next_message;
+                }
+
+                if (this_message && (SPIMessage::State::Sending == this_message->state)) {
+                    // Then grab the (only) Sending message and mark it Done, then call it's done callback.
+                    this_message->state = SPIMessage::State::Done;
 
                     // Set the values for *this* message before the callback, so
                     // the callback can re-queue with different values AND tell us
@@ -424,7 +420,8 @@ namespace Motate {
                     }
                 }
                 sending = false; // we can now allow more sending
-                sendNextMessageActual();
+                //sendNextMessageActual();
+                message_manager.call();
             }
         };
 
@@ -439,13 +436,13 @@ namespace Motate {
         struct SPIBusDevice : SPIBusDeviceBase
         {
             // Since we are defining this INSIDE the SPIBus struct, we'll use SPIBus internals liberally
-            SPIBus<spiMISOPinNumber, spiMOSIPinNumber, spiSCKPinNumber, svcCallNum> * const _spi_bus;
+            SPIBus<spiMISOPinNumber, spiMOSIPinNumber, spiSCKPinNumber> * const _spi_bus;
 
             uint32_t _cs_number; // the chip select number
             uint32_t _cs_value;  // the internal value to give the hardware to select the right chip
 
             template <typename chipSelectType>
-            constexpr SPIBusDevice(SPIBus<spiMISOPinNumber, spiMOSIPinNumber, spiSCKPinNumber, svcCallNum> *parent_bus, const chipSelectType &cs, const uint32_t baud, const uint16_t options, uint32_t min_between_cs_delay_ns, uint32_t cs_to_sck_delay_ns, uint32_t between_word_delay_ns) : _spi_bus {parent_bus}
+            constexpr SPIBusDevice(SPIBus<spiMISOPinNumber, spiMOSIPinNumber, spiSCKPinNumber> *parent_bus, const chipSelectType &cs, const uint32_t baud, const uint16_t options, uint32_t min_between_cs_delay_ns, uint32_t cs_to_sck_delay_ns, uint32_t between_word_delay_ns) : _spi_bus {parent_bus}
             {
                 _cs_number = cs.csNumber;
                 _cs_value  = cs.csValue;
@@ -484,11 +481,13 @@ namespace Motate {
                 }
                 else {
                     SPIMessage *walker_message = _spi_bus->_first_message;
-                    while (walker_message->next_message != nullptr) {
+                    while ((walker_message != msg) && (walker_message->next_message != nullptr)) {
                         walker_message = walker_message->next_message;
                     }
 
-                    walker_message->next_message = msg;
+                    if (walker_message != msg) {
+                        walker_message->next_message = msg;
+                    }
                 }
 
                 // Either we just queued the first message, OR we *might* have

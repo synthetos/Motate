@@ -46,7 +46,7 @@
 
 // ITM doesn't seem to work too well. Needs work.
 
-#if DEBUG_SEMIHOSTING == 1
+#if IN_DEBUGGER == 1
 #warning IN_DEBUGGER=1: DEEP DEBUGGING IS ON - this firmware must be used with a debugger attached!
 #endif
 namespace Motate {

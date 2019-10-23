@@ -77,6 +77,9 @@ namespace Motate {
 
         // For use on PWM pins only!
         kPWMPinInverted = 1<<8,
+
+        // For use on ADC pins only!
+        kDifferentialPair = 1<<9,
     };
 
     enum PinInterruptOptions : PinInterruptOptions_t {
@@ -415,16 +418,16 @@ namespace Motate {
                         NVIC_SetPriority(_IRQn(), 0);
                     }
                     else if (interrupts & kPinInterruptPriorityHigh) {
-                        NVIC_SetPriority(_IRQn(), 3);
+                        NVIC_SetPriority(_IRQn(), 1);
                     }
                     else if (interrupts & kPinInterruptPriorityMedium) {
-                        NVIC_SetPriority(_IRQn(), 7);
+                        NVIC_SetPriority(_IRQn(), 2);
                     }
                     else if (interrupts & kPinInterruptPriorityLow) {
-                        NVIC_SetPriority(_IRQn(), 11);
+                        NVIC_SetPriority(_IRQn(), 3);
                     }
                     else if (interrupts & kPinInterruptPriorityLowest) {
-                        NVIC_SetPriority(_IRQn(), 15);
+                        NVIC_SetPriority(_IRQn(), 4);
                     }
                 }
                 /* Enable the IRQ */
@@ -448,8 +451,10 @@ namespace Motate {
                 i = i->next;
             }
             i->next = newInt;
-        }
+        };
     };
+
+
 
     /**************************************************
      *
@@ -488,32 +493,40 @@ namespace Motate {
 
 
 
-#if defined(__SAM3X8E__) || defined(__SAM3X8C__)
-
-#pragma mark ADC_Module/ACD_Pin (Sam3x)
+#pragma mark ADC_Module/ACD_Pin
     /**************************************************
      *
-     * PIN CHANGE INTERRUPT SUPPORT: IsIRQPin / MOTATE_PIN_INTERRUPT
+     * PIN CHANGE INTERRUPT SUPPORT: ADC_Module/ACD_Pin
      *
      **************************************************/
 
     constexpr uint32_t startup_table[] = { 0, 8, 16, 24, 64, 80, 96, 112, 512, 576, 640, 704, 768, 832, 896, 960 };
 
+#if defined(__SAM3X8E__) || defined(__SAM3X8C__)
+
+#pragma mark ADC_Module/ACD_Pin (Sam3x)
+
     // Internal ADC object, and a parent of the ADCPin objects.
     // Handles: Setting options for the ADC module as a whole,
     //          and initializing the ADC module once.
     struct ADC_Module {
-        static const uint32_t default_adc_clock_frequency = 20000000;
-        static const uint32_t default_adc_startup_time = 12;
-        static const uint32_t peripheralId() { return ID_ADC; }
+        static const uint32_t _default_adc_clock_frequency = 20 * 1000000; // 20MHz
+        static const uint32_t _default_adc_startup_time = 12;
 
-        static bool inited_;
+        static const uint32_t peripheralId() { return ID_ADC; }
+        static constexpr bool is_real = true;
+
+        const float _default_vref = 3.28;
+        float _vref = _default_vref;
+
+        static bool _inited;
+        static _pinChangeInterrupt *_firstInterrupt;
 
         void init(const uint32_t adc_clock_frequency, const uint8_t adc_startuptime) {
-            if (inited_) {
+            if (_inited) {
                 return;
             }
-            inited_ = true;
+            _inited = true;
 
             SamCommon::enablePeripheralClock(peripheralId());
 
@@ -555,7 +568,7 @@ namespace Motate {
         };
 
         ADC_Module() {
-            init(default_adc_clock_frequency, default_adc_startup_time);
+            init(_default_adc_clock_frequency, _default_adc_startup_time);
         };
 
         static void startSampling() {
@@ -565,48 +578,50 @@ namespace Motate {
         static void startFreeRunning() {
             ADC->ADC_MR |= ADC_MR_FREERUN_ON;
         };
-    };
 
-    template<pin_number pinNum>
-    struct ADCPinParent {
-        static const uint32_t adcMask = 0;
-        static const uint32_t adcNumber = 0;
-        static const uint16_t getTop() { return 4095; };
-    };
+        void initPin(const uint32_t adcNumber, bool differential) {
+            // NOTE: differential is ignored
+            const uint32_t adcMask = 1<<adcNumber;
 
-    template<pin_number pinNum>
-    struct ADCPin : ADCPinParent<pinNum>, Pin<pinNum>, ADC_Module {
-        using ADCPinParent<pinNum>::adcMask;
-        using ADCPinParent<pinNum>::adcNumber;
-        using ADCPinParent<pinNum>::getTop;
-
-        ADCPin() : ADCPinParent<pinNum>(), Pin<pinNum>(kInput), ADC_Module() { init(); };
-        ADCPin(const PinOptions_t options) : ADCPinParent<pinNum>(), Pin<pinNum>(kInput), ADC_Module() { init(); };
-
-        void init() {
             /* Enable the pin */
             ADC->ADC_CHER = adcMask;
             /* Enable the conversion TAG */
             ADC->ADC_EMR = ADC_EMR_TAG ;
         };
-        uint32_t getRaw() {
+        int32_t getRawPin(const uint32_t adcNumber) {
             return ADC->ADC_CDR[adcNumber];
         };
-        uint32_t getValue() {
+        int32_t getValuePin(const uint32_t adcNumber) {
+            const uint32_t adcMask = 1<<adcNumber;
             if ((ADC->ADC_CHSR & adcMask) != adcMask) {
                 ADC->ADC_CR = ADC_CR_START; /* start the sample */
                 while ((ADC->ADC_ISR & ADC_ISR_DRDY) != ADC_ISR_DRDY) {;} /* Wait... */
             }
-            return getRaw();
+            return getRawPin(adcNumber);
         };
-        operator int16_t() {
-            return getValue();
+        int32_t getBottomPin(const uint32_t adcNumber) {
+            return 0;
         };
-        operator float() {
-            return (float)getValue() / getTop();
+        float getBottomVoltagePin(const uint32_t adcNumber) {
+            return 0.0;
+        }
+        int32_t getTopPin(const uint32_t adcNumber) {
+            return 4095;
         };
-        static const bool is_real = true;
-        void setInterrupts(const uint32_t interrupts) {
+        float getTopVoltagePin(const uint32_t adcNumber) {
+            return _vref;
+        }
+        void setVoltageRangePin(const uint32_t adcNumber,
+                                const float vref,
+                                const float min_expected,
+                                const float max_expected,
+                                const float ideal_steps)
+        {
+            _vref = vref; // all pins on the same module share the same vref
+            // ignore min_expected and max_expected for now
+        };
+
+        void setInterrupts(const uint32_t interrupts, const uint32_t adcMask) {
             if (interrupts != kPinInterruptsOff) {
                 /* Set interrupt priority */
                 if (interrupts & kPinInterruptPriorityMask) {
@@ -614,16 +629,16 @@ namespace Motate {
                         NVIC_SetPriority(ADC_IRQn, 0);
                     }
                     else if (interrupts & kPinInterruptPriorityHigh) {
-                        NVIC_SetPriority(ADC_IRQn, 3);
+                        NVIC_SetPriority(ADC_IRQn, 1);
                     }
                     else if (interrupts & kPinInterruptPriorityMedium) {
-                        NVIC_SetPriority(ADC_IRQn, 7);
+                        NVIC_SetPriority(ADC_IRQn, 2);
                     }
                     else if (interrupts & kPinInterruptPriorityLow) {
-                        NVIC_SetPriority(ADC_IRQn, 11);
+                        NVIC_SetPriority(ADC_IRQn, 3);
                     }
                     else if (interrupts & kPinInterruptPriorityLowest) {
-                        NVIC_SetPriority(ADC_IRQn, 15);
+                        NVIC_SetPriority(ADC_IRQn, 4);
                     }
                 }
                 /* Enable the IRQ */
@@ -643,107 +658,388 @@ namespace Motate {
                 }
             }
         };
-        static void interrupt();
-    };
 
-    template<int16_t adcNum>
-    struct ReverseADCPin : ADCPin<-1> {
-        ReverseADCPin() : ADCPin<-1>() {};
-        ReverseADCPin(const PinOptions_t options) : ADCPin<-1>() {};
-    };
-
-#define _MAKE_MOTATE_ADC_PIN(registerChar, registerPin, adcNum) \
-    template<> \
-    struct ADCPinParent< ReversePinLookup<registerChar, registerPin>::number > { \
-        static const uint32_t adcMask = 1 << adcNum; \
-        static const uint32_t adcNumber = adcNum; \
-        static const uint16_t getTop() { return 4095; }; \
-    }; \
-    template<> \
-    struct ReverseADCPin<adcNum> : ADCPin<ReversePinLookup<registerChar, registerPin>::number> { \
-        ReverseADCPin() : ADCPin<ReversePinLookup<registerChar, registerPin>::number>() {}; \
-        ReverseADCPin(const PinOptions_t options) : ADCPin<ReversePinLookup<registerChar, registerPin>::number>(options) {}; \
-    };
-
-    template<int16_t pinNum>
-    constexpr const bool IsADCPin() { return ADCPin<pinNum>::is_real; };
-
-    template<uint8_t portChar, int16_t portPin>
-    using LookupADCPin = ADCPin< ReversePinLookup<portChar, portPin>::number >;
-
-    template<int16_t adcNum>
-    using LookupADCPinByADC = ADCPin< ReverseADCPin< adcNum >::number >;
-
-#else // not Sam3x
-
-#pragma mark ADC_Module/ACD_Pin (Sam3x)
-    /**************************************************
-     *
-     * PIN CHANGE INTERRUPT SUPPORT: IsIRQPin / MOTATE_PIN_INTERRUPT
-     *
-     **************************************************/
-
-    template<pin_number pinNum>
-    struct ADCPinParent {
-        static const uint32_t adcMask = 0;
-        static const uint32_t adcNumber = 0;
-        static const uint16_t getTop() { return 4095; };
-    };
-
-    // Some pins are ADC pins.
-     template<pin_number n>
-     struct ADCPin : Pin<-1> {
-         ADCPin() : Pin<-1>() {};
-         ADCPin(const PinOptions_t options) : Pin<-1>() {};
-    
-         uint32_t getRaw() {
-             return 0;
-         };
-         uint32_t getValue() {
-             return 0;
-         };
-         operator int16_t() {
-             return getValue();
-         };
-         operator float() {
-             return 0.0;
-         };
-         static const uint16_t getTop() { return 4095; };
-    
-         static const bool is_real = false;
-         void setInterrupts(const uint32_t interrupts) {};
-         static void interrupt() __attribute__ (( weak )); // Allow setting an interrupt on a invalid ADC pin -- will never be called
-     };
-
-    template<int16_t adcNum>
-    struct ReverseADCPin : ADCPin<-1> {
-        ReverseADCPin() : ADCPin<-1>() {};
-        ReverseADCPin(const PinOptions_t options) : ADCPin<-1>() {};
+        void addInterrupt(_pinChangeInterrupt *newInt) {
+            _pinChangeInterrupt *i = _firstInterrupt;
+            if (i == nullptr) {
+                _firstInterrupt = newInt;
+                return;
+            }
+            while (i->next != nullptr) {
+                i = i->next;
+            }
+            i->next = newInt;
+        };
     };
 
     #define _MAKE_MOTATE_ADC_PIN(registerChar, registerPin, adcNum) \
         template<> \
-            struct ADCPinParent< ReversePinLookup<registerChar, registerPin>::number > { \
-            static const uint32_t adcMask = 1 << adcNum; \
-            static const uint32_t adcNumber = adcNum; \
-            static const uint16_t getTop() { return 4095; }; \
-        }; \
-        template<> \
-        struct ReverseADCPin<adcNum> : ADCPin<ReversePinLookup<registerChar, registerPin>::number> { \
-            ReverseADCPin() : ADCPin<ReversePinLookup<registerChar, registerPin>::number>() {}; \
-            ReverseADCPin(const PinOptions_t options) : ADCPin<ReversePinLookup<registerChar, registerPin>::number>(options) {}; \
+        struct ADCPinParent< ReversePinLookup<registerChar, registerPin>::number > : ADC_Module { \
+            static constexpr uint32_t adcMask = 1 << adcNum; \
+            static constexpr uint32_t adcNumber = adcNum; \
         };
 
-    template<int16_t pinNum>
-    constexpr const bool IsADCPin() { return ADCPin<pinNum>::is_real; };
+#else // not Sam3x
 
-    template<uint8_t portChar, int16_t portPin>
-    using LookupADCPin = ADCPin< ReversePinLookup<portChar, portPin>::number >;
+#pragma mark ADC_Module/ACD_Pin (SamS70)
+    /**************************************************
+     *
+     * PIN CHANGE INTERRUPT SUPPORT: ADC_Module/ACD_Pin (SamS70)
+     *
+     **************************************************/
 
-    template<int16_t adcNum>
-    using LookupADCPinByADC = ADCPin< ReverseADCPin< adcNum >::number >;
+    // Internal ADC object, and a parent of the ADCPin objects.
+    // Handles: Setting options for the ADC module as a whole,
+    //          and initializing the ADC module once.
+    template <int32_t afecNum>
+    struct ADC_Module {
+        static const uint32_t moduleNumber = afecNum;
+
+        const uint32_t _default_adc_clock_frequency = 10*1000000; // 10MHz
+        const uint32_t _default_adc_startup_time = 10;
+
+        // these are highly tuned parameters, and may need to become adjustable at runtime in the future
+        // see http://www.atmel.com/Images/Atmel-44093-AFE-Calibration-on-SAM-V7-SAM-E7-SAM-S7-Microcontrollers_Application-Note.pdf
+        //    specifically section 2.2.2
+//        const float _default_gain = 0.991073741551146;
+//        const float _default_gain = 0.9903;
+        const float _default_gain = 1.01;
+//        const float _default_gain = 1;
+
+//        const float _default_offset = 106;
+        const float _default_offset = 11;
+//        const float _default_offset = 0;
+        const float _default_vref = 3.29;
+
+        // each pin holds a copy of this object, so these a per-pin inherently
+        int32_t _top_value = 4095;
+        float   _pin_offset = 0;
+        int32_t _pin_scale = 1;
+        bool    _differential = false;
+        float  _vref = _default_vref;
+
+        constexpr Afec* const afec() const { return afecNum == 0 ? AFEC0 : AFEC1; };
+        constexpr IRQn const afecIRQnum() const { return afecNum == 0 ? AFEC0_IRQn : AFEC1_IRQn; };
+        constexpr uint32_t peripheralId() const { return afecNum == 0 ? ID_AFEC0 : ID_AFEC1; };
+        static constexpr bool is_real = true;
+
+        static bool _inited;
+        static _pinChangeInterrupt *_firstInterrupt;
+
+        void init(const uint32_t adc_clock_frequency, const uint8_t adc_startuptime) {
+            if (_inited) {
+                return;
+            }
+            _inited = true;
+
+            SamCommon::enablePeripheralClock(peripheralId());
+
+            uint32_t ul_prescal, ul_startup,  ul_mr_startup, ul_real_adc_clock;
+            afec()->AFEC_CR = AFEC_CR_SWRST;
+
+            /* Reset Mode Register. */
+            afec()->AFEC_MR = 0;
+
+            ul_prescal = (SamCommon::getPeripheralClockFreq() / adc_clock_frequency) - 1;
+            ul_real_adc_clock = SamCommon::getPeripheralClockFreq() / (ul_prescal + 1);
+
+            // ADC clocks needed to get ul_startuptime uS
+            ul_startup = (ul_real_adc_clock / 1000000) * adc_startuptime;
+
+            // Find correct MR_STARTUP value from conversion table
+            for (ul_mr_startup=0; ul_mr_startup<16; ul_mr_startup++) {
+                if (startup_table[ul_mr_startup] >= ul_startup) {
+                    break;
+                }
+            }
+            if (ul_mr_startup==16) {
+                return /*-1*/;
+            }
+
+            afec()->AFEC_MR =
+                AFEC_MR_PRESCAL(ul_prescal) |
+                AFEC_MR_STARTUP(ul_mr_startup) |
+                AFEC_MR_TRACKTIM(0) |
+                AFEC_MR_TRANSFER(2) |
+                AFEC_MR_ONE            // becuase this bit must be one, apparently
+            ;
+            afec()->AFEC_EMR =
+                AFEC_EMR_TAG | // enable the conversion TAG
+                AFEC_EMR_STM   // enable Single Trigger Mode
+            ;
+
+            afec()->AFEC_ACR =
+                AFEC_ACR_IBCTL(1) |
+                AFEC_ACR_PGA0EN |
+                AFEC_ACR_PGA1EN
+            ;
+
+            // reset error correction list
+            afec()->AFEC_CECR = 0;
+            // enable it generally, however
+            afec()->AFEC_COSR = AFEC_COSR_CSEL;
+
+            setupErrorCorrection(_default_gain, _default_offset, _default_vref);
+        };
+
+        ADC_Module() {
+            init(_default_adc_clock_frequency, _default_adc_startup_time);
+        };
+
+        void startSampling() {
+            afec()->AFEC_CR = AFEC_CR_START; /* start the sample */;
+        };
+
+        static void startFreeRunning() {
+            afec()->AFEC_MR |= AFEC_MR_FREERUN_ON;
+        };
+
+        void setupErrorCorrection(const float gain, const float offset, const float vref) {
+            // Using two measurements: V1 the actual voltage, with V1_a being the actual measurement (no correction) and
+            //  V1_i being the ideal and a second measurement (preferably near the other end of the range) V2, V2_a, and
+            //  V2_i, where Vn_i = 2^12*(Vn/VREF). Arrange it so that V1 is a higher voltage than V2.
+            // To get the gain:     gain = (V1_a-V2_a)/(V1_i-V2_i)
+            // To get the offset: offset = (V1_a-2^11)-gain*(V1_i-2^11)
+
+            afec()->AFEC_CVR = AFEC_CVR_OFFSETCORR((int16_t)-offset) | AFEC_CVR_GAINCORR((int16_t)(32768.0/gain));
+        };
+
+        void initPin(const uint32_t adcNumber, bool differential) {
+            const uint32_t adcMask = 1<<adcNumber;
+
+            // Note about differential pairs: they are sequential, starting from 0
+            // 0 and 1, 2 and 3, etc.
+            // So, the other one from any adcNumber is adcNumber XOR 1, or adcNumber^1
+
+            // Enable the pin
+            afec()->AFEC_CHER = adcMask;
+
+            // Enable error correction - note the actual correction parameters are shared across this module
+            // and are set in setupErrorCorrection
+            afec()->AFEC_CECR |= adcMask;
+
+            // The offset (AOFF) is a 10-bit value that will set where in the range is the mid-point.
+            // The startup value is 0, and the ideal midpoint is 2^10 / 2=512.
+            // See 54.8.4.2 of the SamS70 Manual (19-Jan-16 ed):
+            //    C_i = (4096/V_refp)*(V_in-V_DAC)*gain+2047
+            // The VDAC uses the AOFF value as an "input". That's vague.
+            // For more info, see:
+            // http://www.atmel.com/Images/Atmel-44093-AFE-Calibration-on-SAM-V7-SAM-E7-SAM-S7-Microcontrollers_Application-Note.pdf
+            afec()->AFEC_CSELR = AFEC_CSELR_CSEL(adcNumber);
+            afec()->AFEC_COCR = AFEC_COCR_AOFF(512);
+
+            _differential = differential;
+        };
+        int32_t getRawPin(const uint32_t adcNumber) {
+            afec()->AFEC_CSELR = AFEC_CSELR_CSEL(adcNumber);
+            return (int32_t)afec()->AFEC_CDR; // cast to get negative value correct
+        };
+        int32_t getValuePin(const uint32_t adcNumber) {
+            const uint32_t adcMask = 1<<adcNumber;
+            if ((afec()->AFEC_CHSR & adcMask) != adcMask) {
+                afec()->AFEC_CR = AFEC_CR_START; /* start the sample */
+                while ((afec()->AFEC_CHSR & adcMask) != adcMask) {;} /* Wait... */
+            }
+            return getRawPin(adcNumber);
+        };
+        int32_t getBottomPin(const uint32_t adcNumber) {
+            return 0;
+        };
+        float getBottomVoltagePin(const uint32_t adcNumber) {
+            if (afec()->AFEC_DIFFR & (1<<adcNumber)) {
+                return 0.0; // differential values both have the offset, so it cancels out
+            }
+            return _pin_offset * _vref;
+        }
+        int32_t getTopPin(const uint32_t adcNumber) {
+            if (afec()->AFEC_DIFFR & (1<<adcNumber)) {
+                // differential values are centered and the offset cancels out
+                return (_top_value * _pin_scale)/2.0;
+            }
+            return (_pin_offset + 1.0) * _top_value * _pin_scale;
+        };
+        float getTopVoltagePin(const uint32_t adcNumber) {
+            return _vref;
+        }
+        void setVoltageRangePin(const uint32_t adcNumber,
+                                const float vref,
+                                const float min_expected,
+                                const float max_expected,
+                                const float ideal_steps)
+        {
+            _vref = vref; // all pins on the same module share the same vref
+            // ignore min_expected and max_expected for now, except to set the bits
+            // we have as optins 12, 13, 14, 15, and 16bit, each costs more in sample time
+
+            float min_lsb = (vref/(max_expected-min_expected))*ideal_steps;
+            if (min_lsb > (_differential ? 2047 : 4095)) { // 2^12 = 4096
+                if (min_lsb > (_differential ? 4095 : 8191)) { // 2^13 = 8192
+                    if (min_lsb > (_differential ? 8191 : 16383)) { // 2^14 = 16384
+                        if (min_lsb > 32767) { // 2^15 = 32,768
+                            // 2^16 = 65,536
+                            // use 16 bit
+                            afec()->AFEC_EMR = (afec()->AFEC_EMR & ~AFEC_EMR_RES_Msk) | AFEC_EMR_RES(5);
+                            _top_value = 65535;
+                        } else {
+                            // use 15 bit
+                            afec()->AFEC_EMR = (afec()->AFEC_EMR & ~AFEC_EMR_RES_Msk) | AFEC_EMR_RES(4);
+                            _top_value = 32767;
+                        }
+                    } else {
+                        // use 14 bit
+                        afec()->AFEC_EMR = (afec()->AFEC_EMR & ~AFEC_EMR_RES_Msk) | AFEC_EMR_RES(3);
+                        _top_value = 16383;
+                    }
+                } else {
+                    // use 13 bit
+                    afec()->AFEC_EMR = (afec()->AFEC_EMR & ~AFEC_EMR_RES_Msk) | AFEC_EMR_RES(2);
+                    _top_value = 8191;
+                }
+            } else {
+                // use 12 bit
+                afec()->AFEC_EMR = (afec()->AFEC_EMR & ~AFEC_EMR_RES_Msk) | AFEC_EMR_RES(0);
+                _top_value = 4095;
+            }
+
+            if (_differential) {
+                // make sure any differential pins are enabled as well
+                afec()->AFEC_CHER = 1<<(adcNumber^1);
+                afec()->AFEC_CECR |= (1 << adcNumber) | (1 << (adcNumber^1));
+                afec()->AFEC_DIFFR |= (1 << adcNumber) | (1 << (adcNumber^1));
+            }
+
+            // handle scale, which is per-pin
+            // also handles offset, which is the center of the range of size (VREF/scale)
+            // and it cannot offset more that 1/(scale*2) from zero
+            float scale_used = (max_expected-(_differential?0:min_expected))/vref;
+            if (scale_used < 0.25) { // 4x scale
+                afec()->AFEC_CSELR = AFEC_CSELR_CSEL(adcNumber);
+                afec()->AFEC_CGR = (afec()->AFEC_CGR & ~(0x3 << (adcNumber * 2))) |
+                                    (2 << (adcNumber * 2)
+                                   );
+
+                int32_t offset = (1024 * min_expected)/vref + 128;
+                offset = std::min(offset, 1024L);
+                afec()->AFEC_COCR = AFEC_COCR_AOFF(offset);
+                _pin_offset = ((float)(offset-128)/1024.0);
+
+                if (_differential) {
+                    afec()->AFEC_CSELR = AFEC_CSELR_CSEL((adcNumber^1));
+                    afec()->AFEC_CGR = (afec()->AFEC_CGR & ~(0x3 << ((adcNumber^1) * 2))) |
+                                        (2 << ((adcNumber^1) * 2)
+                                       );
+                    afec()->AFEC_COCR = AFEC_COCR_AOFF(offset);
+                }
+                _pin_scale = 4;
+            }
+            else if (scale_used < 0.5) { // 2x scale
+                afec()->AFEC_CSELR = AFEC_CSELR_CSEL(adcNumber);
+                afec()->AFEC_CGR = (afec()->AFEC_CGR & ~(0x3 << (adcNumber * 2))) |
+                                    (1 << (adcNumber * 2)
+                                   );
+
+                int32_t offset = (1024 * min_expected)/vref + 256;
+                offset = std::min(offset, 1024L);
+                afec()->AFEC_COCR = AFEC_COCR_AOFF(offset);
+                _pin_offset = ((float)(offset-256)/1024.0);
+
+                if (_differential) {
+                    afec()->AFEC_CSELR = AFEC_CSELR_CSEL(adcNumber^1);
+                    afec()->AFEC_CGR = (afec()->AFEC_CGR & ~(0x3 << ((adcNumber^1) * 2))) |
+                                        (1 << ((adcNumber^1) * 2)
+                                       );
+                    afec()->AFEC_COCR = AFEC_COCR_AOFF(offset);
+                }
+
+                _pin_scale = 2;
+            }
+            else { // 1x scale
+                afec()->AFEC_CSELR = AFEC_CSELR_CSEL(adcNumber);
+                afec()->AFEC_CGR = (afec()->AFEC_CGR & ~(0x3 << (adcNumber * 2))) |
+                                    (0 << (adcNumber * 2));
+
+                int32_t offset = (1024 * min_expected)/vref + 512;
+                offset = std::min(offset, 1024L);
+                afec()->AFEC_COCR = AFEC_COCR_AOFF(offset);
+                _pin_offset = ((float)(offset-512)/1024.0);
+
+                if (_differential) {
+                    afec()->AFEC_CSELR = AFEC_CSELR_CSEL(adcNumber^1);
+                    afec()->AFEC_CGR = (afec()->AFEC_CGR & ~(0x3 << ((adcNumber^1) * 2))) |
+                                        (0 << ((adcNumber^1) * 2)
+                                       );
+                    afec()->AFEC_COCR = AFEC_COCR_AOFF(offset);
+                }
+
+                _pin_scale = 1;
+            }
+        };
+
+        void setInterrupts(const uint32_t interrupts, const uint32_t adcMask) {
+            if (interrupts != kPinInterruptsOff) {
+                /* Set interrupt priority */
+                if (interrupts & kPinInterruptPriorityMask) {
+                    if (interrupts & kPinInterruptPriorityHighest) {
+                        NVIC_SetPriority(afecIRQnum(), 0);
+                    }
+                    else if (interrupts & kPinInterruptPriorityHigh) {
+                        NVIC_SetPriority(afecIRQnum(), 3);
+                    }
+                    else if (interrupts & kPinInterruptPriorityMedium) {
+                        NVIC_SetPriority(afecIRQnum(), 7);
+                    }
+                    else if (interrupts & kPinInterruptPriorityLow) {
+                        NVIC_SetPriority(afecIRQnum(), 11);
+                    }
+                    else if (interrupts & kPinInterruptPriorityLowest) {
+                        NVIC_SetPriority(afecIRQnum(), 15);
+                    }
+                }
+                /* Enable the IRQ */
+                NVIC_EnableIRQ(afecIRQnum());
+                /* Enable the interrupt */
+                afec()->AFEC_IER = adcMask;
+                /* Enable the pin */
+                afec()->AFEC_CHER = adcMask;
+            } else {
+                /* Disable the pin */
+                afec()->AFEC_CHDR = adcMask;
+                /* Disable the interrupt */
+                afec()->AFEC_IDR = adcMask;
+                /* Disable the interrupt - if all channels are disabled */
+                if (afec()->AFEC_CHSR == 0) {
+                    NVIC_DisableIRQ(afecIRQnum());
+                }
+            }
+        };
+
+        void addInterrupt(_pinChangeInterrupt *newInt) {
+            _pinChangeInterrupt *i = _firstInterrupt;
+            if (i == nullptr) {
+                _firstInterrupt = newInt;
+                return;
+            }
+            while (i->next != nullptr) {
+                i = i->next;
+            }
+            i->next = newInt;
+        };
+    };
+
+    #define _MAKE_MOTATE_ADC_PIN(registerChar, registerPin, afecNum, adcNum) \
+        template<> \
+        struct ADCPinParent< ReversePinLookup<registerChar, registerPin>::number > : ADC_Module<afecNum> { \
+            static constexpr uint32_t adcMask = 1 << adcNum; \
+            static constexpr uint32_t adcNumber = adcNum; \
+        };
 
 #endif
+
+//    template<pin_number negPinNum, pin_number posPinNum>
+//    constexpr const bool IsADCDifferentialPair() {
+//        return (ADCPin<adcNegNum>::moduleNumber == ADCPin<adcPosNum>::moduleNumber) &&
+//        (ADCPin<adcNegNum>::adcNumber == (ADCPin<adcPosNum>::adcNumber^1));
+//    };
 
 
 #pragma mark PWMOutputPin support
@@ -758,8 +1054,8 @@ namespace Motate {
         struct AvailablePWMOutputPin< ReversePinLookup<registerChar, registerPin>::number > : RealPWMOutputPin< ReversePinLookup<registerChar, registerPin>::number, timerOrPWM > { \
             typedef timerOrPWM parentTimerType; \
             static const pin_number pinNum = ReversePinLookup<registerChar, registerPin>::number; \
-            AvailablePWMOutputPin() : RealPWMOutputPin<pinNum, timerOrPWM>(kPeripheral ## peripheralAorB) { pwmpin_init(invertedByDefault ? kPWMOnInverted : kPWMOn);}; \
-            AvailablePWMOutputPin(const PinOptions_t options, const uint32_t freq) : RealPWMOutputPin<pinNum, timerOrPWM>(kPeripheral ## peripheralAorB, options, freq) { \
+            AvailablePWMOutputPin() : RealPWMOutputPin<pinNum, timerOrPWM>{kPeripheral ## peripheralAorB} { pwmpin_init(invertedByDefault ? kPWMOnInverted : kPWMOn);}; \
+            AvailablePWMOutputPin(const PinOptions_t options, const uint32_t freq) : RealPWMOutputPin<pinNum, timerOrPWM>{kPeripheral ## peripheralAorB, options, freq} { \
                 pwmpin_init((invertedByDefault ^ ((options & kPWMPinInverted)?true:false)) ? kPWMOnInverted : kPWMOn); \
             }; \
             using RealPWMOutputPin<pinNum, timerOrPWM>::operator=; \
@@ -788,7 +1084,7 @@ namespace Motate {
             static constexpr bool is_real = true; \
             static constexpr uint8_t spiNum = spiNumber; \
             static constexpr uint8_t csNumber =  csNum; \
-            static constexpr uint8_t csValue  = ~csNum; \
+            static constexpr uint8_t csValue  = ~(1<<csNum); \
             static constexpr bool usesDecoder = false; \
         };
 
@@ -816,6 +1112,35 @@ namespace Motate {
             SPISCKPin() : ReversePinLookup<registerChar, registerPin> { kPeripheral ## peripheralAorB } {};\
             static constexpr bool is_real = true; \
             static constexpr uint8_t spiNum = spiNumber; \
+        };
+
+
+#pragma mark TWI Pins support
+    /**************************************************
+     *
+     * TWI PIN METADATA and wiring: specializes TWISCKPin / TWISDAPin
+     *
+     * Provides: _MAKE_MOTATE_TWI_SCK_PIN
+     *           _MAKE_MOTATE_TWI_SDA_PIN
+     *
+     **************************************************/
+
+
+    #define _MAKE_MOTATE_TWI_SCK_PIN(registerChar, registerPin, twiNumber, peripheralAorB)\
+        template<>\
+        struct TWISCKPin< ReversePinLookup<registerChar, registerPin>::number > : ReversePinLookup<registerChar, registerPin> {\
+            TWISCKPin() : ReversePinLookup<registerChar, registerPin>{kPeripheral ## peripheralAorB} {};\
+            static constexpr bool is_real = true; \
+            static constexpr uint8_t twiNum = twiNumber; \
+        };
+
+
+    #define _MAKE_MOTATE_TWI_SDA_PIN(registerChar, registerPin, twiNumber, peripheralAorB)\
+        template<>\
+        struct TWISDAPin< ReversePinLookup<registerChar, registerPin>::number > : ReversePinLookup<registerChar, registerPin> {\
+            TWISDAPin() : ReversePinLookup<registerChar, registerPin>{kPeripheral ## peripheralAorB} {};\
+            static constexpr bool is_real = true; \
+            static constexpr uint8_t twiNum = twiNumber; \
         };
 
 

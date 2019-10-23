@@ -33,12 +33,10 @@
 #include "MotateBuffer.h"
 
 // This makes the Motate:: prefix unnecessary.
-using namespace Motate;
-
 // Setup an led to blink and show that the board's working...
-OutputPin<kLED1_PinNumber> led1_pin;
-OutputPin<kLED2_PinNumber> led2_pin;
-IRQPin<kInput1_PinNumber> button { Motate::kPullUp };
+OutputPin<Motate::kLED1_PinNumber> led1_pin;
+OutputPin<Motate::kLED2_PinNumber> led2_pin;
+IRQPin<Motate::kInput1_PinNumber> button { Motate::kPullUp };
 
 // Create a buffer to hold the data to blast
 Motate::Buffer<1024> blast_buffer;

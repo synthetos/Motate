@@ -2,7 +2,7 @@
  SamUART.h - Library for the Motate system
  http://github.com/synthetos/motate/
 
- Copyright (c) 2016 Robert Giseburt
+ Copyright (c) 2016-2018 Robert Giseburt
 
  This file is part of the Motate Library.
 
@@ -39,6 +39,9 @@
 
 #include "SamCommon.h" // pull in defines and fix them
 #include "SamDMA.h" // pull in defines and fix them
+
+#include "SamUARTInternal.h" // grab cleanup of defines and helpers
+#include "SamUARTDMA.h" // grab cleanup of defines and helpers
 
 namespace Motate {
     // Convenience template classes for specialization:
@@ -104,35 +107,16 @@ namespace Motate {
 
     // USART peripherals
     template<uint8_t uartPeripheralNumber>
-    struct _USARTHardware {
-
+    struct _USARTHardware : UART_internal::USARTInfo<uartPeripheralNumber> {
         static constexpr Usart * const usart() {
-            switch (uartPeripheralNumber) {
-                case (0): return USART0;
-                case (1): return USART1;
-                case (2): return USART2;
-            };
+            return UART_internal::USARTInfo<uartPeripheralNumber>::usart;
         };
-        static constexpr uint32_t peripheralId() {
-            switch (uartPeripheralNumber) {
-                case (0): return ID_USART0;
-                case (1): return ID_USART1;
-                case (2): return ID_USART2;
-            };
-            //return (uartPeripheralNumber == 0) ? ID_USART0_DONT_CONFLICT : ID_USART1_DONT_CONFLICT;
-        };
-        static constexpr IRQn_Type usartIRQ() {
-            switch (uartPeripheralNumber) {
-                case (0): return USART0_IRQn;
-                case (1): return USART1_IRQn;
-                case (2): return USART2_IRQn;
-            };
-//            return (uartPeripheralNumber == 0) ? USART0_IRQn : USART1_IRQn;
-        };
+        using UART_internal::USARTInfo<uartPeripheralNumber>::peripheralId;
+        using UART_internal::USARTInfo<uartPeripheralNumber>::IRQ;
 
         static constexpr const uint8_t uartPeripheralNum=uartPeripheralNumber;
 
-        std::function<void(uint16_t)> _uartInterruptHandler;
+        std::function<void(Interrupt::Type)> _uartInterruptHandler;
 
         DMA<Usart *, uartPeripheralNumber> dma_ {_uartInterruptHandler};
         constexpr const DMA<Usart *, uartPeripheralNumber> *dma() { return &dma_; };
@@ -151,7 +135,7 @@ namespace Motate {
 
         void init() {
             // init is called once after reset, so clean up after a reset
-            SamCommon::enablePeripheralClock(peripheralId());
+            SamCommon::enablePeripheralClock(peripheralId);
 
             // Reset and disable TX and RX
             usart()->US_CR = US_CR_RSTRX | US_CR_RSTTX | US_CR_RXDIS | US_CR_TXDIS;
@@ -220,7 +204,7 @@ namespace Motate {
 
         };
 
-        void setInterrupts(const uint16_t interrupts) {
+        void setInterrupts(const Interrupt::Type interrupts) {
             if (interrupts != UARTInterrupt::Off) {
 
                 if (interrupts & UARTInterrupt::OnRxDone) {
@@ -248,29 +232,29 @@ namespace Motate {
 
                 /* Set interrupt priority */
                 if (interrupts & UARTInterrupt::PriorityHighest) {
-                    NVIC_SetPriority(usartIRQ(), 0);
+                    NVIC_SetPriority(IRQ, 0);
                 }
                 else if (interrupts & UARTInterrupt::PriorityHigh) {
-                    NVIC_SetPriority(usartIRQ(), 3);
+                    NVIC_SetPriority(IRQ, 1);
                 }
                 else if (interrupts & UARTInterrupt::PriorityMedium) {
-                    NVIC_SetPriority(usartIRQ(), 7);
+                    NVIC_SetPriority(IRQ, 2);
                 }
                 else if (interrupts & UARTInterrupt::PriorityLow) {
-                    NVIC_SetPriority(usartIRQ(), 11);
+                    NVIC_SetPriority(IRQ, 3);
                 }
                 else if (interrupts & kInterruptPriorityLowest) {
-                    NVIC_SetPriority(usartIRQ(), 15);
+                    NVIC_SetPriority(IRQ, 4);
                 }
 
-                NVIC_EnableIRQ(usartIRQ());
+                NVIC_EnableIRQ(IRQ);
             } else {
 
-                NVIC_DisableIRQ(usartIRQ());
+                NVIC_DisableIRQ(IRQ);
             }
         };
 
-        void setInterruptHandler(std::function<void(uint16_t)> &&handler) {
+        void setInterruptHandler(std::function<void(Interrupt::Type)> &&handler) {
             _uartInterruptHandler = std::move(handler);
         }
 
@@ -314,8 +298,8 @@ namespace Motate {
             }
         };
 
-        static uint16_t getInterruptCause() { // __attribute__ (( noinline ))
-            uint16_t status = UARTInterrupt::Unknown;
+        static Interrupt::Type getInterruptCause() { // __attribute__ (( noinline ))
+            Interrupt::Type status = UARTInterrupt::Unknown;
 
             // Notes from experience:
             // This processor will sometimes allow one of these bits to be set,
@@ -423,39 +407,17 @@ namespace Motate {
 
     // UART peripheral
     template<uint8_t uartPeripheralNumber>
-    struct _UARTHardware {
+    struct _UARTHardware : UART_internal::UARTInfo<uartPeripheralNumber> {
 
         static constexpr Uart * const uart() {
-            switch (uartPeripheralNumber) {
-                case (0): return UART0;
-                case (1): return UART1;
-                case (2): return UART2;
-                case (3): return UART3;
-                case (4): return UART4;
-            };
+            return UART_internal::UARTInfo<uartPeripheralNumber>::uart;
         };
-        static constexpr uint32_t peripheralId() {
-            switch (uartPeripheralNumber) {
-                case (0): return ID_UART0;
-                case (1): return ID_UART1;
-                case (2): return ID_UART2;
-                case (3): return ID_UART3;
-                case (4): return ID_UART4;
-            };
-        };
-        static constexpr IRQn_Type uartIRQ() {
-            switch (uartPeripheralNumber) {
-                case (0): return UART0_IRQn;
-                case (1): return UART1_IRQn;
-                case (2): return UART2_IRQn;
-                case (3): return UART3_IRQn;
-                case (4): return UART4_IRQn;
-            };
-        };
+        using UART_internal::UARTInfo<uartPeripheralNumber>::peripheralId;
+        using UART_internal::UARTInfo<uartPeripheralNumber>::IRQ;
 
         static constexpr const uint8_t uartPeripheralNum=uartPeripheralNumber;
 
-        std::function<void(uint16_t)> _uartInterruptHandler;
+        std::function<void(Interrupt::Type)> _uartInterruptHandler;
 
         DMA<Uart *, uartPeripheralNumber> dma_ {_uartInterruptHandler};
         constexpr const DMA<Uart *, uartPeripheralNumber> *dma() { return &dma_; };
@@ -479,7 +441,7 @@ namespace Motate {
 
         void init() {
             // init is called once after reset, so clean up after a reset
-            SamCommon::enablePeripheralClock(peripheralId());
+            SamCommon::enablePeripheralClock(peripheralId);
 
             // Reset and disable TX and RX
             uart()->UART_CR = UART_CR_RSTRX | UART_CR_RSTTX | UART_CR_RXDIS | UART_CR_TXDIS;
@@ -535,7 +497,7 @@ namespace Motate {
 
         };
 
-        void setInterrupts(const uint16_t interrupts) {
+        void setInterrupts(const Interrupt::Type interrupts) {
             if (interrupts != UARTInterrupt::Off) {
 
                 if (interrupts & UARTInterrupt::OnRxDone) {
@@ -553,29 +515,29 @@ namespace Motate {
 
                 /* Set interrupt priority */
                 if (interrupts & UARTInterrupt::PriorityHighest) {
-                    NVIC_SetPriority(uartIRQ(), 0);
+                    NVIC_SetPriority(IRQ, 0);
                 }
                 else if (interrupts & UARTInterrupt::PriorityHigh) {
-                    NVIC_SetPriority(uartIRQ(), 3);
+                    NVIC_SetPriority(IRQ, 1);
                 }
                 else if (interrupts & UARTInterrupt::PriorityMedium) {
-                    NVIC_SetPriority(uartIRQ(), 7);
+                    NVIC_SetPriority(IRQ, 2);
                 }
                 else if (interrupts & UARTInterrupt::PriorityLow) {
-                    NVIC_SetPriority(uartIRQ(), 11);
+                    NVIC_SetPriority(IRQ, 3);
                 }
                 else if (interrupts & kInterruptPriorityLowest) {
-                    NVIC_SetPriority(uartIRQ(), 15);
+                    NVIC_SetPriority(IRQ, 4);
                 }
 
-                NVIC_EnableIRQ(uartIRQ());
+                NVIC_EnableIRQ(IRQ);
             } else {
 
-                NVIC_DisableIRQ(uartIRQ());
+                NVIC_DisableIRQ(IRQ);
             }
         };
 
-        void setInterruptHandler(std::function<void(uint16_t)> &&handler) {
+        void setInterruptHandler(std::function<void(Interrupt::Type)> &&handler) {
             _uartInterruptHandler = std::move(handler);
         }
 
@@ -617,8 +579,8 @@ namespace Motate {
             }
         };
 
-        uint16_t getInterruptCause() { // __attribute__ (( noinline ))
-            uint16_t status = UARTInterrupt::Unknown;
+        Interrupt::Type getInterruptCause() { // __attribute__ (( noinline ))
+            Interrupt::Type status = UARTInterrupt::Unknown;
 
             // Notes from experience:
             // This processor will sometimes allow one of these bits to be set,
@@ -713,7 +675,7 @@ namespace Motate {
             _tx_paused = false;
             dma()->enableTx();
         };
-};
+    };
 
     template<uint8_t uartPeripheralNumber>
     using _USART_Or_UART = typename std::conditional< (uartPeripheralNumber < 4), _USARTHardware<uartPeripheralNumber>, _UARTHardware<uartPeripheralNumber-4>>::type;
@@ -736,285 +698,6 @@ namespace Motate {
     constexpr const bool isRealAndCorrectCTSPin() {
         return IsUARTCTSPin<ctsPinNumber>() && (UARTCTSPin<ctsPinNumber>::uartNum == UARTRxPin<rxPinNumber>::uartNum);
     }
-
-//    template<uint8_t uartPeripheralNumber>
-//    struct _UARTHardwareProxy {
-//    };
-
-
-//    template<uint8_t uartPeripheralNumber, pin_number rtsPinNumber, pin_number ctsPinNumber, typename rxBufferClass, typename txBufferClass>
-//    struct _BufferedUARTHardware : _UARTHardware<uartPeripheralNumber> {
-//        rxBufferClass rxBuffer;
-//        txBufferClass txBuffer;
-//
-//        OutputPin<rtsPinNumber> rtsPin;
-//        IRQPin<ctsPinNumber> ctsPin;
-//
-//        uint32_t txDelayAfterResume = 3;
-//        uint32_t txDelayUntilTime   = 0;
-//
-//        bool _rtsCtsFlowControl    = false;
-//        bool _xonXoffFlowControl   = false;
-//        volatile bool _xonXoffCanSend       = true;
-//        volatile char _xonXoffStartStop     = kUARTXOn;
-//        volatile bool _xonXoffStartStopSent = true;
-//
-//        typedef _UARTHardware<uartPeripheralNumber> parent;
-//
-//        _BufferedUARTHardware() {
-//        };
-//
-//        void init() {
-//            parent::init();
-//            parent::setInterrupts(UARTInterrupt::OnRxReady | UARTInterrupt::PriorityLowest);
-//            _UARTHardwareProxy<uartPeripheralNumber>::uartInterruptHandler = [&](uint16_t interruptCause) { // use a closure
-//                uartInterruptHandler(interruptCause);
-//            };
-//        };
-//
-//        void setOptions(const uint32_t baud, const uint16_t options, const bool fromConstructor=false) {
-//            parent::setOptions(baud, options, fromConstructor);
-//
-//            if (options & UARTMode::RTSCTSFlowControl && IsIRQPin<ctsPinNumber>() && !rtsPin.isNull()) {
-//                _rtsCtsFlowControl = true;
-////                parent::setInterruptTxReady(!canSend());
-//                ctsPin.setInterrupts(kPinInterruptOnChange);
-//            } else {
-//                _rtsCtsFlowControl = false;
-//            }
-////            if (options & UARTMode::XonXoffFlowControl) {
-////                _xonXoffFlowControl = true;
-////            } else {
-////                _xonXoffFlowControl = false;
-////                _xonXoffStartStopSent = true;
-////            }
-//        }
-//
-////        void stopRx() {
-////            if (_rtsCtsFlowControl) {
-////                rtsPin = true;
-////            }
-////            if (_xonXoffFlowControl && _xonXoffStartStop != kUARTXOff) {
-////                _xonXoffStartStop = kUARTXOff;
-////                _xonXoffStartStopSent = false;
-////                parent::setInterruptTxReady(true);
-////            }
-////        };
-////
-////        void startRx() {
-////            if (_rtsCtsFlowControl) {
-////                rtsPin = false;
-////            }
-////            if (_xonXoffFlowControl && _xonXoffStartStop != kUARTXOn) {
-////                _xonXoffStartStop = kUARTXOn;
-////                _xonXoffStartStopSent = false;
-////                parent::setInterruptTxReady(true);
-////            }
-////        };
-//
-////        bool canSend() {
-////            if (_rtsCtsFlowControl) {
-////                return !ctsPin;
-////            }
-////            if (_xonXoffFlowControl) {
-////                return _xonXoffCanSend;
-////            }
-////            return true;
-////        };
-//
-//        void setTxDelayAfterResume(uint32_t newDelay) { txDelayAfterResume = newDelay; };
-//
-//        int16_t readByte() {
-//            return rxBuffer.read();
-//        };
-//
-//        int16_t writeByte(const uint8_t data) {
-//            int16_t ret = txBuffer.write(data);
-//            return ret;
-//        };
-//
-//        void uartInterruptHandler(uint16_t interruptCause) {
-////            if ((interruptCause & (UARTInterrupt::OnTxReady /*| UARTInterrupt::OnTxDone*/))) {
-////                if (txDelayUntilTime && SysTickTimer.getValue() < txDelayUntilTime)
-////                    return;
-////                txDelayUntilTime = 0;
-////                if (_xonXoffFlowControl) {
-////                    if (_xonXoffStartStopSent == false) {
-////                        parent::writeByte(_xonXoffStartStop);
-////                        _xonXoffStartStopSent = true;
-////                        return;
-////                    }
-////                }
-////                int16_t value = txBuffer.read();
-////                if (value >= 0) {
-////                    parent::writeByte(value);
-////                }
-////            }
-////            if (txBuffer.isEmpty() || txBuffer.isLocked()) {
-////                // This is tricky: If it's write locked, we have to bail, and SHUT OFF TxReady interrupts.
-////                // On the ARM, it won't return to the main code as long as there's a pending interrupt,
-////                // and the txReady interrupt will continue to fire, causing deadlock.
-////                parent::setInterruptTxReady(false);
-////            }
-////
-////            if ((interruptCause & UARTInterrupt::OnRxReady) && !rxBuffer.isFull()) {
-////                int16_t value = parent::readByte();
-////                if (_xonXoffFlowControl) {
-////                    if (value == kUARTXOn) {
-////                        _xonXoffCanSend = true;
-////                        return;
-////                    } else if (value == kUARTXOff) {
-////                        _xonXoffCanSend = false;
-////                        return;
-////                    }
-////                }
-////                // We don't double check to ensure value is not -1 -- should we?
-////                rxBuffer.write(value);
-////                if (rxBuffer.available() < 4) {
-////                    stopRx();
-////                }
-////            }
-//        };
-//
-////        void pinChangeInterrupt() {
-////            txDelayUntilTime = SysTickTimer.getValue() + txDelayAfterResume;
-////            parent::setInterruptTxReady(canSend());
-////        };
-//
-//        void flush() {
-//            // Wait for the buffer to be empty...
-//            while(!txBuffer.isEmpty());
-//        };
-//    };
-
-
-
-//    template<pin_number rxPinNumber, pin_number txPinNumber, pin_number rtsPinNumber = -1, pin_number ctsPinNumber = -1, typename rxBufferClass = Buffer<128>, typename txBufferClass = rxBufferClass>
-//    struct BufferedUART {
-//        UARTRxPin<rxPinNumber> rxPin;
-//        UARTTxPin<txPinNumber> txPin;
-//
-//
-//        _BufferedUARTHardware< UARTGetHardware<rxPinNumber, txPinNumber>::uartPeripheralNum, rtsPinNumber, ctsPinNumber, rxBufferClass, txBufferClass > hardware;
-//
-//
-//        const uint8_t uartPeripheralNum() { return hardware.uartPeripheralNum; };
-//
-//        BufferedUART(const uint32_t baud = 115200, const uint16_t options = UARTMode::As8N1) {
-//            hardware.init();
-//            init(baud, options, /*fromConstructor =*/ true);
-//        };
-//
-//        void init(const uint32_t baud, const uint16_t options, const bool fromConstructor=false) {
-//            setOptions(baud, options, fromConstructor);
-//        };
-//
-//        void setOptions(const uint32_t baud, const uint16_t options, const bool fromConstructor=false) {
-//            hardware.setOptions(baud, options, fromConstructor);
-//        };
-//
-//
-//
-//        int16_t readByte() {
-//            return hardware.readByte();
-//        };
-//
-//        // WARNING: Currently only reads in bytes. For more-that-byte size data, we'll need another call.
-//        int16_t read(const uint8_t *buffer, const uint16_t length) {
-//            int16_t total_read = 0;
-//            int16_t to_read = length;
-//            const uint8_t *read_ptr = buffer;
-//
-//            // BLOCKING!!
-//            while (to_read > 0) {
-//                int16_t ret = hardware.readByte();
-//
-//                if (ret >= 0) {
-//                    *read_ptr++ = ret;
-//                    total_read++;
-//                    to_read--;
-//                }
-//            };
-//
-//            return total_read;
-//        };
-//
-//        int16_t writeByte(uint8_t data) {
-//            return hardware.writeByte(data);
-//        };
-//
-//        void flush() {
-//            hardware.flush();
-//        };
-//
-//        // WARNING: Currently only writes in bytes. For more-that-byte size data, we'll need another call.
-//        int16_t write(const char* data, const uint16_t length = 0, bool autoFlush = false) {
-//            int16_t total_written = 0;
-//            const char* out_ptr = data;
-//            int16_t to_write = length;
-//
-//            if (length==0 && *out_ptr==0) {
-//                return 0;
-//            }
-//
-//            do {
-//                int16_t ret = hardware.writeByte(*out_ptr);
-//
-//                if (ret > 0) {
-//                    out_ptr++;
-//                    total_written++;
-//                    to_write--;
-//
-//                    if (length==0 && *out_ptr==0) {
-//                        break;
-//                    }
-//                } else if (autoFlush) {
-//                    flush();
-//                } else {
-//                    break;
-//                }
-//            } while (to_write);
-//
-//            if (autoFlush && total_written > 0)
-//                flush();
-//
-//            return total_written;
-//        };
-//
-//        template<uint16_t _size>
-//        int16_t write(Motate::Buffer<_size> &data, const uint16_t length = 0, bool autoFlush = false) {
-//            int16_t total_written = 0;
-//            int16_t to_write = length;
-//
-//            do {
-//                int16_t value = data.peek();
-//                if (value < 0) // no more data
-//                    break;
-//
-//                int16_t ret = hardware.writeByte(value);
-//                if (ret > 0) {
-//                    data.pop();
-//                    to_write--;
-//                } else if (autoFlush) {
-//                    flush();
-//                } else {
-//                    break;
-//                }
-//            } while (to_write != 0);
-//
-//            if (autoFlush && total_written > 0)
-//                flush();
-//
-//            return total_written;
-//        };
-//
-//        void pinChangeInterrupt() {
-//            hardware.pinChangeInterrupt();
-//        };
-//
-//        //	// Placeholder for user code.
-//        //	static void interrupt() __attribute__ ((weak));
-//    };
 }
 
 #endif /* end of include guard: SAMUART_H_ONCE */

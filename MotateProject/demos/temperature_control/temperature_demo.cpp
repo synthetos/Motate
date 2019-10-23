@@ -40,13 +40,11 @@
 #include "pin_assignments.h"
 
 // This makes the Motate:: prefix unnecessary.
-using namespace Motate;
-
 /****** Create file-global objects ******/
 
 
-OutputPin<kDebug1_PinNumber> debug_pin1;
-OutputPin<kDebug2_PinNumber> debug_pin2;
+OutputPin<Motate::kDebug1_PinNumber> debug_pin1;
+OutputPin<Motate::kDebug2_PinNumber> debug_pin2;
 
 
 const float kSystemVoltage = 3.3;
@@ -179,7 +177,7 @@ namespace Motate {
 //                return buf.copy(value_.temperature_exact(), precision_);
 //            };
 //        };
-        
+
     }
 }
 
@@ -189,10 +187,10 @@ const int16_t fet_pin1_freq = 100;
 const int16_t fet_pin1_sample_freq = 1; // every fet_pin1_sample_freq interrupts, sample
 int16_t fet_pin1_sample_counter = fet_pin1_sample_freq;
 
-PWMOutputPin<kFET1_PinNumber> fet_pin1;
+PWMOutputPin<Motate::kFET1_PinNumber> fet_pin1;
 namespace Motate {
     template<>
-    void PWMOutputPin<kFET1_PinNumber>::parentTimerType::interrupt() {
+    void PWMOutputPin<Motate::kFET1_PinNumber>::parentTimerType::interrupt() {
         if (!--fet_pin1_sample_counter) {
             ADC_Module::startSampling();
             fet_pin1_sample_counter = fet_pin1_sample_freq;
@@ -200,10 +198,10 @@ namespace Motate {
     };
 }
 
-Thermistor<kADCInput1_PinNumber> thermistor1 {
+Thermistor<Motate::kADCInput1_PinNumber> thermistor1 {
     /*T1:*/    25, /*T2:*/  160, /*T3:*/ 235,
     /*R1:*/ 86500, /*R2:*/ 800, /*R3:*/ 190, /*pullup_resistance:*/ 4700};
-void ADCPin<kADCInput1_PinNumber>::interrupt() {
+void ADCPin<Motate::kADCInput1_PinNumber>::interrupt() {
     thermistor1.adc_has_new_value();
 };
 
@@ -213,11 +211,11 @@ void ADCPin<kADCInput1_PinNumber>::interrupt() {
 const int16_t fet_pin2_freq = 100;
 // Sampling piggybacks off of the first fet timer
 
-PWMOutputPin<kFET2_PinNumber> fet_pin2;
-Thermistor<kADCInput2_PinNumber> thermistor2 {
+PWMOutputPin<Motate::kFET2_PinNumber> fet_pin2;
+Thermistor<Motate::kADCInput2_PinNumber> thermistor2 {
     /*T1:*/    25, /*T2:*/  160, /*T3:*/ 235,
     /*R1:*/ 86500, /*R2:*/ 800, /*R3:*/ 190, /*pullup_resistance:*/ 4700};
-void ADCPin<kADCInput2_PinNumber>::interrupt() {
+void ADCPin<Motate::kADCInput2_PinNumber>::interrupt() {
     thermistor2.adc_has_new_value();
 };
 
@@ -225,11 +223,11 @@ void ADCPin<kADCInput2_PinNumber>::interrupt() {
 // Sampling piggybacks off of the first fet timer
 
 // NOT a PWM pin -- bang bang!
-OutputPin<kFET3_PinNumber> fet_pin3;
-Thermistor<kADCInput3_PinNumber> thermistor3 {
+OutputPin<Motate::kFET3_PinNumber> fet_pin3;
+Thermistor<Motate::kADCInput3_PinNumber> thermistor3 {
     /*T1:*/    25, /*T2:*/  160, /*T3:*/ 235,
     /*R1:*/ 86500, /*R2:*/ 800, /*R3:*/ 190, /*pullup_resistance:*/ 4700};
-void ADCPin<kADCInput3_PinNumber>::interrupt() {
+void ADCPin<Motate::kADCInput3_PinNumber>::interrupt() {
     thermistor3.adc_has_new_value();
 };
 
@@ -373,7 +371,7 @@ void loop() {
                 JSON::parse_json(commands, (char *)read_buffer);
                 commands.exec(&json_base);
                 commands.write(&json_base, write_buffer, sizeof(write_buffer));
-                Serial.write(write_buffer, strlen(write_buffer));
+                Serial.write(write_buffer, Motate::strlen(write_buffer));
                 Serial.write("\n", 1);
                 read_buffer_pos = read_buffer;
                 *(read_buffer_pos) = 0;
@@ -383,11 +381,11 @@ void loop() {
     }
 
     if (sr_timeout.isPast()) {
-        strncpy(json_str_pool, json_sr, strlen(json_sr));
+        strncpy(json_str_pool, json_sr, Motate::strlen(json_sr));
 
         JSON::parse_json(sr, json_str_pool);
         sr.write(&json_base, write_buffer, sizeof(write_buffer));
-        Serial.write(write_buffer, strlen(write_buffer));
+        Serial.write(write_buffer, Motate::strlen(write_buffer));
         Serial.write("\n", 1);
 
         sr_timeout.set(250);

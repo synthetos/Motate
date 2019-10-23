@@ -72,7 +72,8 @@ CHIP_SERIES:=sam3x
         CHIP_SUBSERIES:=sam3x4
     endif
 
-CPU_DEV = cortex-m3
+    CPU_DEV = cortex-m3
+    JLINK_DEVICE=AT$(CHIP)
 
 else ifeq ($(CHIP),$(findstring $(CHIP), $(SAM4S)))
 
@@ -110,7 +111,9 @@ else ifeq ($(CHIP),$(findstring $(CHIP), $(SAMS70)))
     endif
 
     CPU_DEV = cortex-m7
-    #FLOAT_OPTIONS = -mfloat-abi=hard -mfpu=fpv4-sp-d16
+    FLOAT_OPTIONS = -mfloat-abi=hard -mfpu=fpv5-d16
+
+    JLINK_DEVICE=AT$(CHIP)
 
 else
 
@@ -156,5 +159,9 @@ DEVICE_LIB_DIRS     += $(MOTATE_PATH)/platform/atmel_sam
 DEVICE_LINKER_SCRIPT = $(SAM_PATH)/linker_scripts/$(CHIP_SERIES)/$(CHIP_SUBSERIES)/$(GCC_TOOLCHAIN)/flash.ld
 DEVICE_LINKER_SCRIPT_PATH = $(DEVICE_PATH)/source/$(GCC_TOOLCHAIN)/
 
+OPENOCD_CFG = $(MOTATE_PATH)/platform/atmel_sam/atmel_sam.cfg
+
+export JLINK_DEVICE
+export OPENOCD_CFG
 
 include $(MOTATE_PATH)/arch/arm.mk

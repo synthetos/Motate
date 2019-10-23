@@ -1,8 +1,8 @@
 /*
- utility/SamSPI.h - Library for the Motate system
+ Atmel_sam_common/SamSPI.h - Library for the Motate system
  http://github.com/synthetos/motate/
 
- Copyright (c) 2013 - 2016  Robert Giseburt
+ Copyright (c) 2013 - 2018  Robert Giseburt
 
  This file is part of the Motate Library.
 
@@ -35,78 +35,54 @@
 
 #include "MotatePins.h"
 #include "SamCommon.h"
-#include "SamDMA.h"
 #include <type_traits>
 
+#include "SamSPIInternal.h"
+#include "SamSPIDMA.h"
+
 namespace Motate {
-
     template<int8_t spiPeripheralNumber>
-    struct _SPIHardware
+    struct _SPIHardware : Motate::SPI_internal::SPIInfo<spiPeripheralNumber>
     {
-#if !defined(HAS_SPI1)
-        static_assert(spiPeripheralNumber == 0,
-                      "Only _SPIHardware<0> is valid on this processor.");
-        static constexpr uint32_t peripheralId() {
-            return ID_SPI0;
-        };
-        static constexpr IRQn_Type spiIRQ() {
-            return SPI0_IRQn;
-        };
-#else
-        static_assert((spiPeripheralNumber == 0) || (spiPeripheralNumber == 1),
-                      "Only _SPIHardware<0> or _SPIHardware<1> is valid on this processor.");
+        using this_type_t = _SPIHardware<spiPeripheralNumber>;
+        using info = Motate::SPI_internal::SPIInfo<spiPeripheralNumber>;
 
-        constexpr uint32_t peripheralId() {
-            return (spiPeripheralNumber == 0) ? ID_SPI0 : ID_SPI1;
-        };
-        constexpr IRQn_Type spiIRQ() {
-            return (spiPeripheralNumber == 0) ? SPI0_IRQn : SPI1_IRQn;
-        };
-#endif
+        static_assert(info::exists,
+                "Only _SPIHardware<0> or _SPIHardware<1> is valid on this processor.");
 
-        constexpr Spi * const spi() {
-            return Motate::spi(spiPeripheralNumber);
-        };
-        const uint8_t spiPeripheralNum = spiPeripheralNumber;
+        using info::spi;
+        using info::peripheralId;
+        static constexpr auto spiIRQ = info::IRQ;
+        static constexpr auto spiPeripheralNum = spiPeripheralNumber;
 
-        typedef _SPIHardware<spiPeripheralNumber> this_type_t;
+        std::function<void(Interrupt::Type)> _spiInterruptHandler;
 
-        std::function<void(uint16_t)> _spiInterruptHandler;
-
-#ifndef CAN_SPI_PDC_DMA
-        DMA<Spi *, spiPeripheralNumber> dma_ {_spiInterruptHandler};
-        constexpr const DMA<Spi *, spiPeripheralNumber> *dma() { return &dma_; };
-#endif
+        DMA<SPI_tag, spiPeripheralNumber> dma {_spiInterruptHandler};
 
         static std::function<void()> _spiInterruptHandlerJumper;
         _SPIHardware() {
-            SamCommon::enablePeripheralClock(peripheralId());
+            SamCommon::enablePeripheralClock(peripheralId);
 
             // Softare reset of SPI module
-            spi()->SPI_CR = SPI_CR_SWRST;
+            spi->SPI_CR = SPI_CR_SWRST;
             disable();
         };
 
         void init() {
-//            static bool inited = false;
-//            if (inited)
-//                return;
-//            inited = true;
-
             // Set last transfer
-            spi()->SPI_CR = SPI_CR_LASTXFER;
+            spi->SPI_CR = SPI_CR_LASTXFER;
 
             // Set Mode Register to Master mode
-            spi()->SPI_MR |= SPI_MR_MSTR;
+            spi->SPI_MR |= SPI_MR_MSTR;
 
             // Mode Fault Detection Disabled
-            spi()->SPI_MR |= SPI_MR_MODFDIS;
+            spi->SPI_MR |= SPI_MR_MODFDIS;
 
             // Ensure Fixed Peripheral Select
-            spi()->SPI_MR &= (~SPI_MR_PS);
+            spi->SPI_MR &= (~SPI_MR_PS);
 
             // Disable all interrupts
-            spi()->SPI_IDR = 0x7FF;
+            spi->SPI_IDR = 0x7FF;
 
             // setup interrupt handlers BEFORE setting up DMA, in case it causes an interrupt
             _spiInterruptHandlerJumper = [&]() {
@@ -119,37 +95,24 @@ namespace Motate {
                 }
             };
 
-#ifdef CAN_SPI_PDC_DMA
-            // Reset the PDC
-            spi()->SPI_PTCR = SPI_PTCR_RXTDIS | SPI_PTCR_TXTDIS;
-            spi()->SPI_RPR = 0;
-            spi()->SPI_RCR = 0;
-            spi()->SPI_TPR = 0;
-            spi()->SPI_TCR = 0;
-            spi()->SPI_RNPR = 0;
-            spi()->SPI_RNCR = 0;
-            spi()->SPI_TNPR = 0;
-            spi()->SPI_TNCR = 0;
-#else
-            dma()->reset();
-#endif
+            dma.reset();
         };
 
         // This is to be called by the device, once it detects a "decoded" CS pin
         void setUsingCSDecoder(bool decoder) {
             if (decoder) {
-                spi()->SPI_MR |= SPI_MR_PCSDEC;
+                spi->SPI_MR |= SPI_MR_PCSDEC;
             } else {
-                spi()->SPI_MR &= ~SPI_MR_PCSDEC;
+                spi->SPI_MR &= ~SPI_MR_PCSDEC;
             }
         }
 
         void enable() {
-            spi()->SPI_CR = SPI_CR_SPIEN ;
+            spi->SPI_CR = SPI_CR_SPIEN ;
         };
 
         void disable() {
-            spi()->SPI_CR = SPI_CR_SPIDIS;
+            spi->SPI_CR = SPI_CR_SPIDIS;
         };
 
         void deassert() {
@@ -158,19 +121,11 @@ namespace Motate {
 
         bool setChannel(const uint8_t channel) {
             // if we are transmitting, we cannot switch
-            while (!(spi()->SPI_SR & SPI_SR_TXEMPTY)) {
+            while (!(spi->SPI_SR & SPI_SR_TXEMPTY)) {
                 ;
             }
 
-            uint8_t channel_setting;
-
-            if (!(spi()->SPI_MR & SPI_MR_PCSDEC)) {
-                channel_setting = ~(1 << channel);
-            } else {
-                channel_setting = channel;
-            }
-
-            spi()->SPI_MR = (spi()->SPI_MR & ~SPI_MR_PCS_Msk) | SPI_MR_PCS(channel_setting);
+            spi->SPI_MR = (spi->SPI_MR & ~SPI_MR_PCS_Msk) | SPI_MR_PCS(channel);
 
             enable();
             return true;
@@ -180,20 +135,39 @@ namespace Motate {
             // We derive the baud from the master clock with a divider.
             // We want the closest match *below* the value asked for. It's safer to bee too slow.
             uint32_t new_otions = 0;
+            uint32_t old_options = spi->SPI_CSR[channel];
 
-            uint16_t divider = SystemCoreClock / baud;
+            uint32_t divider = SamCommon::getPeripheralClockFreq() / baud;
             if (divider > 255) {
                 divider = 255;
             } else if (divider < 1) {
                 divider = 1;
             }
 
+            uint32_t old_divider = (old_options & SPI_CSR_SCBR_Msk) >> SPI_CSR_SCBR_Pos;
+            divider = std::max(old_divider, divider); // this gives the slowest rate of the old or new setting
             new_otions |= SPI_CSR_SCBR(divider);
 
+            // We can't really mix these ... they must already be compatible
+            // But if we are using a debugger we can throw a wrench in and catch it
+#if IN_DEBUGGER == 1
+            uint32_t old_polarity = (old_options & SPI_CSR_CPOL);
+            if ((old_divider != 0) && (!!(options & kSPIPolarityReversed) != !!old_polarity)) {
+                __asm__("BKPT"); // two SPI devices sharing config have different polarity!
+            }
+#endif
             if (options & kSPIPolarityReversed) {
                 new_otions |= SPI_CSR_CPOL;
             }
 
+            // We can't really mix these ... they must already be compatible
+            // But if we are using a debugger we can throw a wrench in and catch it
+#if IN_DEBUGGER == 1
+            uint32_t old_phase = (old_options & SPI_CSR_NCPHA);
+            if ((old_divider != 0) && (!!(options & kSPIClockPhaseReversed) != !!old_phase)) {
+                __asm__("BKPT"); // two SPI devices sharing config have different phases!
+            }
+#endif
             if (options & kSPIClockPhaseReversed) {
                 new_otions |= SPI_CSR_NCPHA;
             }
@@ -230,16 +204,22 @@ namespace Motate {
                     break;
             }
 
+#if IN_DEBUGGER == 1
+            uint32_t old_bits = (old_options & SPI_CSR_BITS_Msk);
+            if ((old_divider != 0) && ((options & SPI_CSR_BITS_Msk) != old_bits)) {
+                __asm__("BKPT"); // two SPI devices have different bit-lengths!
+            }
+#endif
 
             // min_between_cs_delay_ns = DLYBCS
             // cs_to_sck_delay_ns = DLYBS
             // between_word_delay_ns = DLYBCT
 
-            // these are in mupliples of MCLK (mater clock, a.k.a. SystemCoreClock)
+            // these are in mupliples of MCLK (master clock, a.k.a. SystemCoreClock)
             // we want to round up, not down, so we divide by 100,000,000 instead of
             // 1,000,000,000, then add 5 and then further divide by 10.
 
-            uint32_t dlybcs = (((min_between_cs_delay_ns*SystemCoreClock)/100000000)+5)/10;
+            uint32_t dlybcs = (((min_between_cs_delay_ns*SamCommon::getPeripheralClockFreq())/100000000)+5)/10;
 
             if (dlybcs > 0xff) {
                 // Break into the debugger
@@ -248,50 +228,53 @@ namespace Motate {
 #endif
             }
 
-            // Check to see if the new value is bigger than the old one
-            if ( ((spi()->SPI_MR & SPI_MR_DLYBCS_Msk) >> SPI_MR_DLYBCS_Pos) < dlybcs ) {
-                spi()->SPI_MR = (spi()->SPI_MR & ~SPI_MR_DLYBCS_Msk) | SPI_MR_DLYBCS(dlybcs);
+            // Always use the larger delay
+            uint32_t old_dlybcs = ((spi->SPI_MR & SPI_MR_DLYBCS_Msk) >> SPI_MR_DLYBCS_Pos);
+            if ( old_dlybcs < dlybcs ) {
+                spi->SPI_MR = (spi->SPI_MR & ~SPI_MR_DLYBCS_Msk) | SPI_MR_DLYBCS(dlybcs);
             }
 
 
-            uint32_t dlybs = (((cs_to_sck_delay_ns*SystemCoreClock)/100000000)+5)/10;
+            uint32_t dlybs = (((cs_to_sck_delay_ns*SamCommon::getPeripheralClockFreq())/100000000)+5)/10;
             if (dlybs > 0xff) {
                 // Break into the debugger
 #if IN_DEBUGGER == 1
                 __asm__("BKPT"); // SPI dlybs is too high!
 #endif
             }
-            new_otions |= SPI_CSR_DLYBS(dlybs);
+            uint32_t old_dlybs = (old_options & SPI_CSR_SCBR_Msk) >> SPI_CSR_SCBR_Pos;
+            new_otions |= SPI_CSR_DLYBS(std::max(dlybs, old_dlybs));
 
-            uint32_t dlybct = (((between_word_delay_ns*SystemCoreClock)/100000000)+5)/10;
+            uint32_t dlybct = (((between_word_delay_ns*SamCommon::getPeripheralClockFreq())/100000000)+5)/10;
             if (dlybct > 0xff) {
                 // Break into the debugger
 #if IN_DEBUGGER == 1
                 __asm__("BKPT"); // SPI dlybct is too high!
 #endif
             }
-            new_otions |= SPI_CSR_DLYBCT(dlybct);
+            uint32_t old_dlybct = (old_options & SPI_CSR_DLYBCT_Msk) >> SPI_CSR_DLYBCT_Pos;
+            new_otions |= SPI_CSR_DLYBCT(std::max(dlybct, old_dlybct));
 
-            // We'll drive CS low after we're done, so we want this:
+            // We'll drive CS low after we're done, so we always want this:
             new_otions |= SPI_CSR_CSAAT;
 
-            spi()->SPI_CSR[channel] = new_otions;
+            spi->SPI_CSR[channel] = new_otions;
         };
 
         /* TEMPORARILY REMOVING DIRECT READ/WRITE/TRANSFER. Can be brought back later */
 #if 0
         static int16_t read(const bool lastXfer = false, uint8_t toSendAsNoop = 0) {
-            if (!(spi()->SPI_SR & SPI_SR_RDRF)) {
-                if (spi()->SPI_SR & SPI_SR_TXEMPTY) {
-                    spi()->SPI_TDR = toSendAsNoop;
+            if (!(spi->SPI_SR & SPI_SR_RDRF)) {
+                if (spi->SPI_SR & SPI_SR_TXEMPTY) {
+                    spi->SPI_TDR = toSendAsNoop;
                     if (lastXfer) {
-                        spi()->SPI_CR = SPI_CR_LASTXFER;
+                        spi->SPI_CR = SPI_CR_LASTXFER;
                     }
                 }
                 return -1;
             }
 
-            return spi()->SPI_RDR;
+            return spi->SPI_RDR;
         }
 
         static int16_t write(uint8_t value, const bool lastXfer = false) {
@@ -301,20 +284,20 @@ namespace Motate {
         };
 
         static int16_t write(uint8_t value, int16_t &readValue, const bool lastXfer = false) {
-            while (!(spi()->SPI_SR & SPI_SR_TDRE)) {;}
+            while (!(spi->SPI_SR & SPI_SR_TDRE)) {;}
 
-            if (spi()->SPI_SR & SPI_SR_RDRF) {
-                readValue = spi()->SPI_RDR;
+            if (spi->SPI_SR & SPI_SR_RDRF) {
+                readValue = spi->SPI_RDR;
             } else {
                 readValue = -1;
             }
 
-            if (spi()->SPI_SR & SPI_SR_TDRE) {
+            if (spi->SPI_SR & SPI_SR_TDRE) {
 
-                spi()->SPI_TDR = value;
+                spi->SPI_TDR = value;
 
                 if (lastXfer) {
-                    spi()->SPI_CR = SPI_CR_LASTXFER;
+                    spi->SPI_CR = SPI_CR_LASTXFER;
                 }
 
                 return 1;
@@ -332,25 +315,25 @@ namespace Motate {
             // NOTE: Assumes we DON'T have an external decoder/multiplexer!
             data_with_flags |= SPI_TDR_PCS(~(1<< channel));
 
-            while (!(spi()->SPI_SR & SPI_SR_TDRE))
+            while (!(spi->SPI_SR & SPI_SR_TDRE))
                 ;
-            spi()->SPI_TDR = data_with_flags;
+            spi->SPI_TDR = data_with_flags;
 
-            while (!(spi()->SPI_SR & SPI_SR_RDRF))
+            while (!(spi->SPI_SR & SPI_SR_RDRF))
                 ;
 
-            uint16_t outdata = spi()->SPI_RDR;
+            uint16_t outdata = spi->SPI_RDR;
             return outdata;
         };
 #endif // temporarily removed read/write/transfer
 
 
-        void setInterruptHandler(std::function<void(uint16_t)> &&handler) {
+        void setInterruptHandler(std::function<void(Interrupt::Type)> &&handler) {
             _spiInterruptHandler = std::move(handler);
         }
 
-        uint16_t getInterruptCause() {
-            uint16_t status = SPIInterrupt::Unknown;
+        Interrupt::Type getInterruptCause() {
+            Interrupt::Type status = SPIInterrupt::Unknown;
 
             // Notes from experience:
             // This processor will sometimes allow one of these bits to be set,
@@ -360,8 +343,8 @@ namespace Motate {
             // calls for that interrupt before considering it as a possible interrupt
             // source. This should be a best practice anyway, really. -Giseburt
 
-            auto SPI_SR_hold = spi()->SPI_SR;
-            auto SPI_IMR_hold = spi()->SPI_IMR;
+            auto SPI_SR_hold = spi->SPI_SR;
+            auto SPI_IMR_hold = spi->SPI_IMR;
 
             if ((SPI_IMR_hold & SPI_IMR_TDRE) && (SPI_SR_hold & SPI_SR_TDRE))
             {
@@ -371,226 +354,119 @@ namespace Motate {
             {
                 status |= SPIInterrupt::OnRxReady;
             }
-#ifdef CAN_SPI_PDC_DMA
-            if ((SPI_IMR_hold & SPI_IMR_TXBUFE) && (SPI_SR_hold & SPI_SR_TXBUFE))
+
+            if (dma.inTxBufferEmptyInterrupt())
             {
                 status |= SPIInterrupt::OnTxTransferDone;
             }
-            if ((SPI_IMR_hold & SPI_IMR_RXBUFF) && (SPI_SR_hold & SPI_SR_RXBUFF))
+            if (dma.inRxBufferFullInterrupt())
             {
                 status |= SPIInterrupt::OnRxTransferDone;
             }
-#else
-            if (dma()->inTxBufferEmptyInterrupt())
-            {
-                status |= SPIInterrupt::OnTxTransferDone;
-            }
-            if (dma()->inRxBufferFullInterrupt())
-            {
-                status |= SPIInterrupt::OnRxTransferDone;
-            }
-#endif
             return status;
         }
 
-        void setInterrupts(const uint16_t interrupts) {
+        void setInterrupts(const Interrupt::Type interrupts) {
             if (interrupts != SPIInterrupt::Off) {
 
                 if (interrupts & SPIInterrupt::OnTxReady) {
-                    spi()->SPI_IER = SPI_IER_TDRE;
+                    spi->SPI_IER = SPI_IER_TDRE;
                 } else {
-                    spi()->SPI_IDR = SPI_IDR_TDRE;
+                    spi->SPI_IDR = SPI_IDR_TDRE;
                 }
                 if (interrupts & SPIInterrupt::OnRxReady) {
-                    spi()->SPI_IER = SPI_IER_RDRF;
+                    spi->SPI_IER = SPI_IER_RDRF;
                 } else {
-                    spi()->SPI_IDR = SPI_IDR_RDRF;
+                    spi->SPI_IDR = SPI_IDR_RDRF;
                 }
 
-#ifdef CAN_SPI_PDC_DMA
-                if (interrupts & SPIInterrupt::OnTxTransferDone) {
-                    spi()->SPI_IER = SPI_IER_TXBUFE;
-                } else {
-                    spi()->SPI_IDR = SPI_IDR_TXBUFE;
-                }
                 if (interrupts & SPIInterrupt::OnRxTransferDone) {
-                    spi()->SPI_IER = SPI_IER_RXBUFF;
+                    dma.startRxDoneInterrupts();
                 } else {
-                    spi()->SPI_IDR = SPI_IDR_RXBUFF;
-                }
-#else
-                if (interrupts & SPIInterrupt::OnRxTransferDone) {
-                    dma()->startRxDoneInterrupts();
-                } else {
-                    dma()->stopRxDoneInterrupts();
+                    dma.stopRxDoneInterrupts();
                 }
                 if (interrupts & SPIInterrupt::OnTxTransferDone) {
-                    dma()->startTxDoneInterrupts();
+                    dma.startTxDoneInterrupts();
                 } else {
-                    dma()->stopTxDoneInterrupts();
+                    dma.stopTxDoneInterrupts();
                 }
-#endif
 
                 /* Set interrupt priority */
                 if (interrupts & SPIInterrupt::PriorityHighest) {
-                    NVIC_SetPriority(spiIRQ(), 0);
+                    NVIC_SetPriority(spiIRQ, 0);
                 }
                 else if (interrupts & SPIInterrupt::PriorityHigh) {
-                    NVIC_SetPriority(spiIRQ(), 3);
+                    NVIC_SetPriority(spiIRQ, 1);
                 }
                 else if (interrupts & SPIInterrupt::PriorityMedium) {
-                    NVIC_SetPriority(spiIRQ(), 7);
+                    NVIC_SetPriority(spiIRQ, 2);
                 }
                 else if (interrupts & SPIInterrupt::PriorityLow) {
-                    NVIC_SetPriority(spiIRQ(), 11);
+                    NVIC_SetPriority(spiIRQ, 3);
                 }
                 else if (interrupts & SPIInterrupt::PriorityLowest) {
-                    NVIC_SetPriority(spiIRQ(), 15);
+                    NVIC_SetPriority(spiIRQ, 4);
                 }
 
-                NVIC_EnableIRQ(spiIRQ());
+                NVIC_EnableIRQ(spiIRQ);
             } else {
-                
-                NVIC_DisableIRQ(spiIRQ());
+
+                NVIC_DisableIRQ(spiIRQ);
             }
         };
 
-#ifdef CAN_SPI_PDC_DMA
         void _enableOnTXTransferDoneInterrupt() {
-            spi()->SPI_IER = SPI_IER_TXBUFE;
+            dma.startTxDoneInterrupts();
         };
 
         void _disableOnTXTransferDoneInterrupt() {
-            spi()->SPI_IDR = SPI_IDR_TXBUFE;
+            dma.stopTxDoneInterrupts();
         };
 
         void _enableOnRXTransferDoneInterrupt() {
-            spi()->SPI_IER = SPI_IER_RXBUFF;
+            dma.startRxDoneInterrupts();
         };
 
         void _disableOnRXTransferDoneInterrupt() {
-            spi()->SPI_IDR = SPI_IDR_RXBUFF;
+            dma.stopRxDoneInterrupts();
         };
 
         uint8_t getMessageSlotsAvailable() {
             uint8_t count = 0;
-            if (spi()->SPI_RCR > 0) { count++; }
-            if (spi()->SPI_NRCR > 0) { count++; }
-            return count;
-        };
-
-        // start transfer of message
-        bool startTransfer(uint8_t *tx_buffer, uint8_t *rx_buffer, uint16_t size) {
-            // We need to clear the read buffer or it won't clock anything...
-            if (spi()->SPI_SR & SPI_SR_RDRF) {
-                /*uint16_t dont_care =*/ spi()->SPI_RDR;
-            }
-
-            if ((spi()->SPI_RCR == 0) && (spi()->SPI_TCR == 0)) {
-                spi()->SPI_PTCR = SPI_PTCR_RXTDIS | SPI_PTCR_TXTDIS;
-
-                uint32_t PTCR_prep = 0;
-
-                // setup immediate PDC transfer
-                if (rx_buffer != nullptr) {
-                    spi()->SPI_RPR = (uint32_t)rx_buffer;
-                    spi()->SPI_RCR = size;
-                    _enableOnRXTransferDoneInterrupt();
-                    PTCR_prep = SPI_PTCR_RXTEN;
-                } else {
-                    spi()->SPI_RPR = 0;
-                    spi()->SPI_RCR = 0;
-//                    _toss_next_read = true;
-                }
-                if (tx_buffer != nullptr) {
-                    spi()->SPI_TPR = (uint32_t)tx_buffer;
-                    spi()->SPI_TCR = size;
-//                    _enableOnTXTransferDoneInterrupt();
-                    PTCR_prep |= SPI_PTCR_TXTEN;
-                } else {
-                    spi()->SPI_TPR = 0;
-                    spi()->SPI_TCR = 0;
-                }
-
-                // enable both transfers - we use zero size to diable, but this
-                // allows the next transfer to be of a different direction set
-                spi()->SPI_PTCR = PTCR_prep;
-                return true;
-            }
-//            else if ((spi()->SPI_RNCR == 0) && (spi()->SPI_TNCR == 0)) {
-//                // setup next PDC transfer
-//                if (rx_buffer != nullptr) {
-//                    spi()->SPI_RNPR = (uint32_t)rx_buffer;
-//                    spi()->SPI_RNCR = size;
-//                } else {
-//                    spi()->SPI_RNPR = 0;
-//                    spi()->SPI_RNCR = 0;
-//                }
-//                if (tx_buffer != nullptr) {
-//                    spi()->SPI_TNPR = (uint32_t)tx_buffer;
-//                    spi()->SPI_TNCR = size;
-//                } else {
-//                    spi()->SPI_TNPR = 0;
-//                    spi()->SPI_TNCR = 0;
-//                    // HMM, how to handle _toss_next_read here?
-//                }
-//
-//                // current transfer should already be enabled...
-//                return true;
-//            }
-
-            // We didn't set anything up...
-            return false;
-        }
-#else
-        void _enableOnTXTransferDoneInterrupt() {
-            dma()->startTxDoneInterrupts();
-        };
-
-        void _disableOnTXTransferDoneInterrupt() {
-            dma()->stopTxDoneInterrupts();
-        };
-
-        void _enableOnRXTransferDoneInterrupt() {
-            dma()->startRxDoneInterrupts();
-        };
-
-        void _disableOnRXTransferDoneInterrupt() {
-            dma()->stopRxDoneInterrupts();
-        };
-
-        uint8_t getMessageSlotsAvailable() {
-            uint8_t count = 0;
-            if (dma()->doneWriting() && dma()->doneReading()) { count++; }
-//            if (dma()->doneWritingNext()) { count++; }
+            if (dma.doneWriting() && dma.doneReading()) { count++; }
+//            if (dma.doneWritingNext()) { count++; }
             return count;
         };
 
         bool doneWriting() {
-            return dma()->doneWriting();
+            return dma.doneWriting();
         };
         bool doneReading() {
-            return dma()->doneReading();
+            return dma.doneReading();
         };
 
         // start transfer of message
         bool startTransfer(uint8_t *tx_buffer, uint8_t *rx_buffer, uint16_t size) {
             bool is_setup = false;
+            dma.setInterrupts(Interrupt::Off);
             if (rx_buffer != nullptr) {
-                const bool handle_interrupts = true;
+                const bool handle_interrupts = false;
                 const bool include_next = false;
-                is_setup = dma()->startRXTransfer(rx_buffer, size, handle_interrupts, include_next);
+                is_setup = dma.startRXTransfer(rx_buffer, size, handle_interrupts, include_next);
                 if (!is_setup) { return false; } // fail early
             }
             if (tx_buffer != nullptr) {
-                const bool handle_interrupts = true;
+                const bool handle_interrupts = false;
                 const bool include_next = false;
-                is_setup = dma()->startTXTransfer(tx_buffer, size, handle_interrupts, include_next);
+                is_setup = dma.startTXTransfer(tx_buffer, size, handle_interrupts, include_next);
             }
-            if (is_setup) { enable(); }
+            if (is_setup) {
+                enable();
+                dma.enable();
+                dma.setInterrupts(Interrupt::OnTxTransferDone | Interrupt::OnRxTransferDone);
+            }
             return is_setup;
         }
-#endif // CAN_SPI_PDC_DMA
 
         // abort transfer of message
         // TODO
@@ -598,148 +474,6 @@ namespace Motate {
         // get transfer status
         // TODO
     };
-
-#if 0
-    pin_number _default_MISOPinNumber = ReversePinLookup<'A', 25>::number;
-    pin_number _default_MOSIPinNumber = ReversePinLookup<'A', 26>::number;
-    pin_number _default_SCKPinNumber = ReversePinLookup<'A', 27>::number;
-
-    template<int8_t spiCSPinNumber, int8_t spiMISOPinNumber=_default_MISOPinNumber, int8_t spiMOSIPinNumber=_default_MOSIPinNumber, int8_t spiSCKSPinNumber=_default_SCKPinNumber>
-    struct SPI {
-        typedef SPIChipSelectPin<spiCSPinNumber> csPinType;
-        csPinType csPin;
-
-        SPIMISOPin<spiMISOPinNumber> misoPin;
-        SPIMOSIPin<spiMOSIPinNumber> mosiPin;
-        SPISCKPin<spiSCKSPinNumber> sckPin;
-
-        static _SPIHardware< misoPin::spiNum > hardware;
-        static const uint8_t spiPeripheralNum() { return csPinType::moduleId; };
-        static const uint8_t spiChannelNumber() { return SPIChipSelectPin<spiCSPinNumber>::csOffset; };
-
-        static Spi * const spi() { return hardware.spi(); };
-        static const uint32_t peripheralId() { return hardware.peripheralId(); };
-        static const IRQn_Type spiIRQ() { return hardware.spiIRQ(); };
-
-        
-
-        SPI(const uint32_t baud = 4000000, const uint16_t options = kSPI8Bit | kSPIMode0) {
-            hardware.init();
-            init(baud, options, /*fromConstructor =*/ true);
-        };
-
-        void init(const uint32_t baud, const uint16_t options, const bool fromConstructor=false) {
-            setOptions(baud, options, fromConstructor);
-        };
-
-//        void setOptions(const uint32_t baud, const uint16_t options, const bool fromConstructor=false) {
-//            // We derive the baud from the master clock with a divider.
-//            // We want the closest match *below* the value asked for. It's safer to bee too slow.
-//
-//            uint16_t divider = SystemCoreClock / baud;
-//            if (divider > 255)
-//                divider = 255;
-//            else if (divider < 1)
-//                divider = 1;
-//
-//            spi()->SPI_CSR[spiChannelNumber()] = (options & (SPI_CSR_NCPHA | SPI_CSR_CPOL | SPI_CSR_BITS_Msk)) | SPI_CSR_SCBR(divider) | SPI_CSR_DLYBCT(1) | SPI_CSR_CSAAT;
-//
-//            // Should be a non-op for already-enabled devices.
-//            hardware.enable();
-//
-//        };
-
-        bool setChannel() {
-            return hardware.setChannel(spiChannelNumber());
-        };
-
-//        uint16_t getOptions() {
-//            return spi()->SPI_CSR[spiChannelNumber()]/* & (SPI_CSR_NCPHA | SPI_CSR_CPOL | SPI_CSR_BITS_Msk)*/;
-//        };
-
-        int16_t readByte(const bool lastXfer = false, uint8_t toSendAsNoop = 0) {
-            return hardware.read(lastXfer, toSendAsNoop);
-        };
-
-        // WARNING: Currently only reads in bytes. For more-that-byte size data, we'll need another call.
-        int16_t read(const uint8_t *buffer, const uint16_t length) {
-            if (!setChannel())
-                return -1;
-
-
-            int16_t total_read = 0;
-            int16_t to_read = length;
-            const uint8_t *read_ptr = buffer;
-
-            bool lastXfer = false;
-
-            // BLOCKING!!
-            while (to_read > 0) {
-
-                if (to_read == 1)
-                    lastXfer = true;
-
-                int16_t ret = read(lastXfer);
-
-                if (ret >= 0) {
-                    *read_ptr++ = ret;
-                    total_read++;
-                    to_read--;
-                }
-            };
-
-            return total_read;
-        };
-
-        int16_t writeByte(uint16_t data, const bool lastXfer = false) {
-            return hardware.write(data, lastXfer);
-        };
-
-        int16_t writeByte(uint8_t data, int16_t &readValue, const bool lastXfer = false) {
-            return hardware.write(data, lastXfer);
-        };
-
-        void flush() {
-            hardware.disable();
-            hardware.enable();
-        };
-
-        // WARNING: Currently only writes in bytes. For more-that-byte size data, we'll need another call.
-        int16_t write(const uint8_t *data, const uint16_t length, bool autoFlush = true) {
-            if (!setChannel())
-                return -1;
-
-            int16_t total_written = 0;
-            const uint8_t *out_buffer = data;
-            int16_t to_write = length;
-
-            bool lastXfer = false;
-
-            // BLOCKING!!
-            do {
-                if (autoFlush && to_write == 1)
-                    lastXfer = true;
-
-                int16_t ret = write(*out_buffer, lastXfer);
-                
-                if (ret > 0) {
-                    out_buffer++;
-                    total_written++;
-                    to_write--;
-                }
-            } while (to_write);
-            
-            // HACK! Autoflush forced...
-            if (autoFlush && total_written > 0)
-                flush();
-
-            return total_written;
-        }
-    };
-
-#endif
-    
-
 
     template <pin_number csBit0PinNumber, pin_number csBit1PinNumber, pin_number csBit2PinNumber, pin_number csBit3PinNumber>
     struct SPIChipSelectPinMux {

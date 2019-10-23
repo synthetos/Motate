@@ -1,18 +1,16 @@
 #include "MotatePins.h"
 
 // This makes the Motate:: prefix unnecessary.
-using namespace Motate;
-
 /****** Create file-global objects ******/
 
-OutputPin<kLED1_PinNumber> led1_pin;
+OutputPin<Motate::kLED1_PinNumber> led1_pin;
 
 timer_number kBlinkTimerNumber = 0;
 timer_number kBlinkTimerChNumber = 0;
 TimerChannel<kBlinkTimerNumber, kBlinkTimerChNumber>
                 blinkTimer(kTimerUpToMatch, /*Hz: */ 1000);
 
-PWMOutputPin<kLED1_PinNumber> led2_pin;
+PWMOutputPin<Motate::kLED1_PinNumber> led2_pin;
 
 
 float duty_cycle = 0.01;

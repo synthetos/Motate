@@ -28,20 +28,41 @@
  */
 
 #include "SamDMA.h"
+#ifdef DMAC
+Motate::_DMACInterrupt *Motate::_first_dmac_interrupt = nullptr;
 
-using namespace Motate;
+extern "C" void DMAC_Handler(void)
+{
+   Motate::_DMACInterrupt *current = Motate::_first_dmac_interrupt;
+    uint32_t isr = DMAC->DMAC_EBCISR;
+    uint32_t imr = DMAC->DMAC_EBCIMR;
+    while (current != nullptr) {
+        if ((imr & current->channel_mask) && (isr & current->channel_mask)) {
+            // if (current->interrupt_handler) {
+                current->interrupt_handler(isr);
+            // }
+        }
+        current = current->next;
+    }
+
+    NVIC_ClearPendingIRQ(DMAC_IRQn);
+}
+
+#endif // DMAC
 
 #ifdef XDMAC
-_XDMAInterrupt *Motate::_first_xdmac_interrupt = nullptr;
+Motate::_XDMAInterrupt *Motate::_first_xdmac_interrupt = nullptr;
 
 extern "C" void XDMAC_Handler(void)
 {
-    _XDMAInterrupt *current = Motate::_first_xdmac_interrupt;
+   Motate::_XDMAInterrupt *current = Motate::_first_xdmac_interrupt;
     uint32_t isr = XDMAC->XDMAC_GIS;
     uint32_t imr = XDMAC->XDMAC_GIM;
     while (current != nullptr) {
         if ((imr & current->channel_mask) && (isr & current->channel_mask)) {
-            current->interrupt_handler();
+            // if (current->interrupt_handler) {
+                current->interrupt_handler();
+            // }
         }
         current = current->next;
     }

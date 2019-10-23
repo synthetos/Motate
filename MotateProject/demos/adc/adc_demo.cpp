@@ -33,20 +33,18 @@
 #include "MotatePins.h"
 
 // This makes the Motate:: prefix unnecessary.
-using namespace Motate;
-
 /****** Create file-global objects ******/
 
-PWMOutputPin<kLED1_PinNumber> led1_pin;
-ADCPin<kADCInput1_PinNumber> adc1_pin;
-void ADCPin<kADCInput1_PinNumber>::interrupt() {
+PWMOutputPin<Motate::kLED1_PinNumber> led1_pin;
+ADCPin<Motate::kADCInput1_PinNumber> adc1_pin;
+void ADCPin<Motate::kADCInput1_PinNumber>::interrupt() {
     led1_pin = (float)adc1_pin;
 }
 
 
-PWMOutputPin<kLED2_PinNumber> led2_pin;
-ADCPin<kADCInput2_PinNumber> adc2_pin;
-void ADCPin<kADCInput2_PinNumber>::interrupt() {
+PWMOutputPin<Motate::kLED2_PinNumber> led2_pin;
+ADCPin<Motate::kADCInput2_PinNumber> adc2_pin;
+void ADCPin<Motate::kADCInput2_PinNumber>::interrupt() {
     led2_pin = (float)adc2_pin;
 }
 

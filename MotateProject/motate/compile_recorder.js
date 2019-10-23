@@ -1,24 +1,33 @@
 #!/usr/bin/env node
-var fs = require("fs")
+let fs = require("fs")
 
 // Copy the argv
-var new_process_args = process.argv.slice(2)
+let new_process_args = process.argv.slice(2)
 
-var directory = new_process_args.shift()
-var file = new_process_args.shift()
+let build_directory = new_process_args.shift()
+let output_directory = new_process_args.shift()
+let file = new_process_args.shift()
 
-var commands = [];
+let commands = [];
+let file_commands = {};
 try {
-  commands = require(process.cwd()+"/compile_commands.json");
+  let incoming_commands = require(output_directory+"/compile_commands.json");
+
+  // strip out commands for this file
+  for (let command of incoming_commands) {
+    // if (file !== command.file) {
+      commands.push(command);
+    // }
+  }
 } catch (e) {};
 
 commands.push({
   "file": file,
-  "directory": directory,
+  "directory": build_directory,
   "command": new_process_args.join(" ")
 });
 
-var ws = fs.createWriteStream("./compile_commands.json")
+let ws = fs.createWriteStream(output_directory+"/compile_commands.json")
 
 ws.on("open", (fd) => {
   ws.write(JSON.stringify(commands, null, 2))

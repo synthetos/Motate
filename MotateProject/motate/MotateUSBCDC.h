@@ -455,15 +455,15 @@ namespace Motate {
 
         void setConnectionCallback(const std::function<void(bool)> &callback) {
             connection_state_changed_callback = callback;
-            if (connection_state_changed_callback && isConnected()) {
-                connection_state_changed_callback(true);
+            if (connection_state_changed_callback) {
+                connection_state_changed_callback(isConnected());
             }
         }
 
         void setConnectionCallback(std::function<void(bool)> &&callback) {
             connection_state_changed_callback = std::move(callback);
-            if (connection_state_changed_callback && isConnected()) {
-                connection_state_changed_callback(true);
+            if (connection_state_changed_callback) {
+                connection_state_changed_callback(isConnected());
             }
         }
 
@@ -558,8 +558,12 @@ namespace Motate {
 
         void handleConnectionStateChanged(const bool connected) {
             // We only use this to inform if DISconnects
-            // We only show connection when the DTR changes, which is later
+            // We only connection_state_changed_callback(true) when the DTR changes,
+            // which is later than this hardware change, and happens when host software
+            // connects
             if (connection_state_changed_callback && !connected) {
+                _line_info_valid = false;
+                _line_state = 0;
                 connection_state_changed_callback(false);
             }
         }

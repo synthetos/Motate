@@ -58,7 +58,8 @@ namespace Motate {
                 // Set bootflag to run SAM-BA bootloader at restart
                 while ((EFC->EEFC_FSR & EEFC_FSR_FRDY) == 0);
 
-                //
+                // 0x400E0C00 + 0x04 = 0xB | ((0xffff & 1) << 8) | (0x5Au << 24)
+                // 0x400E0C00 = 0x5a00010b
                 EFC->EEFC_FCR = EEFC_FCR_FCMD_CGPB | EEFC_FCR_FARG(1) | EEFC_FCR_FKEY_PASSWD;
 
                 while ((EFC->EEFC_FSR & EEFC_FSR_FRDY) == 0);

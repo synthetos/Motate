@@ -50,8 +50,17 @@ SEARCH_DIR(.)
 /* Memory Spaces Definitions */
 MEMORY
 {
-  rom (rx)  : ORIGIN = 0x00400000, LENGTH = 0x00080000
-  ram (rwx) : ORIGIN = 0x20400000, LENGTH = 0x00040000
+  /* ITCM/DTCM/RAM config options */
+  /* 128/128/0 config
+  itcm (rwx) : ORIGIN = 0x00000000, LENGTH = 0x00020000
+  rom  (rx)  : ORIGIN = 0x00400000, LENGTH = 0x00080000
+  ram  (rwx) : ORIGIN = 0x20000000, LENGTH = 0x00020000
+  */
+  /* 64/64/128 config */
+  itcm (rwx) : ORIGIN = 0x00000000, LENGTH = 0x00010000
+  rom  (rx)  : ORIGIN = 0x00400000, LENGTH = 0x00080000
+  dtcm (rw)  : ORIGIN = 0x20000000, LENGTH = 0x00010000
+  ram  (rwx) : ORIGIN = 0x20400000, LENGTH = 0x00020000
 }
 
 /* The stack size used by the application. NOTE: you need to adjust according to your application. */
@@ -61,9 +70,19 @@ __ram_end__ = ORIGIN(ram) + LENGTH(ram) - 4;
 /* The heapsize used by the application. NOTE: you need to adjust according to your application. */
 HEAP_SIZE = DEFINED(HEAP_SIZE) ? HEAP_SIZE : 0x200;
 
+ENTRY(Reset_Handler)
+
 /* Section Definitions */
 SECTIONS
 {
+    .code_tcm : AT ( _itcm_lma )
+    {
+        _sitcm = .;
+        *(.hot_func .hot_func.*)
+        *(.ramfunc .ramfunc.*);
+        _eitcm = .;
+    } > itcm
+
     .text :
     {
         . = ALIGN(4);
@@ -124,15 +143,20 @@ SECTIONS
     . = ALIGN(4);
     _etext = .;
 
+    . = . + SIZEOF(.relocate);
+
+    . = ALIGN(4);
+    _itcm_lma = .;
+
     .relocate : AT (_etext)
     {
         . = ALIGN(4);
         _srelocate = .;
-        *(.ramfunc .ramfunc.*);
+        *(.hot_data .hot_data.*);
         *(.data .data.*);
         . = ALIGN(4);
         _erelocate = .;
-    } > ram
+    } > dtcm
 
     /* .bss section which is used for uninitialized data */
     .bss (NOLOAD) :

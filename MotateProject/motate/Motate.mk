@@ -60,6 +60,9 @@ OPTIMIZATION ?= s
 CFLAGS   +=
 CPPFLAGS +=
 
+# The project MUST specify the tools version, so we can assure a match bewteen motate and the project.
+TOOLS_VERSION ?= unspecified
+
 #
 # End of configuration section
 ##############################################################################################
@@ -234,7 +237,8 @@ SPECIAL_ATMEL_STUDIO_DEFAULT_TARGETS =
 ifneq (,$(findstring Atmel,$(PATH)))
 $(info "Found that we're in Atmel Studio")
 OS := WIN32
-TOOLS_SUBPATH := win32/gcc-$(CROSS_COMPILE)
+TOOLS_SUBPATH := win32/gcc-$(CROSS_COMPILE)-$(TOOLS_VERSION)
+TOOLS_PATH := $(realpath $(TOOLS_PATH))
 PATH := $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin;c:\Program Files\Git\bin;c:\Program Files\Git\cmd;c:\Program Files\Git\mingw32\bin;c:\Program Files\Git\mingw64\bin;$(PATH)
 MKDIR   = gmkdir
 SPECIAL_ATMEL_STUDIO_DEFAULT_TARGETS = $(PROJECT).elf $(PROJECT).map
@@ -242,14 +246,16 @@ else
 ifneq (,$(findstring /cygdrive/,$(PATH)))
 $(info "Found that we're in Windows Cygwin")
 OS := WIN32
-TOOLS_SUBPATH := win32/gcc-$(CROSS_COMPILE)
+TOOLS_SUBPATH := win32/gcc-$(CROSS_COMPILE)-$(TOOLS_VERSION)
+TOOLS_PATH := $(realpath $(TOOLS_PATH))
 PATH := $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin;c:\Program Files\Git\bin;c:\Program Files\Git\cmd;c:\Program Files\Git\mingw32\bin;c:\Program Files\Git\mingw64\bin;$(PATH)
 #MKDIR   = gmkdir
 else
 ifneq (,$(findstring WINDOWS,$(PATH)))
 $(info "Found that we're in WINDOWS")
 OS := WIN32
-TOOLS_SUBPATH := win32/gcc-$(CROSS_COMPILE)
+TOOLS_SUBPATH := win32/gcc-$(CROSS_COMPILE)-$(TOOLS_VERSION)
+TOOLS_PATH := $(realpath $(TOOLS_PATH))
 PATH := $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin;c:\Program Files\Git\bin;c:\Program Files\Git\cmd;c:\Program Files\Git\mingw32\bin;c:\Program Files\Git\mingw64\bin;$(PATH)
 #MKDIR   = gmkdir
 else
@@ -261,12 +267,12 @@ UNAME := $(shell uname -s)
 ifeq (Darwin,${UNAME})
 $(info "Found that we're in OS X")
 OS = OSX
-TOOLS_SUBPATH := osx/gcc-$(CROSS_COMPILE)
+TOOLS_SUBPATH := osx/gcc-$(CROSS_COMPILE)-$(TOOLS_VERSION)
 else
 ifeq (Linux,${UNAME})
 $(info "Found that we're in Linux")
 OS = LINUX
-TOOLS_SUBPATH := linux/gcc-$(CROSS_COMPILE)
+TOOLS_SUBPATH := linux/gcc-$(CROSS_COMPILE)-$(TOOLS_VERSION)
 endif #LINUX
 endif #Darwin
 
@@ -379,15 +385,6 @@ LIBDIR   = $(patsubst %,-L%,$(DEVICE_LIB_DIRS) $(USER_LIB_DIRS))
 # Start of RULES
 #
 
-ifeq ($(VERBOSE),2)
-$(info DEVICE_INCLUDE_DIRS+USER_INCLUDE_DIRS:$(patsubst %,$(NEWLINE_TAB)%,$(DEVICE_INCLUDE_DIRS) $(USER_INCLUDE_DIRS)))
-$(info $(NEWLINE_ONLY)DEVICE_LIB_DIRS+USER_LIB_DIRS: $(patsubst %,$(NEWLINE_TAB)%,$(DEVICE_LIB_DIRS) $(USER_LIB_DIRS)))
-$(info $(NEWLINE_ONLY)SOURCE_DIRS: $(patsubst %,$(NEWLINE_TAB)%,$(SOURCE_DIRS)))
-$(info $(NEWLINE_ONLY)C_SOURCES: $(patsubst %,$(NEWLINE_TAB)%,$(C_SOURCES)))
-$(info $(NEWLINE_ONLY)CXX_SOURCES: $(patsubst %,$(NEWLINE_TAB)%,$(CXX_SOURCES)))
-$(info $(NEWLINE_ONLY)FIRST_LINK_SOURCES: $(patsubst %,$(NEWLINE_TAB)%,$(FIRST_LINK_SOURCES)))
-endif
-
 ifneq ("$(DEVICE_NEEDS_HEX)","")
 NEEDS_HEX = $(OUTPUT_BIN).hex
 endif
@@ -395,14 +392,27 @@ endif
 all: $(OUTPUT_BIN).elf $(NEEDS_HEX) $(SPECIAL_ATMEL_STUDIO_DEFAULT_TARGETS)
 	@echo $(START_BOLD)Build ${GIT_EXACT_VERSION} "${GIT_VERSION}"$(END_BOLD)
 
+ALL_OTHER_C_SOURCES :=
+ALL_OTHER_CXX_SOURCES :=
+
 $(eval $(DEVICE_RULES))
+
+ifeq ($(VERBOSE),2)
+$(info DEVICE_INCLUDE_DIRS+USER_INCLUDE_DIRS:$(patsubst %,$(NEWLINE_TAB)%,$(DEVICE_INCLUDE_DIRS) $(USER_INCLUDE_DIRS)))
+$(info $(NEWLINE_ONLY)DEVICE_LIB_DIRS+USER_LIB_DIRS: $(patsubst %,$(NEWLINE_TAB)%,$(DEVICE_LIB_DIRS) $(USER_LIB_DIRS)))
+$(info $(NEWLINE_ONLY)SOURCE_DIRS: $(patsubst %,$(NEWLINE_TAB)%,$(SOURCE_DIRS)))
+$(info $(NEWLINE_ONLY)C_SOURCES full: $(patsubst %,$(NEWLINE_TAB)%,$(ALL_OTHER_C_SOURCES) $(C_SOURCES)))
+$(info $(NEWLINE_ONLY)CXX_SOURCES full: $(patsubst %,$(NEWLINE_TAB)%,$(ALL_OTHER_CXX_SOURCES) $(CXX_SOURCES)))
+$(info $(NEWLINE_ONLY)FIRST_LINK_SOURCES: $(patsubst %,$(NEWLINE_TAB)%,$(FIRST_LINK_SOURCES)))
+endif
 
 # We use tools as a "macro" for dependencies later
 tools: | $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin
 
-$(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin:
+# and make it depend on the tools makefile to catch updates
+$(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin: $(TOOLS_PATH)/Makefile
 	@echo Installing the necessary tools...
-	cd ${TOOLS_PATH} && make "ARCH=gcc-${CROSS_COMPILE}"
+	cd ${TOOLS_PATH} && make "ARCH=gcc-${CROSS_COMPILE}" "TOOLS_VERSION=$(TOOLS_VERSION)"
 
 OUTDIR = $(OBJ)
 
@@ -427,6 +437,7 @@ CPPFLAGS += $(DEBUG_SYMBOLS) -O$(OPTIMIZATION) $(INCLUDES) $(patsubst %,-D%,$(DE
 ASFLAGS  += $(DEBUG_SYMBOLS) -O$(OPTIMIZATION) $(INCLUDES) -D__ASSEMBLY__ $(patsubst %,-D%,$(DEVICE_DEFINES) $(USER_DEFINES))
 
 ifneq ("$(DEVICE_LINKER_SCRIPT)", "")
+
 LINKER_SCRIPT := $(DEVICE_LINKER_SCRIPT)
 LINKER_SCRIPT_TEXT = $(LINKER_SCRIPT)
 LINKER_SCRIPT_OPTION = -T"$(LINKER_SCRIPT)"
@@ -441,6 +452,50 @@ endif
 
 # Generate dependency information
 DEPFLAGS = -MMD -MF $(OBJ)/dep/$(@F).d -MT $(subst $(OUTDIR),$(OBJ),$@)
+UNITY_BUILD ?= 0
+ifeq ($(UNITY_BUILD),1)
+
+$(info Single Translation Unit Build (STUB, AKA Unity Build))
+
+# This little dance is to make the sources land in this order:
+# 1- Motate
+#    1.1- first-link then non-first-link
+# 2- Non-Motate
+#    2.1- first-link then non-first-link
+
+# The C sources have to be wrapped in extern "C" { ... } and can safely always go LAST, so we handle that as well.
+
+MOTATE_C_SOURCES := $(filter $(MOTATE_PATH)/%,$(filter-out $(FIRST_LINK_SOURCES), $(ALL_OTHER_C_SOURCES) $(C_SOURCES)) $(filter $(FIRST_LINK_SOURCES), $(ALL_OTHER_C_SOURCES) $(C_SOURCES)))
+NON_MOTATE_C_SOURCES := $(filter-out $(MOTATE_PATH)/%,$(filter-out $(FIRST_LINK_SOURCES), $(ALL_OTHER_C_SOURCES) $(C_SOURCES)) $(filter $(FIRST_LINK_SOURCES), $(ALL_OTHER_C_SOURCES) $(C_SOURCES)))
+MOTATE_CXX_SOURCES := $(filter $(MOTATE_PATH)/%,$(filter-out $(FIRST_LINK_SOURCES), $(ALL_OTHER_CXX_SOURCES) $(CXX_SOURCES)) $(filter $(FIRST_LINK_SOURCES), $(ALL_OTHER_CXX_SOURCES) $(CXX_SOURCES)))
+NON_MOTATE_CXX_SOURCES := $(filter-out $(MOTATE_PATH)/%,$(filter-out $(FIRST_LINK_SOURCES), $(ALL_OTHER_CXX_SOURCES) $(CXX_SOURCES)) $(filter $(FIRST_LINK_SOURCES), $(ALL_OTHER_CXX_SOURCES) $(CXX_SOURCES)))
+
+SORTED_C_SOURCES := $(filter-out $(LAST_C_SOURCES), $(MOTATE_C_SOURCES) $(NON_MOTATE_C_SOURCES)) $(LAST_C_SOURCES)
+SORTED_CXX_SOURCES := $(MOTATE_CXX_SOURCES) $(NON_MOTATE_CXX_SOURCES)
+
+# Also of note are the calls to $(REC) which are to populate the compile_commands.json file, for intelligent IDE navigation
+
+$(OUTDIR)/all.cpp: $(ALL_OTHER_C_SOURCES) $(ALL_OTHER_CXX_SOURCES) $(C_SOURCES) $(CXX_SOURCES) | tools $(DEPDIR) $(BIN)
+	$(shell echo "#define SINGLE_TRANSLATION_BUILD" > $(OUTDIR)/all.cpp)
+	$(foreach f,$(SORTED_CXX_SOURCES),$(shell echo "#include \"../../$(f)\"" >> $(OUTDIR)/all.cpp ))
+	$(foreach f,$(SORTED_CXX_SOURCES),$(shell $(REC) $(realpath $(CWD)) $(realpath $(CWD)) $(f) $(CXX) "$(CPPFLAGS) $(DEPFLAGS) -xc++ -c -o $(f).o $(f)" ))
+	$(shell echo "extern \"C\" {" >> $(OUTDIR)/all.cpp)
+	$(foreach f,$(SORTED_C_SOURCES),$(shell echo "#include \"../../$(f)\"" >> $(OUTDIR)/all.cpp ))
+	$(foreach f,$(SORTED_C_SOURCES),$(shell $(REC) $(realpath $(CWD)) $(realpath $(CWD)) $(f) $(CC) "$(CFLAGS) $(DEPFLAGS) -c -o $(f).o $(f)" ))
+	$(shell echo "}" >> $(OUTDIR)/all.cpp)
+
+$(OUTPUT_BIN).elf: $(OUTDIR)/all.o $(ALL_ASM_OBJECTS) $(LINKER_SCRIPT) | $(ALL_OTHER_C_SOURCES) $(ALL_OTHER_CXX_SOURCES) $(C_SOURCES) $(CXX_SOURCES)
+	@echo $(START_BOLD)"Linking $(OUTPUT_BIN).elf" $(END_BOLD)
+	@echo $(START_BOLD)"Using linker script: $(LINKER_SCRIPT)" $(END_BOLD)
+	$(QUIET)$(CXX) $(LIB_PATH) $(LINKER_SCRIPT_OPTION) $(LIBDIR) -Wl,-Map,"$(OUTPUT_BIN).map" -o $@ $(LDFLAGS) $(LD_OPTIONAL) -Wl,--start-group $(OUTDIR)/all.o $(LIBS) -Wl,--end-group
+	@echo $(START_BOLD)"Exporting symbols $(OUTPUT_BIN).elf.txt" $(END_BOLD)
+	$(QUIET)$(NM) "$(OUTPUT_BIN).elf" >"$(OUTPUT_BIN).elf.txt"
+	@echo $(START_BOLD)"Making binary $(OUTPUT_BIN).bin" $(END_BOLD)
+	$(QUIET)$(OBJCOPY) -O binary "$(OUTPUT_BIN).elf" "$(OUTPUT_BIN).bin"
+	@echo "--- SIZE INFO ---"
+	$(QUIET)$(SIZE) "$(OUTPUT_BIN).elf"
+
+else
 
 $(OUTPUT_BIN).elf: $(ALL_C_OBJECTS) $(ALL_CXX_OBJECTS) $(ALL_ASM_OBJECTS) $(LINKER_SCRIPT)
 	@echo $(START_BOLD)"Linking $(OUTPUT_BIN).elf" $(END_BOLD)
@@ -453,6 +508,8 @@ $(OUTPUT_BIN).elf: $(ALL_C_OBJECTS) $(ALL_CXX_OBJECTS) $(ALL_ASM_OBJECTS) $(LINK
 	@echo "--- SIZE INFO ---"
 	$(QUIET)$(SIZE) "$(OUTPUT_BIN).elf"
 
+endif
+
 $(OUTPUT_BIN).hex: $(OUTPUT_BIN).elf
 	$(QUIET)$(OBJCOPY) -O ihex $(DEVICE_HEX_FLAGS) $< $@
 
@@ -461,37 +518,37 @@ $(OUTPUT_BIN).hex: $(OUTPUT_BIN).elf
 $(MOTATE_CXX_OBJECTS): | tools $(sort $(dir $(MOTATE_CXX_OBJECTS))) $(DEPDIR) $(BIN)
 $(MOTATE_CXX_OBJECTS): $(OUTDIR)/motate/%.o: $(MOTATE_PATH)/%.cpp
 	@echo $(START_BOLD)"Compiling cpp $<"; echo "    -> $@" $(END_BOLD)
-	@cd $(MOTATE_PATH) && $(REC) $(CWD) $(realpath $<) $(realpath $(CXX)) $(subst $(MOTATE_PATH),$(realpath $(MOTATE_PATH)),$(INCLUDES) $(patsubst %,-D%,$(DEVICE_DEFINES) $(USER_DEFINES))) -xc++ -c -o $(realpath $@) $(realpath $<)
+	$(REC) $(realpath $(CWD)) $(realpath $(CWD)) $< $(CXX) "$(CPPFLAGS) $(DEPFLAGS) -xc++ -c -o $@ $<"
 	$(QUIET)$(CXX) $(CPPFLAGS) $(DEPFLAGS) -xc++ -c -o $@ $<
 
 $(ALL_OTHER_CXX_OBJECTS): | tools $(sort $(dir $(ALL_OTHER_CXX_OBJECTS))) $(DEPDIR) $(BIN)
 $(ALL_OTHER_CXX_OBJECTS): $(OUTDIR)/%.o: %.cpp
 	@echo $(START_BOLD)"Compiling cpp $<"; echo "    -> $@" $(END_BOLD)
-	@$(REC) $(CWD) $(realpath $<) $(realpath $(CXX)) $(INCLUDES) $(patsubst %,-D%,$(DEVICE_DEFINES) $(USER_DEFINES)) -xc++ -c -o $@ $<
+	$(REC) $(realpath $(CWD)) $(realpath $(CWD)) $< $(CXX) "$(CPPFLAGS) $(DEPFLAGS) -xc++ -c -o $@ $<"
 	$(QUIET)$(CXX) $(CPPFLAGS) $(DEPFLAGS) -xc++ -c -o $@ $<
 
 $(MOTATE_C_OBJECTS): | tools $(sort $(dir $(MOTATE_C_OBJECTS))) $(DEPDIR) $(BIN)
 $(MOTATE_C_OBJECTS): $(OUTDIR)/motate/%.o: $(MOTATE_PATH)/%.c
 	@echo $(START_BOLD)"Compiling c $<"; echo "    -> $@" $(END_BOLD)
-	@cd $(MOTATE_PATH) && $(REC) $(CWD) $(realpath $<) $(realpath $(CC)) $(subst $(MOTATE_PATH),$(realpath $(MOTATE_PATH)),$(INCLUDES) $(patsubst %,-D%,$(DEVICE_DEFINES) $(USER_DEFINES))) -c -o $(realpath $@) $(realpath $<)
+	@$(REC) $(realpath $(CWD)) $(realpath $(CWD)) $< $(CC) "$(CFLAGS) $(DEPFLAGS) -c -o $@ $<"
 	$(QUIET)$(CC) $(CFLAGS) $(DEPFLAGS) -c -o $@ $<
 
 $(ALL_OTHER_C_OBJECTS): | tools $(sort $(dir $(ALL_OTHER_C_OBJECTS))) $(DEPDIR) $(BIN)
 $(ALL_OTHER_C_OBJECTS): $(OUTDIR)/%.o: %.c
 	@echo $(START_BOLD)"Compiling c $<"; echo "    -> $@" $(END_BOLD)
-	@$(REC) $(CWD) $(realpath $<) $(realpath $(CC)) $(INCLUDES) $(patsubst %,-D%,$(DEVICE_DEFINES) $(USER_DEFINES)) -c -o $@ $<
+	@$(REC) $(realpath $(CWD)) $(realpath $(CWD)) $< $(CC) "$(CFLAGS) $(DEPFLAGS) -c -o $@ $<"
 	$(QUIET)$(CC) $(CFLAGS) $(DEPFLAGS) -c -o $@ $<
 
 $(MOTATE_ASM_OBJECTS): | tools $(sort $(dir $(MOTATE_ASM_OBJECTS))) $(DEPDIR) $(BIN)
 $(MOTATE_ASM_OBJECTS): $(OUTDIR)/motate/%.o: $(MOTATE_PATH)/%.s
 	@echo $(START_BOLD)"Compiling $<"; echo "    -> $@"  $(END_BOLD)
-	@cd $(MOTATE_PATH) && $(REC) $(CWD) $(realpath $<) $(realpath $(CC)) $(subst $(MOTATE_PATH),$(realpath $(MOTATE_PATH)),$(INCLUDES) $(patsubst %,-D%,$(DEVICE_DEFINES) $(USER_DEFINES))) -c -o $(realpath $@) $(realpath $<)
+	@$(REC) $(realpath $(CWD)) $(realpath $(CWD)) $< $(CC) "$(ASFLAGS) $(DEPFLAGS) -c -o $@ $<"
 	$(QUIET)$(CC) $(ASFLAGS) $(DEPFLAGS) -c -o $@ $<
 
 $(ALL_OTHER_ASM_OBJECTS): | tools $(sort $(dir $(ALL_OTHER_ASM_OBJECTS))) $(DEPDIR) $(BIN)
 $(ALL_OTHER_ASM_OBJECTS): $(OUTDIR)/%.o: %.s
 	@echo $(START_BOLD)"Compiling $<"; echo "    -> $@"  $(END_BOLD)
-	@$(REC) $(CWD) $(realpath $<) $(realpath $(CC)) $(INCLUDES) $(patsubst %,-D%,$(DEVICE_DEFINES) $(USER_DEFINES)) -c -o $(realpath $@) $(realpath $<)
+	@$(REC) $(realpath $(CWD)) $(realpath $(CWD)) $< $(CC) "$(ASFLAGS) $(DEPFLAGS) -c -o $@ $<"
 	$(QUIET)$(CC) $(ASFLAGS) $(DEPFLAGS) -c -o $@ $<
 
 
@@ -507,13 +564,53 @@ $(DEPDIR) $(BIN):
 	$(QUIET)$(MKDIR) -p "$@"
 
 
-# Rule for debugging
-debug: $(OUTPUT_BIN).elf
-	$(GDB) -ex "dir '${MOTATE_PATH}/arch/'" -x "${BOARD_PATH}.gdb" -ex "monitor reset halt" -readnow -se "$(OUTPUT_BIN).elf"
+# Rule for debugging with the J-Link
+# Best to start the server with make ... debugjs first, then run make ... debugj
+.PHONY: debugj debuggyj debugjs debugjs2 debugj-kill debugj-murder
+debugjs2:
+	JLinkGDBServer -device "${JLINK_DEVICE}" -log jlinkgdbserver.log -silent -halt -vd -if SWD -excdbg 4 -nogui -speed 2000 -ir
 
-# Rule for debugging (using python-enabled debugger)
-debuggy: $(OUTPUT_BIN).elf
-	$(GDB_PY) -ex "dir '${MOTATE_PATH}/arch/'" -x "${BOARD_PATH}.gdb" -ex "monitor reset halt" -readnow -se "$(OUTPUT_BIN).elf"
+debugjs:
+	$(MAKE) debugjs2 &
+
+debugj: $(OUTPUT_BIN).elf
+	$(GDB) -ex "dir '${MOTATE_PATH}/arch/'" -x "${BOARD_PATH}.gdb" -x "${MOTATE_PATH}/platform/jlink.gdb" -readnow -se "$(OUTPUT_BIN).elf"
+
+# use the GDB with python enabled
+debuggyj: $(OUTPUT_BIN).elf
+	$(GDB_PY) -ex "dir '${MOTATE_PATH}/arch/'" -x "${BOARD_PATH}.gdb" -x "${MOTATE_PATH}/platform/jlink.gdb" -readnow -se "$(OUTPUT_BIN).elf"
+
+# when done debugging, run this
+debugj-kill:
+	killall JLinkGDBServer
+
+# if the debugger gets "jammed", this'll kill it
+debugj-murder:
+	killall -9 JLinkGDBServer
+
+
+# Rules for debugging with the Atmel-ICE
+.PHONY: debugi debuggyi debugis debugis2 debugi-kill debugi-murder
+debugis2:
+	openocd -c "set CHIPNAME ${CHIP}" -f ${MOTATE_PATH}/openocd.cfg -f ${OPENOCD_CFG} -c "gdb_port 2331; log_output openocd.log"
+
+debugis:
+	$(MAKE) debugis2 &
+
+debugi: $(OUTPUT_BIN).elf
+	$(GDB) -ex "dir '${MOTATE_PATH}/arch/'" -x "${BOARD_PATH}.gdb" -x "${MOTATE_PATH}/platform/atmel_ice.gdb" -readnow -se "$(OUTPUT_BIN).elf"
+
+# Rule for debugging with the Atmel-ICE
+debuggyi: $(OUTPUT_BIN).elf
+	$(GDB_PY) -ex "dir '${MOTATE_PATH}/arch/'" -x "${BOARD_PATH}.gdb" -x "${MOTATE_PATH}/platform/atmel_ice.gdb" -readnow -se "$(OUTPUT_BIN).elf"
+
+# when done debugging, run this
+debugi-kill:
+	killall openocd
+
+# if the debugger gets "jammed", this'll kill it
+debugi-murder:
+	killall -9 openocd
 
 flash: $(FLASH_REQUIRES)
 	$(DEVICE_FLASH_CMD)
@@ -534,12 +631,23 @@ $(PROJECT).hex: $(OUTPUT_BIN).elf
 $(PROJECT).bin: $(OUTPUT_BIN).elf
 	$(QUIET)$(OBJCOPY) -O binary $< $@
 
+ifneq (WIN32,${UNAME})
+
 clean:
 	-$(RM) -fR $(OBJ)
 	-$(RM) -fR $(BIN)
 	-$(RM) -fR $(BOARD).elf $(BOARD).map $(BOARD).hex $(BOARD).bin
 	-$(RM) -fR compile_commands.json $(MOTATE_PATH)/compile_commands.json
 
+else
+
+clean:
+	-find  $(OBJ)/ -d -print0 -name \* | xargs -0 rm -rf
+	-find  $(BIN)/ -d -print0 -name \* | xargs -0 rm -rf
+	-$(RM) -fR $(BOARD).elf $(BOARD).map $(BOARD).hex $(BOARD).bin
+	-$(RM) -fR compile_commands.json $(MOTATE_PATH)/compile_commands.json
+
+endif
 
 #
 # Include the dependency files, should be the last of the makefile

@@ -67,8 +67,9 @@ SECTIONS
         . = ALIGN(4);
         _sfixed = .;
         KEEP(*(.vectors .vectors.*))
-        *(.text .text.* .gnu.linkonce.t.*) 	      
-        *(.glue_7t) *(.glue_7)		                
+        *(.text .text.* .gnu.linkonce.t.*)
+        *(.hot_func .hot_func.*)
+        *(.glue_7t) *(.glue_7)
         *(.rodata .rodata* .gnu.linkonce.r.*)		    	                  
         *(.ARM.extab* .gnu.linkonce.armextab.*)
 
@@ -127,6 +128,7 @@ SECTIONS
         . = ALIGN(4);
         _srelocate = .;
         *(.ramfunc .ramfunc.*);
+        *(.hot_data .hot_data.*);
         *(.data .data.*);
         . = ALIGN(4);
         _erelocate = .;
