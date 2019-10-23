@@ -52,10 +52,6 @@ namespace Motate {
 
     //extern volatile uint32_t _internal_pendsv_handler_number;
 
-    struct ServiceCallEventHandler {
-        virtual void handleServiceCallEvent();
-    };
-
     struct ServiceCallEvent {
         ServiceCallEventHandler *handler_;
         std::atomic<ServiceCallEvent *> _next = nullptr;
@@ -307,75 +303,6 @@ namespace Motate {
         virtual void _debug_print_num() {;};
 
         // virtual void interrupt() {;};
-    };
-
-    template <service_call_number svcNumber>
-    struct ServiceCall final : ServiceCallEvent {
-        ServiceCall() {
-        };
-
-        // Interface that makes sense for this object...
-        void call() {
-            _call_or_queue();
-        };
-
-        // Interface for compatibility with Pins and Timers....
-        void setInterruptPending() {
-            call();
-        };
-
-        void setInterrupts(const uint32_t interrupts) {
-            _interrupt_level = interrupts;
-            if (_interrupt_level & kInterruptPriorityHighest) {
-                _priority_value = 0;
-            }
-            else if (_interrupt_level & kInterruptPriorityHigh) {
-                _priority_value = 1;
-            }
-            else if (_interrupt_level & kInterruptPriorityMedium) {
-                _priority_value = 2;
-            }
-            else if (_interrupt_level & kInterruptPriorityLow) {
-                _priority_value = 3;
-            }
-            else if (_interrupt_level & kInterruptPriorityLowest) {
-                _priority_value = 4;
-            }
-        };
-
-        // Stub to match the interface of Timer
-        uint16_t getInterruptCause() {
-            return 0;
-        };
-
-        void setInterruptHandler(ServiceCallEventHandler *handler) {
-            handler_ = handler;
-        }
-
-        void _debug_print_num() override {
-            switch (svcNumber) {
-                case 0: svc_call_debug("<0>"); break;
-                case 1: svc_call_debug("<1>"); break;
-                case 2: svc_call_debug("<2>"); break;
-                case 3: svc_call_debug("<3>"); break;
-                case 4: svc_call_debug("<4>"); break;
-                case 5: svc_call_debug("<5>"); break;
-
-                default:
-                    svc_call_debug("<?>");
-                    break;
-            }
-        };
-
-        // If the main interrupt isn't overidden, then we'll this one
-        //static void alternate_interrupt() {
-        //    if (_altInterruptHandler) {
-        //        _altInterruptHandler();
-        //    }
-        //};
-
-        // Override this to implement this call
-        // void interrupt() override;
     };
 }
 

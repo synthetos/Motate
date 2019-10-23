@@ -174,9 +174,9 @@ struct TWIMessage {
  *
  **************************************************/
 
-template <pin_number twiSCKPinNumber, pin_number twiSDAPinNumber, service_call_number svcCallNum>
+template <pin_number twiSCKPinNumber, pin_number twiSDAPinNumber>
 struct TWIBus : virtual TWIInterruptHandler, virtual ServiceCallEventHandler {
-    using bus_type = TWIBus<twiSCKPinNumber, twiSDAPinNumber, svcCallNum>;
+    using bus_type = TWIBus<twiSCKPinNumber, twiSDAPinNumber>;
     // Note these asserts will need to be revisited if we make a bit-banged TWI
     static_assert(IsTWISCKPin<twiSCKPinNumber>(), "TWI SCK Pin is not on a hardware TWI.");
 
@@ -190,7 +190,7 @@ struct TWIBus : virtual TWIInterruptHandler, virtual ServiceCallEventHandler {
 
     TWIGetHardware<twiSCKPinNumber, twiSDAPinNumber> hardware;
 
-    ServiceCall<svcCallNum> message_manager;
+    ServiceCall message_manager;
 
     TWIBusDeviceBase *_first_device, *_current_transaction_device;
     std::atomic<TWIMessage*> _first_message, _last_message;
