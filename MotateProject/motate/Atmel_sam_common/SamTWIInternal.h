@@ -130,7 +130,7 @@ struct TWIInfo : TWIInfoBase<twiPeripheralNumber> {
 
     void setStartStop() { twi->TWIHS_CR = TWIHS_CR_START | TWIHS_CR_STOP; }
 
-    void readByteToBuffer(uint8_t* buff) { *buff = (uint8_t)twi->TWIHS_RHR; }
+    uint8_t readByte() { return twi->TWIHS_RHR; }
 
     void transmitChar(uint8_t b) { twi->TWIHS_THR = b; }
 
