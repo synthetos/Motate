@@ -14,14 +14,18 @@ let should_write = true;
 try {
   let incoming_commands = require(output_directory+"/compile_commands.json");
 
-  // strip out commands for this file
   for (let command of incoming_commands) {
+    // check for the file already being shown
     if (file === command.file && build_directory === command.directory && new_process_args.join(" ") === command.command) {
-      // this command is exactly already in the commands, stop
+      // this command is *exactly* already in the commands list, stop
       should_write = false;
       break;
     }
-    commands.push(command);
+    if (file === command.file && build_directory === command.directory) {
+      // Don't add it to the list, removing the old version
+    } else {
+      commands.push(command);
+    }
   }
 } catch (e) {};
 
