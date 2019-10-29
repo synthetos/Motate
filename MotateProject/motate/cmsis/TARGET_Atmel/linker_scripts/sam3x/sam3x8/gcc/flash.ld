@@ -59,18 +59,18 @@ MEMORY
 __stack_size__ = DEFINED(__stack_size__) ? __stack_size__ : 0x2000;
 __ram_end__ = ORIGIN(ram) + LENGTH(ram) - 4;
 
-/* Section Definitions */ 
-SECTIONS 
-{ 
-    .text : 
-    { 
+/* Section Definitions */
+SECTIONS
+{
+    .text :
+    {
         . = ALIGN(4);
         _sfixed = .;
         KEEP(*(.vectors .vectors.*))
         *(.text .text.* .gnu.linkonce.t.*)
         *(.hot_func .hot_func.*)
         *(.glue_7t) *(.glue_7)
-        *(.rodata .rodata* .gnu.linkonce.r.*)		    	                  
+        *(.rodata .rodata* .gnu.linkonce.r.*)
         *(.ARM.extab* .gnu.linkonce.armextab.*)
 
         /* Support C constructors, and C destructors in both user code
@@ -120,7 +120,7 @@ SECTIONS
     } > rom
     PROVIDE_HIDDEN (__exidx_end = .);
 
-    . = ALIGN(4); 
+    . = ALIGN(4);
     _etext = .;
 
     .relocate : AT (_etext)
@@ -134,9 +134,9 @@ SECTIONS
         _erelocate = .;
     } > ram
 
-    /* .bss section which is used for uninitialized data */ 
-    .bss (NOLOAD) :
-    { 
+    /* .bss section which is used for uninitialized data */
+    .bss ALIGN(4) (NOLOAD) :
+    {
         . = ALIGN(4);
         _sbss = . ;
         _szero = .;
@@ -157,6 +157,6 @@ SECTIONS
         _estack = .;
     } > ram
 
-    . = ALIGN(4); 
-    _end = . ; 
+    . = ALIGN(4);
+    _end = . ;
 }
