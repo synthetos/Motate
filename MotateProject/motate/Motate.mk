@@ -219,7 +219,7 @@ endif
 #
 
 # Output file basename
-OUTPUT_BIN = $(BIN)/$(PROJECT)
+OUTPUT_BIN := $(BIN)/$(PROJECT)
 
 # Some basical (external) utility paths
 RM      = rm
@@ -389,7 +389,7 @@ ifneq ("$(DEVICE_NEEDS_HEX)","")
 NEEDS_HEX = $(OUTPUT_BIN).hex
 endif
 
-all: $(OUTPUT_BIN).elf $(NEEDS_HEX) $(SPECIAL_ATMEL_STUDIO_DEFAULT_TARGETS)
+all: $(OUTPUT_BIN).elf $(OUTPUT_BIN).bin $(OUTPUT_BIN).elf.txt $(NEEDS_HEX) $(SPECIAL_ATMEL_STUDIO_DEFAULT_TARGETS) $(ALL_ADDITIONS)
 	@echo $(START_BOLD)Build ${GIT_EXACT_VERSION} "${GIT_VERSION}"$(END_BOLD)
 
 ALL_OTHER_C_SOURCES :=
@@ -436,18 +436,21 @@ CFLAGS   += $(DEBUG_SYMBOLS) -O$(OPTIMIZATION) $(INCLUDES) $(patsubst %,-D%,$(DE
 CPPFLAGS += $(DEBUG_SYMBOLS) -O$(OPTIMIZATION) $(INCLUDES) $(patsubst %,-D%,$(DEVICE_DEFINES) $(USER_DEFINES))
 ASFLAGS  += $(DEBUG_SYMBOLS) -O$(OPTIMIZATION) $(INCLUDES) -D__ASSEMBLY__ $(patsubst %,-D%,$(DEVICE_DEFINES) $(USER_DEFINES))
 
+ifneq ("$(CUSTOM_LINKER_SCRIPT)", "")
+$(info Using custom linker script!)
+LINKER_SCRIPT := $(CUSTOM_LINKER_SCRIPT)
+LINKER_SCRIPT_TEXT = $(LINKER_SCRIPT)
+LINKER_SCRIPT_OPTION = -T"$(LINKER_SCRIPT)"
+else
 ifneq ("$(DEVICE_LINKER_SCRIPT)", "")
-
 LINKER_SCRIPT := $(DEVICE_LINKER_SCRIPT)
 LINKER_SCRIPT_TEXT = $(LINKER_SCRIPT)
 LINKER_SCRIPT_OPTION = -T"$(LINKER_SCRIPT)"
-
 else
-
 ABS_LINKER_SCRIPT =
 ABS_LINKER_SCRIPT_TEXT = "[built in]"
 LINKER_SCRIPT_OPTION =
-
+endif
 endif
 
 # Generate dependency information
@@ -488,9 +491,6 @@ $(OUTPUT_BIN).elf: $(OUTDIR)/all.o $(ALL_ASM_OBJECTS) $(LINKER_SCRIPT) | $(ALL_O
 	@echo $(START_BOLD)"Linking $(OUTPUT_BIN).elf" $(END_BOLD)
 	@echo $(START_BOLD)"Using linker script: $(LINKER_SCRIPT)" $(END_BOLD)
 	$(QUIET)$(CXX) $(LIB_PATH) $(LINKER_SCRIPT_OPTION) $(LIBDIR) -Wl,-Map,"$(OUTPUT_BIN).map" -o $@ $(LDFLAGS) $(LD_OPTIONAL) -Wl,--start-group $(OUTDIR)/all.o $(LIBS) -Wl,--end-group
-	@echo $(START_BOLD)"Exporting symbols $(OUTPUT_BIN).elf.txt" $(END_BOLD)
-	$(QUIET)$(NM) "$(OUTPUT_BIN).elf" >"$(OUTPUT_BIN).elf.txt"
-	@echo $(START_BOLD)"Making binary $(OUTPUT_BIN).bin" $(END_BOLD)
 	$(QUIET)$(OBJCOPY) -O binary "$(OUTPUT_BIN).elf" "$(OUTPUT_BIN).bin"
 	@echo "--- SIZE INFO ---"
 	$(QUIET)$(SIZE) "$(OUTPUT_BIN).elf"
@@ -501,14 +501,18 @@ $(OUTPUT_BIN).elf: $(ALL_C_OBJECTS) $(ALL_CXX_OBJECTS) $(ALL_ASM_OBJECTS) $(LINK
 	@echo $(START_BOLD)"Linking $(OUTPUT_BIN).elf" $(END_BOLD)
 	@echo $(START_BOLD)"Using linker script: $(LINKER_SCRIPT)" $(END_BOLD)
 	$(QUIET)$(CXX) $(LIB_PATH) $(LINKER_SCRIPT_OPTION) $(LIBDIR) -Wl,-Map,"$(OUTPUT_BIN).map" -o ${filter-out tools,$@} $(LDFLAGS) $(LD_OPTIONAL) -Wl,--start-group $(FIRST_LINK_OBJECTS_PATHS) $(filter-out $(FIRST_LINK_OBJECTS_PATHS) $(LINKER_SCRIPT) tools,$+) $(LIBS) -Wl,--end-group
-	@echo $(START_BOLD)"Exporting symbols $(OUTPUT_BIN).elf.txt" $(END_BOLD)
-	$(QUIET)$(NM) "$(OUTPUT_BIN).elf" >"$(OUTPUT_BIN).elf.txt"
-	@echo $(START_BOLD)"Making binary $(OUTPUT_BIN).bin" $(END_BOLD)
-	$(QUIET)$(OBJCOPY) -O binary "$(OUTPUT_BIN).elf" "$(OUTPUT_BIN).bin"
 	@echo "--- SIZE INFO ---"
 	$(QUIET)$(SIZE) "$(OUTPUT_BIN).elf"
 
 endif
+
+$(OUTPUT_BIN).elf.txt: $(OUTPUT_BIN).elf
+	@echo $(START_BOLD)"Exporting symbols $(OUTPUT_BIN).elf.txt" $(END_BOLD)
+	$(QUIET)$(NM) "$(OUTPUT_BIN).elf" >"$(OUTPUT_BIN).elf.txt"
+
+$(OUTPUT_BIN).bin: $(OUTPUT_BIN).elf
+	@echo $(START_BOLD)"Making binary $(OUTPUT_BIN).bin" $(END_BOLD)
+	$(QUIET)$(OBJCOPY) -O binary "$(OUTPUT_BIN).elf" "$(OUTPUT_BIN).bin"
 
 $(OUTPUT_BIN).hex: $(OUTPUT_BIN).elf
 	$(QUIET)$(OBJCOPY) -O ihex $(DEVICE_HEX_FLAGS) $< $@
@@ -552,6 +556,8 @@ $(ALL_OTHER_ASM_OBJECTS): $(OUTDIR)/%.o: %.s
 	$(QUIET)$(CC) $(ASFLAGS) $(DEPFLAGS) -c -o $@ $<
 
 
+# Special rule that can be added by ./board/*.mk files
+$(eval $(ADDITIONAL_RECIPES))
 
 # Rules to make the directories:
 $(sort $(dir $(MOTATE_CXX_OBJECTS) $(ALL_OTHER_CXX_OBJECTS) $(MOTATE_C_OBJECTS))):
