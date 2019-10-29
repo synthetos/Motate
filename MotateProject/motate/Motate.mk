@@ -497,10 +497,14 @@ $(OUTPUT_BIN).elf: $(OUTDIR)/all.o $(ALL_ASM_OBJECTS) $(LINKER_SCRIPT) | $(ALL_O
 
 else
 
-$(OUTPUT_BIN).elf: $(ALL_C_OBJECTS) $(ALL_CXX_OBJECTS) $(ALL_ASM_OBJECTS) $(LINKER_SCRIPT)
+ compile_commands.json: $(ALL_OTHER_C_SOURCES) $(ALL_OTHER_CXX_SOURCES) $(C_SOURCES) $(CXX_SOURCES) | tools $(DEPDIR) $(BIN)
+	$(foreach f,$(ALL_OTHER_CXX_SOURCES) $(CXX_SOURCES),$(shell $(REC) $(realpath $(CWD)) $(realpath $(CWD)) $(f) $(CXX) "$(CPPFLAGS) $(DEPFLAGS) -xc++ -c -o $(f).o $(f)" ))
+	$(foreach f,$(ALL_OTHER_C_SOURCES) $(C_SOURCES),$(shell $(REC) $(realpath $(CWD)) $(realpath $(CWD)) $(f) $(CC) "$(CFLAGS) $(DEPFLAGS) -c -o $(f).o $(f)" ))
+
+$(OUTPUT_BIN).elf: $(ALL_C_OBJECTS) $(ALL_CXX_OBJECTS) $(ALL_ASM_OBJECTS) $(LINKER_SCRIPT) compile_commands.json
 	@echo $(START_BOLD)"Linking $(OUTPUT_BIN).elf" $(END_BOLD)
 	@echo $(START_BOLD)"Using linker script: $(LINKER_SCRIPT)" $(END_BOLD)
-	$(QUIET)$(CXX) $(LIB_PATH) $(LINKER_SCRIPT_OPTION) $(LIBDIR) -Wl,-Map,"$(OUTPUT_BIN).map" -o ${filter-out tools,$@} $(LDFLAGS) $(LD_OPTIONAL) -Wl,--start-group $(FIRST_LINK_OBJECTS_PATHS) $(filter-out $(FIRST_LINK_OBJECTS_PATHS) $(LINKER_SCRIPT) tools,$+) $(LIBS) -Wl,--end-group
+	$(QUIET)$(CXX) $(LIB_PATH) $(LINKER_SCRIPT_OPTION) $(LIBDIR) -Wl,-Map,"$(OUTPUT_BIN).map" -o ${filter-out tools,$@} $(LDFLAGS) $(LD_OPTIONAL) -Wl,--start-group $(FIRST_LINK_OBJECTS_PATHS) $(filter-out $(FIRST_LINK_OBJECTS_PATHS) $(LINKER_SCRIPT) tools compile_commands.json,$+) $(LIBS) -Wl,--end-group
 	@echo "--- SIZE INFO ---"
 	$(QUIET)$(SIZE) "$(OUTPUT_BIN).elf"
 

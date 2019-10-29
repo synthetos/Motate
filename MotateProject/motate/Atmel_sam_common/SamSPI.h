@@ -515,10 +515,10 @@ namespace Motate {
         // cs = the number we're going to call this one externally, using the order of the bits we provided
         //  IOW, cs of 3  is what you get when bit0Pin and bit1Pin are HIGH
 
-        // csNumber = the internal cs number used by the hardware. All cs where csNumber is the same MUST share settings.
-        // csValue  = the internal value provided to the spi hardware (PCS for the Sam chips)
         struct SPIChipSelect {
+            // the internal value provided to the spi hardware (PCS for the Sam chips)
             const uint8_t csValue;
+            // the internal cs number used by the hardware. All cs where csNumber is the same MUST share settings.
             const uint8_t csNumber;
             const bool usesDecoder = true;
 

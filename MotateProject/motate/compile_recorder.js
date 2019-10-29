@@ -10,25 +10,35 @@ let file = new_process_args.shift()
 
 let commands = [];
 let file_commands = {};
+let should_write = true;
 try {
   let incoming_commands = require(output_directory+"/compile_commands.json");
 
-  // strip out commands for this file
   for (let command of incoming_commands) {
-    // if (file !== command.file) {
+    // check for the file already being shown
+    if (file === command.file && build_directory === command.directory && new_process_args.join(" ") === command.command) {
+      // this command is *exactly* already in the commands list, stop
+      should_write = false;
+      break;
+    }
+    if (file === command.file && build_directory === command.directory) {
+      // Don't add it to the list, removing the old version
+    } else {
       commands.push(command);
-    // }
+    }
   }
 } catch (e) {};
 
-commands.push({
-  "file": file,
-  "directory": build_directory,
-  "command": new_process_args.join(" ")
-});
+if (should_write) {
+  commands.push({
+    "file": file,
+    "directory": build_directory,
+    "command": new_process_args.join(" ")
+  });
 
-let ws = fs.createWriteStream(output_directory+"/compile_commands.json")
+  let ws = fs.createWriteStream(output_directory+"/compile_commands.json")
 
-ws.on("open", (fd) => {
-  ws.write(JSON.stringify(commands, null, 2))
-})
+  ws.on("open", (fd) => {
+    ws.write(JSON.stringify(commands, null, 2))
+  })
+}

@@ -272,7 +272,7 @@ namespace Motate {
         }
 
         // WARNING!!
-        // This must be called later, outside of the contructors, to ensure that all dependencies are contructed.
+        // This must be called later, outside of the contructors, to ensure that all dependencies are constructed.
         void init() {
             // setup message_manager system call handler and priority
             message_manager.setInterruptHandler(this);  // will call this->handleServiceCallEvent()

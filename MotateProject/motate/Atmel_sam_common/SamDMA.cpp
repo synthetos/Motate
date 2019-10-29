@@ -51,11 +51,11 @@ extern "C" void DMAC_Handler(void)
 #endif // DMAC
 
 #ifdef XDMAC
-Motate::_XDMAInterrupt *Motate::_first_xdmac_interrupt = nullptr;
+Motate::_XDMACInterrupt *Motate::_first_xdmac_interrupt = nullptr;
 
 extern "C" void XDMAC_Handler(void)
 {
-   Motate::_XDMAInterrupt *current = Motate::_first_xdmac_interrupt;
+   Motate::_XDMACInterrupt *current = Motate::_first_xdmac_interrupt;
     uint32_t isr = XDMAC->XDMAC_GIS;
     uint32_t imr = XDMAC->XDMAC_GIM;
     while (current != nullptr) {
