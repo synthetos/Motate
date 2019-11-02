@@ -186,30 +186,34 @@ struct DMA_DMAC_TX : virtual DMA_DMAC_TX_hardware<periph_t, periph_num> {
         dmacTxChannel()->DMAC_SADDR = 0UL;
         dmacTxChannel()->DMAC_DADDR = (uint32_t)dmacPeripheralTxAddress();
         dmacTxChannel()->DMAC_CTRLA = DMAC_CTRLA_BTSIZE(0);  // set later in setTx(...)
-        dmacTxChannel()->DMAC_CTRLB =
-            DMAC_CTRLB_SRC_DSCR_FETCH_DISABLE |  // Buffer Descriptor Fetch operation is disabled for the source
-            DMAC_CTRLB_DST_DSCR_FETCH_DISABLE |  // Buffer Descriptor Fetch operation is disabled for the
-                                                 // destination
-            DMAC_CTRLB_FC_MEM2PER_DMA_FC |       // memory->peripheral
-            DMAC_CTRLB_SRC_INCR_INCREMENTING |   // increment source address after each fetch
-            DMAC_CTRLB_DST_INCR_FIXED |          // destination address is fixed
-            // leave DMAC_CTRLB_IEN as 0 - we want an interrupt
-            0;  // for layout purposes
 
         // enable interrupts for this channel
         dmac()->DMAC_EBCIER |= ((DMAC_EBCIER_BTC0 | DMAC_EBCIER_CBTC0 | DMAC_EBCIER_ERR0) << dmacTxChannelNumber());
     };
 
-
     void disableTx() const { dmac()->DMAC_CHDR = DMAC_CHDR_DIS0 << dmacTxChannelNumber(); };
     void enableTx() const { dmac()->DMAC_CHER = DMAC_CHER_ENA0 << dmacTxChannelNumber(); };
 
+    alignas(4) uint8_t dummy_buffer[4] = { 0xff, 0xad, 0xbe, 0xef };
+
     void setTx(void* const buffer, const uint32_t length) const {
-        dmacTxChannel()->DMAC_SADDR = (uint32_t)buffer;
+        dmacTxChannel()->DMAC_SADDR = (uint32_t)(buffer != nullptr ? buffer : dummy_buffer);
+
         dmacTxChannel()->DMAC_CTRLA = DMAC_CTRLA_BTSIZE(length) | DMAC_CTRLA_SCSIZE_CHK_1 | DMAC_CTRLA_DCSIZE_CHK_1 |
                                       DMAC_CTRLA_SRC_WIDTH_BYTE | DMAC_CTRLA_DST_WIDTH_BYTE |
                                       // DON'T set DMAC_CTRLA_DONE
                                       0;
+
+        dmacTxChannel()->DMAC_CTRLB =
+            DMAC_CTRLB_SRC_DSCR_FETCH_DISABLE |  // Buffer Descriptor Fetch operation is disabled for the source
+            DMAC_CTRLB_DST_DSCR_FETCH_DISABLE |  // Buffer Descriptor Fetch operation is disabled for the
+                                                 // destination
+            DMAC_CTRLB_FC_MEM2PER_DMA_FC |       // memory->peripheral
+            (buffer == nullptr ? DMAC_CTRLB_SRC_INCR_FIXED :  // source address fixed
+                 DMAC_CTRLB_SRC_INCR_INCREMENTING) |                 // increment source address after each fetch
+            DMAC_CTRLB_DST_INCR_FIXED |                              // destination address is fixed
+            // leave DMAC_CTRLB_IEN as 0 - we want an interrupt
+            0;  // for layout purposes
     };
     void setNextTx(void* const buffer, const uint32_t length) const {
         // ...
@@ -298,7 +302,6 @@ struct DMA_DMAC_RX : virtual DMA_DMAC_RX_hardware<periph_t, periph_num> {
     DmacCh_num* const dmacRxChannel() const { return &(dmac()->DMAC_CH_NUM[dmacRxChannelNumber()]); };
 
     constexpr DMA_DMAC_RX(const std::function<void(Interrupt::Type)>& handler) : _dmaCInterruptHandler{handler} {};
-
     void resetRx() const {
         // init is called once after reset, so clean up after a reset
 
@@ -322,15 +325,6 @@ struct DMA_DMAC_RX : virtual DMA_DMAC_RX_hardware<periph_t, periph_num> {
         dmacRxChannel()->DMAC_SADDR = (uint32_t)dmacPeripheralRxAddress();
         dmacRxChannel()->DMAC_DADDR = 0;
         dmacRxChannel()->DMAC_CTRLA = DMAC_CTRLA_BTSIZE(0);  // set later in setRx(...)
-        dmacRxChannel()->DMAC_CTRLB =
-            DMAC_CTRLB_SRC_DSCR_FETCH_DISABLE |  // Buffer Descriptor Fetch operation is disabled for the source
-            DMAC_CTRLB_DST_DSCR_FETCH_DISABLE |  // Buffer Descriptor Fetch operation is disabled for the
-                                                 // destination
-            DMAC_CTRLB_FC_PER2MEM_DMA_FC |       // peripheral->memory
-            DMAC_CTRLB_DST_INCR_INCREMENTING |   // increment destination address after each fetch
-            DMAC_CTRLB_SRC_INCR_FIXED |          // source address is fixed
-            // leave DMAC_CTRLB_IEN as 0 - we want an interrupt
-            0;  // for layout purposes
 
         // enable interrupts for this channel
         dmac()->DMAC_EBCIER |= ((DMAC_EBCIER_BTC0 | DMAC_EBCIER_CBTC0 | DMAC_EBCIER_ERR0) << dmacRxChannelNumber());
@@ -338,12 +332,27 @@ struct DMA_DMAC_RX : virtual DMA_DMAC_RX_hardware<periph_t, periph_num> {
 
     void disableRx() const { dmac()->DMAC_CHDR = DMAC_CHDR_DIS0 << dmacRxChannelNumber(); };
     void enableRx() const { dmac()->DMAC_CHER = DMAC_CHER_ENA0 << dmacRxChannelNumber(); };
+
+    alignas(4) uint8_t dummy_buffer[4] = {0xbe, 0xef, 0xed, 0xff};
+
     void setRx(void* const buffer, const uint32_t length) const {
-        dmacRxChannel()->DMAC_DADDR = (uint32_t)buffer;
+        dmacRxChannel()->DMAC_DADDR = (uint32_t)(buffer != nullptr ? buffer : dummy_buffer);
+
         dmacRxChannel()->DMAC_CTRLA = DMAC_CTRLA_BTSIZE(length) | DMAC_CTRLA_SCSIZE_CHK_1 | DMAC_CTRLA_DCSIZE_CHK_1 |
                                       DMAC_CTRLA_SRC_WIDTH_BYTE | DMAC_CTRLA_DST_WIDTH_BYTE |
                                       // DON'T set DMAC_CTRLA_DONE
                                       0;
+
+        dmacRxChannel()->DMAC_CTRLB =
+            DMAC_CTRLB_SRC_DSCR_FETCH_DISABLE |  // Buffer Descriptor Fetch operation is disabled for the source
+            DMAC_CTRLB_DST_DSCR_FETCH_DISABLE |  // Buffer Descriptor Fetch operation is disabled for the
+                                                 // destination
+            DMAC_CTRLB_FC_PER2MEM_DMA_FC |       // peripheral->memory
+            (buffer == nullptr ? DMAC_CTRLB_DST_INCR_FIXED :  // destination address fixed
+                 DMAC_CTRLB_DST_INCR_INCREMENTING) |          // increment destination address after each fetch
+            DMAC_CTRLB_SRC_INCR_FIXED |                       // source address is fixed
+            // leave DMAC_CTRLB_IEN as 0 - we want an interrupt
+            0;  // for layout purposes
     };
     void setNextRx(void* const buffer, const uint32_t length) const {
         //            pdc->PERIPH_RNPR = (uint32_t)buffer;
