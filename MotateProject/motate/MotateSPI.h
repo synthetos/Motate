@@ -340,7 +340,7 @@ namespace Motate {
             sending = true;
             _first_message->state = SPIMessage::State::Sending;
             _current_transaction_device = _first_message->device;
-            hardware.setChannel(_current_transaction_device->getChannel());
+            hardware.setChannel(_current_transaction_device->getChannel(), _first_message->deassert_after);
             hardware.startTransfer(_first_message->tx_buffer, _first_message->rx_buffer, _first_message->size);
         }
 
@@ -376,6 +376,7 @@ namespace Motate {
 #ifdef IN_DEBUGGER
                 if (nullptr == _first_message) {
                     __asm__("BKPT"); // no first message!?
+                    return;
                 }
 #endif
 
