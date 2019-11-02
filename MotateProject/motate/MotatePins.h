@@ -211,7 +211,7 @@ namespace Motate {
             port.setModes(type, mask);
         };
         PinMode getMode() {
-            return port.getMode();
+            return port.getMode(mask);
         };
         void setOptions(const PinOptions_t options, const bool fromConstructor=false) {
             port.setOptions(options, mask);
