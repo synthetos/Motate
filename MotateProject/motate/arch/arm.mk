@@ -51,7 +51,7 @@ DEVICE_DEFINES += __$(CHIP)__ __$(CHIP_SERIES)__ __ARM__
 # ---------------------------------------------------------------------------------------
 # C Flags (NOT CPP flags)
 
-DEVICE_CFLAGS := -mcpu=$(CPU_DEV) -mthumb -ffunction-sections -fdata-sections -std=gnu99 $(FLOAT_OPTIONS)
+DEVICE_CFLAGS := -mcpu=$(CPU_DEV) -mthumb -ffunction-sections -fdata-sections -std=c11 $(FLOAT_OPTIONS)
 
 #--param max-inline-insns-single=500 -mlong-calls
 
