@@ -373,12 +373,12 @@ namespace Motate {
                 hardware._disableOnRXTransferDoneInterrupt();
 
 
-#ifdef IN_DEBUGGER
                 if (nullptr == _first_message) {
+#ifdef IN_DEBUGGER
                     __asm__("BKPT"); // no first message!?
+#endif
                     return;
                 }
-#endif
 
                 // _first_message is done sending.
                 // Go ahead and pop it from the list and reset (partially)

@@ -144,7 +144,6 @@ namespace Motate {
             // We derive the baud from the master clock with a divider.
             // We want the closest match *below* the value asked for. It's safer to bee too slow.
             uint32_t new_otions = 0;
-            uint32_t old_options = spi->SPI_CSR[channel];
 
             uint32_t divider = SamCommon::getPeripheralClockFreq() / baud;
             if (divider > 255) {
@@ -153,30 +152,14 @@ namespace Motate {
                 divider = 1;
             }
 
-            // uint32_t old_divider = (old_options & SPI_CSR_SCBR_Msk) >> SPI_CSR_SCBR_Pos;
-            // divider = std::max(old_divider, divider); // this gives the slowest rate of the old or new setting
             new_otions |= SPI_CSR_SCBR(divider);
 
-            // We can't really mix these ... they must already be compatible
-            // But if we are using a debugger we can throw a wrench in and catch it
-// #if IN_DEBUGGER == 1
-//             uint32_t old_polarity = (old_options & SPI_CSR_CPOL);
-//             if ((old_divider != 0) && (!!(options & kSPIPolarityReversed) != !!old_polarity)) {
-//                 __asm__("BKPT"); // two SPI devices sharing config have different polarity!
-//             }
-// #endif
             if (options & kSPIPolarityReversed) {
                 new_otions |= SPI_CSR_CPOL;
             }
 
             // We can't really mix these ... they must already be compatible
             // But if we are using a debugger we can throw a wrench in and catch it
-// #if IN_DEBUGGER == 1
-//             uint32_t old_phase = (old_options & SPI_CSR_NCPHA);
-//             if ((old_divider != 0) && (!!(options & kSPIClockPhaseReversed) != !!old_phase)) {
-//                 __asm__("BKPT"); // two SPI devices sharing config have different phases!
-//             }
-// #endif
             if (options & kSPIClockPhaseReversed) {
                 new_otions |= SPI_CSR_NCPHA;
             }
@@ -213,13 +196,6 @@ namespace Motate {
                     break;
             }
 
-// #if IN_DEBUGGER == 1
-//             uint32_t old_bits = (old_options & SPI_CSR_BITS_Msk);
-//             if ((old_divider != 0) && ((options & SPI_CSR_BITS_Msk) != old_bits)) {
-//                 __asm__("BKPT"); // two SPI devices have different bit-lengths!
-//             }
-// #endif
-
             // min_between_cs_delay_ns = DLYBCS
             // cs_to_sck_delay_ns = DLYBS
             // between_word_delay_ns = DLYBCT
@@ -238,11 +214,7 @@ namespace Motate {
             }
 
             // Always use the larger delay
-            uint32_t old_dlybcs = ((spi->SPI_MR & SPI_MR_DLYBCS_Msk) >> SPI_MR_DLYBCS_Pos);
-            if ( old_dlybcs < dlybcs ) {
-                spi->SPI_MR = (spi->SPI_MR & ~SPI_MR_DLYBCS_Msk) | SPI_MR_DLYBCS(dlybcs);
-            }
-
+            spi->SPI_MR = (spi->SPI_MR & ~SPI_MR_DLYBCS_Msk) | SPI_MR_DLYBCS(dlybcs);
 
             uint32_t dlybs = (((cs_to_sck_delay_ns*SamCommon::getPeripheralClockFreq())/100000000)+5)/10;
             if (dlybs > 0xff) {
@@ -251,8 +223,7 @@ namespace Motate {
                 __asm__("BKPT"); // SPI dlybs is too high!
 #endif
             }
-            uint32_t old_dlybs = (old_options & SPI_CSR_SCBR_Msk) >> SPI_CSR_SCBR_Pos;
-            new_otions |= SPI_CSR_DLYBS(std::max(dlybs, old_dlybs));
+            new_otions |= SPI_CSR_DLYBS(dlybs);
 
             uint32_t dlybct = (((between_word_delay_ns*SamCommon::getPeripheralClockFreq())/100000000)+5)/10;
             if (dlybct > 0xff) {
@@ -261,8 +232,7 @@ namespace Motate {
                 __asm__("BKPT"); // SPI dlybct is too high!
 #endif
             }
-            uint32_t old_dlybct = (old_options & SPI_CSR_DLYBCT_Msk) >> SPI_CSR_DLYBCT_Pos;
-            new_otions |= SPI_CSR_DLYBCT(std::max(dlybct, old_dlybct));
+            new_otions |= SPI_CSR_DLYBCT(dlybct);
 
             // We'll drive CS low after we're done, so we always want this:
             new_otions |= SPI_CSR_CSAAT;
@@ -461,11 +431,11 @@ namespace Motate {
             const bool handle_interrupts = false;
             const bool include_next = false;
 
-            // Motate::Interrupt::Type interrupts = 0;
+            Motate::Interrupt::Type interrupts = 0;
             dma.setInterrupts(Interrupt::Off);
             if (rx_buffer != nullptr) {
                 rx_is_setup = dma.startRXTransfer(rx_buffer, size, handle_interrupts, include_next);
-                // interrupts = Interrupt::OnTxTransferDone;
+                interrupts = Interrupt::OnTxTransferDone;
                 if (!rx_is_setup) { return false; } // fail early
             } else {
                 // Setup to transfer one dummy byte repeatedly
@@ -473,13 +443,13 @@ namespace Motate {
             }
             if (tx_buffer != nullptr) {
                 tx_is_setup = dma.startTXTransfer(tx_buffer, size, handle_interrupts, include_next);
-                // interrupts |= Interrupt::OnRxTransferDone;
+                interrupts |= Interrupt::OnRxTransferDone;
             } else {
                 // Setup to transfer one dummy byte repeatedly
                 dma.startTXTransfer(nullptr, size, handle_interrupts, include_next);
             }
             if (rx_is_setup || tx_is_setup) {
-                dma.setInterrupts(Interrupt::OnTxTransferDone | Interrupt::OnRxTransferDone);
+                dma.setInterrupts(interrupts);
                 dma.enable();
                 enable();
 #ifdef IN_DEBUGGER
