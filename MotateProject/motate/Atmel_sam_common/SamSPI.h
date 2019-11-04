@@ -160,7 +160,7 @@ namespace Motate {
 
             // We can't really mix these ... they must already be compatible
             // But if we are using a debugger we can throw a wrench in and catch it
-            if (options & kSPIClockPhaseReversed) {
+            if (!(options & kSPIClockPhaseReversed)) {
                 new_otions |= SPI_CSR_NCPHA;
             }
 
@@ -449,7 +449,7 @@ namespace Motate {
                 dma.startTXTransfer(nullptr, size, handle_interrupts, include_next);
             }
             if (rx_is_setup || tx_is_setup) {
-                dma.setInterrupts(interrupts);
+                dma.setInterrupts(Interrupt::OnRxTransferDone);
                 dma.enable();
                 enable();
 #ifdef IN_DEBUGGER

@@ -395,33 +395,37 @@ struct DMA_DMAC_RX : virtual DMA_DMAC_RX_hardware<periph_t, periph_num> {
             }
         }
         // check to see if they overlap, in which case we're extending the region
-        else if ((dmacRxChannel()->DMAC_DADDR >= (uint32_t)buffer) &&
-                 (dmacRxChannel()->DMAC_DADDR < ((uint32_t)buffer + length))) {
-            if (handle_interrupts) {
-                stopRxDoneInterrupts();
-            }
+//         else if ((dmacRxChannel()->DMAC_DADDR >= (uint32_t)buffer) &&
+//                  (dmacRxChannel()->DMAC_DADDR < ((uint32_t)buffer + length))) {
+//             if (handle_interrupts) {
+//                 stopRxDoneInterrupts();
+//             }
 
-            // they overlap, we need to compute the new length
-            decltype(dmacRxChannel()->DMAC_DADDR) pos_save;
-            do {
-                pos_save = dmacRxChannel()->DMAC_DADDR;
+// #if IN_DEBUGGER == 1
+//     __asm__("BKPT");
+// #endif
 
-                // new_length = (start_pos + length) - current_positon
-                auto new_length             = ((uint32_t)buffer + length) - pos_save;
-                dmacRxChannel()->DMAC_CTRLA = DMAC_CTRLA_BTSIZE(new_length) | DMAC_CTRLA_SCSIZE_CHK_1 |
-                                              DMAC_CTRLA_DCSIZE_CHK_1 | DMAC_CTRLA_SRC_WIDTH_BYTE |
-                                              DMAC_CTRLA_DST_WIDTH_BYTE |
-                                              // DON'T set DMAC_CTRLA_DONE
-                                              0;
+//             // they overlap, we need to compute the new length
+//             decltype(dmacRxChannel()->DMAC_DADDR) pos_save;
+//             do {
+//                 pos_save = dmacRxChannel()->DMAC_DADDR;
 
-                // catch rare case where it advances while we were computing
-            } while (dmacRxChannel()->DMAC_DADDR > pos_save);
+//                 // new_length = (start_pos + length) - current_positon
+//                 auto new_length             = ((uint32_t)buffer + length) - pos_save;
+//                 dmacRxChannel()->DMAC_CTRLA = DMAC_CTRLA_BTSIZE(new_length) | DMAC_CTRLA_SCSIZE_CHK_1 |
+//                                               DMAC_CTRLA_DCSIZE_CHK_1 | DMAC_CTRLA_SRC_WIDTH_BYTE |
+//                                               DMAC_CTRLA_DST_WIDTH_BYTE |
+//                                               // DON'T set DMAC_CTRLA_DONE
+//                                               0;
 
-            enableRx();
-            if (handle_interrupts) {
-                startRxDoneInterrupts();
-            }
-        }
+//                 // catch rare case where it advances while we were computing
+//             } while (dmacRxChannel()->DMAC_DADDR > pos_save);
+
+//             enableRx();
+//             if (handle_interrupts) {
+//                 startRxDoneInterrupts();
+//             }
+//         }
         // otherwise, we set the next region, if requested. We DON'T attempt to extend it.
         else if (include_next && doneReadingNext()) {
             setNextRx(buffer, length);

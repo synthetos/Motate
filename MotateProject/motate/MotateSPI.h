@@ -359,14 +359,14 @@ namespace Motate {
                 // something is in the buffer right now...
             }
 
-            if (interruptCause & (SPIInterrupt::OnTxTransferDone | SPIInterrupt::OnRxTransferDone)) {
+            if (interruptCause & (SPIInterrupt::OnRxTransferDone)) { // SPIInterrupt::OnTxTransferDone |
                 // Check that we're done with all transmission...
-                if (!hardware.doneReading()) {
-                    return;
-                }
-                if (!hardware.doneWriting()) {
-                    return;
-                }
+                // if (!hardware.doneReading()) {
+                //     return;
+                // }
+                // if (!hardware.doneWriting()) {
+                //     return;
+                // }
 
                 // This needs to be cleaned up:
                 hardware._disableOnTXTransferDoneInterrupt();
