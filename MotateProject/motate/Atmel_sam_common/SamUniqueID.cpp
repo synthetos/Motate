@@ -43,7 +43,7 @@
 namespace Motate {
     // Declare our static values for storage
     uint32_t UUID_t::_d[4] = {0, 0, 0, 0};
-    char UUID_t::_stringval[20] { "0000-0000-0000-0000" };
+    char UUID_t::_stringval[40] { "0000-0000-0000-0000-0000-0000-0000-0000" };
 
     // Define the static global Motate::UUID object;
     UUID_t UUID;
@@ -85,9 +85,9 @@ namespace Motate {
 
         // Precalculate the _stringval
         char *p =_stringval;
-        for (int i = 0; i < 16; ++i) {
+        for (int i = 0; i < 32; ++i) {
             // Network/Big-endian
-            uint8_t byte = (_d[i/4] >> (i%4)) & 0xF;
+            uint8_t byte = (_d[i/8] >> ((7-i%8)*4)) & 0xF;
 
             // Put a dash every four characters
             if (i > 0 && (i%4) == 0) {
