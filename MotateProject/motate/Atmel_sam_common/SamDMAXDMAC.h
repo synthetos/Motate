@@ -146,17 +146,20 @@ namespace Motate {
 
         const std::function<void(Interrupt::Type)> &_xdmaCInterruptHandler;
 
-        _XDMACInterrupt _tx_interrupt{[&]() {
-                                         if (_xdmaCInterruptHandler) {
-                                             auto CIS_hold = xdmaTxChannel()->XDMAC_CIS;
-                                             Interrupt::Type cause;
-                                             if (CIS_hold & XDMAC_CIS_BIS) { cause
-                                             = Interrupt::OnTxTransferDone; }
-                                             if (CIS_hold & XDMAC_CIS_WBEIS) { cause |= Interrupt::OnTxError; }
-                                             _xdmaCInterruptHandler(cause);
-                                         }
-                                     },
-                                     _first_xdmac_interrupt};
+        _XDMACInterrupt _tx_interrupt{
+            [&]() {
+                if (_xdmaCInterruptHandler) {
+                    // auto CIS_hold = xdmaTxChannel()->XDMAC_CIS;
+                    // Interrupt::Type cause;
+                    // if (CIS_hold & XDMAC_CIS_BIS) { cause = Interrupt::OnTxTransferDone; }
+                    // if (CIS_hold & XDMAC_CIS_WBEIS) { cause |= Interrupt::OnTxError; }
+                    // _xdmaCInterruptHandler(cause);
+
+                    // For now, we'll treat the transfer as down if we get an interrupt
+                    _xdmaCInterruptHandler(Interrupt::OnTxTransferDone);
+                }
+            },
+            _first_xdmac_interrupt};
 
         const uint8_t xdmaTxChannelNumber() const { return _tx_interrupt.getChannel(); }
         XdmacChid * const xdmaTxChannel() const
@@ -214,11 +217,11 @@ namespace Motate {
 
         void disableTx() const
         {
-            xdma()->XDMAC_GD = XDMAC_GID_ID0 << xdmaTxChannelNumber();
+            xdma()->XDMAC_GD = XDMAC_GD_DI0 << xdmaTxChannelNumber();
         };
         void enableTx() const
         {
-            xdma()->XDMAC_GE = XDMAC_GIE_IE0 << xdmaTxChannelNumber();
+            xdma()->XDMAC_GE = XDMAC_GE_EN0 << xdmaTxChannelNumber();
         };
         void setTx(void * const buffer, const uint32_t length) const
         {
@@ -308,12 +311,13 @@ namespace Motate {
 
         const std::function<void(Interrupt::Type)> &_xdmaCInterruptHandler;
 
-        _XDMACInterrupt _rx_interrupt{[&]() {
-                                         if (_xdmaCInterruptHandler) {
-                                             _xdmaCInterruptHandler(Interrupt::OnRxTransferDone);
-                                         }
-                                     },
-                                     _first_xdmac_interrupt};
+        _XDMACInterrupt _rx_interrupt{
+            [&]() {
+                if (_xdmaCInterruptHandler) {
+                    _xdmaCInterruptHandler(Interrupt::OnRxTransferDone);
+                }
+            },
+            _first_xdmac_interrupt};
 
         const uint8_t xdmaRxChannelNumber() const { return _rx_interrupt.getChannel(); }
         XdmacChid * const xdmaRxChannel() const
