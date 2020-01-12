@@ -94,8 +94,9 @@ namespace Motate {
 #endif
                 }
             };
-
+            setInterrupts(Interrupt::PriorityLow);
             dma.reset();
+            dma.setInterrupts(Interrupt::PriorityLow);
         };
 
         // This is to be called by the device, once it detects a "decoded" CS pin
