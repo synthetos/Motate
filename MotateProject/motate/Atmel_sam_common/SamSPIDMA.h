@@ -193,12 +193,14 @@ namespace Motate {
         };
 
         void enable() const {
-            xdma()->XDMAC_GE = (XDMAC_GIE_IE0 << rx::xdmaRxChannelNumber()) | (XDMAC_GIE_IE0 << tx::xdmaTxChannelNumber());
+            tx::enableTx();
+            rx::enableRx();
         }
 
         void disable() const
         {
-            xdma()->XDMAC_GD = (XDMAC_GID_ID0 << rx::xdmaRxChannelNumber()) | (XDMAC_GID_ID0 << tx::xdmaTxChannelNumber());
+            tx::disableTx();
+            rx::disableRx();
         };
     };
 
