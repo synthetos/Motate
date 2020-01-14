@@ -438,31 +438,37 @@ namespace Motate {
                 enableRx();
                 if (handle_interrupts) { startRxDoneInterrupts(); }
             }
-            // check to see if they overlap, in which case we're extending the region
-            else if ((xdmaRxChannel()->XDMAC_CDA >= (uint32_t)buffer) &&
-                     (xdmaRxChannel()->XDMAC_CDA < ((uint32_t)buffer + length))
-                     )
-            {
-                if (handle_interrupts) { stopRxDoneInterrupts(); }
+            // // check to see if they overlap, in which case we're extending the region
+            // else if ((xdmaRxChannel()->XDMAC_CDA >= (uint32_t)buffer) &&
+            //          (xdmaRxChannel()->XDMAC_CDA < ((uint32_t)buffer + length))
+            //          )
+            // {
+            //     if (handle_interrupts) { stopRxDoneInterrupts(); }
 
-                // they overlap, we need to compute the new length
-                decltype(xdmaRxChannel()->XDMAC_CDA) pos_save;
-                do {
-                    pos_save = xdmaRxChannel()->XDMAC_CDA;
+            //     // they overlap, we need to compute the new length
+            //     decltype(xdmaRxChannel()->XDMAC_CDA) pos_save;
+            //     do {
+            //         pos_save = xdmaRxChannel()->XDMAC_CDA;
 
-                    // new_length = (start_pos + length) - current_positon
-                    xdmaRxChannel()->XDMAC_CUBC = ((uint32_t)buffer + length) - pos_save;
+            //         // new_length = (start_pos + length) - current_positon
+            //         xdmaRxChannel()->XDMAC_CUBC = ((uint32_t)buffer + length) - pos_save;
 
-                    // catch rare case where it advances while we were computing
-                } while (xdmaRxChannel()->XDMAC_CDA > pos_save);
+            //         // catch rare case where it advances while we were computing
+            //     } while (xdmaRxChannel()->XDMAC_CDA > pos_save);
 
-                enableRx();
-                if (handle_interrupts) { startRxDoneInterrupts(); }
-            }
-            // otherwise, we set the next region, if requested. We DON'T attempt to extend it.
-            else if (include_next && doneReadingNext()) {
-                setNextRx(buffer, length);
-                return true;
+            //     enableRx();
+            //     if (handle_interrupts) { startRxDoneInterrupts(); }
+            // }
+            // // otherwise, we set the next region, if requested. We DON'T attempt to extend it.
+            // else if (include_next && doneReadingNext()) {
+            //     setNextRx(buffer, length);
+            //     return true;
+            // }
+            else {
+                #if IN_DEBUGGER == 1
+                    __asm__("BKPT"); // a DMA RX transfer was requested
+                #endif
+                return false;
             }
 
             return (length > 0);
