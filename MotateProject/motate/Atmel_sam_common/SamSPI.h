@@ -451,7 +451,6 @@ namespace Motate {
             }
             if (rx_is_setup || tx_is_setup) {
                 dma.setInterrupts(Interrupt::OnRxTransferDone);
-                dma.enable();
                 enable();
 #ifdef IN_DEBUGGER
             } else {
