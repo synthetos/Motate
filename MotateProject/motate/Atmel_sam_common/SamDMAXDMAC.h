@@ -373,11 +373,11 @@ namespace Motate {
 
         void disableRx() const
         {
-            xdma()->XDMAC_GD = XDMAC_GID_ID0 << xdmaRxChannelNumber();
+            xdma()->XDMAC_GD = XDMAC_GD_DI0 << xdmaRxChannelNumber();
         };
         void enableRx() const
         {
-            xdma()->XDMAC_GE = XDMAC_GIE_IE0 << xdmaRxChannelNumber();
+            xdma()->XDMAC_GE = XDMAC_GE_EN0 << xdmaRxChannelNumber();
         };
         void setRx(void * const buffer, const uint32_t length) const
         {
