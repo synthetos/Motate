@@ -128,11 +128,11 @@ namespace Motate {
 
             auto csr_hold = spi->SPI_CSR[channel];
             csr_hold &= ~(SPI_CSR_CSAAT | SPI_CSR_CSNAAT);
-            if (deassert_after) {
-                csr_hold |= SPI_CSR_CSNAAT;
-            } else {
+            // if (deassert_after) {
+            //     csr_hold |= SPI_CSR_CSNAAT;
+            // } else {
                 csr_hold |= SPI_CSR_CSAAT;
-            }
+            // }
             spi->SPI_CSR[channel] = csr_hold;
 
             spi->SPI_MR = (spi->SPI_MR & ~SPI_MR_PCS_Msk) | SPI_MR_PCS(channel);

@@ -149,14 +149,14 @@ namespace Motate {
         _XDMACInterrupt _tx_interrupt{
             [&]() {
                 if (_xdmaCInterruptHandler) {
-                    // auto CIS_hold = xdmaTxChannel()->XDMAC_CIS;
-                    // Interrupt::Type cause;
-                    // if (CIS_hold & XDMAC_CIS_BIS) { cause = Interrupt::OnTxTransferDone; }
-                    // if (CIS_hold & XDMAC_CIS_WBEIS) { cause |= Interrupt::OnTxError; }
-                    // _xdmaCInterruptHandler(cause);
+                    auto CIS_hold = xdmaTxChannel()->XDMAC_CIS;
+                    Interrupt::Type cause;
+                    if (CIS_hold & XDMAC_CIS_BIS) { cause = Interrupt::OnTxTransferDone; }
+                    if (CIS_hold & XDMAC_CIS_WBEIS) { cause |= Interrupt::OnTxError; }
+                    _xdmaCInterruptHandler(cause);
 
                     // For now, we'll treat the transfer as down if we get an interrupt
-                    _xdmaCInterruptHandler(Interrupt::OnTxTransferDone);
+                    // _xdmaCInterruptHandler(Interrupt::OnTxTransferDone);
                 }
             },
             _first_xdmac_interrupt};
