@@ -418,6 +418,72 @@ void Reset_Handler(void)
     __ISB();
 #endif
 
+
+/* Default memory map
+   Address range          Memory region          Memory type      Shareability   Cache policy
+   0x00000000- 0x1FFFFFFF Code                   Normal           Non-shareable  WT
+   0x20000000- 0x3FFFFFFF SRAM                   Normal           Non-shareable  WBWA
+   0x40000000- 0x5FFFFFFF Peripheral             Device           Non-shareable  -
+   0x60000000- 0x7FFFFFFF RAM                    Normal           Non-shareable  WBWA
+   0x80000000- 0x9FFFFFFF RAM                    Normal           Non-shareable  WT
+   0xA0000000- 0xBFFFFFFF Device                 Device           Shareable
+   0xC0000000- 0xDFFFFFFF Device                 Device           Non Shareable
+   0xE0000000- 0xFFFFFFFF System                  -                     -
+   */
+
+    // Setup the MPU
+    // Region 0 - ITCM
+    MPU->RNR = 0;
+    MPU->RBAR = 0x00000000UL;
+    MPU->RASR =
+        (0x000 << MPU_RASR_TEX_Pos) |
+        (0 << MPU_RASR_C_Pos) |     // cacheable
+        (0 << MPU_RASR_B_Pos) |     // bufferable
+        (0 << MPU_RASR_S_Pos) |     // sharable
+        (15 << MPU_RASR_SIZE_Pos) | // 64K
+        (0 << MPU_RASR_XN_Pos) |    // eXecute Never
+        (0b110 << MPU_RASR_AP_Pos) |  // Access Permission == Read-Only
+        (1 << MPU_RASR_ENABLE_Pos);
+
+    // Region 1 - DTCM
+    // MPU->RNR = 1;
+    // MPU->RBAR = 0x20000000UL;
+    // MPU->RASR =
+    //     (0x000 << MPU_RASR_TEX_Pos) |
+    //     (0 << MPU_RASR_C_Pos) |     // cacheable
+    //     (0 << MPU_RASR_B_Pos) |     // bufferable
+    //     (0 << MPU_RASR_S_Pos) |     // sharable
+    //     (15 << MPU_RASR_SIZE_Pos) | // 64K
+    //     (0 << MPU_RASR_XN_Pos) |    // eXecute Never
+    //     (0b011 << MPU_RASR_AP_Pos) |  // Access Permission == Read-Write
+    //     (1 << MPU_RASR_ENABLE_Pos);
+
+    // Region 2 - Flash
+    MPU->RNR = 2;
+    MPU->RBAR = 0x00400000UL;
+    MPU->RASR =
+        (0x001 << MPU_RASR_TEX_Pos) |
+        (1 << MPU_RASR_C_Pos) |     // cacheable
+        (1 << MPU_RASR_B_Pos) |     // bufferable
+        (0 << MPU_RASR_S_Pos) |     // sharable
+        (18 << MPU_RASR_SIZE_Pos) | // 512K
+        (0 << MPU_RASR_XN_Pos) |    // eXecute Never
+        (0b110 << MPU_RASR_AP_Pos) |  // Access Permission == Read-Write
+        (1 << MPU_RASR_ENABLE_Pos);
+
+    // Region 3 - RAM
+    // Use the default
+
+    // ENable the MPU
+    MPU->CTRL =
+        (1 << MPU_CTRL_PRIVDEFENA_Pos) | // allow default access to non-specified areas
+        (0 << MPU_CTRL_HFNMIENA_Pos) | // MPU is disabled during hard fault, NMI, and FAULTMASK handlers
+        (1 << MPU_CTRL_ENABLE_Pos);    // ENABLE
+
+    SCB->SHCSR |= SCB_SHCSR_BUSFAULTENA_Msk;
+    SCB->SHCSR |= SCB_SHCSR_USGFAULTENA_Msk;
+    SCB->SHCSR |= SCB_SHCSR_MEMFAULTENA_Msk;
+
     /* Initialize the C library */
     __libc_init_array();
 
