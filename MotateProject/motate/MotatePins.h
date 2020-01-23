@@ -826,7 +826,7 @@ namespace Motate {
         operator uint32_t() { return timerOrPWM::getExactDutyCycle(); };
         void operator=(const float value) { write(value); };
         void write(const float value) {
-            uint16_t duty = timerOrPWM::getTopValue() * value;
+            uint32_t duty = timerOrPWM::getTopValue() * value;
             if (duty == 0) {
                 timerOrPWM::stopPWMOutput();
             } else {
@@ -834,7 +834,7 @@ namespace Motate {
             }
             timerOrPWM::setExactDutyCycle(duty);
         };
-        void writeRaw(const uint16_t duty) {
+        void writeRaw(const uint32_t duty) {
             if (duty == 0) {
                 timerOrPWM::stopPWMOutput();
             } else {
