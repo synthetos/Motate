@@ -427,7 +427,7 @@ namespace Motate {
 
         void init();
         void startSampling() { };
-        void setInterrupts(const uint32_t interrupts, const uint32_t adcMask) { };
+        void setInterrupts(const uint32_t interrupts, const uint32_t adcInterruptMask) { };
 
         // The folowing will need to be implemented per-processor, but should NOT be used for non-real pins
         void initPin(const uint32_t adcNumber);

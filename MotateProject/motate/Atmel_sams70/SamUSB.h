@@ -239,8 +239,8 @@ namespace Motate {
         USB_DMA_Status status;
     };
 
-    static constexpr auto _devdma(const uint32_t ep) {
-        return (volatile USB_DMA_Channel_Info*)(USBHS->USBHS_DEVDMA + (ep-1));
+    static auto _devdma(const uint32_t ep) {
+        return reinterpret_cast<volatile USB_DMA_Channel_Info*>(USBHS->USBHS_DEVDMA + (ep-1));
     }
 
     static auto _devdma_status(const uint32_t ep) {

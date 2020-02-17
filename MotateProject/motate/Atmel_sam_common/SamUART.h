@@ -389,7 +389,7 @@ namespace Motate {
         };
 
         char* getTXTransferPosition() {
-            if (_tx_paused) { return false; }
+            if (_tx_paused) { return nullptr; }
             return dma()->getTXTransferPosition();
         };
 
