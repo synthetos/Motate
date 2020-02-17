@@ -20,6 +20,10 @@ else
 ifeq (Linux,${UNAME})
 ifeq (armv7l,$(shell uname -m))
 OS = LINUX_ARMV7
+ifeq ("$(TOOLS_VERSION)", "7u2")
+$(info armv7l isn't supported by arm-none-eabi-gcc 7u2, switching to 9m)
+TOOLS_VERSION = 9m
+endif # 7u2
 else
 OS = LINUX
 endif #LINUX ARM
@@ -36,8 +40,6 @@ endif #cygdrive
 ifeq ($(ARCH), gcc-arm-none-eabi)
 
 ifeq ("$(TOOLS_VERSION)", "7u2")
-
-TOOLS_EASYPATH = gcc-arm-none-eabi-7u2
 
 TOOLS_VERSION_FILENAME = 7-2018-q2-update
 
@@ -67,15 +69,13 @@ TOOLS_EXPANDED_DIRNAME = ${TOOLS_${OS}_EXPANDED_DIRNAME}
 
 TEST_COMMAND_BASE=arm-none-eabi-gcc
 
-else ifeq ("$(TOOLS_VERSION)", "9u1")
+else ifeq ("$(TOOLS_VERSION)", "9m")
 
-TOOLS_EASYPATH = gcc-arm-none-eabi-9u1
-
-TOOLS_VERSION_FILENAME = 9-2020-q1-update
+TOOLS_VERSION_FILENAME = 9-2019-q4-major
 
 TOOLS_OSX_URL_PREFIX = https://github.com/synthetos/gcc-arm-none-eabi-archive/releases/download/9-2019-q4-major/gcc-arm-none-eabi-9-2019-q4-major-mac.tar.bz2
 TOOLS_LINUX_URL_PREFIX = https://github.com/synthetos/gcc-arm-none-eabi-archive/releases/download/9-2019-q4-major/gcc-arm-none-eabi-9-2019-q4-major-x86_64-linux.tar.bz2
-TOOLS_LINUX_ARMV7_URL_PREFIX = https://github.com/synthetos/gcc-arm-none-eabi-archive/releases/download/9-2019-q4-major/gcc-arm-none-eabi-9-2020-q1-update-armv7l-linux.tar.bz2
+TOOLS_LINUX_ARMV7_URL_PREFIX = https://github.com/synthetos/gcc-arm-none-eabi-archive/releases/download/9-2019-q4-major/gcc-arm-none-eabi-9-2019-q4-major-armv7l-linux.tar.bz2
 TOOLS_WIN32_URL_PREFIX = https://github.com/synthetos/gcc-arm-none-eabi-archive/releases/download/9-2019-q4-major/gcc-arm-none-eabi-9-2019-q4-major-win32.zip
 TOOLS_URL = ${TOOLS_${OS}_URL_PREFIX}
 
@@ -97,6 +97,8 @@ else
 $(error The TOOLS_VERSION ($(TOOLS_VERSION)) requested is not a valid option. You project and Motate are mismatched. (?))
 
 endif #$(TOOLS_VERSION)
+
+TOOLS_EASYPATH = gcc-arm-none-eabi-$(TOOLS_VERSION)
 
 endif #eq ($(ARCH), 'gcc-arm-none-eabi')
 
