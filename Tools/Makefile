@@ -22,7 +22,7 @@ ifeq (armv7l,$(shell uname -m))
 OS = LINUX_ARMV7
 ifeq ("$(TOOLS_VERSION)", "7u2")
 $(info armv7l isn't supported by arm-none-eabi-gcc 7u2, switching to 9m)
-TOOLS_VERSION = 9m
+TOOLS_VERSION := 9m
 endif # 7u2
 else
 OS = LINUX

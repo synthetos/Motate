@@ -102,9 +102,9 @@ else ifeq ($(CHIP),$(findstring $(CHIP), $(SAMS70)))
 
     ifeq ($(CHIP),$(findstring $(CHIP), SAMS70N19))
         CHIP_SUBSERIES:=sams70n19
-    else ifeq ($(CHIP),$(findstring $(CHIP), SAMS70N20)
+    else ifeq ($(CHIP),$(findstring $(CHIP), SAMS70N20))
         CHIP_SUBSERIES:=sams70n20
-    else ifeq ($(CHIP),$(findstring $(CHIP), SAMS70N21)
+    else ifeq ($(CHIP),$(findstring $(CHIP), SAMS70N21))
         CHIP_SUBSERIES:=sams70n21
     else
         $(error $(CHIP) is not in a known Atmel subseries (incomplete makefile, most likely).)

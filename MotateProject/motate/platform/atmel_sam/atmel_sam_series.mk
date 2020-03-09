@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------------------
-#         ATMEL Microcontroller Software Support 
+#         ATMEL Microcontroller Software Support
 # ----------------------------------------------------------------------------
 # Copyright (c) 2010, Atmel Corporation
 #
@@ -38,6 +38,6 @@ SAM4S=SAM4S8B SAM4S8C SAM4S16B SAM4S16C
 SAM4E=SAM4E8C SAM4E8E SAM4E16C SAM4E16E
 SAM4E8=SAM4E8C SAM4E8E
 SAM4E16=SAM4E16C SAM4E16E
-SAMS70=SAMS70N19
+SAMS70=SAMS70N19 SAMS70N20
 
 SAM_SERIES=$(SAM3N) $(SAM3S) $(SAM3SD8) $(SAM3U) $(SAM3XA) $(SAM4S) $(SAMS70)
