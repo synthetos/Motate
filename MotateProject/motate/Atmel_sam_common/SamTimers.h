@@ -1302,7 +1302,10 @@ namespace Motate {
             return ((SysTickTimer.getValue() - start_) > delay_);
         };
 
-        void set(uint32_t delay) {
+        void set(uint32_t delay, bool only_if_lower = false) {
+            if (only_if_lower && (delay_ - (SysTickTimer.getValue() - start_) <= delay)) {
+                return; // we would extend the timer
+            }
             start_ = SysTickTimer.getValue();
             delay_ = delay;
         };
