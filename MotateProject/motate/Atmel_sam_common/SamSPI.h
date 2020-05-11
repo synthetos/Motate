@@ -444,13 +444,13 @@ namespace Motate {
             }
             if (tx_buffer != nullptr) {
                 tx_is_setup = dma.startTXTransfer(tx_buffer, size, handle_interrupts, include_next);
-                interrupts |= Interrupt::OnRxTransferDone;
+                interrupts = Interrupt::OnRxTransferDone;
             } else {
                 // Setup to transfer one dummy byte repeatedly
                 dma.startTXTransfer(nullptr, size, handle_interrupts, include_next);
             }
             if (rx_is_setup || tx_is_setup) {
-                dma.setInterrupts(Interrupt::OnRxTransferDone);
+                dma.setInterrupts(interrupts);
                 enable();
 #ifdef IN_DEBUGGER
             } else {

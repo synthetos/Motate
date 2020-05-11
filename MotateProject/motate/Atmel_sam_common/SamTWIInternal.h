@@ -134,7 +134,7 @@ struct TWIInfo : TWIInfoBase<twiPeripheralNumber> {
 
     void transmitChar(uint8_t b) { twi->TWIHS_THR = b; }
 
-   private:
+   protected:
     void _setAddress(uint8_t  adjusted_address,
                      uint32_t adjusted_internal_address,
                      uint8_t  adjusted_internal_address_size) {

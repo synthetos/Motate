@@ -191,17 +191,18 @@ namespace Motate {
             xdmaTxChannel()->XDMAC_CSA = 0;
             xdmaTxChannel()->XDMAC_CDA = (uint32_t)xdmaPeripheralTxAddress();
             xdmaTxChannel()->XDMAC_CC =
-            XDMAC_CC_TYPE_PER_TRAN | // between memory and a peripheral
-            XDMAC_CC_MBSIZE_SINGLE | // burst size of one "unit" at a time
-            XDMAC_CC_DSYNC_MEM2PER | // memory->peripheral
-            XDMAC_CC_CSIZE_CHK_1   | // chunk size of one "unit" at a time
-            XDMAC_CC_DWIDTH( (buffer_width >> 1) ) | // data width (based on alignment size of base type of buffer_t)
-            XDMAC_CC_SIF_AHB_IF0   | // source is RAM   (info cryptically extracted from Table 18-3 of the datasheep)
-            XDMAC_CC_DIF_AHB_IF1   | // destination is peripheral (info cryptically extracted from Table 18-3 of the datasheep)
-            XDMAC_CC_SAM_INCREMENTED_AM  | // the source address increments as written
-            XDMAC_CC_DAM_FIXED_AM        | // destination address doesn't change (FIFO)
-            XDMAC_CC_PERID(xdmaTxPeripheralId()) // and finally, set the peripheral identifier
-            ;
+                XDMAC_CC_TYPE_PER_TRAN |                // between memory and a peripheral
+                XDMAC_CC_MBSIZE_SINGLE |                // burst size of one "unit" at a time
+                XDMAC_CC_DSYNC_MEM2PER |                // memory->peripheral
+                XDMAC_CC_CSIZE_CHK_1 |                  // chunk size of one "unit" at a time
+                XDMAC_CC_DWIDTH((buffer_width >> 1)) |  // data width (based on alignment size of base type of buffer_t)
+                XDMAC_CC_SIF_AHB_IF0 |  // source is RAM   (info cryptically extracted from Table 18-3 of the datasheep)
+                XDMAC_CC_DIF_AHB_IF1 |  // destination is peripheral (info cryptically extracted from Table 18-3 of the
+                                        // datasheep)
+                XDMAC_CC_SAM_INCREMENTED_AM |         // the source address increments as written
+                XDMAC_CC_DAM_FIXED_AM |               // destination address doesn't change (FIFO)
+                XDMAC_CC_PERID(xdmaTxPeripheralId())  // and finally, set the peripheral identifier
+                ;
             // Datasheep says to clear these out explicitly:
             //            xdmaTxChannel()->XDMAC_CNDC = 0; // no "next descriptor"
             //            xdmaTxChannel()->XDMAC_CBC = 0;  // ???
@@ -223,10 +224,13 @@ namespace Motate {
         {
             xdma()->XDMAC_GE = XDMAC_GE_EN0 << xdmaTxChannelNumber();
         };
+        alignas(4) uint8_t dummy_buffer[4] = {0xbe, 0xef, 0xed, 0xff};
         void setTx(void * const buffer, const uint32_t length) const
         {
-            xdmaTxChannel()->XDMAC_CSA = (uint32_t)buffer;
+            xdmaTxChannel()->XDMAC_CSA = (uint32_t)(buffer != nullptr ? buffer : dummy_buffer);
             xdmaTxChannel()->XDMAC_CUBC = length;
+            // xdmaTxChannel()->XDMAC_CC = (xdmaTxChannel()->XDMAC_CC & ~XDMAC_CC_SAM_Msk) |
+            //                              (buffer != nullptr ? XDMAC_CC_SAM_INCREMENTED_AM : XDMAC_CC_SAM_FIXED_AM);
         };
         void setNextTx(void * const buffer, const uint32_t length) const
         {
@@ -314,7 +318,21 @@ namespace Motate {
         _XDMACInterrupt _rx_interrupt{
             [&]() {
                 if (_xdmaCInterruptHandler) {
-                    _xdmaCInterruptHandler(Interrupt::OnRxTransferDone);
+                    auto CIS_hold = xdmaRxChannel()->XDMAC_CIS;
+                    Interrupt::Type cause;
+                    if (CIS_hold & XDMAC_CIS_BIS) {
+                        cause = Interrupt::OnRxTransferDone;
+                    }
+                    if (CIS_hold & XDMAC_CIS_WBEIS) {
+                        cause |= Interrupt::OnRxError;
+                    }
+                    if (CIS_hold & XDMAC_CIS_ROIS) {
+                        cause |= Interrupt::OnRxError;
+                    }
+                    if (CIS_hold & XDMAC_CIS_RBEIS) {
+                        cause |= Interrupt::OnRxError;
+                    }
+                    _xdmaCInterruptHandler(cause);
                 }
             },
             _first_xdmac_interrupt};
@@ -379,10 +397,16 @@ namespace Motate {
         {
             xdma()->XDMAC_GE = XDMAC_GE_EN0 << xdmaRxChannelNumber();
         };
-        void setRx(void * const buffer, const uint32_t length) const
-        {
-            xdmaRxChannel()->XDMAC_CDA = (uint32_t)buffer;
+
+        alignas(4) uint8_t dummy_buffer[4] = {0xbe, 0xef, 0xed, 0xff};
+        void setRx(void* const buffer, const uint32_t length) const {
+            xdmaRxChannel()->XDMAC_CDA = (uint32_t)(buffer != nullptr ? buffer : dummy_buffer);
             xdmaRxChannel()->XDMAC_CUBC = length;
+
+            // xdmaRxChannel()->XDMAC_CC = (xdmaRxChannel()->XDMAC_CC & ~XDMAC_CC_SAM_Msk) |
+            //                              (buffer != nullptr ? XDMAC_CC_SAM_INCREMENTED_AM : XDMAC_CC_SAM_FIXED_AM);
+
+            SamCommon::sync();
         };
         void setNextRx(void * const buffer, const uint32_t length) const
         {
@@ -431,44 +455,19 @@ namespace Motate {
         {
             if (0 == length) { return false; }
 
-            if (doneReading()) {
-                disableRx();
-                if (handle_interrupts) { stopRxDoneInterrupts(); }
-                setRx(buffer, length);
-                enableRx();
-                if (handle_interrupts) { startRxDoneInterrupts(); }
+            // Problem: The last transfer wasn't cleared out, which may be fine and otherwise handled
+            // ToDo: Make a clear method to reset these values for this detection
+            // For now, in I2C we don't need to extend a request, and upper layers prevent double-requesting
+
+            disableRx();
+            flushRead();
+            if (handle_interrupts) {
+                stopRxDoneInterrupts();
             }
-            // // check to see if they overlap, in which case we're extending the region
-            // else if ((xdmaRxChannel()->XDMAC_CDA >= (uint32_t)buffer) &&
-            //          (xdmaRxChannel()->XDMAC_CDA < ((uint32_t)buffer + length))
-            //          )
-            // {
-            //     if (handle_interrupts) { stopRxDoneInterrupts(); }
-
-            //     // they overlap, we need to compute the new length
-            //     decltype(xdmaRxChannel()->XDMAC_CDA) pos_save;
-            //     do {
-            //         pos_save = xdmaRxChannel()->XDMAC_CDA;
-
-            //         // new_length = (start_pos + length) - current_positon
-            //         xdmaRxChannel()->XDMAC_CUBC = ((uint32_t)buffer + length) - pos_save;
-
-            //         // catch rare case where it advances while we were computing
-            //     } while (xdmaRxChannel()->XDMAC_CDA > pos_save);
-
-            //     enableRx();
-            //     if (handle_interrupts) { startRxDoneInterrupts(); }
-            // }
-            // // otherwise, we set the next region, if requested. We DON'T attempt to extend it.
-            // else if (include_next && doneReadingNext()) {
-            //     setNextRx(buffer, length);
-            //     return true;
-            // }
-            else {
-                #if IN_DEBUGGER == 1
-                    __asm__("BKPT"); // a DMA RX transfer was requested
-                #endif
-                return false;
+            setRx(buffer, length);
+            enableRx();
+            if (handle_interrupts) {
+                startRxDoneInterrupts();
             }
 
             return (length > 0);

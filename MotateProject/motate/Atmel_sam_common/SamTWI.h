@@ -277,7 +277,6 @@ struct TWIHardware_ : public Motate::TWI_internal::TWIInfo<twiPeripheralNumber> 
         TXError,
         TXDone,
 
-        RXReadyToReadFirstByte,
         RXReadingFirstByte,
         RXDMAStarted,
         RXWaitingForRXReady,
@@ -307,33 +306,28 @@ struct TWIHardware_ : public Motate::TWI_internal::TWIInfo<twiPeripheralNumber> 
             local_buffer_size_ = size;
 
             // tell the peripheral that we're reading
-            // (Note that internall address mode MIGHT actually write first!)
+            // (Note that internal address mode MIGHT actually write first!)
             this->setReading();
-
+            this->enableOnNACKInterrupt();
+            this->enableOnRXReadyInterrupt();
             if (local_buffer_size_ == 1) {
-                // If this is the only character to read, tell it to NACK at the end of this read
-                // and tart the reading transaction
-                this->setStartStop();
-
                 // "last char" is the only char
                 state_ = InternalState::RXWaitingForLastChar;
 
+                // If this is the only character to read, tell it to NACK at the end of this read
+                // and tart the reading transaction
+                this->setStartStop();
             } else if (local_buffer_size_ > 2) {
-                // Start the reading transaction
-                this->setStart();
-
                 state_ = InternalState::RXReadingFirstByte;
 
-            } else {  // local_buffer_size_ == 2
                 // Start the reading transaction
                 this->setStart();
-
+            } else {  // local_buffer_size_ == 2
                 state_ = InternalState::RXWaitingForRXReady;  // this will pick up below
-                this->enableOnRXReadyInterrupt();
-                this->enableOnNACKInterrupt();
-                // return true;
+
+                // Start the reading transaction
+                this->setStart();
             }
-            this->enableOnNACKInterrupt();
 
             TWIInterruptCause empty_cause;
             prehandleInterrupt(empty_cause);  // ignore return value
@@ -364,9 +358,9 @@ struct TWIHardware_ : public Motate::TWI_internal::TWIInfo<twiPeripheralNumber> 
             state_ = InternalState::TXError;
         }
 
-        // NACK cases
-        if (cause.isNACK() || state_ == InternalState::RXError || state_ == InternalState::TXError) {
-            // __asm__("BKPT");
+        // error cases
+        if (state_ == InternalState::RXError || state_ == InternalState::TXError) {
+            __asm__("BKPT");
             this->disableOnRXReadyInterrupt();
 
             this->disableOnTXReadyInterrupt();
@@ -387,6 +381,7 @@ struct TWIHardware_ : public Motate::TWI_internal::TWIInfo<twiPeripheralNumber> 
             // #if IN_DEBUGGER == 1
             // __asm__("BKPT");
             // #endif
+
             this->disableOnRXReadyInterrupt();
 
             this->disableOnTXReadyInterrupt();
@@ -400,51 +395,62 @@ struct TWIHardware_ : public Motate::TWI_internal::TWIInfo<twiPeripheralNumber> 
         }
 
         // RX cases
-        if (InternalState::RXReadingFirstByte == state_ && cause.isRxReady()) {
-            // NOTE: local_buffer_size_ > 2 for RXReadingFirstByte state to be set
-            cause.clearRxReady();  // stop this from being propagated
 
-            this->disableOnRXReadyInterrupt();
 
-            // From SAM E70/S70/V70/V71 Family Eratta:
-            //  If TCM accesses are generated through the AHBS port of the core, only 32-bit accesses are supported.
-            //  Accesses that are not 32-bit aligned may overwrite bytes at the beginning and at the end of 32-bit
-            //  words.
-            // Workaround
-            //  The user application must use 32-bit aligned buffers and buffers with a size of a multiple of 4 bytes
-            //  when transferring data to or from the TCM through the AHBS port of the core.
+        if (InternalState::RXReadingFirstByte == state_) {
+            if (cause.isNACK()) {
+                this->disableOnRXReadyInterrupt();
+                this->disableOnNACKInterrupt();
 
-            // Nothing to be done about the scribble of data at the end, other than oversize the buffers accordingly.
-
-            // But to handle the beginning alignment, read unaligned bytes manally
-
-            if ((std::intptr_t)local_buffer_ptr_ & 0b11) {
-                *local_buffer_ptr_ = this->readByte();
-                ++local_buffer_ptr_;
-                --local_buffer_size_;
-
-                // now leave, and at the next RxReady, we'll be back here
-                return false;
-            }
-
-            // The first byte to read is in the RHR register, and DMA will grab it first
-            const bool handle_interrupts = true;
-            const bool include_next      = false;
-
-            state_ = InternalState::RXDMAStarted;
-
-            // Note we set size to size-2 since we have to handle the last two characters "manually"
-            // This happens in prehandleInterrupt()
-            bool dma_is_setup =
-                dma.startRXTransfer(local_buffer_ptr_, local_buffer_size_ - 2, handle_interrupts, include_next);
-            if (!dma_is_setup) {
                 state_ = InternalState::RXError;
                 cause.setRxError();
-                return true;
-            }  // fail early
+            } else if (cause.isRxReady()) {
+                // NOTE: local_buffer_size_ > 2 for RXReadingFirstByte state to be set
+                cause.clearRxReady();  // stop this from being propagated
 
-            local_buffer_ptr_ = local_buffer_ptr_ + (local_buffer_size_ - 2);
-        }  // no else here!
+                // From SAM E70/S70/V70/V71 Family Eratta:
+                //  If TCM accesses are generated through the AHBS port of the core, only 32-bit accesses are supported.
+                //  Accesses that are not 32-bit aligned may overwrite bytes at the beginning and at the end of 32-bit
+                //  words.
+                // Workaround
+                //  The user application must use 32-bit aligned buffers and buffers with a size of a multiple of 4
+                //  bytes when transferring data to or from the TCM through the AHBS port of the core.
+
+                // Nothing to be done about the scribble of data at the end, other than oversize the buffers
+                // accordingly.
+
+                // But to handle the beginning alignment, read unaligned bytes manally
+
+                if ((std::intptr_t)local_buffer_ptr_ & 0b11) {
+                    *local_buffer_ptr_ = this->readByte();
+                    ++local_buffer_ptr_;
+                    --local_buffer_size_;
+
+                    // now leave, and at the next RxReady, we'll be back here
+                    return false;
+                }
+
+                this->disableOnRXReadyInterrupt();
+
+                // The first byte to read is in the RHR register, and DMA will grab it first
+                const bool handle_interrupts = true;
+                const bool include_next      = false;
+
+                state_ = InternalState::RXDMAStarted;
+
+                // Note we set size to size-2 since we have to handle the last two characters "manually"
+                // This happens in prehandleInterrupt()
+                bool dma_is_setup =
+                    dma.startRXTransfer(local_buffer_ptr_, local_buffer_size_ - 2, handle_interrupts, include_next);
+                if (!dma_is_setup) {
+                    state_ = InternalState::RXError;
+                    cause.setRxError();
+                }  // fail early
+                else {
+                    local_buffer_ptr_ = local_buffer_ptr_ + (local_buffer_size_ - 2);
+                }
+            }  // cause.isRxReady()
+        }      // no else here!
 
         if (InternalState::RXDMAStarted == state_ && cause.isRxTransferDone()) {
             cause.clearRxTransferDone();  // stop this from being propagated
@@ -453,13 +459,34 @@ struct TWIHardware_ : public Motate::TWI_internal::TWIInfo<twiPeripheralNumber> 
             state_ = InternalState::RXWaitingForRXReady;
 
             // IMPORTANT: This code is called from the XDMAC interrupt, NOT the TWIHS interrupt!
-            // It's possible to accidentally trifgger the TWIHS interrupt and have both covering this state.
+            // It's possible to accidentally trigger the TWIHS interrupt and have both covering this state.
 
             dma.stopRxDoneInterrupts();
             dma.disable();
 
             this->enableOnRXReadyInterrupt();
             return false;
+        }  // no else here!
+
+        if (InternalState::RXDMAStarted == state_ && cause.isNACK()) {
+            // if the DMA was done, we wouldn't be here...
+            // stop the DMA interrupts
+            dma.stopRxDoneInterrupts();
+            dma.disable();
+            this->disableOnNACKInterrupt();
+
+            state_ = InternalState::RXError;
+            cause.setRxError();
+        }  // no else here!
+
+        if (InternalState::RXWaitingForRXReady == state_ && cause.isNACK()) {
+            // if the DMA was done, we wouldn't be here...
+            // stop the DMA interrupts
+            this->disableOnRXReadyInterrupt();
+            this->disableOnNACKInterrupt();
+
+            state_ = InternalState::RXError;
+            cause.setRxError();
         }  // no else here!
 
         if (InternalState::RXWaitingForRXReady == state_) {
@@ -514,7 +541,7 @@ struct TWIHardware_ : public Motate::TWI_internal::TWIInfo<twiPeripheralNumber> 
             if (local_buffer_size_ > 2) {
                 cause.clearTxReady();  // stop this from being propagated
 
-                state_         = InternalState::TXSendingFirstByte;
+                state_ = InternalState::TXSendingFirstByte;
                 this->transmitChar(*local_buffer_ptr_);
                 ++local_buffer_ptr_;
                 --local_buffer_size_;
@@ -523,6 +550,22 @@ struct TWIHardware_ : public Motate::TWI_internal::TWIInfo<twiPeripheralNumber> 
             } else {
                 state_ = InternalState::TXWaitingForTXReady1;  // this will pick up below
             }
+        }  // no else here!
+
+        if (InternalState::TXReadyToSendFirstByte == state_ && cause.isNACK()) {
+            this->disableOnRXReadyInterrupt();
+            this->disableOnNACKInterrupt();
+
+            state_ = InternalState::TXError;
+            cause.setTxError();
+        }  // no else here!
+
+        if (InternalState::TXSendingFirstByte == state_ && cause.isNACK()) {
+            this->disableOnRXReadyInterrupt();
+            this->disableOnNACKInterrupt();
+
+            state_ = InternalState::TXError;
+            cause.setTxError();
         }  // no else here!
 
         if (InternalState::TXSendingFirstByte == state_ && cause.isTxReady()) {
@@ -538,14 +581,14 @@ struct TWIHardware_ : public Motate::TWI_internal::TWIInfo<twiPeripheralNumber> 
                 // Note we set size to size-1 since we have to handle the last character "manually"
                 // This happens in prehandleInterrupt()
                 bool dma_is_setup =
-                    dma.startTXTransfer(local_buffer_ptr_, local_buffer_size_ - 1, handle_interrupts, include_next);
+                    dma.startTXTransfer(local_buffer_ptr_, local_buffer_size_, handle_interrupts, include_next);
                 if (!dma_is_setup) {
                     state_ = InternalState::TXError;
                     cause.setTxError();
                     return true;
                 }  // fail early
 
-                local_buffer_ptr_  = local_buffer_ptr_ + (local_buffer_size_ - 1);
+                local_buffer_ptr_  = local_buffer_ptr_ + (local_buffer_size_);
                 local_buffer_size_ = 1;
                 state_             = InternalState::TXDMAStarted;
             } else {
@@ -584,15 +627,13 @@ struct TWIHardware_ : public Motate::TWI_internal::TWIInfo<twiPeripheralNumber> 
             // ... set the STOP bit, ...
             this->setStop();
 
-            // ... and put the last char in the hold register, ...
-            this->transmitChar(*local_buffer_ptr_);
-            local_buffer_ptr_ = nullptr;
-
-            // ... and move the state machine along.
+            // ... and move the state machine along, ...
             state_ = InternalState::TXWaitingForTXReady2;
             this->enableOnTXDoneInterrupt();
 
-            // return; // there's nothing more we can do here, save time
+            // We'll wait for txDone to add a delay.
+            local_buffer_ptr_ = nullptr;
+
         }  // no else here!
 
         if (InternalState::TXWaitingForTXReady2 == state_ && (cause.isTxReady() || cause.isTxDone())) {
@@ -606,7 +647,7 @@ struct TWIHardware_ : public Motate::TWI_internal::TWIInfo<twiPeripheralNumber> 
             this->disableOnNACKInterrupt();
         }
 
-        if (state_ == InternalState::TXDone || state_ == InternalState::RXDone) {
+        if (state_ == InternalState::TXDone || state_ == InternalState::RXDone || state_ == InternalState::TXError || state_ == InternalState::RXError) {
             state_ = InternalState::Idle;
 
             if (externalTWIInterruptHandler_) {
