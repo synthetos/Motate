@@ -436,7 +436,7 @@ namespace Motate {
             dma.setInterrupts(Interrupt::Off);
             if (rx_buffer != nullptr) {
                 rx_is_setup = dma.startRXTransfer(rx_buffer, size, handle_interrupts, include_next);
-                interrupts = Interrupt::OnTxTransferDone;
+                interrupts = Interrupt::OnRxTransferDone;
                 if (!rx_is_setup) { return false; } // fail early
             } else {
                 // Setup to transfer one dummy byte repeatedly
@@ -444,7 +444,7 @@ namespace Motate {
             }
             if (tx_buffer != nullptr) {
                 tx_is_setup = dma.startTXTransfer(tx_buffer, size, handle_interrupts, include_next);
-                interrupts = Interrupt::OnRxTransferDone;
+                interrupts |= Interrupt::OnTxTransferDone;
             } else {
                 // Setup to transfer one dummy byte repeatedly
                 dma.startTXTransfer(nullptr, size, handle_interrupts, include_next);
