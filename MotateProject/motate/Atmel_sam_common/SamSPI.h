@@ -429,28 +429,28 @@ namespace Motate {
         bool startTransfer(uint8_t *tx_buffer, uint8_t *rx_buffer, uint16_t size) {
             bool rx_is_setup = false;
             bool tx_is_setup = false;
-            const bool handle_interrupts = false;
+            const bool handle_interrupts = true;
             const bool include_next = false;
 
             Motate::Interrupt::Type interrupts = 0;
             dma.setInterrupts(Interrupt::Off);
-            if (rx_buffer != nullptr) {
+            // if (rx_buffer != nullptr) {
                 rx_is_setup = dma.startRXTransfer(rx_buffer, size, handle_interrupts, include_next);
-                interrupts = Interrupt::OnRxTransferDone;
+                // interrupts = Interrupt::OnRxTransferDone;
                 if (!rx_is_setup) { return false; } // fail early
-            } else {
-                // Setup to transfer one dummy byte repeatedly
-                dma.startRXTransfer(nullptr, size, handle_interrupts, include_next);
-            }
-            if (tx_buffer != nullptr) {
+            // } else {
+            //     // Setup to transfer one dummy byte repeatedly
+            //     dma.startRXTransfer(nullptr, size, handle_interrupts, include_next);
+            // }
+            // if (tx_buffer != nullptr) {
                 tx_is_setup = dma.startTXTransfer(tx_buffer, size, handle_interrupts, include_next);
-                interrupts |= Interrupt::OnTxTransferDone;
-            } else {
-                // Setup to transfer one dummy byte repeatedly
-                dma.startTXTransfer(nullptr, size, handle_interrupts, include_next);
-            }
+                // interrupts |= Interrupt::OnTxTransferDone;
+            // } else {
+            //     // Setup to transfer one dummy byte repeatedly
+            //     dma.startTXTransfer(nullptr, size, handle_interrupts, include_next);
+            // }
             if (rx_is_setup || tx_is_setup) {
-                dma.setInterrupts(interrupts);
+                // dma.setInterrupts(interrupts);
                 enable();
 #ifdef IN_DEBUGGER
             } else {
