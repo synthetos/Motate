@@ -432,7 +432,7 @@ namespace Motate {
             const bool handle_interrupts = true;
             const bool include_next = false;
 
-            Motate::Interrupt::Type interrupts = 0;
+            // Motate::Interrupt::Type interrupts = 0;
             dma.setInterrupts(Interrupt::Off);
             // if (rx_buffer != nullptr) {
                 rx_is_setup = dma.startRXTransfer(rx_buffer, size, handle_interrupts, include_next);
