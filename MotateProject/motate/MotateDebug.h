@@ -41,9 +41,13 @@
 #define DEBUG_SEMIHOSTING 0
 #endif
 
-#define DEBUG_USE_SWI 1
-#define DEBUG_USE_ITM 0
+#ifndef DEBUG_USE_SWI
+#define DEBUG_USE_SWI 0
+#endif
 
+#ifndef DEBUG_USE_ITM
+#define DEBUG_USE_ITM 1
+#endif
 // ITM doesn't seem to work too well. Needs work.
 
 #if IN_DEBUGGER == 1
@@ -157,8 +161,8 @@ struct Debug {
         void write(const char* arg, int32_t length)
         {
 #if DEBUG_SEMIHOSTING == 1
-            int32_t delay = 100;
-            while (delay--) { __asm("NOP"); };
+            // int32_t delay = 100;
+            // while (delay--) { __asm("NOP"); };
             while (length--) {
                 ITM_SendChar(*arg++);
             }
@@ -172,6 +176,28 @@ struct Debug {
         template <uint32_t length>
         void write(const char (&arg)[length]) {
             write(arg, length);
+        }
+
+
+        void send(float value, uint8_t port) {
+            volatile int timeout = 500;
+            union {
+                float float_val;
+                uint32_t uint32_val;
+            } value_union;
+            value_union.float_val = value;
+
+            if (((ITM->TCR & ITM_TCR_ITMENA_Msk) != 0UL) && /* ITM enabled */
+                ((ITM->TER & (port + 1)) != 0UL))           /* ITM Port enabled */
+            {
+                while (ITM->PORT[port].u32 == 0UL) { /* read returns 1 if it's available */
+                    if (timeout-- == 0) {
+                        return; /* not able to send */
+                    }
+                    __NOP();
+                }
+                ITM->PORT[port].u32 = value_union.uint32_val;
+            }
         }
     };
 #endif // DEBUG_USE_ITM == 1
