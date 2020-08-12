@@ -195,7 +195,6 @@ namespace Motate {
                 XDMAC_CC_MBSIZE_SINGLE |                // burst size of one "unit" at a time
                 XDMAC_CC_DSYNC_MEM2PER |                // memory->peripheral
                 XDMAC_CC_CSIZE_CHK_1 |                  // chunk size of one "unit" at a time
-                XDMAC_CC_DWIDTH((buffer_width >> 1)) |  // data width (based on alignment size of base type of buffer_t)
                 XDMAC_CC_SIF_AHB_IF0 |  // source is RAM   (info cryptically extracted from Table 18-3 of the datasheep)
                 XDMAC_CC_DIF_AHB_IF1 |  // destination is peripheral (info cryptically extracted from Table 18-3 of the
                                         // datasheep)
@@ -225,12 +224,24 @@ namespace Motate {
             xdma()->XDMAC_GE = XDMAC_GE_EN0 << xdmaTxChannelNumber();
         };
         alignas(4) uint8_t dummy_buffer[4] = {0xbe, 0xef, 0xed, 0xff};
-        void setTx(void * const buffer, const uint32_t length) const
+        void setTx(void * const buffer, const uint32_t length, const uint8_t byte_width = 1) const
         {
+            xdmaTxChannel()->XDMAC_CC =
+                (xdmaTxChannel()->XDMAC_CC & ~(XDMAC_CC_SAM_Msk | XDMAC_CC_DWIDTH_Msk)) |
+                (buffer != nullptr ? XDMAC_CC_SAM_INCREMENTED_AM : XDMAC_CC_SAM_FIXED_AM) |
+                (byte_width == 1 ? XDMAC_CC_DWIDTH_BYTE : XDMAC_CC_DWIDTH_HALFWORD)  // data width
+                ;
+            // xdmaTxChannel()->XDMAC_CC =
+            //     (xdmaTxChannel()->XDMAC_CC & ~(XDMAC_CC_DWIDTH_Msk)) |
+            //     (byte_width == 1 ? XDMAC_CC_DWIDTH_BYTE : XDMAC_CC_DWIDTH_HALFWORD)  // data width
+            //     ;
+
+            SamCommon::sync();
+
             xdmaTxChannel()->XDMAC_CSA = (uint32_t)(buffer != nullptr ? buffer : dummy_buffer);
             xdmaTxChannel()->XDMAC_CUBC = length;
-            // xdmaTxChannel()->XDMAC_CC = (xdmaTxChannel()->XDMAC_CC & ~XDMAC_CC_SAM_Msk) |
-            //                              (buffer != nullptr ? XDMAC_CC_SAM_INCREMENTED_AM : XDMAC_CC_SAM_FIXED_AM);
+
+            SamCommon::sync();
         };
         void setNextTx(void * const buffer, const uint32_t length) const
         {
@@ -264,12 +275,17 @@ namespace Motate {
 
 
         // Bundle it all up
-        bool startTXTransfer(void * const buffer, const uint32_t length, bool handle_interrupts = true, bool include_next = false) const
+        bool startTXTransfer(void* const    buffer,
+                             const uint32_t length,
+                             const bool     handle_interrupts = true,
+                             const bool     include_next      = false,
+                             const uint8_t  byte_width        = 1
+                            ) const
         {
             if (doneWriting()) {
                 disableTx();
                 if (handle_interrupts) { stopTxDoneInterrupts(); }
-                setTx(buffer, length);
+                setTx(buffer, length, byte_width);
                 if (length != 0) {
                     if (handle_interrupts) { startTxDoneInterrupts(); }
                     enableTx();
@@ -370,7 +386,7 @@ namespace Motate {
             XDMAC_CC_MBSIZE_SINGLE | // burst size of one "unit" at a time
             XDMAC_CC_DSYNC_PER2MEM | // peripheral->memory
             XDMAC_CC_CSIZE_CHK_1   | // chunk size of one "unit" at a time
-            XDMAC_CC_DWIDTH( (buffer_width >> 1) ) | // data width (based on alignment size of base type of buffer_t)
+            // XDMAC_CC_DWIDTH( (buffer_width >> 1) ) | // data width (based on alignment size of base type of buffer_t)
             XDMAC_CC_SIF_AHB_IF1   | // source is peripheral (info cryptically extracted from Table 18-3 of the datasheep)
             XDMAC_CC_DIF_AHB_IF0   | // destination is RAM   (info cryptically extracted from Table 18-3 of the datasheep)
             XDMAC_CC_SAM_FIXED_AM  | // the source address doesn't change (FIFO)
@@ -399,12 +415,21 @@ namespace Motate {
         };
 
         alignas(4) uint8_t dummy_buffer[4] = {0xbe, 0xef, 0xed, 0xff};
-        void setRx(void* const buffer, const uint32_t length) const {
+        void setRx(void* const buffer, const uint32_t length, const uint8_t byte_width = 1) const {
+            xdmaRxChannel()->XDMAC_CC =
+                (xdmaRxChannel()->XDMAC_CC & ~(XDMAC_CC_DAM_Msk | XDMAC_CC_DWIDTH_Msk)) |
+                (buffer != nullptr ? XDMAC_CC_DAM_INCREMENTED_AM : XDMAC_CC_DAM_FIXED_AM) |
+                (byte_width == 1 ? XDMAC_CC_DWIDTH_BYTE : XDMAC_CC_DWIDTH_HALFWORD)  // data width
+                ;
+            // xdmaRxChannel()->XDMAC_CC =
+            //     (xdmaRxChannel()->XDMAC_CC & ~(XDMAC_CC_DWIDTH_Msk)) |
+            //     (byte_width == 1 ? XDMAC_CC_DWIDTH_BYTE : XDMAC_CC_DWIDTH_HALFWORD)  // data width
+            //     ;
+
+            SamCommon::sync();
+
             xdmaRxChannel()->XDMAC_CDA = (uint32_t)(buffer != nullptr ? buffer : dummy_buffer);
             xdmaRxChannel()->XDMAC_CUBC = length;
-
-            // xdmaRxChannel()->XDMAC_CC = (xdmaRxChannel()->XDMAC_CC & ~XDMAC_CC_SAM_Msk) |
-            //                              (buffer != nullptr ? XDMAC_CC_SAM_INCREMENTED_AM : XDMAC_CC_SAM_FIXED_AM);
 
             SamCommon::sync();
         };
@@ -449,8 +474,9 @@ namespace Motate {
         // Bundle it all up
         bool startRXTransfer(void * const buffer,
                              const uint32_t length,
-                             bool handle_interrupts = true,
-                             bool include_next = false
+                             const bool handle_interrupts = true,
+                             const bool include_next = false,
+                             const uint8_t byte_width = 1
                              ) const
         {
             if (0 == length) { return false; }
@@ -464,7 +490,7 @@ namespace Motate {
             if (handle_interrupts) {
                 stopRxDoneInterrupts();
             }
-            setRx(buffer, length);
+            setRx(buffer, length, byte_width);
             enableRx();
             if (handle_interrupts) {
                 startRxDoneInterrupts();

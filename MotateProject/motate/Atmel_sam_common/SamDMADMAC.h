@@ -196,11 +196,11 @@ struct DMA_DMAC_TX : virtual DMA_DMAC_TX_hardware<periph_t, periph_num> {
 
     alignas(4) uint8_t dummy_buffer[4] = { 0xff, 0xad, 0xbe, 0xef };
 
-    void setTx(void* const buffer, const uint32_t length) const {
+    void setTx(void* const buffer, const uint32_t length, const uint8_t byte_width = 1) const {
         dmacTxChannel()->DMAC_SADDR = (uint32_t)(buffer != nullptr ? buffer : dummy_buffer);
 
         dmacTxChannel()->DMAC_CTRLA = DMAC_CTRLA_BTSIZE(length) | DMAC_CTRLA_SCSIZE_CHK_1 | DMAC_CTRLA_DCSIZE_CHK_1 |
-                                      DMAC_CTRLA_SRC_WIDTH_BYTE | DMAC_CTRLA_DST_WIDTH_BYTE |
+                                      (byte_width == 1 ? (DMAC_CTRLA_SRC_WIDTH_BYTE | DMAC_CTRLA_DST_WIDTH_BYTE) : (DMAC_CTRLA_SRC_WIDTH_HALF_WORD | DMAC_CTRLA_DST_WIDTH_HALF_WORD)) |
                                       // DON'T set DMAC_CTRLA_DONE
                                       0;
 
@@ -239,13 +239,16 @@ struct DMA_DMAC_TX : virtual DMA_DMAC_TX_hardware<periph_t, periph_num> {
     bool startTXTransfer(void* const    buffer,
                          const uint32_t length,
                          bool           handle_interrupts = true,
-                         bool           include_next      = false) const {
+                         bool           include_next      = false,
+                         const uint8_t  byte_width        = 1
+                        ) const
+    {
         if (doneWriting()) {
             disableTx();
             if (handle_interrupts) {
                 stopTxDoneInterrupts();
             }
-            setTx(buffer, length);
+            setTx(buffer, length, byte_width);
             if (length != 0) {
                 if (handle_interrupts) {
                     startTxDoneInterrupts();
@@ -335,11 +338,11 @@ struct DMA_DMAC_RX : virtual DMA_DMAC_RX_hardware<periph_t, periph_num> {
 
     alignas(4) uint8_t dummy_buffer[4] = {0xbe, 0xef, 0xed, 0xff};
 
-    void setRx(void* const buffer, const uint32_t length) const {
+    void setRx(void* const buffer, const uint32_t length, const uint8_t byte_width = 1) const {
         dmacRxChannel()->DMAC_DADDR = (uint32_t)(buffer != nullptr ? buffer : dummy_buffer);
 
         dmacRxChannel()->DMAC_CTRLA = DMAC_CTRLA_BTSIZE(length) | DMAC_CTRLA_SCSIZE_CHK_1 | DMAC_CTRLA_DCSIZE_CHK_1 |
-                                      DMAC_CTRLA_SRC_WIDTH_BYTE | DMAC_CTRLA_DST_WIDTH_BYTE |
+                                      (byte_width == 1 ? (DMAC_CTRLA_SRC_WIDTH_BYTE | DMAC_CTRLA_DST_WIDTH_BYTE) : (DMAC_CTRLA_SRC_WIDTH_HALF_WORD | DMAC_CTRLA_DST_WIDTH_HALF_WORD)) |
                                       // DON'T set DMAC_CTRLA_DONE
                                       0;
 
@@ -354,7 +357,7 @@ struct DMA_DMAC_RX : virtual DMA_DMAC_RX_hardware<periph_t, periph_num> {
             // leave DMAC_CTRLB_IEN as 0 - we want an interrupt
             0;  // for layout purposes
     };
-    void setNextRx(void* const buffer, const uint32_t length) const {
+    void setNextRx(void* const buffer, const uint32_t length, const uint8_t byte_width = 1) const {
         //            pdc->PERIPH_RNPR = (uint32_t)buffer;
         //            pdc->PERIPH_RNCR = length;
     };
@@ -375,10 +378,13 @@ struct DMA_DMAC_RX : virtual DMA_DMAC_RX_hardware<periph_t, periph_num> {
 
 
     // Bundle it all up
-    bool startRXTransfer(void* const    buffer,
-                         const uint32_t length,
-                         bool           handle_interrupts = true,
-                         bool           include_next      = false) const {
+    bool startRXTransfer(void* const          buffer,
+                         const uint32_t       length,
+                         const bool           handle_interrupts = true,
+                         const bool           include_next      = false,
+                         const uint8_t        byte_width        = 1
+                        ) const
+    {
         if (0 == length) {
             return false;
         }
@@ -388,7 +394,7 @@ struct DMA_DMAC_RX : virtual DMA_DMAC_RX_hardware<periph_t, periph_num> {
             if (handle_interrupts) {
                 stopRxDoneInterrupts();
             }
-            setRx(buffer, length);
+            setRx(buffer, length, byte_width);
             enableRx();
             if (handle_interrupts) {
                 startRxDoneInterrupts();
