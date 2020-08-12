@@ -120,22 +120,29 @@ namespace Motate {
             spi->SPI_CR = SPI_CR_LASTXFER;
         }
 
-        bool setChannel(const uint8_t channel, const bool deassert_after = false) {
+        const SPIBusDeviceBase*  current_device = nullptr;
+
+        bool setChannel(const SPIBusDeviceBase* const device, const bool deassert_after = false) {
             // if we are transmitting, we cannot switch
             while (!(spi->SPI_SR & SPI_SR_TXEMPTY)) {
                 ;
             }
 
-            auto csr_hold = spi->SPI_CSR[channel];
+            current_device = device;
+
+            auto channel_num = device->getChannel();
+            auto channel_id = device->getChannelID();
+
+            auto csr_hold    = spi->SPI_CSR[channel_num];
             csr_hold &= ~(SPI_CSR_CSAAT | SPI_CSR_CSNAAT);
             // if (deassert_after) {
             //     csr_hold |= SPI_CSR_CSNAAT;
             // } else {
                 csr_hold |= SPI_CSR_CSAAT;
             // }
-            spi->SPI_CSR[channel] = csr_hold;
+            spi->SPI_CSR[channel_num] = csr_hold;
 
-            spi->SPI_MR = (spi->SPI_MR & ~SPI_MR_PCS_Msk) | SPI_MR_PCS(channel);
+            spi->SPI_MR = (spi->SPI_MR & ~SPI_MR_PCS_Msk) | SPI_MR_PCS(channel_id);
 
             enable();
             return true;

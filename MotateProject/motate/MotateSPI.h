@@ -33,6 +33,7 @@
 #include <cinttypes>
 #include "MotateCommon.h"
 #include "MotateServiceCall.h"
+#include <atomic>
 
 
 /* After some setup, we call the processor-specific bits, then we have the
@@ -108,11 +109,6 @@ namespace Motate {
 
     struct SPIInterrupt : Interrupt {
     };
-} // namespace Motate
-
-#include <ProcessorSPI.h>
-
-namespace Motate {
 
 #pragma mark SPIBusDeviceBase
     /**************************************************
@@ -133,9 +129,15 @@ namespace Motate {
         // queue message
         virtual void queueMessage(SPIMessage *msg) {};
         // return a value that can be used by hardware to select this device
-        virtual uint32_t getChannel() { return 0; };
+        virtual uint32_t getChannelID() const { return 0; };
+        // return an index to this device's channel - may be different from the channel ID
+        virtual uint32_t getChannel() const { return 0; };
     };
+} // namespace Motate
 
+#include <ProcessorSPI.h>
+
+namespace Motate {
     // useful verbose enums
     struct SPIMessage
     {
@@ -164,13 +166,27 @@ namespace Motate {
 
 
         SPIBusDeviceBase *device;
-        SPIMessage * volatile next_message;
+        SPIMessage *next_message;
+        static SPIMessage *first_message;
 
         std::function<void(void)> message_done_callback;
         volatile State state = State::Idle;
 
 
-        SPIMessage() {};
+        SPIMessage() {
+            // manage the linked list
+            if (first_message == nullptr) {
+                first_message = this;
+                this->next_message = first_message; // loop the list
+            }
+            else {
+                auto message_walker = first_message;
+                // look for the list to loop, there shouldn't be any nullptrs!
+                while (message_walker->next_message != first_message) { message_walker = message_walker->next_message; }
+                message_walker->next_message = this;
+                this->next_message = first_message; // loop the list
+            }
+        };
 //        SPIMessage(std::function<void(void)>&& callback) : message_done_callback{std::move(callback)} {};
 //        SPIMessage(std::function<void(void)> callback) : message_done_callback{callback} {};
 
@@ -223,7 +239,7 @@ namespace Motate {
 
 
         SPIBusDeviceBase *_first_device, *_current_transaction_device;
-        SPIMessage * volatile _first_message;//, *_last_message;
+        SPIMessage *_next_message_to_send;
 
         volatile bool sending = false; // as long as this is true, sendNextMessage() does nothing
 
@@ -287,61 +303,41 @@ namespace Motate {
             hardware.enable();
         };
 
+        // DO NOT DIRECT CALL THIS - call device->queueMessage instead!
+        void queueMessageFromDevice (SPIMessage *msg) {
+            if (_next_message_to_send == nullptr) {
+                // first one in the queue!
+                _next_message_to_send = msg;
+            }
+
+            sendNextMessage();
+        }
+
         // This function uses a ServiceCall to jump to the correct interrupt level, which may be higher or lower than the current level.
         void sendNextMessage() {
             message_manager.call();
-            //sendNextMessageActual();
         }
 
         void handleServiceCallEvent() override {
-            if (sending) { return; }
-            while (_first_message && (SPIMessage::State::Done == _first_message->state)) {
-                auto done_message = _first_message;
-                _first_message = _first_message->next_message;
-                done_message->next_message = nullptr;
-            }
-            if (_first_message == nullptr) { return;}
-            if (SPIMessage::State::Sending == _first_message->state) { return; }
+            if (sending || _next_message_to_send == nullptr) { return; }
 
-            if (_current_transaction_device != nullptr) {
-                // the next message we send must be from the _current_transaction_device
-                if (!(_first_message->device == _current_transaction_device)) {
-                    // now we'll make a pass throught the messages, looking for one
-                    // for the _current_transaction_device
-                    SPIMessage *previous_message = _first_message;
-                    SPIMessage *walker_message = _first_message->next_message;
+            if (SPIMessage::State::Sending == _next_message_to_send->state) { return; }
 
-                    while (walker_message != nullptr) {
-                        if (walker_message->device == _current_transaction_device) {
-                            // we have our actual next message, we'll pop it to the first position
-                            previous_message->next_message = walker_message->next_message;
-                            walker_message->next_message = _first_message;
-                            _first_message = walker_message;
-                            break;
-                        }
+            SPIMessage *first_message = _next_message_to_send;
 
-                        previous_message = walker_message;
-                        walker_message = walker_message->next_message;
-                    }
-
-                    if (walker_message == nullptr) {
-                        // we have to wait for a new message to be queued up
-                        return;
-                    }
+            while (SPIMessage::State::Setup != _next_message_to_send->state) {
+                _next_message_to_send = _next_message_to_send->next_message;
+                if (_next_message_to_send == first_message) {
+                    // we made a full loop, bail
+                    return;
                 }
             }
 
-#ifdef IN_DEBUGGER
-            if (SPIMessage::State::Setup != _first_message->state) {
-                __asm__("BKPT"); // SPI about to send non-Setup message
-            }
-#endif
-
             sending = true;
-            _first_message->state = SPIMessage::State::Sending;
-            _current_transaction_device = _first_message->device;
-            hardware.setChannel(_current_transaction_device->getChannel(), _first_message->deassert_after);
-            hardware.startTransfer(_first_message->tx_buffer, _first_message->rx_buffer, _first_message->size);
+            _next_message_to_send->state = SPIMessage::State::Sending;
+            _current_transaction_device = _next_message_to_send->device;
+            hardware.setChannel(_current_transaction_device, _next_message_to_send->deassert_after);
+            hardware.startTransfer(_next_message_to_send->tx_buffer, _next_message_to_send->rx_buffer, _next_message_to_send->size);
         }
 
         void spiInterruptHandler(uint16_t interruptCause) {
@@ -361,32 +357,12 @@ namespace Motate {
 
             if (interruptCause & (SPIInterrupt::OnRxTransferDone)) { // SPIInterrupt::OnTxTransferDone |
                 // Check that we're done with all transmission...
-                if (!hardware.doneReading()) {
-                    return;
-                }
-                if (!hardware.doneWriting()) {
-                    return;
-                }
 
                 // This needs to be cleaned up:
                 hardware._disableOnTXTransferDoneInterrupt();
                 hardware._disableOnRXTransferDoneInterrupt();
 
-
-                if (nullptr == _first_message) {
-#ifdef IN_DEBUGGER
-                    __asm__("BKPT"); // no first message!?
-#endif
-                    return;
-                }
-
-                // _first_message is done sending.
-                // Go ahead and pop it from the list and reset (partially)
-                auto this_message = _first_message;
-                while (this_message && (SPIMessage::State::Done == this_message->state)) {
-                    this_message = this_message->next_message;
-                }
-
+                auto this_message = _next_message_to_send;
                 if (this_message && (SPIMessage::State::Sending == this_message->state)) {
                     // Then grab the (only) Sending message and mark it Done, then call it's done callback.
                     this_message->state = SPIMessage::State::Done;
@@ -476,30 +452,12 @@ namespace Motate {
             // queue message
             void queueMessage (SPIMessage *msg) override {
                 msg->device = this;
-                if (_spi_bus->_first_message == nullptr) {
-                    _spi_bus->_first_message = msg;
-                    //_spi_bus->_last_message = msg;
-                }
-                else {
-                    SPIMessage *walker_message = _spi_bus->_first_message;
-                    while ((walker_message != msg) && (walker_message->next_message != nullptr)) {
-                        walker_message = walker_message->next_message;
-                    }
 
-                    if (walker_message != msg) {
-                        walker_message->next_message = msg;
-                    }
-                }
-
-                // Either we just queued the first message, OR we *might* have
-                // just queued a message for the current transaction
-                // that has stalled, waiting for more messages.
-
-                // In either case, we want to:
-                _spi_bus->sendNextMessage();
+                _spi_bus->queueMessageFromDevice(msg);
             };
 
-            uint32_t getChannel() override { return _cs_value; };
+            uint32_t getChannelID() const override { return _cs_value; };
+            uint32_t getChannel() const override { return _cs_number; };
         };
 
         template <typename chipSelectType>
@@ -507,28 +465,6 @@ namespace Motate {
         {
             return {this, std::move(cs), baud, options, min_between_cs_delay_ns, cs_to_sck_delay_ns, between_word_delay_ns};
         }
-
-//        void _TMP_setUsingCSDecoder(bool v) { hardware.setUsingCSDecoder(v); };
-//
-//        void _TMP_setChannelOptions(const uint8_t channel, const uint32_t baud, const uint16_t options, uint32_t min_between_cs_delay_ns, uint32_t cs_to_sck_delay_ns, uint32_t between_word_delay_ns) {
-//        };
-//
-//        bool _TMP_startTransfer(uint8_t *tx_buffer, uint8_t *rx_buffer, uint16_t size) {
-//            return hardware.startTransfer(tx_buffer, rx_buffer, size);
-//        };
-//
-//        void _TMP_setChannel(const uint8_t channel) {
-//            hardware.setChannel(channel);
-//        };
-//
-//        int16_t _TMP_write(uint8_t value, int16_t &readValue, const bool lastXfer = false) {
-//            return hardware.write(value, readValue, lastXfer);
-//        };
-//
-//        void _TMP_setMsgDone(std::function<void(void)> &&handler) {
-//            message_done_callback = std::move(handler);
-//        }
-
 
     }; // SPIBus
 
