@@ -156,7 +156,14 @@ endif
 ifeq ($(RECORD),0)
 REC := true #
 else
-REC := $(realpath ${MOTATE_PATH}/compile_recorder.js)
+REC := recordCompilation() { $(realpath ${MOTATE_PATH}/compile_recorder.js) "$${@}"; }; \
+	useNVMorDirectNode() { \
+		if [[ -f ${HOME}/.nvm/nvm.sh ]]; then \
+			. ${HOME}/.nvm/nvm.sh && nvm use --lts && recordCompilation "$${@}"; \
+		else \
+			recordCompilation "$${@}"; \
+		fi;\
+	}; useNVMorDirectNode
 endif
 
 #

@@ -14,16 +14,17 @@ else
 UNAME := $(shell uname -s)
 
 ifeq (Darwin,${UNAME})
-OS = OSX
+ifeq (x86_64,$(shell uname -m))
+OS = OSX_INTEL
+else
+OS = OSX_APPLE
+endif
 else
 
 ifeq (Linux,${UNAME})
 ifeq (armv7l,$(shell uname -m))
+# TODO this needs verified!
 OS = LINUX_ARMV7
-ifeq ("$(TOOLS_VERSION)", "7u2")
-$(info armv7l isn't supported by arm-none-eabi-gcc 7u2, switching to 9m)
-TOOLS_VERSION := 9m
-endif # 7u2
 else
 OS = LINUX
 endif #LINUX ARM
@@ -39,55 +40,28 @@ endif #cygdrive
 
 ifeq ($(ARCH), gcc-arm-none-eabi)
 
-ifeq ("$(TOOLS_VERSION)", "7u2")
+ifeq ("$(TOOLS_VERSION)", "12.2r1")
 
-TOOLS_VERSION_FILENAME = 7-2018-q2-update
+TOOLS_VERSION_FILENAME = 12.2.rel1
 
-# Example:
-#  https://developer.arm.com/-/media/Files/downloads/gnu-rm/7-2018q2/gcc-arm-none-eabi-7-2018-q2-update-mac.tar.bz2?revision=982ef8a4-1815-4651-9c44-6144c9d8b34b?product=GNU%20Arm%20Embedded%20Toolchain,64-bit,,Mac%20OS%20X,7-2018-q2-update
-
-# downloads as Mac: gcc-arm-none-eabi-7-2018-q2-update-mac.tar.bz2
-#            Linux: gcc-arm-none-eabi-7-2018-q2-update-linux.tar.bz2
-#          Windows: gcc-arm-none-eabi-7-2018-q2-update-win32.zip
-
-# exapnds to Linux/Mac: gcc-arm-none-eabi-7-2018-q2-update
-#              Windows: gcc-arm-none-eabi-7-2018-q2-update-win32
-
-TOOLS_OSX_URL_PREFIX = https://developer.arm.com/-/media/Files/downloads/gnu-rm/7-2018q2/gcc-arm-none-eabi-7-2018-q2-update-mac.tar.bz2?revision=982ef8a4-1815-4651-9c44-6144c9d8b34b?product=GNU%20Arm%20Embedded%20Toolchain,64-bit,,Mac%20OS%20X,7-2018-q2-update
-TOOLS_LINUX_URL_PREFIX = https://developer.arm.com/-/media/Files/downloads/gnu-rm/7-2018q2/gcc-arm-none-eabi-7-2018-q2-update-linux.tar.bz2?revision=bc2c96c0-14b5-4bb4-9f18-bceb4050fee7?product=GNU%20Arm%20Embedded%20Toolchain,64-bit,,Linux,7-2018-q2-update
-TOOLS_WIN32_URL_PREFIX = https://developer.arm.com/-/media/Files/downloads/gnu-rm/7-2018q2/gcc-arm-none-eabi-7-2018-q2-update-win32.zip?revision=9b83e69c-e279-4d16-9401-990c836197b3?product=GNU%20Arm%20Embedded%20Toolchain,ZIP,,Windows,7-2018-q2-update
+TOOLS_OSX_INTEL_URL_PREFIX = https://github.com/synthetos/gcc-arm-none-eabi-archive/releases/download/12.2.Rel1/arm-gnu-toolchain-12.2.rel1-darwin-x86_64-arm-none-eabi.tar.xz
+TOOLS_OSX_APPLE_URL_PREFIX = https://github.com/synthetos/gcc-arm-none-eabi-archive/releases/download/12.2.Rel1/arm-gnu-toolchain-12.2.rel1-darwin-arm64-arm-none-eabi.tar.xz
+TOOLS_LINUX_URL_PREFIX = https://github.com/synthetos/gcc-arm-none-eabi-archive/releases/download/12.2.Rel1/arm-gnu-toolchain-12.2.rel1-linux-x86_64-arm-none-eabi.tar.xz
+TOOLS_LINUX_ARMV7_URL_PREFIX = https://github.com/synthetos/gcc-arm-none-eabi-archive/releases/download/12.2.Rel1/arm-gnu-toolchain-12.2.rel1-linux-aarch64-arm-none-eabi.tar.xz
+# TOOLS_WIN32_URL_PREFIX = https://github.com/synthetos/gcc-arm-none-eabi-archive/releases/download/9-2019-q4-major/gcc-arm-none-eabi-9-2019-q4-major-win32.zip
 TOOLS_URL = ${TOOLS_${OS}_URL_PREFIX}
 
-TOOLS_OSX_ARCHIVE_FILENAME   = gcc-arm-none-eabi-${TOOLS_VERSION_FILENAME}-mac.tar.bz2
-TOOLS_LINUX_ARCHIVE_FILENAME = gcc-arm-none-eabi-${TOOLS_VERSION_FILENAME}-linux.tar.bz2
-TOOLS_WIN32_ARCHIVE_FILENAME = gcc-arm-none-eabi-${TOOLS_VERSION_FILENAME}-win32.zip
-
-TOOLS_OSX_EXPANDED_DIRNAME   = gcc-arm-none-eabi-${TOOLS_VERSION_FILENAME}
-TOOLS_LINUX_EXPANDED_DIRNAME = gcc-arm-none-eabi-${TOOLS_VERSION_FILENAME}
-TOOLS_WIN32_EXPANDED_DIRNAME = gcc-arm-none-eabi-${TOOLS_VERSION_FILENAME}-win32
-TOOLS_EXPANDED_DIRNAME = ${TOOLS_${OS}_EXPANDED_DIRNAME}
-
-TEST_COMMAND_BASE=arm-none-eabi-gcc
-
-else ifeq ("$(TOOLS_VERSION)", "9m")
-
-TOOLS_VERSION_FILENAME = 9-2019-q4-major
-
-TOOLS_OSX_URL_PREFIX = https://github.com/synthetos/gcc-arm-none-eabi-archive/releases/download/9-2019-q4-major/gcc-arm-none-eabi-9-2019-q4-major-mac.tar.bz2
-TOOLS_LINUX_URL_PREFIX = https://github.com/synthetos/gcc-arm-none-eabi-archive/releases/download/9-2019-q4-major/gcc-arm-none-eabi-9-2019-q4-major-x86_64-linux.tar.bz2
-TOOLS_LINUX_ARMV7_URL_PREFIX = https://github.com/synthetos/gcc-arm-none-eabi-archive/releases/download/9-2019-q4-major/gcc-arm-none-eabi-9-2019-q4-major-armv7l-linux.tar.bz2
-TOOLS_WIN32_URL_PREFIX = https://github.com/synthetos/gcc-arm-none-eabi-archive/releases/download/9-2019-q4-major/gcc-arm-none-eabi-9-2019-q4-major-win32.zip
-TOOLS_URL = ${TOOLS_${OS}_URL_PREFIX}
-
-TOOLS_OSX_ARCHIVE_FILENAME         = gcc-arm-none-eabi-${TOOLS_VERSION_FILENAME}-mac.tar.bz2
+TOOLS_OSX_INTEL_ARCHIVE_FILENAME         = gcc-arm-none-eabi-${TOOLS_VERSION_FILENAME}-mac.tar.bz2
+TOOLS_OSX_APPLE_ARCHIVE_FILENAME         = gcc-arm-none-eabi-${TOOLS_VERSION_FILENAME}-mac.tar.bz2
 TOOLS_LINUX_ARCHIVE_FILENAME       = gcc-arm-none-eabi-${TOOLS_VERSION_FILENAME}-linux.tar.bz2
 TOOLS_LINUX_ARMV7_ARCHIVE_FILENAME = gcc-arm-none-eabi-${TOOLS_VERSION_FILENAME}-linux.tar.bz2
-TOOLS_WIN32_ARCHIVE_FILENAME       = gcc-arm-none-eabi-${TOOLS_VERSION_FILENAME}-win32.zip
+# TOOLS_WIN32_ARCHIVE_FILENAME       = gcc-arm-none-eabi-${TOOLS_VERSION_FILENAME}-win32.zip
 
-TOOLS_OSX_EXPANDED_DIRNAME          = gcc-arm-none-eabi-${TOOLS_VERSION_FILENAME}
-TOOLS_LINUX_EXPANDED_DIRNAME        = gcc-arm-none-eabi-${TOOLS_VERSION_FILENAME}
-TOOLS_LINUX_ARMV7_EXPANDED_DIRNAME  = gcc-arm-none-eabi-${TOOLS_VERSION_FILENAME}
-TOOLS_WIN32_EXPANDED_DIRNAME        = gcc-arm-none-eabi-${TOOLS_VERSION_FILENAME}-win32
+TOOLS_OSX_INTEL_EXPANDED_DIRNAME          = arm-gnu-toolchain-${TOOLS_VERSION_FILENAME}-darwin-x86_64-arm-none-eabi
+TOOLS_OSX_APPLE_EXPANDED_DIRNAME          = arm-gnu-toolchain-${TOOLS_VERSION_FILENAME}
+TOOLS_LINUX_EXPANDED_DIRNAME        = arm-gnu-toolchain-${TOOLS_VERSION_FILENAME}
+TOOLS_LINUX_ARMV7_EXPANDED_DIRNAME  = arm-gnu-toolchain-${TOOLS_VERSION_FILENAME}
+# TOOLS_WIN32_EXPANDED_DIRNAME        = arm-gnu-toolchain-${TOOLS_VERSION_FILENAME}-win32
 TOOLS_EXPANDED_DIRNAME = ${TOOLS_${OS}_EXPANDED_DIRNAME}
 
 TEST_COMMAND_BASE=arm-none-eabi-gcc
@@ -105,13 +79,21 @@ endif #eq ($(ARCH), 'gcc-arm-none-eabi')
 # all platforms from here on -----
 
 
-EXPAND_COMMAND_OSX = tar xjf
-TOOLS_SUBPATH_OSX = osx
-TEST_COMMAND_OSX = ${TEST_COMMAND_BASE}
-DOWNLOAD_TOOL_OSX = curl -L
-DOWNLOAD_TOOL_SET_NAME_OSX = -o
-# DOWNLOAD_TOOL_OSX = wget
-# DOWNLOAD_TOOL_SET_NAME_OSX = -O
+EXPAND_COMMAND_OSX_INTEL = tar xjf
+TOOLS_SUBPATH_OSX_INTEL = osx
+TEST_COMMAND_OSX_INTEL = ${TEST_COMMAND_BASE}
+DOWNLOAD_TOOL_OSX_INTEL = curl -L
+DOWNLOAD_TOOL_SET_NAME_OSX_INTEL = -o
+# DOWNLOAD_TOOL_OSX_INTEL = wget
+# DOWNLOAD_TOOL_SET_NAME_OSX_INTEL = -O
+
+EXPAND_COMMAND_OSX_APPLE = tar xjf
+TOOLS_SUBPATH_OSX_APPLE = osx
+TEST_COMMAND_OSX_APPLE = ${TEST_COMMAND_BASE}
+DOWNLOAD_TOOL_OSX_APPLE = curl -L
+DOWNLOAD_TOOL_SET_NAME_OSX_APPLE = -o
+# DOWNLOAD_TOOL_OSX_APPLE = wget
+# DOWNLOAD_TOOL_SET_NAME_OSX_APPLE = -O
 
 EXPAND_COMMAND_LINUX = tar xjf
 TOOLS_SUBPATH_LINUX = linux
