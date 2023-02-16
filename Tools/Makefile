@@ -3,6 +3,7 @@ MKDIR = mkdir -p
 ARCH ?= gcc-arm-none-eabi
 
 UNAME := $(shell uname -s)
+${info Current UNAME: $(UNAME) }
 
 ifeq (Darwin,${UNAME})
 ifeq (x86_64,$(shell uname -m))
@@ -38,13 +39,13 @@ TOOLS_LINUX_URL_PREFIX = https://github.com/synthetos/gcc-arm-none-eabi-archive/
 TOOLS_LINUX_ARMV7_URL_PREFIX = https://github.com/synthetos/gcc-arm-none-eabi-archive/releases/download/12.2.Rel1/arm-gnu-toolchain-12.2.rel1-linux-aarch64-arm-none-eabi.tar.xz
 TOOLS_URL = ${TOOLS_${OS}_URL_PREFIX}
 
-TOOLS_OSX_INTEL_ARCHIVE_FILENAME         = gcc-arm-none-eabi-${TOOLS_VERSION_FILENAME}-mac.tar.xz
-TOOLS_OSX_APPLE_ARCHIVE_FILENAME         = gcc-arm-none-eabi-${TOOLS_VERSION_FILENAME}-mac.tar.xz
+TOOLS_OSX_INTEL_ARCHIVE_FILENAME   = gcc-arm-none-eabi-${TOOLS_VERSION_FILENAME}-mac.tar.xz
+TOOLS_OSX_APPLE_ARCHIVE_FILENAME   = gcc-arm-none-eabi-${TOOLS_VERSION_FILENAME}-mac.tar.xz
 TOOLS_LINUX_ARCHIVE_FILENAME       = gcc-arm-none-eabi-${TOOLS_VERSION_FILENAME}-linux.tar.xz
 TOOLS_LINUX_ARMV7_ARCHIVE_FILENAME = gcc-arm-none-eabi-${TOOLS_VERSION_FILENAME}-linux.tar.xz
 
-TOOLS_OSX_INTEL_EXPANDED_DIRNAME          = arm-gnu-toolchain-${TOOLS_VERSION_FILENAME}-darwin-x86_64-arm-none-eabi
-TOOLS_OSX_APPLE_EXPANDED_DIRNAME          = arm-gnu-toolchain-${TOOLS_VERSION_FILENAME}-arm64-arm-none-eabi
+TOOLS_OSX_INTEL_EXPANDED_DIRNAME    = arm-gnu-toolchain-${TOOLS_VERSION_FILENAME}-darwin-x86_64-arm-none-eabi
+TOOLS_OSX_APPLE_EXPANDED_DIRNAME    = arm-gnu-toolchain-${TOOLS_VERSION_FILENAME}-darwin-arm64-arm-none-eabi
 TOOLS_LINUX_EXPANDED_DIRNAME        = arm-gnu-toolchain-${TOOLS_VERSION_FILENAME}-x86_64-arm-none-eabi
 TOOLS_LINUX_ARMV7_EXPANDED_DIRNAME  = arm-gnu-toolchain-${TOOLS_VERSION_FILENAME}-arm-none-eabi
 TOOLS_EXPANDED_DIRNAME = ${TOOLS_${OS}_EXPANDED_DIRNAME}
@@ -77,11 +78,13 @@ DOWNLOAD_TOOL_OSX_APPLE = curl -L
 DOWNLOAD_TOOL_SET_NAME_OSX_APPLE = -o
 
 EXPAND_COMMAND_LINUX = tar xf
+EXPAND_COMMAND_LINUX = tar xf
 TOOLS_SUBPATH_LINUX = linux
 TEST_COMMAND_LINUX = ${TEST_COMMAND_BASE}
 DOWNLOAD_TOOL_LINUX = wget
 DOWNLOAD_TOOL_SET_NAME_LINUX = -O
 
+EXPAND_COMMAND_LINUX_ARMV7 = tar xf
 EXPAND_COMMAND_LINUX_ARMV7 = tar xf
 TOOLS_SUBPATH_LINUX_ARMV7 = linux
 TEST_COMMAND_LINUX_ARMV7 = ${TEST_COMMAND_BASE}
@@ -93,6 +96,7 @@ TOOLS_SUBPATH = ${TOOLS_SUBPATH_${OS}}
 TEST_COMMAND = ${TEST_COMMAND_${OS}}
 DOWNLOAD_TOOL = ${DOWNLOAD_TOOL_${OS}}
 DOWNLOAD_TOOL_SET_NAME = ${DOWNLOAD_TOOL_SET_NAME_${OS}}
+
 
 # NOTE: We set the PATH in the Motate.mk makefile that calls this!
 # If it's missing stuff, then you're path is wrong!
