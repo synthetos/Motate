@@ -14,9 +14,9 @@ endif
 else
 
 ifeq (Linux,${UNAME})
-ifeq (armv7l,$(shell uname -m))
+ifeq (aarch64,$(shell uname -m))
 # TODO this needs verified!
-OS = LINUX_ARMV7
+OS = LINUX_ARM64
 else
 OS = LINUX
 endif #LINUX ARM
@@ -36,18 +36,19 @@ TOOLS_VERSION_FILENAME = 12.2.rel1
 TOOLS_OSX_INTEL_URL_PREFIX = https://github.com/synthetos/gcc-arm-none-eabi-archive/releases/download/12.2.Rel1/arm-gnu-toolchain-12.2.rel1-darwin-x86_64-arm-none-eabi.tar.xz
 TOOLS_OSX_APPLE_URL_PREFIX = https://github.com/synthetos/gcc-arm-none-eabi-archive/releases/download/12.2.Rel1/arm-gnu-toolchain-12.2.rel1-darwin-arm64-arm-none-eabi.tar.xz
 TOOLS_LINUX_URL_PREFIX = https://github.com/synthetos/gcc-arm-none-eabi-archive/releases/download/12.2.Rel1/arm-gnu-toolchain-12.2.rel1-linux-x86_64-arm-none-eabi.tar.xz
-TOOLS_LINUX_ARMV7_URL_PREFIX = https://github.com/synthetos/gcc-arm-none-eabi-archive/releases/download/12.2.Rel1/arm-gnu-toolchain-12.2.rel1-linux-aarch64-arm-none-eabi.tar.xz
+TOOLS_LINUX_ARM64_URL_PREFIX = https://github.com/synthetos/gcc-arm-none-eabi-archive/releases/download/12.2.Rel1/arm-gnu-toolchain-12.2.rel1-linux-aarch64-arm-none-eabi.tar.xz
 TOOLS_URL = ${TOOLS_${OS}_URL_PREFIX}
 
 TOOLS_OSX_INTEL_ARCHIVE_FILENAME   = gcc-arm-none-eabi-${TOOLS_VERSION_FILENAME}-mac.tar.xz
 TOOLS_OSX_APPLE_ARCHIVE_FILENAME   = gcc-arm-none-eabi-${TOOLS_VERSION_FILENAME}-mac.tar.xz
 TOOLS_LINUX_ARCHIVE_FILENAME       = gcc-arm-none-eabi-${TOOLS_VERSION_FILENAME}-linux.tar.xz
-TOOLS_LINUX_ARMV7_ARCHIVE_FILENAME = gcc-arm-none-eabi-${TOOLS_VERSION_FILENAME}-linux.tar.xz
+TOOLS_LINUX_ARM64_ARCHIVE_FILENAME = gcc-arm-none-eabi-${TOOLS_VERSION_FILENAME}-linux.tar.xz
 
 TOOLS_OSX_INTEL_EXPANDED_DIRNAME    = arm-gnu-toolchain-${TOOLS_VERSION_FILENAME}-darwin-x86_64-arm-none-eabi
 TOOLS_OSX_APPLE_EXPANDED_DIRNAME    = arm-gnu-toolchain-${TOOLS_VERSION_FILENAME}-darwin-arm64-arm-none-eabi
 TOOLS_LINUX_EXPANDED_DIRNAME        = arm-gnu-toolchain-${TOOLS_VERSION_FILENAME}-x86_64-arm-none-eabi
-TOOLS_LINUX_ARMV7_EXPANDED_DIRNAME  = arm-gnu-toolchain-${TOOLS_VERSION_FILENAME}-arm-none-eabi
+TOOLS_LINUX_ARM64_EXPANDED_DIRNAME  = arm-gnu-toolchain-${TOOLS_VERSION_FILENAME}-aarch64-arm-none-eabi
+
 TOOLS_EXPANDED_DIRNAME = ${TOOLS_${OS}_EXPANDED_DIRNAME}
 
 TEST_COMMAND_BASE=arm-none-eabi-gcc
@@ -84,12 +85,12 @@ TEST_COMMAND_LINUX = ${TEST_COMMAND_BASE}
 DOWNLOAD_TOOL_LINUX = wget
 DOWNLOAD_TOOL_SET_NAME_LINUX = -O
 
-EXPAND_COMMAND_LINUX_ARMV7 = tar xf
-EXPAND_COMMAND_LINUX_ARMV7 = tar xf
-TOOLS_SUBPATH_LINUX_ARMV7 = linux
-TEST_COMMAND_LINUX_ARMV7 = ${TEST_COMMAND_BASE}
-DOWNLOAD_TOOL_LINUX_ARMV7 = wget
-DOWNLOAD_TOOL_SET_NAME_LINUX_ARMV7 = -O
+EXPAND_COMMAND_LINUX_ARM64 = tar xf
+EXPAND_COMMAND_LINUX_ARM64 = tar xf
+TOOLS_SUBPATH_LINUX_ARM64 = linux
+TEST_COMMAND_LINUX_ARM64 = ${TEST_COMMAND_BASE}
+DOWNLOAD_TOOL_LINUX_ARM64 = wget
+DOWNLOAD_TOOL_SET_NAME_LINUX_ARM64 = -O
 
 EXPAND_COMMAND = ${EXPAND_COMMAND_${OS}}
 TOOLS_SUBPATH = ${TOOLS_SUBPATH_${OS}}
