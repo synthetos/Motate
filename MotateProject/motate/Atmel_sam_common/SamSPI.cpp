@@ -31,14 +31,10 @@
 #include "MotateSPI.h"
 
 namespace Motate {
-
-SPIMessage *SPIMessage::first_message;
-
-template <> std::function<void()> _SPIHardware<0>::_spiInterruptHandlerJumper{};
+    template<> std::function<void()> _SPIHardware<0>::_spiInterruptHandlerJumper {};
 #if defined(HAS_SPI1)
     template<> std::function<void()> _SPIHardware<1>::_spiInterruptHandlerJumper {};
 #endif // HAS_SPI1
-
 }
 
 extern "C" void SPI0_Handler(void)  {
