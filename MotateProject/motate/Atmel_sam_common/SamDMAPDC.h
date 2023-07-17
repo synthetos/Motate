@@ -95,12 +95,12 @@ namespace Motate {
         {
             pdc->PERIPH_PTCR = PERIPH_PTCR_RXTEN;  // enable
         };
-        void setRx(void * const buffer, const uint32_t length, const uint8_t byte_width = 1) const
+        void setRx(void * const buffer, const uint32_t length) const
         {
             pdc->PERIPH_RPR = (uint32_t)buffer;
             pdc->PERIPH_RCR = length;
         };
-        void setNextRx(void * const buffer, const uint32_t length, const uint8_t byte_width = 1) const
+        void setNextRx(void * const buffer, const uint32_t length) const
         {
             pdc->PERIPH_RNPR = (uint32_t)buffer;
             pdc->PERIPH_RNCR = length;
@@ -135,19 +135,18 @@ namespace Motate {
         };
 
         // Bundle it all up
-        bool startRXTransfer(void* const    buffer,
+        bool startRXTransfer(void * const buffer,
                              const uint32_t length,
-                             const bool     handle_interrupts = true,
-                             const bool     include_next      = false,
-                             const uint8_t  byte_width        = 1
-                            ) const
+                             bool handle_interrupts = true,
+                             bool include_next = false
+                             ) const
         {
             if (0 == length) { return false; }
 
             if (doneReading()) {
                 if (handle_interrupts) { stopRxDoneInterrupts(); }
 
-                setRx(buffer, length, byte_width);
+                setRx(buffer, length);
 
                 enableRx();
                 if (handle_interrupts) { startRxDoneInterrupts(); }
@@ -175,7 +174,7 @@ namespace Motate {
             }
             // otherwise, we set the next region, if requested. We DON'T attempt to extend it.
             else if (include_next && doneReadingNext()) {
-                setNextRx(buffer, length, byte_width);
+                setNextRx(buffer, length);
                 return true;
             }
 
@@ -191,12 +190,12 @@ namespace Motate {
         {
             pdc->PERIPH_PTCR = PERIPH_PTCR_TXTEN;  // enable again
         };
-        void setTx(void * const buffer, const uint32_t length, const uint8_t byte_width = 1) const
+        void setTx(void * const buffer, const uint32_t length) const
         {
             pdc->PERIPH_TPR = (uint32_t)buffer;
             pdc->PERIPH_TCR = length;
         };
-        void setNextTx(void * const buffer, const uint32_t length, const uint8_t byte_width = 1) const
+        void setNextTx(void * const buffer, const uint32_t length) const
         {
             pdc->PERIPH_TNPR = (uint32_t)buffer;
             pdc->PERIPH_TNCR = length;
@@ -227,16 +226,11 @@ namespace Motate {
 
 
         // Bundle it all up
-        bool startTXTransfer(void* const    buffer,
-                             const uint32_t length,
-                             const bool     handle_interrupts = true,
-                             const bool     include_next      = false,
-                             const uint8_t  byte_width        = 1
-                            ) const
+        bool startTXTransfer(void * const buffer, const uint32_t length, bool handle_interrupts = true, bool include_next = false) const
         {
             if (doneWriting()) {
                 stopTxDoneInterrupts();
-                setTx(buffer, length, byte_width);
+                setTx(buffer, length);
                 if (length != 0) {
                     if (handle_interrupts) { startTxDoneInterrupts(); }
                     enableTx();
@@ -245,7 +239,7 @@ namespace Motate {
                 return false;
             }
             else if (include_next && doneWritingNext()) {
-                setNextTx(buffer, length, byte_width);
+                setNextTx(buffer, length);
                 return true;
             }
             return false;

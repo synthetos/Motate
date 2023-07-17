@@ -439,16 +439,10 @@ namespace Motate {
             const bool handle_interrupts = true;
             const bool include_next = false;
 
-            if (current_device == nullptr) {
-                return false;
-            }
-            auto channel    = current_device->getChannel();
-            uint8_t byte_width = ((spi->SPI_CSR[channel] & SPI_CSR_BITS_Msk) >> SPI_CSR_BITS_Pos) == SPI_CSR_BITS_8_BIT ? 1 : 2;
-
             // Motate::Interrupt::Type interrupts = 0;
             dma.setInterrupts(Interrupt::Off);
             // if (rx_buffer != nullptr) {
-                rx_is_setup = dma.startRXTransfer(rx_buffer, size, handle_interrupts, include_next, byte_width);
+                rx_is_setup = dma.startRXTransfer(rx_buffer, size, handle_interrupts, include_next);
                 // interrupts = Interrupt::OnRxTransferDone;
                 if (!rx_is_setup) { return false; } // fail early
             // } else {
@@ -456,7 +450,7 @@ namespace Motate {
             //     dma.startRXTransfer(nullptr, size, handle_interrupts, include_next);
             // }
             // if (tx_buffer != nullptr) {
-                tx_is_setup = dma.startTXTransfer(tx_buffer, size, handle_interrupts, include_next, byte_width);
+                tx_is_setup = dma.startTXTransfer(tx_buffer, size, handle_interrupts, include_next);
                 // interrupts |= Interrupt::OnTxTransferDone;
             // } else {
             //     // Setup to transfer one dummy byte repeatedly
