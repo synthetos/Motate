@@ -31,181 +31,194 @@
 #define SAMSERVICECALL_H_ONCE
 
 #include <sys/types.h>
-#include <functional>
 #include <atomic>
+#include <functional>
 
-#include "MotateTimers.h" // for the interrupt definitions
 #include "MotateDebug.h"
+#include "MotateTimers.h"  // for the interrupt definitions
 
 // Unless debugging, this should always read "#if 0 && ..."
 // DON'T COMMIT with anything else!
-#if 0 && (IN_DEBUGGER == 1)
-    template<int32_t len>
-    void svc_call_debug(const char (&str)[len]) { Motate::debug.write(str); };
+#if (DEBUG_SEMIHOSTING == 1) && (IN_DEBUGGER == 1)
+template <int32_t length>
+void svc_call_debug(const char (&str)[length]) {
+    Motate::debug.write(str, length);
+};
 #else
-    template<int32_t len>
-    void svc_call_debug(const char (&str)[len]) { ; };
+template <int32_t len>
+void svc_call_debug(const char (&str)[len]) {
+    ;
+};
 #endif
 
 namespace Motate {
-    typedef const uint32_t service_call_number;
+typedef const uint32_t service_call_number;
 
-    //extern volatile uint32_t _internal_pendsv_handler_number;
+// extern volatile uint32_t _internal_pendsv_handler_number;
 
-    struct ServiceCallEvent {
-        ServiceCallEventHandler *handler_;
-        std::atomic<ServiceCallEvent *> _next = nullptr;
-        std::atomic<bool> _queued = false;
-        std::atomic<bool> _pended = false;
+struct ServiceCallEvent {
+    ServiceCallEventHandler*       handler_;
+    std::atomic<ServiceCallEvent*> _next   = nullptr;
+    std::atomic<bool>              _queued = false;
+    std::atomic<bool>              _pended = false;
 
-        static std::atomic<ServiceCallEvent *> _first_service_call; // the pointer is volatile
+    static std::atomic<ServiceCallEvent*> _first_service_call;  // the pointer is volatile
 
-        uint32_t _interrupt_level = kInterruptPriorityLowest; // start at the lowest
-        // we need to convert the enum to a priority value we can compare with
-        int32_t _priority_value = 4;
+    uint32_t _interrupt_level = kInterruptPriorityLowest;  // start at the lowest
+    // we need to convert the enum to a priority value we can compare with
+    int32_t _priority_value = 4;
 
-        void _call_or_queue() {
-            if (_queued) {
-                _debug_print_num(); svc_call_debug("💣");
-                return;
-            }
+    void _call_or_queue() {
+        if (_queued) {
+            _debug_print_num();
+            // svc_call_debug("💣");
+            svc_call_debug("!");
+            return;
+        }
 
-            _queued = true;
-            _next = nullptr;
+        _queued = true;
+        _next   = nullptr;
 
-            // Things we know:
-            //   We are already in the highest priority ServiceCall or interrrupt, or we would have been interrupted.
-            //   We might get interrupted.
+        // Things we know:
+        //   We are already in the highest priority ServiceCall or interrrupt, or we would have been interrupted.
+        //   We might get interrupted.
 
-            // This we need to know:
-            //  What is the current priority, either as an interrupt, or as BASEPRI?
-            //  What is the target priority?
+        // This we need to know:
+        //  What is the current priority, either as an interrupt, or as BASEPRI?
+        //  What is the target priority?
 
-            // Then we can follow this plan:
-            //   If we are requesting a higher priority, we raise BASEPRI and call it.
-            //   If we are requesting the same priority, we queue and pend the task
-            //   If we are requesting a lower priority, we queue and pend the task
+        // Then we can follow this plan:
+        //   If we are requesting a higher priority, we raise BASEPRI and call it.
+        //   If we are requesting the same priority, we queue and pend the task
+        //   If we are requesting a lower priority, we queue and pend the task
 
-            // Queuing a task:
-            //   Add the item to the linked list
+        // Queuing a task:
+        //   Add the item to the linked list
 
-            // Pending a task:
-            //   If the queue is empty or has only lower-priority tasks, we set the priority of pendSV and pend it
+        // Pending a task:
+        //   If the queue is empty or has only lower-priority tasks, we set the priority of pendSV and pend it
 
-            // Handling pendSV:
-            //   Pop the highest priority item off of the list, call it
+        // Handling pendSV:
+        //   Pop the highest priority item off of the list, call it
 
-            bool needs_pended = false;
+        bool needs_pended = false;
 
-            // Thanks to http://embeddedgurus.com/state-space/2014/02/cutting-through-the-confusion-with-arm-cortex-m-interrupt-priorities/
-            // for explaining __get_BASEPRI and __set_BASEPRI needing shifted.
+        // Thanks to
+        // http://embeddedgurus.com/state-space/2014/02/cutting-through-the-confusion-with-arm-cortex-m-interrupt-priorities/
+        // for explaining __get_BASEPRI and __set_BASEPRI needing shifted.
 
-            // REMEMBER: "higher priority" means a lower number!!!
-            //           0 is the highest priority!
+        // REMEMBER: "higher priority" means a lower number!!!
+        //           0 is the highest priority!
 
-//             int32_t current_basepri = __get_BASEPRI() >> (8 - __NVIC_PRIO_BITS);
-//             int32_t effective_priority_level = current_basepri;
-// //            bool in_pendsv_irq = false;
+        //             int32_t current_basepri = __get_BASEPRI() >> (8 - __NVIC_PRIO_BITS);
+        //             int32_t effective_priority_level = current_basepri;
+        // //            bool in_pendsv_irq = false;
 
-//             // get the currently highest-priority active "exception" (interrupt)
-//             // see http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0552a/CHDBIBGJ.html
-//             // NOTE: it's signed!
-//             int32_t active_interrupt_number = (SCB->ICSR & SCB_ICSR_VECTACTIVE_Msk) >> SCB_ICSR_VECTACTIVE_Pos;
-//             if (active_interrupt_number != 0) {
-//                 // See note in previous link: we need to subtract 16 from the interrupt number to get the IRQn_Type
-//                 IRQn_Type active_irq = (IRQn_Type)(active_interrupt_number - 16);
+        //             // get the currently highest-priority active "exception" (interrupt)
+        //             // see http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0552a/CHDBIBGJ.html
+        //             // NOTE: it's signed!
+        //             int32_t active_interrupt_number = (SCB->ICSR & SCB_ICSR_VECTACTIVE_Msk) >>
+        //             SCB_ICSR_VECTACTIVE_Pos; if (active_interrupt_number != 0) {
+        //                 // See note in previous link: we need to subtract 16 from the interrupt number to get the
+        //                 IRQn_Type IRQn_Type active_irq = (IRQn_Type)(active_interrupt_number - 16);
 
-//                 int32_t interrupt_priority_level = NVIC_GetPriority(active_irq);
-//                 if (interrupt_priority_level < effective_priority_level) {
-//                     effective_priority_level = interrupt_priority_level;
-//                 }
-// //
-// //                if (PendSV_IRQn == active_irq) {
-// //                    in_pendsv_irq = true;
-// //                }
-//             }
+        //                 int32_t interrupt_priority_level = NVIC_GetPriority(active_irq);
+        //                 if (interrupt_priority_level < effective_priority_level) {
+        //                     effective_priority_level = interrupt_priority_level;
+        //                 }
+        // //
+        // //                if (PendSV_IRQn == active_irq) {
+        // //                    in_pendsv_irq = true;
+        // //                }
+        //             }
 
-            // if (_priority_value < effective_priority_level) {
-            //     // we are asking for a higher priority, so we elevate BASEPI, call, reset BASEPRI, and return
+        // if (_priority_value < effective_priority_level) {
+        //     // we are asking for a higher priority, so we elevate BASEPI, call, reset BASEPRI, and return
 
-            //     __set_BASEPRI(_priority_value << (8 - __NVIC_PRIO_BITS));
-            //     svc_call_debug("🛫");
-            //     switch(_priority_value) {
-            //         case 0: svc_call_debug("⇈"); break;
-            //         case 1: svc_call_debug("⇡"); break;
-            //         case 2: svc_call_debug("⦿"); break;
-            //         case 3: svc_call_debug("⇣"); break;
-            //         case 4: svc_call_debug("⇊"); break;
-            //         default: svc_call_debug("?"); break;
-            //     }
+        //     __set_BASEPRI(_priority_value << (8 - __NVIC_PRIO_BITS));
+        //     svc_call_debug("🛫");
+        //     switch(_priority_value) {
+        //         case 0: svc_call_debug("⇈"); break;
+        //         case 1: svc_call_debug("⇡"); break;
+        //         case 2: svc_call_debug("⦿"); break;
+        //         case 3: svc_call_debug("⇣"); break;
+        //         case 4: svc_call_debug("⇊"); break;
+        //         default: svc_call_debug("?"); break;
+        //     }
 
-            //     _call();
+        //     _call();
 
-            //     svc_call_debug("🛬");
-            //     __set_BASEPRI(current_basepri << (8 - __NVIC_PRIO_BITS));
+        //     svc_call_debug("🛬");
+        //     __set_BASEPRI(current_basepri << (8 - __NVIC_PRIO_BITS));
 
-            //     return;
-            // }
+        //     return;
+        // }
 
-            // else if (_priority_value == effective_priority_level) {
-            //     // we are asking for the same priority, so just call it and return
-            //     _call();
-            //     return;
-            // }
+        // else if (_priority_value == effective_priority_level) {
+        //     // we are asking for the same priority, so just call it and return
+        //     _call();
+        //     return;
+        // }
 
-            do {  // loop until it works
-                // SamCommon::InterruptDisabler disabler;
+        do {  // loop until it works
+            // SamCommon::InterruptDisabler disabler;
 
-                auto orig_first_service_call = _first_service_call.load();
-                // Again, higher _priority_value is lower priority!
-                if (true || orig_first_service_call == nullptr || orig_first_service_call->_priority_value > _priority_value) {
-                    if (!_first_service_call.compare_exchange_weak(orig_first_service_call, this)) {
-                        continue;  // something changed out from under us, try again
-                    }
-                    _next = orig_first_service_call;
-
-                    _debug_print_num();
-                    svc_call_debug("✂️");
-
-                    needs_pended = true;
-                } else {
-                    ServiceCallEvent* walker = orig_first_service_call;
-                    ServiceCallEvent* next   = nullptr;
-                    while ((next = walker->_next) != nullptr) {
-                        // // put this in front of lower priority tasks
-                        // // Again, higher _priority_value is lower priority!
-                        // if (next->_priority_value > _priority_value) {
-                        //     if (walker == orig_first_service_call) {
-                        //         needs_pended = true;
-                        //     }
-                        //     break;
-                        // }
-                        walker = next;
-                    }
-
-                    _next = next;
-                    if (!walker->_next.compare_exchange_weak(next, this)) {
-                        continue;  // something changed out from under us, try again
-                    }
-                    // if (walker == _first_service_call) {
-                        needs_pended = true;
-                    // }
+            auto orig_first_service_call = _first_service_call.load();
+            // Again, higher _priority_value is lower priority!
+            if (true || orig_first_service_call == nullptr ||
+                orig_first_service_call->_priority_value > _priority_value) {
+                if (!_first_service_call.compare_exchange_weak(orig_first_service_call, this)) {
+                    svc_call_debug("(1)");
+                    continue;  // something changed out from under us, try again
                 }
-            } while (0);
+                _next = orig_first_service_call;
 
-            // If the first_service_call's priority is lower (has a higher number)
-            // then we'll pend another PendSV to esure the correct level.
-            if (needs_pended) {
-                _pend();
+                _debug_print_num();
+                // svc_call_debug("✂️");
+                svc_call_debug("X");
+
+                needs_pended = true;
+            } else {
+                ServiceCallEvent* walker = orig_first_service_call;
+                ServiceCallEvent* next   = nullptr;
+                while ((next = walker->_next) != nullptr) {
+                    // // put this in front of lower priority tasks
+                    // // Again, higher _priority_value is lower priority!
+                    // if (next->_priority_value > _priority_value) {
+                    //     if (walker == orig_first_service_call) {
+                    //         needs_pended = true;
+                    //     }
+                    //     break;
+                    // }
+                    walker = next;
+                }
+
+                _next = next;
+                if (!walker->_next.compare_exchange_weak(next, this)) {
+                    svc_call_debug("(2)");
+                    continue;  // something changed out from under us, try again
+                }
+                // if (walker == _first_service_call) {
+                svc_call_debug("y");
+                needs_pended = true;
+                // }
             }
-        };
+            break;
+        } while (1);
 
-        // We were queued and pended, then called.
-        void _call() {
-            _pended = false;
-            #if 0
+        // If the first_service_call's priority is lower (has a higher number)
+        // then we'll pend another PendSV to esure the correct level.
+        if (needs_pended) {
+            _pend();
+        }
+    };
+
+    // We were queued and pended, then called.
+    void _call() {
+        _pended = false;
+#if 0
             // If we are here then we are in the interrupt context
-            _debug_print_num(); svc_call_debug("☎️");
+            _debug_print_num(); svc_call_debug("B");
 
             // debug code to get priority level
             // see _pend comments for description
@@ -233,42 +246,44 @@ namespace Motate {
                 default: svc_call_debug("?"); break;
             }
             // end debug code
-            #endif
+#endif
 
-            // Mark it as un-queued so it can be re-queued
-            _queued = false;
+        // Mark it as un-queued so it can be re-queued
+        _queued = false;
 
-            // ... and finally:
-            if (handler_) {
-                handler_->handleServiceCallEvent();
-            } else {
-                // interrupt();
-            }
-
-            _debug_print_num(); svc_call_debug("🎉\n");
-        };
-
-        // This is called *ONLY* from the handler (in the .cpp file)
-        void _call_from_handler() {
-            ServiceCallEvent* first_service_call;
-            while ((first_service_call = _first_service_call.load()) != nullptr) {
-                if (!_first_service_call.compare_exchange_weak(first_service_call, first_service_call->_next)) {
-                    continue; // it changed, try again
-                }
-                first_service_call->_next = nullptr;
-                first_service_call->_call();
-
-                first_service_call = _first_service_call.load();
-                if (first_service_call != nullptr) {
-                    first_service_call->_pend();
-                }
-
-                break;
-            }
+        // ... and finally:
+        if (handler_) {
+            handler_->handleServiceCallEvent();
+        } else {
+            // interrupt();
         }
 
-        void _pend() {
-            #if 0
+        _debug_print_num();
+        // svc_call_debug("🎉\n");
+        svc_call_debug(".\n");
+    };
+
+    // This is called *ONLY* from the handler (in the .cpp file)
+    void _call_from_handler() {
+        ServiceCallEvent* first_service_call;
+        while ((first_service_call = _first_service_call.load()) != nullptr) {
+            if (!_first_service_call.compare_exchange_weak(first_service_call, first_service_call->_next)) {
+                continue;  // it changed, try again
+            }
+            first_service_call->_next = nullptr;
+            first_service_call->_call();
+
+            first_service_call = _first_service_call.load();
+            if (first_service_call != nullptr) {
+                first_service_call->_pend();
+            }
+
+            break;
+        }
+    }
+
+    void _pend() {
+#if 0
             _debug_print_num(); svc_call_debug("✍🏻");
 
             switch(_priority_value) {
@@ -279,31 +294,32 @@ namespace Motate {
                 case 4: svc_call_debug("⇊"); break;
                 default: svc_call_debug("?"); break;
             }
-            #endif
+#endif
 
-            /* Set interrupt priority */
-            {
-                // See erratum 837070 in "ARM Processor Cortex-M7 (AT610) and Cortex-M7 with FPU (AT611), Product revision r0, Sofware Developers Errata Notice".
-                SamCommon::InterruptDisabler disabler;
-                NVIC_SetPriority(PendSV_IRQn, _first_service_call.load()->_priority_value);
-            }
+        /* Set interrupt priority */
+        {
+            // See erratum 837070 in "ARM Processor Cortex-M7 (AT610) and Cortex-M7 with FPU (AT611), Product revision
+            // r0, Sofware Developers Errata Notice".
+            SamCommon::InterruptDisabler disabler;
+            NVIC_SetPriority(PendSV_IRQn, _first_service_call.load()->_priority_value);
+        }
 
-            _pended = true;
+        _pended = true;
 
-            // see
-            // http://infocenter.arm.com/help/topic/com.arm.doc.dai0321a/DAI0321A_programming_guide_memory_barriers_for_m_profile.pdf
-            // Section 4.5 and 4.10. Specifically:
-            // "if it is necessary to have the side-effect of the priority change recognized immediately,
-            // an ISB instruction is required"
-            __ISB();
-            SCB->ICSR |= SCB_ICSR_PENDSVSET_Msk;
-            __ISB();
-        };
-
-        virtual void _debug_print_num() {;};
-
-        // virtual void interrupt() {;};
+        // see
+        // http://infocenter.arm.com/help/topic/com.arm.doc.dai0321a/DAI0321A_programming_guide_memory_barriers_for_m_profile.pdf
+        // Section 4.5 and 4.10. Specifically:
+        // "if it is necessary to have the side-effect of the priority change recognized immediately,
+        // an ISB instruction is required"
+        __ISB();
+        SCB->ICSR |= SCB_ICSR_PENDSVSET_Msk;
+        __ISB();
     };
-}
+
+    virtual void _debug_print_num() { ; };
+
+    // virtual void interrupt() {;};
+};
+}  // namespace Motate
 
 #endif /* end of include guard: SAMSERVICECALL_H_ONCE */
