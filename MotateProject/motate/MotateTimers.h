@@ -86,6 +86,12 @@ namespace Motate {
 #include <SamTimers.h>
 #endif
 
+#if defined(__SAMD51J19A__) || defined(__SAMD51J20A__) || defined(__SAMD51G19A__) || \
+    defined(__SAMD51G18A__) || defined(__SAMD51J18A__) || defined(__SAMD51N19A__) || \
+    defined(__SAMD51N20A__) || defined(__SAMD51P19A__) || defined(__SAMD51P20A__)
+#include <SamdTimers.h>
+#endif
+
 #if defined(__KL05Z__)
 #include <Freescale_klxx/KL05ZTimers.h>
 #endif

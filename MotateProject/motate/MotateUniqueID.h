@@ -62,6 +62,10 @@ namespace Motate {
 #include <SamUniqueID.h>
 #endif
 
+#if defined(__SAMD51J19A__) || defined(__SAMD51J20A__) || defined(__SAMD51G19A__) || defined(__samd51__)
+#include <SamdUniqueID.h>
+#endif
+
 #if defined(__KL05Z__)
 //#include <Freescale_klxx/KL05ZSPI.h>
 #endif

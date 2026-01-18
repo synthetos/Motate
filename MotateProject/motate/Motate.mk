@@ -238,7 +238,7 @@ GIT     = git
 
 SHELL = bash
 
-# Unix/Linux section:
+# Unix/Linux/Windows section:
 UNAME := $(shell uname -s)
 
 ifeq (Darwin,${UNAME})
@@ -250,13 +250,35 @@ ifeq (Linux,${UNAME})
 $(info "Found that we're in Linux")
 OS = LINUX
 TOOLS_SUBPATH := linux/gcc-$(CROSS_COMPILE)-$(TOOLS_VERSION)
+else
+# Windows detection (MSYS2, MinGW, Cygwin)
+ifneq (,$(findstring MINGW,${UNAME}))
+$(info "Found that we're in Windows (MinGW)")
+OS = WINDOWS
+TOOLS_SUBPATH := windows/gcc-$(CROSS_COMPILE)-$(TOOLS_VERSION)
+MKDIR = mkdir -p
+else
+ifneq (,$(findstring MSYS,${UNAME}))
+$(info "Found that we're in Windows (MSYS2)")
+OS = WINDOWS
+TOOLS_SUBPATH := windows/gcc-$(CROSS_COMPILE)-$(TOOLS_VERSION)
+MKDIR = mkdir -p
+else
+ifneq (,$(findstring CYGWIN,${UNAME}))
+$(info "Found that we're in Windows (Cygwin)")
+OS = WINDOWS
+TOOLS_SUBPATH := windows/gcc-$(CROSS_COMPILE)-$(TOOLS_VERSION)
+MKDIR = mkdir -p
+endif #CYGWIN
+endif #MSYS
+endif #MINGW
 endif #LINUX
 endif #Darwin
 
 
 PATH := $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin:$(PATH)
 
-# end Unix/linux section
+# end Unix/linux/Windows section
 
 
 export PATH
@@ -348,6 +370,17 @@ CXX_OBJECTS := $(addsuffix .o,$(basename $(CXX_SOURCES)))
 ASM_OBJECTS := $(addsuffix .o,$(basename $(ASM_SOURCES)))
 FIRST_LINK_OBJECTS = $(addsuffix .o,$(basename $(FIRST_LINK_SOURCES)))
 
+# Debug output to diagnose board file compilation issues
+$(info DEBUG Motate.mk: STAR = $(STAR))
+$(info DEBUG Motate.mk: SOURCE_DIRS = $(SOURCE_DIRS))
+$(info DEBUG Motate.mk: Testing wildcard for each SOURCE_DIR:)
+$(foreach dir,$(SOURCE_DIRS),$(info   wildcard $(dir)/$(STAR).cpp = $(wildcard $(dir)/$(STAR).cpp)))
+$(info DEBUG Motate.mk: Also testing with literal asterisk:)
+$(foreach dir,$(SOURCE_DIRS),$(info   wildcard $(dir)/*.cpp = $(wildcard $(dir)/*.cpp)))
+$(info DEBUG Motate.mk: CXX_SOURCES = $(CXX_SOURCES))
+$(info DEBUG Motate.mk: CXX_OBJECTS from SOURCE_DIRS = $(CXX_OBJECTS))
+$(info DEBUG Motate.mk: Filter for 'board': $(filter %board/%,$(CXX_OBJECTS)))
+
 INCLUDES = $(patsubst %,-I%,$(DEVICE_INCLUDE_DIRS) $(USER_INCLUDE_DIRS))
 LIBS     = $(patsubst %,-l%,$(DEVICE_LIBS) $(USER_LIBS))
 LIBDIR   = $(patsubst %,-L%,$(DEVICE_LIB_DIRS) $(USER_LIB_DIRS))
@@ -372,6 +405,10 @@ ALL_OTHER_CXX_SOURCES :=
 
 $(eval $(DEVICE_RULES))
 
+# Debug: Show CXX_OBJECTS after DEVICE_RULES adds more
+$(info DEBUG Motate.mk after DEVICE_RULES: CXX_OBJECTS now includes SAM sources)
+$(info DEBUG Motate.mk after DEVICE_RULES: Filter for 'board': $(filter %board/%,$(CXX_OBJECTS)))
+
 ifeq ($(VERBOSE),2)
 $(info DEVICE_INCLUDE_DIRS+USER_INCLUDE_DIRS:$(patsubst %,$(NEWLINE_TAB)%,$(DEVICE_INCLUDE_DIRS) $(USER_INCLUDE_DIRS)))
 $(info $(NEWLINE_ONLY)DEVICE_LIB_DIRS+USER_LIB_DIRS: $(patsubst %,$(NEWLINE_TAB)%,$(DEVICE_LIB_DIRS) $(USER_LIB_DIRS)))
@@ -387,7 +424,7 @@ tools: | $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin
 # and make it depend on the tools makefile to catch updates
 $(TOOLS_PATH)/$(TOOLS_SUBPATH)/bin: $(TOOLS_PATH)/Makefile
 	@echo Installing the necessary tools...
-	cd ${TOOLS_PATH} && make "ARCH=gcc-${CROSS_COMPILE}" "TOOLS_VERSION=$(TOOLS_VERSION)"
+	cd ${TOOLS_PATH} && $(MAKE) "ARCH=gcc-${CROSS_COMPILE}" "TOOLS_VERSION=$(TOOLS_VERSION)"
 
 OUTDIR = $(OBJ)
 

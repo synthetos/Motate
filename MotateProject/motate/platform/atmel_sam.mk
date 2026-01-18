@@ -115,6 +115,37 @@ else ifeq ($(CHIP),$(findstring $(CHIP), $(SAMS70)))
 
     JLINK_DEVICE=AT$(CHIP)
 
+else ifeq ($(CHIP),$(findstring $(CHIP), $(SAMD51)))
+
+    CHIP_SERIES:=samd51
+
+    ifeq ($(CHIP),$(findstring $(CHIP), SAMD51G18A))
+        CHIP_SUBSERIES:=samd51g18a
+    else ifeq ($(CHIP),$(findstring $(CHIP), SAMD51G19A))
+        CHIP_SUBSERIES:=samd51g19a
+    else ifeq ($(CHIP),$(findstring $(CHIP), SAMD51J18A))
+        CHIP_SUBSERIES:=samd51j18a
+    else ifeq ($(CHIP),$(findstring $(CHIP), SAMD51J19A))
+        CHIP_SUBSERIES:=samd51j19a
+    else ifeq ($(CHIP),$(findstring $(CHIP), SAMD51J20A))
+        CHIP_SUBSERIES:=samd51j20a
+    else ifeq ($(CHIP),$(findstring $(CHIP), SAMD51N19A))
+        CHIP_SUBSERIES:=samd51n19a
+    else ifeq ($(CHIP),$(findstring $(CHIP), SAMD51N20A))
+        CHIP_SUBSERIES:=samd51n20a
+    else ifeq ($(CHIP),$(findstring $(CHIP), SAMD51P19A))
+        CHIP_SUBSERIES:=samd51p19a
+    else ifeq ($(CHIP),$(findstring $(CHIP), SAMD51P20A))
+        CHIP_SUBSERIES:=samd51p20a
+    else
+        $(error $(CHIP) is not in a known Atmel subseries (incomplete makefile, most likely).)
+    endif
+
+    CPU_DEV = cortex-m4
+    FLOAT_OPTIONS = -mfloat-abi=hard -mfpu=fpv4-sp-d16
+
+    JLINK_DEVICE=AT$(CHIP)
+
 else
 
 $(error $(CHIP) is not a known Atmel processor.)
@@ -132,7 +163,10 @@ CROSS_COMPILE = arm-none-eabi
 SAM_PATH    = $(CMSIS_ROOT)/TARGET_Atmel
 DEVICE_PATH = $(SAM_PATH)/$(CHIP_SERIES)
 
+# SAMD51 uses different peripherals, so don't include Atmel_sam_common for it
+ifneq ($(CHIP_SERIES),samd51)
 SAM_SOURCE_DIRS += $(MOTATE_PATH)/Atmel_sam_common
+endif
 SAM_SOURCE_DIRS += $(MOTATE_PATH)/Atmel_$(CHIP_SERIES)
 SAM_SOURCE_DIRS += $(DEVICE_PATH)/source/templates
 SAM_SOURCE_DIRS += $(DEVICE_PATH)/source/templates/$(GCC_TOOLCHAIN)
@@ -148,7 +182,10 @@ DEVICE_INCLUDE_DIRS += $(SAM_PATH)
 DEVICE_INCLUDE_DIRS += $(SAM_PATH)/preprocessor
 DEVICE_INCLUDE_DIRS += $(SAM_PATH)/$(CHIP_SERIES)/include
 DEVICE_INCLUDE_DIRS += $(SAM_PATH)/$(CHIP_SERIES)/source/templates
+# SAMD51 uses Atmel_samd51, others use Atmel_sam_common
+ifneq ($(CHIP_SERIES),samd51)
 DEVICE_INCLUDE_DIRS += $(MOTATE_PATH)/Atmel_sam_common
+endif
 DEVICE_INCLUDE_DIRS += $(MOTATE_PATH)/Atmel_$(CHIP_SERIES)
 DEVICE_INCLUDE_DIRS += $(MOTATE_PATH)/platform/atmel_sam
 

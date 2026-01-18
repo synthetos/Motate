@@ -31,6 +31,13 @@
 #define MOTATEDEBUG_H_ONCE
 
 #include "MotatePins.h" // Grab the platform-specific libraries - Pins is easy, everything has pins!
+
+// SAMD51 defines PORT as a macro to access the PORT peripheral.
+// This conflicts with ITM->PORT usage below. Save and restore it.
+#ifdef PORT
+#define _MOTATE_SAVED_PORT PORT
+#undef PORT
+#endif
 #include "MotateUtilities.h"
 
 #ifndef IN_DEBUGGER
@@ -205,5 +212,11 @@ struct Debug {
 extern Debug debug;
 
 } // namespace Motate
+
+// Restore PORT macro if it was defined before
+#ifdef _MOTATE_SAVED_PORT
+#define PORT _MOTATE_SAVED_PORT
+#undef _MOTATE_SAVED_PORT
+#endif
 
 #endif //MOTATEDEBUG_H_ONCE
