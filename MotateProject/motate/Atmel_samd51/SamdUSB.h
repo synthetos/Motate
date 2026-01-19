@@ -1180,47 +1180,43 @@ namespace Motate {
             TransferState &ts = _transfers[ep];
             if (!ts.active) return;
 
-            // Step 1: Clear any stale TRFAIL1 BEFORE modifying descriptor
-            // This prevents hardware from reading stale PCKSIZE during the window
-            // between our descriptor write and BK1RDY set (critical for first transfer)
-            USB->DEVICE.DeviceEndpoint[ep].EPINTFLAG.reg = USB_DEVICE_EPINTFLAG_TRFAIL1;
+            // Step 1: Wait for previous transfer to complete (BK1RDY must be clear)
+            uint32_t timeout = 10000;
+            while ((USB->DEVICE.DeviceEndpoint[ep].EPSTATUS.reg & USB_DEVICE_EPSTATUS_BK1RDY) && --timeout) {
+                // BK1RDY should already be clear from previous transfer completion
+            }
 
             uint32_t remaining = ts.total_length - ts.transferred;
+            char *src_buffer = ts.buffer + ts.transferred;
+            char *dma_buffer = src_buffer;
 
-            // Step 2: Point ADDR directly to user buffer
-            _ep_descriptors[ep].DeviceDescBank[1].ADDR.reg = (uint32_t)(ts.buffer + ts.transferred);
-
-            // Step 3: CRITICAL - Zero PCKSIZE first to clear stale MULTI_PACKET_SIZE
-            // MULTI_PACKET_SIZE is used as an accumulator by hardware. If non-zero
-            // from previous transfer or initialization, first transfer gets corrupted.
-            _ep_descriptors[ep].DeviceDescBank[1].PCKSIZE.reg = 0;
-            __DSB();  // Ensure the zero write completes before setting actual values
-
-            // Step 4: Set PCKSIZE using full register write (avoid bitfield R-M-W race)
-            // Per datasheet 38.6.2.10: For IN multi-packet:
-            // - BYTE_COUNT = total bytes to send
-            // - MULTI_PACKET_SIZE = 0 (hardware uses this as accumulator)
-            uint32_t pcksize = USB_DEVICE_PCKSIZE_SIZE(3);  // 64 bytes max packet
-            if (remaining > 64) {
-                // Multi-packet transfer
-                pcksize |= USB_DEVICE_PCKSIZE_BYTE_COUNT(remaining) |
-                           USB_DEVICE_PCKSIZE_MULTI_PACKET_SIZE(0) |
-                           USB_DEVICE_PCKSIZE_AUTO_ZLP;  // Auto ZLP if needed
-            } else {
-                // Single packet transfer
-                pcksize |= USB_DEVICE_PCKSIZE_BYTE_COUNT(remaining) |
-                           USB_DEVICE_PCKSIZE_MULTI_PACKET_SIZE(0);
+            // CRITICAL FIX: SAMD51 USB DMA requires 4-byte aligned addresses for IN transfers
+            // When the source buffer is not 4-byte aligned, copy to aligned endpoint buffer
+            // This fixes corruption when TXBuffer's circular buffer position is at odd offset
+            if (remaining <= 64 && ((uint32_t)src_buffer & 0x3) != 0) {
+                // Copy to aligned endpoint buffer (bank 1 for IN)
+                dma_buffer = (char *)_ep_buffers[ep][1];
+                memcpy(dma_buffer, src_buffer, remaining);
             }
+
+            // Step 2: Set up descriptor with (now aligned) buffer address
+            _ep_descriptors[ep].DeviceDescBank[1].ADDR.reg = (uint32_t)dma_buffer;
+
+            // Clear PCKSIZE first, then set values
+            _ep_descriptors[ep].DeviceDescBank[1].PCKSIZE.reg = 0;
+            __DSB();
+
+            uint32_t pcksize = USB_DEVICE_PCKSIZE_SIZE(3) |  // 64-byte max packet
+                               USB_DEVICE_PCKSIZE_BYTE_COUNT(remaining);
             _ep_descriptors[ep].DeviceDescBank[1].PCKSIZE.reg = pcksize;
 
-            // Step 5: Memory barrier and readback to ensure descriptor write completes
+            // Step 3: Memory barrier to ensure descriptor writes complete
             __DSB();
-            (void)_ep_descriptors[ep].DeviceDescBank[1].PCKSIZE.reg;  // Readback
 
-            // Step 6: Set BK1RDY - signals IN data is ready
+            // Step 4: Set BK1RDY - signals IN data is ready for transmission
             _set_bank1_ready(ep);
 
-            // Step 7: Clear TRFAIL1 AFTER BK1RDY (per TinyUSB implementation)
+            // Step 5: Clear TRFAIL1 AFTER BK1RDY (per TinyUSB pattern)
             USB->DEVICE.DeviceEndpoint[ep].EPINTFLAG.reg = USB_DEVICE_EPINTFLAG_TRFAIL1;
 
             _enable_in_send_interrupt(ep);
@@ -1305,6 +1301,16 @@ namespace Motate {
                                 sent = ts.total_length - ts.transferred;
                             }
                             ts.transferred += sent;
+
+                            // CRITICAL: Clear descriptor state BEFORE calling completion callback
+                            // The callback may immediately start a new transfer. If we leave stale
+                            // values in the descriptor, the new transfer may read from wrong address.
+                            // This is especially important after multi-packet transfers where
+                            // MULTI_PACKET_SIZE and internal DMA state need to be reset.
+                            _ep_descriptors[ep].DeviceDescBank[1].PCKSIZE.reg = USB_DEVICE_PCKSIZE_SIZE(3);
+                            _ep_descriptors[ep].DeviceDescBank[1].STATUS_BK.reg = 0;
+                            __DSB();
+
                             _completeTransfer(ep);
                         }
                         handled = true;
