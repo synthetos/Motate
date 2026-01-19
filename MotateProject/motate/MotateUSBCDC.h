@@ -281,6 +281,8 @@ namespace Motate {
         } ATTR_PACKED;
 
         volatile uint8_t _line_state;
+        volatile uint8_t _old_line_state;  // Track previous state for edge detection
+        volatile bool _connection_broken;   // Set true on USB reset/disconnect, cleared on connection callback
         volatile _line_info_t _line_info;
         volatile bool _line_info_valid = false;
         //volatile uint32_t _cached_dwDTERate;
@@ -294,7 +296,9 @@ namespace Motate {
         read_endpoint(new_endpoint_offset+1),
         write_endpoint(new_endpoint_offset+2),
         interface_number(new_interface_number),
-        _line_state(0x00)
+        _line_state(0x00),
+        _old_line_state(0x00),
+        _connection_broken(true)  // Start as "broken" to trigger callback on first connect
         {};
 
         USBSerial(const USBSerial&) = delete;
@@ -524,12 +528,9 @@ namespace Motate {
                 if (setup.requestIs(kSetLineEncoding)) {
                     // if (setup.length() < sizeof(_line_info_t)) { return false; }
                     g_cdc_line_encoding_count++;  // Debug counter
-                    // Always reset line state to 0 to simulate clean connection start.
-                    // This ensures reconnection works even if Windows didn't send RTS=0 on close.
-                    if (_line_state != 0) {
-                        g_cdc_flag_reset_count++;  // Debug: track line_state resets
-                    }
-                    _line_state = 0;
+                    // SET_LINE_ENCODING indicates host is configuring the port.
+                    // This is sent on first connect but NOT on reconnect (Windows caches settings).
+                    // We do NOT reset _line_state here - that breaks reconnect detection.
                     _line_info_valid = false;
                     usb.readFromControlThen((char*)&_line_info, sizeof(_line_info_t), [&]{
                         _line_info_valid = true;
@@ -538,7 +539,8 @@ namespace Motate {
                 }
 
                 if (setup.requestIs(kSetControlLineState)) {
-                    uint8_t _old_line_state = _line_state;
+                    // Save old state BEFORE updating (use member variable, not local)
+                    _old_line_state = _line_state;
                     _line_state = setup.valueLow();
 
                     // Debug: track all SET_CONTROL_LINE_STATE requests
@@ -546,32 +548,64 @@ namespace Motate {
                     g_cdc_last_old_line_state = _old_line_state;
                     g_cdc_last_line_state = _line_state;
 
+                    // Extract DTR and RTS bits
+                    bool old_dtr = _old_line_state & kCDCControlState_DTR;
+                    bool new_dtr = _line_state & kCDCControlState_DTR;
                     bool old_rts = _old_line_state & kCDCControlState_RTS;
                     bool new_rts = _line_state & kCDCControlState_RTS;
 
-                    // Handle connection state changes based on RTS transitions.
-                    // SET_LINE_ENCODING resets _line_state to 0 when reconnecting,
-                    // so we get a proper 0→1 transition even if Windows didn't send RTS=0 on close.
-                    if (old_rts != new_rts) {
-                        g_cdc_rts_change_count++;  // Debug: track RTS transitions
-                        flush();
-                        if (connection_state_changed_callback) {
-                            connection_state_changed_callback(new_rts);
+                    // Determine if this is a "connect" event:
+                    // 1. Either DTR or RTS transitioned from 0 to 1, OR
+                    // 2. _connection_broken is true AND (DTR or RTS is now set)
+                    //
+                    // The _connection_broken flag handles the Windows reconnect case:
+                    // - Windows doesn't send SET_LINE_ENCODING on reconnect
+                    // - Windows may not send DTR/RTS=0 on port close
+                    // - On reconnect, Windows sends SET_CONTROL_LINE_STATE with RTS=1
+                    // - Without _connection_broken, old_rts==1 and new_rts==1, no transition detected
+                    // - With _connection_broken, we know something disconnected and this is a fresh connect
+
+                    bool is_connect = false;
+                    bool is_disconnect = false;
+
+                    if (_connection_broken) {
+                        // Connection was previously broken (USB reset, explicit disconnect, or first boot)
+                        // Treat any SET_CONTROL_LINE_STATE with DTR or RTS set as a connect event
+                        if (new_dtr || new_rts) {
+                            is_connect = true;
+                            _connection_broken = false;  // Clear the flag
+                            g_cdc_flag_reset_count++;    // Debug: track reconnect events
+                        }
+                    } else {
+                        // Normal operation: detect transitions
+                        // Connect: DTR 0->1 or RTS 0->1
+                        // Disconnect: DTR 1->0 (RTS alone is less reliable)
+                        if ((!old_dtr && new_dtr) || (!old_rts && new_rts)) {
+                            is_connect = true;
+                        }
+                        if (old_dtr && !new_dtr) {
+                            is_disconnect = true;
                         }
                     }
-                    // Auto-reset into the bootloader is triggered when the port, already open at 1200 bps, is closed.
 
+                    // Handle connection state change
+                    if (is_connect || is_disconnect) {
+                        g_cdc_rts_change_count++;  // Debug: track state transitions
+                        flush();
+                        if (connection_state_changed_callback) {
+                            connection_state_changed_callback(is_connect);
+                        }
+                    }
+
+                    // Auto-reset into the bootloader is triggered when the port, already open at 1200 bps, is closed.
                     // Note that it may be reopened immediately at a different rate.
                     // That will *NOT* cancel the reset.
-
                     if (_line_info_valid && (1200 == _line_info.dwDTERate))
                     {
                         // We check DTR state to determine if host port is open (bit 0 of lineState).
                         if (!getDTR()) {
                             Motate::System::reset(1);
                         }
-//                        else
-//                            cancelReset();
                     }
 
                     return true;
@@ -582,14 +616,23 @@ namespace Motate {
         };
 
         void handleConnectionStateChanged(const bool connected) {
-            // We only use this to inform if DISconnects
-            // We only connection_state_changed_callback(true) when the DTR changes,
-            // which is later than this hardware change, and happens when host software
-            // connects
-            if (connection_state_changed_callback && !connected) {
+            // This is called from the USB hardware layer on bus-level events:
+            // - USB bus reset (connected=false during reset handling)
+            // - USB cable disconnect (connected=false)
+            // - USB attach (connected=true, but we wait for CDC control line state)
+            //
+            // For disconnects: notify upper layer and mark connection as broken
+            // For connects: we do NOT call the callback here - we wait for
+            // SET_CONTROL_LINE_STATE with DTR/RTS set, which indicates the host
+            // software has actually opened the COM port
+            if (!connected) {
                 _line_info_valid = false;
                 _line_state = 0;
-                connection_state_changed_callback(false);
+                _old_line_state = 0;
+                _connection_broken = true;  // Mark connection as broken for reconnect detection
+                if (connection_state_changed_callback) {
+                    connection_state_changed_callback(false);
+                }
             }
         }
 

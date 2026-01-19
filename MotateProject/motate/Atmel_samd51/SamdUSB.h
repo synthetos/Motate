@@ -740,8 +740,20 @@ namespace Motate {
             _configure_address(0);
             _address_available = false;
             config_number = 0;  // Reset configuration - device is no longer configured
-            // Note: Don't set _vbus_changed here - bus reset is not a disconnect event
-            // The host will re-enumerate and send SET_CONFIGURATION to restore config_number
+
+            // CRITICAL: Notify CDC layer that connection was broken
+            // This is essential for reconnect detection - the CDC layer needs to know
+            // that a bus reset occurred so it can treat the next SET_CONTROL_LINE_STATE
+            // as a fresh connection, even if the host sends the same RTS/DTR values.
+            //
+            // The handleConnectionStateChanged() call uses isConnected() which returns
+            // _attached. We temporarily set _attached=false to signal disconnection,
+            // then restore it - the cable is still physically attached, but the
+            // protocol-level connection was broken by the bus reset.
+            bool was_attached = _attached;
+            _attached = false;
+            proxy->handleConnectionStateChanged();
+            _attached = was_attached;
 
             // Clear any active transfers
             for (uint32_t ep = 0; ep < MAX_PEP_NB(); ep++) {
