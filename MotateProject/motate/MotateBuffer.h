@@ -145,8 +145,10 @@ namespace Motate {
         void init() {
             _owner->setRXTransferDoneCallback([&]() { // use a closure
                 _transfer_requested = 0;
-                //_restartTransfer();
+                _restartTransfer();  // Restart transfer when previous completes
             });
+            // Start the initial RX transfer immediately so we're ready to receive data
+            _restartTransfer();
         };
 
         uint16_t _nextReadOffset() {

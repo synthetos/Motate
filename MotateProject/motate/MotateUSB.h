@@ -106,6 +106,10 @@ namespace Motate {
 #include <SamUSB.h>
 #endif
 
+#if defined(__SAMD51J19A__) || defined(__SAMD51J20A__) || defined(__SAMD51G19A__) || defined(__SAMD51P20A__)
+#include <SamdUSB.h>
+#endif
+
 namespace Motate {
 
 #pragma mark struct USBDevice<interfaceTypes...>
