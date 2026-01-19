@@ -227,6 +227,7 @@ namespace Motate {
         uint32_t _inited = 0;
         uint32_t config_number = 0;
         bool _address_available = false;
+        bool _attached = false;  // Track physical USB attachment state
 
         enum USBSetupState_t {
             SETUP                  = 0,
@@ -427,6 +428,8 @@ namespace Motate {
             // RXSTP doesn't trigger its own interrupt on SAMD51, so we must poll
             // for SETUP packets on every SOF (1ms intervals) to meet USB timing
             _enable_sof_interrupt();
+
+            _attached = true;  // Mark as attached to bus
         };
 
         bool attach() {
@@ -438,6 +441,7 @@ namespace Motate {
         };
 
         void _detach() {
+            _attached = false;  // Mark as detached from bus
             // Set detach bit to disconnect from bus
             USB->DEVICE.CTRLB.bit.DETACH = 1;
         };
@@ -1094,7 +1098,7 @@ namespace Motate {
             return false;
         };
 
-        virtual bool isConnected() { return config_number > 0; };
+        virtual bool isConnected() { return _attached; };  // Return physical attach state, not protocol state
 
         bool checkAndHandleWakeupSuspend() {
             if (_is_wake_up()) {
@@ -1153,7 +1157,10 @@ namespace Motate {
             g_usb_transfer_calls++;
             g_usb_config_at_transfer = config_number;
 
-            if (!config_number) {
+            // Block transfers if not attached OR not configured
+            // During re-enumeration, config_number is temporarily 0
+            // Data sent before configuration is lost/queued without host polling
+            if (!_attached || !config_number) {
                 g_usb_transfer_failed++;
                 return false;
             }
@@ -1295,29 +1302,29 @@ namespace Motate {
                         _ack_in_send(ep);
 
                         if (ts.active) {
-                            // Per datasheet 38.6.2.10: For IN transfers:
-                            // - We set BYTE_COUNT = total to send initially
-                            // - Hardware decrements BYTE_COUNT as it sends
-                            // - MULTI_PACKET_SIZE accumulates bytes sent
-                            // - TRCPT fires when BYTE_COUNT reaches 0 or short packet sent
-                            // After completion, MULTI_PACKET_SIZE contains total bytes sent
-                            uint32_t sent = _ep_descriptors[ep].DeviceDescBank[1].PCKSIZE.bit.MULTI_PACKET_SIZE;
-                            if (sent == 0) {
-                                // Single packet: MULTI_PACKET_SIZE wasn't used, check original request
-                                sent = ts.total_length - ts.transferred;
-                            }
-                            ts.transferred += sent;
+                            // MULTI-PACKET TRANSFER FIX:
+                            // We manually chunk transfers into 64-byte USB packets. Each TRCPT1
+                            // completion means one 64-byte (or smaller) packet was sent.
+                            // Calculate how much we just sent - same formula as _startINTransfer
+                            uint32_t remaining = ts.total_length - ts.transferred;
+                            uint32_t just_sent = (remaining > 64) ? 64 : remaining;
+                            ts.transferred += just_sent;
 
-                            // CRITICAL: Clear descriptor state BEFORE calling completion callback
-                            // The callback may immediately start a new transfer. If we leave stale
-                            // values in the descriptor, the new transfer may read from wrong address.
-                            // This is especially important after multi-packet transfers where
-                            // MULTI_PACKET_SIZE and internal DMA state need to be reset.
+                            // Clear descriptor state for next packet
+                            // CRITICAL: Must clear PCKSIZE and STATUS_BK before next transfer
+                            // This ensures no stale BYTE_COUNT or status bits affect the new packet
                             _ep_descriptors[ep].DeviceDescBank[1].PCKSIZE.reg = USB_DEVICE_PCKSIZE_SIZE(3);
                             _ep_descriptors[ep].DeviceDescBank[1].STATUS_BK.reg = 0;
                             __DSB();
 
-                            _completeTransfer(ep);
+                            // Check if more data to send
+                            if (ts.transferred < ts.total_length) {
+                                // Continue multi-packet transfer - send next chunk
+                                _startINTransfer(ep);
+                            } else {
+                                // All data sent
+                                _completeTransfer(ep);
+                            }
                         }
                         handled = true;
                     }
