@@ -724,7 +724,8 @@ namespace Motate {
             _configure_address(0);
             _address_available = false;
             config_number = 0;  // Reset configuration - device is no longer configured
-            _vbus_changed = true;  // Trigger connection state callback on next poll
+            // Note: Don't set _vbus_changed here - bus reset is not a disconnect event
+            // The host will re-enumerate and send SET_CONFIGURATION to restore config_number
 
             // Clear any active transfers
             for (uint32_t ep = 0; ep < MAX_PEP_NB(); ep++) {
@@ -1190,15 +1191,18 @@ namespace Motate {
 
             uint32_t remaining = ts.total_length - ts.transferred;
             char *src_buffer = ts.buffer + ts.transferred;
+
+            // Limit to 64 bytes per USB packet (Full-Speed bulk endpoint max)
+            uint32_t transfer_size = (remaining > 64) ? 64 : remaining;
             char *dma_buffer = src_buffer;
 
             // CRITICAL FIX: SAMD51 USB DMA requires 4-byte aligned addresses for IN transfers
-            // When the source buffer is not 4-byte aligned, copy to aligned endpoint buffer
-            // This fixes corruption when TXBuffer's circular buffer position is at odd offset
-            if (remaining <= 64 && ((uint32_t)src_buffer & 0x3) != 0) {
+            // Always copy through aligned endpoint buffer when source is misaligned
+            // This fixes corruption on ALL transfers, not just small ones
+            if (((uint32_t)src_buffer & 0x3) != 0) {
                 // Copy to aligned endpoint buffer (bank 1 for IN)
                 dma_buffer = (char *)_ep_buffers[ep][1];
-                memcpy(dma_buffer, src_buffer, remaining);
+                memcpy(dma_buffer, src_buffer, transfer_size);
             }
 
             // Step 2: Set up descriptor with (now aligned) buffer address
@@ -1209,7 +1213,7 @@ namespace Motate {
             __DSB();
 
             uint32_t pcksize = USB_DEVICE_PCKSIZE_SIZE(3) |  // 64-byte max packet
-                               USB_DEVICE_PCKSIZE_BYTE_COUNT(remaining);
+                               USB_DEVICE_PCKSIZE_BYTE_COUNT(transfer_size);
             _ep_descriptors[ep].DeviceDescBank[1].PCKSIZE.reg = pcksize;
 
             // Step 3: Memory barrier to ensure descriptor writes complete
@@ -1408,7 +1412,7 @@ namespace Motate {
             return kEndpointBufferNull;
         };
 
-        bool _vbus_changed = true;
+        bool _vbus_changed = false;  // Don't trigger false disconnect on first poll
         bool handleVbusChange(const bool force = false) {
             _vbus_changed = true;
             return true;
