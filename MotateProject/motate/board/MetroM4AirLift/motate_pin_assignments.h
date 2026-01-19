@@ -67,6 +67,16 @@ namespace Motate {
     // NeoPixel (internal status LED)
     _MAKE_MOTATE_PIN(40, 'B', 22);   // NEOPIXEL - PB22
 
+    // ESP32 NINA UART pins (for G-code WiFi streaming)
+    // NINA_TX/SAMD_RX is PA04 (pin 18/A4) - already defined above
+    // NINA_RX/SAMD_TX is PA07 (pin 9/D9) - already defined above
+    // These can use SERCOM0: PA04=PAD0(RX), PA07=PAD3(TX)
+
+    // ESP32 NINA flow control and reset pins
+    _MAKE_MOTATE_PIN(50, 'B',  1);   // NINA_GPIO0 (RTS to ESP32) - PB01
+    _MAKE_MOTATE_PIN(51, 'B',  4);   // NINA_ACK (CTS from ESP32) - PB04
+    _MAKE_MOTATE_PIN(52, 'B',  5);   // NINA_RESET - PB05
+
     /*************************************************************
      *
      * PWM Pin Definitions - TCC peripheral mappings

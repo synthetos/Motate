@@ -338,13 +338,14 @@ namespace Motate {
             PORT->Group[0].PINCFG[25].reg = PORT_PINCFG_PMUXEN;
             PORT->Group[0].PMUX[12].reg = PORT_PMUX_PMUXE(7) | PORT_PMUX_PMUXO(7);
 
-            // 4. NOW it's safe to access USB registers - load pad calibration
-            _loadUSBCalibration();
-
-            // 5. Reset USB peripheral (TinyUSB double-wait pattern)
+            // 4. Reset USB peripheral FIRST (TinyUSB double-wait pattern)
+            // This clears all USB registers, so we must load calibration AFTER reset
             USB->DEVICE.CTRLA.bit.SWRST = 1;
             while (USB->DEVICE.SYNCBUSY.bit.SWRST == 0) {}  // Wait for reset to START
             while (USB->DEVICE.SYNCBUSY.bit.SWRST) {}       // Wait for reset to COMPLETE
+
+            // 5. NOW load pad calibration (must be AFTER reset or it gets cleared!)
+            _loadUSBCalibration();
 
             // 6. Set Quality of Service - required for proper interrupt generation
             // Per TinyUSB and Microchip examples, both CQOS and DQOS must be set to 3
