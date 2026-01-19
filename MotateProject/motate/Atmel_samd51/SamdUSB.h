@@ -1180,12 +1180,23 @@ namespace Motate {
             TransferState &ts = _transfers[ep];
             if (!ts.active) return;
 
+            // Step 1: Clear any stale TRFAIL1 BEFORE modifying descriptor
+            // This prevents hardware from reading stale PCKSIZE during the window
+            // between our descriptor write and BK1RDY set (critical for first transfer)
+            USB->DEVICE.DeviceEndpoint[ep].EPINTFLAG.reg = USB_DEVICE_EPINTFLAG_TRFAIL1;
+
             uint32_t remaining = ts.total_length - ts.transferred;
 
-            // Step 1: Point ADDR directly to user buffer
+            // Step 2: Point ADDR directly to user buffer
             _ep_descriptors[ep].DeviceDescBank[1].ADDR.reg = (uint32_t)(ts.buffer + ts.transferred);
 
-            // Step 2: Set PCKSIZE using full register write (avoid bitfield R-M-W race)
+            // Step 3: CRITICAL - Zero PCKSIZE first to clear stale MULTI_PACKET_SIZE
+            // MULTI_PACKET_SIZE is used as an accumulator by hardware. If non-zero
+            // from previous transfer or initialization, first transfer gets corrupted.
+            _ep_descriptors[ep].DeviceDescBank[1].PCKSIZE.reg = 0;
+            __DSB();  // Ensure the zero write completes before setting actual values
+
+            // Step 4: Set PCKSIZE using full register write (avoid bitfield R-M-W race)
             // Per datasheet 38.6.2.10: For IN multi-packet:
             // - BYTE_COUNT = total bytes to send
             // - MULTI_PACKET_SIZE = 0 (hardware uses this as accumulator)
@@ -1202,13 +1213,14 @@ namespace Motate {
             }
             _ep_descriptors[ep].DeviceDescBank[1].PCKSIZE.reg = pcksize;
 
-            // Step 3: Memory barrier to ensure descriptor write completes
+            // Step 5: Memory barrier and readback to ensure descriptor write completes
             __DSB();
+            (void)_ep_descriptors[ep].DeviceDescBank[1].PCKSIZE.reg;  // Readback
 
-            // Step 4: Set BK1RDY FIRST - signals IN data is ready
+            // Step 6: Set BK1RDY - signals IN data is ready
             _set_bank1_ready(ep);
 
-            // Step 5: Clear TRFAIL1 AFTER BK1RDY (per TinyUSB implementation)
+            // Step 7: Clear TRFAIL1 AFTER BK1RDY (per TinyUSB implementation)
             USB->DEVICE.DeviceEndpoint[ep].EPINTFLAG.reg = USB_DEVICE_EPINTFLAG_TRFAIL1;
 
             _enable_in_send_interrupt(ep);
