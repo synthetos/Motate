@@ -67,6 +67,69 @@ namespace Motate {
     // NeoPixel (internal status LED)
     _MAKE_MOTATE_PIN(40, 'B', 22);   // NEOPIXEL - PB22
 
+    /*************************************************************
+     *
+     * PWM Pin Definitions - TCC peripheral mappings
+     *
+     * SAMD51 TCC Pin Multiplexing:
+     *   Function F (index 5) - TCC0, TCC1
+     *   Function G (index 6) - TCC0, TCC1, TCC2
+     *
+     * Format: _MAKE_MOTATE_PWM_PIN(port, pin, TimerType, peripheral, inverted)
+     *
+     * Note: We use typedefs to avoid preprocessor issues with template commas
+     *
+     *************************************************************/
+
+    // Type aliases to protect template commas from preprocessor
+    using TCC0_CH0 = TCCChannel<0, 0>;
+    using TCC0_CH1 = TCCChannel<0, 1>;
+    using TCC0_CH2 = TCCChannel<0, 2>;
+    using TCC0_CH3 = TCCChannel<0, 3>;
+    using TCC0_CH4 = TCCChannel<0, 4>;
+    using TCC0_CH5 = TCCChannel<0, 5>;
+    using TCC1_CH1 = TCCChannel<1, 1>;
+    using TCC1_CH2 = TCCChannel<1, 2>;
+    using TCC2_CH0 = TCCChannel<2, 0>;
+    using TCC2_CH1 = TCCChannel<2, 1>;
+
+    // D2/PA14 - TCC2/WO[0] via Function G
+    _MAKE_MOTATE_PWM_PIN('A', 14, TCC2_CH0, G, false);
+
+    // D3/PA09 - TCC0/WO[1] or TCC1/WO[3] via Function F
+    _MAKE_MOTATE_PWM_PIN('A',  9, TCC0_CH1, F, false);
+
+    // D4/PA08 - TCC0/WO[0] or TCC1/WO[2] via Function F
+    _MAKE_MOTATE_PWM_PIN('A',  8, TCC0_CH0, F, false);
+
+    // D5/PA15 - TCC2/WO[1] via Function G
+    _MAKE_MOTATE_PWM_PIN('A', 15, TCC2_CH1, G, false);
+
+    // D6/PA20 - TCC0/WO[0] via Function G
+    _MAKE_MOTATE_PWM_PIN('A', 20, TCC0_CH0, G, false);
+
+    // D7/PA21 - TCC0/WO[1] via Function G
+    _MAKE_MOTATE_PWM_PIN('A', 21, TCC0_CH1, G, false);
+
+    // D9/PA07 - TCC1/WO[1] via Function F
+    _MAKE_MOTATE_PWM_PIN('A',  7, TCC1_CH1, F, false);
+
+    // D10/PA18 - TCC0/WO[2] via Function G
+    _MAKE_MOTATE_PWM_PIN('A', 18, TCC0_CH2, G, false);
+
+    // D11/PA16 - TCC0/WO[4] via Function G (Spindle PWM)
+    _MAKE_MOTATE_PWM_PIN('A', 16, TCC0_CH4, G, false);
+
+    // D12/PA19 - TCC0/WO[3] via Function G
+    _MAKE_MOTATE_PWM_PIN('A', 19, TCC0_CH3, G, false);
+
+    // D13/PA17 - TCC0/WO[5] via Function G (Built-in LED)
+    _MAKE_MOTATE_PWM_PIN('A', 17, TCC0_CH5, G, false);
+
+    // PB22/Pin40 - TCC1/WO[2] via Function F (NeoPixel)
+    // This is the important one for NeoPixel DMA-driven PWM
+    _MAKE_MOTATE_PWM_PIN('B', 22, TCC1_CH2, F, false);
+
 } // namespace Motate
 
 #endif // motate_pin_assignments_h

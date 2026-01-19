@@ -34,9 +34,16 @@
 
 #include "sam.h"
 #include "SamdCommon.h"
+#include "SamdDMA.h"
 
 #include <functional>
 #include <type_traits>
+
+// Debug variables for NeoPixel/DMA debugging (defined in 0_hardware.cpp)
+extern volatile uint32_t g_dma_channel_valid;
+extern volatile uint32_t g_transfer_started_count;
+extern volatile int32_t g_dma_channel_num;
+extern volatile uint32_t g_tcc1_ctrla_after_update;
 
 namespace Motate {
 
@@ -84,6 +91,17 @@ namespace Motate {
         // Aliases for the above.
         kPWMOn                     = kClearOnMatch | kSetOnOverflow,
         kPWMOnInverted             = kSetOnMatch | kClearOnOverflow,
+    };
+
+    /**************************************************
+     *
+     * Timer Sync Mode - for DMA-driven PWM updates
+     *
+     **************************************************/
+
+    enum TimerSyncMode {
+        kTimerSyncManually = 0,  // Update duty cycle manually
+        kTimerSyncDMA      = 1   // Update duty cycle via DMA on overflow
     };
 
     /* This is an internal enum (but the values are platform-specific):
@@ -624,31 +642,675 @@ namespace Motate {
 
     /**************************************************
      *
+     * TCC Instance and GCLK Helpers
+     *
+     * SAMD51 has TCC0-TCC4:
+     *   TCC0: 6 channels, 24-bit counter
+     *   TCC1: 4 channels, 24-bit counter
+     *   TCC2: 3 channels, 16-bit counter
+     *   TCC3: 2 channels, 16-bit counter
+     *   TCC4: 2 channels, 16-bit counter
+     *
+     **************************************************/
+
+    constexpr Tcc* tccInstance(uint8_t tccNum) {
+        switch(tccNum) {
+            case 0: return TCC0;
+            case 1: return TCC1;
+            case 2: return TCC2;
+#ifdef TCC3
+            case 3: return TCC3;
+#endif
+#ifdef TCC4
+            case 4: return TCC4;
+#endif
+            default: return nullptr;
+        }
+    }
+
+    constexpr uint8_t tccGclkId(uint8_t tccNum) {
+        switch(tccNum) {
+            case 0: case 1: return TCC0_GCLK_ID;  // TCC0 and TCC1 share GCLK
+            case 2: case 3: return TCC2_GCLK_ID;  // TCC2 and TCC3 share GCLK
+#ifdef TCC4_GCLK_ID
+            case 4: return TCC4_GCLK_ID;
+#endif
+            default: return 0xFF;
+        }
+    }
+
+    constexpr IRQn_Type tccIRQn(uint8_t tccNum, uint8_t irqType = 0) {
+        // TCC has multiple IRQs: OVF, MC0, MC1, etc.
+        // For simplicity, we use the main TCC IRQ (OVF/ERR)
+        switch(tccNum) {
+            case 0: return static_cast<IRQn_Type>(TCC0_0_IRQn + irqType);
+            case 1: return static_cast<IRQn_Type>(TCC1_0_IRQn + irqType);
+            case 2: return static_cast<IRQn_Type>(TCC2_0_IRQn + irqType);
+#ifdef TCC3
+            case 3: return static_cast<IRQn_Type>(TCC3_0_IRQn + irqType);
+#endif
+#ifdef TCC4
+            case 4: return static_cast<IRQn_Type>(TCC4_0_IRQn + irqType);
+#endif
+            default: return static_cast<IRQn_Type>(0);
+        }
+    }
+
+    // Get the counter bit width for a TCC
+    constexpr uint8_t tccCounterBits(uint8_t tccNum) {
+        switch(tccNum) {
+            case 0: case 1: return 24;  // TCC0/1 are 24-bit
+            case 2: case 3: case 4: return 16;  // TCC2/3/4 are 16-bit
+            default: return 16;
+        }
+    }
+
+    // Get the maximum compare value for a TCC
+    constexpr uint32_t tccMaxValue(uint8_t tccNum) {
+        return (1UL << tccCounterBits(tccNum)) - 1;
+    }
+
+    // Get number of channels for a TCC
+    constexpr uint8_t tccChannelCount(uint8_t tccNum) {
+        switch(tccNum) {
+            case 0: return 6;
+            case 1: return 4;
+            case 2: return 3;
+            case 3: case 4: return 2;
+            default: return 0;
+        }
+    }
+
+    /**************************************************
+     *
+     * TCC Timer (Timer/Counter for Control)
+     *
+     * Full implementation with DMA support for NeoPixel
+     * and other applications requiring DMA-driven PWM.
+     *
+     **************************************************/
+
+    template <uint8_t tccNum>
+    struct TCCTimer {
+        // Validate TCC number at compile time
+        static_assert(tccNum <= 4, "TCC number must be 0-4");
+
+        // TCC properties
+        static constexpr uint8_t tcc_num = tccNum;
+        static constexpr uint8_t num_channels = tccChannelCount(tccNum);
+        static constexpr uint32_t max_value = tccMaxValue(tccNum);
+
+        // State tracking
+        static volatile uint32_t _interrupt_cause_cached;
+        static bool _enabled;
+        static uint32_t _top_value;
+        static uint16_t _prescaler_divisor;
+
+        // DMA support
+        static bool _sync_enabled;
+        static TimerSyncMode _sync_mode;
+        static DynamicDMAChannel _dma_channel;
+        static bool _transfer_started;
+
+        TCCTimer() { init(); }
+
+        TCCTimer(const TimerMode mode, const uint32_t freq) {
+            init();
+            setModeAndFrequency(mode, freq);
+        }
+
+        void init() {
+            _enablePeripheralClock();
+        }
+
+        /**
+         * Get TCC instance pointer
+         */
+        static Tcc* tcc() {
+            return tccInstance(tccNum);
+        }
+
+        /**
+         * Enable peripheral clocks for this TCC
+         */
+        static void _enablePeripheralClock() {
+            // Enable APB clock
+            switch(tccNum) {
+                case 0: MCLK->APBBMASK.bit.TCC0_ = 1; break;
+                case 1: MCLK->APBBMASK.bit.TCC1_ = 1; break;
+                case 2: MCLK->APBCMASK.bit.TCC2_ = 1; break;
+#ifdef TCC3
+                case 3: MCLK->APBCMASK.bit.TCC3_ = 1; break;
+#endif
+#ifdef TCC4
+                case 4: MCLK->APBDMASK.bit.TCC4_ = 1; break;
+#endif
+            }
+
+            // Enable GCLK for this TCC
+            uint8_t gclk_id = tccGclkId(tccNum);
+            if (gclk_id != 0xFF) {
+                GCLK->PCHCTRL[gclk_id].reg = GCLK_PCHCTRL_GEN_GCLK0 | GCLK_PCHCTRL_CHEN;
+                while (GCLK->PCHCTRL[gclk_id].bit.CHEN == 0);
+            }
+        }
+
+        /**
+         * Wait for synchronization
+         */
+        static void _sync_wait(uint32_t mask) {
+            while (tcc()->SYNCBUSY.reg & mask);
+        }
+
+        /**
+         * Software reset the TCC
+         */
+        void _reset() {
+            Tcc* t = tcc();
+            t->CTRLA.bit.SWRST = 1;
+            _sync_wait(TCC_SYNCBUSY_SWRST);
+        }
+
+        /**
+         * Set mode and frequency for PWM generation
+         *
+         * Uses Normal PWM (NPWM) mode where PER is the TOP value.
+         * Counter counts 0 -> PER, then wraps and generates OVF.
+         *
+         * Returns: Actual frequency achieved, or negative error code
+         */
+        int32_t setModeAndFrequency(const TimerMode mode, uint32_t freq) {
+            Tcc* t = tcc();
+
+            // Disable TCC first
+            if (t->CTRLA.bit.ENABLE) {
+                t->CTRLA.bit.ENABLE = 0;
+                _sync_wait(TCC_SYNCBUSY_ENABLE);
+            }
+
+            // Software reset
+            _reset();
+
+            // Handle center-aligned mode frequency halving
+            if (mode == kPWMCenterAligned || mode == kTimerUpDownToMatch) {
+                freq /= 2;
+            }
+
+            // Get master clock frequency (120 MHz on SAMD51)
+            uint32_t masterClock = SystemCoreClock;
+
+            // Find appropriate prescaler
+            // TCC prescalers: 1, 2, 4, 8, 16, 64, 256, 1024
+            struct PrescalerInfo {
+                uint16_t divisor;
+                uint8_t setting;
+            };
+
+            static const PrescalerInfo prescalers[] = {
+                {1,    TCC_CTRLA_PRESCALER_DIV1_Val},
+                {2,    TCC_CTRLA_PRESCALER_DIV2_Val},
+                {4,    TCC_CTRLA_PRESCALER_DIV4_Val},
+                {8,    TCC_CTRLA_PRESCALER_DIV8_Val},
+                {16,   TCC_CTRLA_PRESCALER_DIV16_Val},
+                {64,   TCC_CTRLA_PRESCALER_DIV64_Val},
+                {256,  TCC_CTRLA_PRESCALER_DIV256_Val},
+                {1024, TCC_CTRLA_PRESCALER_DIV1024_Val},
+            };
+
+            uint8_t prescaler_setting = TCC_CTRLA_PRESCALER_DIV1_Val;
+            _prescaler_divisor = 1;
+
+            for (const auto& ps : prescalers) {
+                uint32_t top = masterClock / (ps.divisor * freq);
+                if (top > 0 && top <= max_value) {
+                    prescaler_setting = ps.setting;
+                    _prescaler_divisor = ps.divisor;
+                    break;
+                }
+            }
+
+            // Calculate top value (PER)
+            uint32_t top = masterClock / (_prescaler_divisor * freq);
+            if (top < 1) top = 1;
+            if (top > max_value) top = max_value;
+            _top_value = top;
+
+            // Configure TCC
+            t->CTRLA.reg = TCC_CTRLA_PRESCALER(prescaler_setting);
+
+            // Configure waveform mode
+            if (mode == kPWMCenterAligned || mode == kTimerUpDownToMatch) {
+                // Dual-slope PWM (center-aligned)
+                t->WAVE.reg = TCC_WAVE_WAVEGEN_DSBOTTOM;
+            } else {
+                // Normal PWM (left-aligned, single-slope)
+                t->WAVE.reg = TCC_WAVE_WAVEGEN_NPWM;
+            }
+            _sync_wait(TCC_SYNCBUSY_WAVE);
+
+            // Set period (TOP value)
+            t->PER.reg = _top_value - 1;
+            _sync_wait(TCC_SYNCBUSY_PER);
+
+            // Initialize all compare channels to 0
+            for (uint8_t ch = 0; ch < num_channels; ch++) {
+                t->CC[ch].reg = 0;
+            }
+            _sync_wait(TCC_SYNCBUSY_CC0 | TCC_SYNCBUSY_CC1);
+
+            // Return actual frequency achieved
+            return masterClock / (_prescaler_divisor * _top_value);
+        }
+
+        /**
+         * Start the timer
+         */
+        void start() {
+            Tcc* t = tcc();
+            t->CTRLA.bit.ENABLE = 1;
+            _sync_wait(TCC_SYNCBUSY_ENABLE);
+            _enabled = true;
+        }
+
+        /**
+         * Stop the timer
+         */
+        void stop() {
+            Tcc* t = tcc();
+            t->CTRLA.bit.ENABLE = 0;
+            _sync_wait(TCC_SYNCBUSY_ENABLE);
+            _enabled = false;
+        }
+
+        /**
+         * Get the TOP value (PER register)
+         */
+        uint32_t getTopValue() const {
+            return tcc()->PER.reg + 1;
+        }
+
+        /**
+         * Set the TOP value
+         */
+        void setTop(const uint32_t topValue) {
+            Tcc* t = tcc();
+            if (_enabled) {
+                // Use buffered update
+                t->PERBUF.reg = topValue - 1;
+            } else {
+                t->PER.reg = topValue - 1;
+                _sync_wait(TCC_SYNCBUSY_PER);
+            }
+            _top_value = topValue;
+        }
+
+        /**
+         * Get current counter value
+         */
+        uint32_t getValue() {
+            Tcc* t = tcc();
+            // Request read sync
+            t->CTRLBSET.bit.CMD = TCC_CTRLBSET_CMD_READSYNC_Val;
+            _sync_wait(TCC_SYNCBUSY_CTRLB);
+            _sync_wait(TCC_SYNCBUSY_COUNT);
+            return t->COUNT.reg;
+        }
+
+        /**
+         * Set duty cycle for a channel (0.0 to 1.0)
+         */
+        void setDutyCycleForChannel(const uint8_t channel, const float ratio) {
+            if (channel < num_channels) {
+                setExactDutyCycleForChannel(channel, (uint32_t)(_top_value * ratio));
+            }
+        }
+
+        float getDutyCycleForChannel(const uint8_t channel) {
+            if (_top_value == 0 || channel >= num_channels) return 0.0f;
+            return (float)getExactDutyCycleForChannel(channel) / (float)_top_value;
+        }
+
+        /**
+         * Set exact duty cycle (compare value)
+         */
+        void setExactDutyCycleForChannel(const uint8_t channel, const uint32_t duty) {
+            if (channel >= num_channels) return;
+
+            Tcc* t = tcc();
+            if (_enabled) {
+                // Use buffered update (CCBUF)
+                t->CCBUF[channel].reg = duty;
+            } else {
+                t->CC[channel].reg = duty;
+                // Wait for sync on the appropriate CC register
+                _sync_wait(TCC_SYNCBUSY_CC0 << channel);
+            }
+        }
+
+        uint32_t getExactDutyCycleForChannel(const uint8_t channel) {
+            if (channel >= num_channels) return 0;
+            return tcc()->CC[channel].reg;
+        }
+
+        /**
+         * Set output options (polarity)
+         */
+        void setOutputOptions(const uint8_t channel, const uint32_t options) {
+            if (channel >= num_channels) return;
+
+            Tcc* t = tcc();
+            if (options == kPWMOnInverted) {
+                t->WAVE.reg |= (TCC_WAVE_POL0 << channel);
+            } else {
+                t->WAVE.reg &= ~(TCC_WAVE_POL0 << channel);
+            }
+            _sync_wait(TCC_SYNCBUSY_WAVE);
+        }
+
+        void startPWMOutput(const uint8_t channel) {
+            (void)channel;
+            start();
+        }
+
+        void stopPWMOutput(const uint8_t channel) {
+            (void)channel;
+            stop();
+        }
+
+        /**
+         * Enable/disable sync mode (for DMA-driven updates)
+         */
+        void setSync(const bool is_sync) {
+            _sync_enabled = is_sync;
+        }
+
+        /**
+         * Set sync mode (manual or DMA)
+         *
+         * For NeoPixel: kTimerSyncDMA with periods=1
+         * This configures DMA to transfer new duty cycle values on each overflow.
+         */
+        void setSyncMode(const TimerSyncMode mode, uint32_t periods = 1) {
+            _sync_mode = mode;
+
+            if (mode == kTimerSyncDMA) {
+                // Allocate DMA channel if needed
+                if (!_dma_channel.isValid()) {
+                    _dma_channel.allocate();
+                }
+
+                // Get the DMA trigger source for this TCC's overflow
+                uint8_t triggerSource;
+                switch(tccNum) {
+                    case 0: triggerSource = DMAC_TRIGSRC::TCC0_OVF; break;
+                    case 1: triggerSource = DMAC_TRIGSRC::TCC1_OVF; break;
+                    case 2: triggerSource = DMAC_TRIGSRC::TCC2_OVF; break;
+                    case 3: triggerSource = DMAC_TRIGSRC::TCC3_OVF; break;
+                    case 4: triggerSource = DMAC_TRIGSRC::TCC4_OVF; break;
+                    default: triggerSource = DMAC_TRIGSRC::DISABLE; break;
+                }
+
+                // Initialize DMA channel with TCC overflow trigger
+                // BURST trigger action: single beat per trigger
+                _dma_channel.init(triggerSource, DMAC_CHCTRLA_TRIGACT_BURST_Val, 2);
+            }
+        }
+
+        /**
+         * Start a DMA transfer to update duty cycles
+         *
+         * buffer: Array of 16-bit duty cycle values
+         * length: Number of values in the buffer (in bytes)
+         *
+         * DMA will transfer one value on each TCC overflow, updating CCB[0].
+         */
+        bool startTransfer(const uint8_t* buffer, const uint16_t length) {
+            // Debug: track DMA channel validity and startTransfer calls
+            ::g_dma_channel_valid = _dma_channel.isValid() ? 1 : 0;
+            ::g_dma_channel_num = _dma_channel.channel();
+            ::g_transfer_started_count++;
+
+            if (!_dma_channel.isValid()) return false;
+
+            Tcc* t = tcc();
+
+            // Configure DMA descriptor for memory-to-peripheral transfer
+            // Source: buffer in memory (incrementing)
+            // Destination: TCC CCB[0] register (fixed)
+            // Beat size: 16-bit (TCC compare values are 16/24-bit, but CCB is 32-bit register)
+
+            // For TCC0/1 (24-bit), we still use 16-bit transfers since typical PWM values fit
+            // For NeoPixel at 800kHz with 120MHz clock, TOP is 150, well within 16-bit
+
+            // Determine beat size based on counter width
+            uint8_t beatSize;
+            uint8_t bytesPerBeat;
+            if (tccCounterBits(tccNum) > 16) {
+                // 24-bit TCC, use 32-bit transfers
+                beatSize = 2;  // WORD (32-bit)
+                bytesPerBeat = 4;
+            } else {
+                // 16-bit TCC, use 16-bit transfers
+                beatSize = 1;  // HWORD (16-bit)
+                bytesPerBeat = 2;
+            }
+
+            // Calculate number of beats
+            uint16_t beatCount = length / bytesPerBeat;
+
+            DMADescriptor* desc = _dma_channel.descriptor();
+
+            // Configure block transfer control
+            desc->btctrl = BTCTRL::VALID |
+                           BTCTRL::BLOCKACT_NOACT |
+                           (beatSize << 8) |      // BEATSIZE
+                           BTCTRL::SRCINC |       // Source address increments
+                           BTCTRL::STEPSEL_SRC;   // Step size applies to source
+
+            desc->btcnt = beatCount;
+
+            // Source: end of buffer (incrementing mode uses end address)
+            desc->srcaddr = (uint32_t)buffer + length;
+
+            // Destination: TCC CCBUF[0] register (buffered compare)
+            desc->dstaddr = (uint32_t)&(t->CCBUF[0].reg);
+
+            // No linked descriptor
+            desc->descaddr = 0;
+
+            // Clear any previous transfer complete flag
+            _dma_channel.clearAllFlags();
+
+            // Enable and start the DMA channel
+            _dma_channel.enable();
+
+            // Mark that we've started a transfer
+            _transfer_started = true;
+
+            // Start the TCC
+            start();
+
+            // Debug: capture TCC CTRLA after start
+            if (tccNum == 1) {
+                ::g_tcc1_ctrla_after_update = t->CTRLA.reg;
+            }
+
+            return true;
+        }
+
+        // Template version for array buffers
+        template<typename T>
+        bool startTransfer(T const &buffer) {
+            static_assert(std::alignment_of<T>::value >= 2,
+                          "startTransfer(buffer): buffer must be aligned to at least 2 bytes");
+            return startTransfer((const uint8_t*)(&buffer), sizeof(T));
+        }
+
+        /**
+         * Check if DMA transfer is complete
+         *
+         * Returns true if:
+         * - DMA channel is not valid (always "done")
+         * - No transfer has been started yet (ready to start first transfer)
+         * - Current transfer is complete (TCMPL set) and not busy
+         */
+        bool isTransferDone() {
+            if (!_dma_channel.isValid()) return true;
+            if (!_transfer_started) return true;  // No transfer started yet, ready to begin
+            return _dma_channel.isTransferComplete() && !_dma_channel.isBusy();
+        }
+
+        /**
+         * Set interrupts
+         */
+        void setInterrupts(const uint32_t interrupts, const int16_t channel = -1) {
+            Tcc* t = tcc();
+
+            if (interrupts != kInterruptsOff) {
+                uint32_t priority = 2;
+                if (interrupts & kInterruptPriorityHighest) priority = 0;
+                else if (interrupts & kInterruptPriorityHigh) priority = 1;
+                else if (interrupts & kInterruptPriorityMedium) priority = 2;
+                else if (interrupts & kInterruptPriorityLow) priority = 3;
+                else if (interrupts & kInterruptPriorityLowest) priority = 4;
+
+                // Clear pending interrupts
+                t->INTFLAG.reg = TCC_INTFLAG_MASK;
+
+                if (interrupts & kInterruptOnOverflow) {
+                    t->INTENSET.reg = TCC_INTENSET_OVF;
+                }
+                if ((interrupts & kInterruptOnMatch) && channel >= 0 && channel < num_channels) {
+                    t->INTENSET.reg = (TCC_INTENSET_MC0 << channel);
+                }
+
+                IRQn_Type irq = tccIRQn(tccNum, 0);  // OVF IRQ
+                NVIC_SetPriority(irq, priority);
+                NVIC_ClearPendingIRQ(irq);
+                NVIC_EnableIRQ(irq);
+            } else {
+                t->INTENCLR.reg = TCC_INTENCLR_MASK;
+                NVIC_DisableIRQ(tccIRQn(tccNum, 0));
+            }
+        }
+
+        void setInterruptPending() {
+            NVIC_SetPendingIRQ(tccIRQn(tccNum, 0));
+        }
+
+        static TimerChannelInterruptOptions getInterruptCause(int16_t &channel) {
+            channel = -1;
+            uint32_t flags = _interrupt_cause_cached;
+
+            if (flags & TCC_INTFLAG_OVF) {
+                return kInterruptOnOverflow;
+            }
+
+            // Check match interrupts
+            for (uint8_t ch = 0; ch < num_channels; ch++) {
+                if (flags & (TCC_INTFLAG_MC0 << ch)) {
+                    channel = ch;
+                    return kInterruptOnMatch;
+                }
+            }
+
+            return kInterruptUnknown;
+        }
+
+        // Placeholder for user interrupt handler
+        static void interrupt();
+    };
+
+    // Static member definitions for TCCTimer
+    template <uint8_t tccNum>
+    volatile uint32_t TCCTimer<tccNum>::_interrupt_cause_cached = 0;
+
+    template <uint8_t tccNum>
+    bool TCCTimer<tccNum>::_enabled = false;
+
+    template <uint8_t tccNum>
+    uint32_t TCCTimer<tccNum>::_top_value = tccMaxValue(tccNum);
+
+    template <uint8_t tccNum>
+    uint16_t TCCTimer<tccNum>::_prescaler_divisor = 1;
+
+    template <uint8_t tccNum>
+    bool TCCTimer<tccNum>::_sync_enabled = false;
+
+    template <uint8_t tccNum>
+    TimerSyncMode TCCTimer<tccNum>::_sync_mode = kTimerSyncManually;
+
+    template <uint8_t tccNum>
+    DynamicDMAChannel TCCTimer<tccNum>::_dma_channel;
+
+    template <uint8_t tccNum>
+    bool TCCTimer<tccNum>::_transfer_started = false;
+
+    /**************************************************
+     *
      * TCC Timer Channel (Timer/Counter for Control)
      *
-     * SAMD51 has TCC0-TCC4 with multiple channels each
-     * Stub implementation for now
+     * Wrapper for TCCTimer with a specific channel.
+     * Provides the same interface as PWMTimer for
+     * compatibility with NeoPixel and other drivers.
      *
      **************************************************/
 
     template <uint8_t tccNum, uint8_t channelNum>
-    struct TCCChannel {
-        static constexpr bool is_real = false;
+    struct TCCChannel : TCCTimer<tccNum> {
+        static constexpr bool is_real = true;
+        static constexpr bool can_sync = true;
+        static constexpr bool sync_master = (channelNum == 0);
 
-        TCCChannel(const TimerMode mode = kTimerUpToMatch, const uint32_t freq = 1000) {}
-        void setModeAndFrequency(const TimerMode mode, const uint32_t freq) {}
-        void start() {}
-        void stop() {}
-        uint32_t getTopValue() const { return 0; }
-        float getDutyCycle() const { return 0.0f; }
-        uint32_t getExactDutyCycle() const { return 0; }
-        void setDutyCycle(const float value) {}
-        void setExactDutyCycle(const uint32_t duty) {}
-        void setOutputOptions(const TimerChannelOutputOptions options) {}
-        void startPWMOutput() {}
-        void stopPWMOutput() {}
-        void setInterrupts(const uint32_t interrupts) {}
-        TimerInterruptOptions getInterruptCause(int16_t &channel) { return kInterruptsOff; }
+        TCCChannel() : TCCTimer<tccNum>{} {}
+
+        TCCChannel(const TimerMode mode, const uint32_t freq) : TCCTimer<tccNum>{mode, freq} {}
+
+        // Channel-specific duty cycle methods
+        void setDutyCycle(const float ratio) {
+            TCCTimer<tccNum>::setDutyCycleForChannel(channelNum, ratio);
+        }
+
+        float getDutyCycle() {
+            return TCCTimer<tccNum>::getDutyCycleForChannel(channelNum);
+        }
+
+        void setExactDutyCycle(const uint32_t absolute) {
+            TCCTimer<tccNum>::setExactDutyCycleForChannel(channelNum, absolute);
+        }
+
+        uint32_t getExactDutyCycle() {
+            return TCCTimer<tccNum>::getExactDutyCycleForChannel(channelNum);
+        }
+
+        void setOutputOptions(const uint32_t options) {
+            TCCTimer<tccNum>::setOutputOptions(channelNum, options);
+        }
+
+        void startPWMOutput() {
+            TCCTimer<tccNum>::startPWMOutput(channelNum);
+        }
+
+        void stopPWMOutput() {
+            TCCTimer<tccNum>::stopPWMOutput(channelNum);
+        }
+
+        void setInterrupts(const uint32_t interrupts) {
+            TCCTimer<tccNum>::setInterrupts(interrupts, channelNum);
+        }
+
+        TimerChannelInterruptOptions getInterruptCause(int16_t &channel) {
+            channel = channelNum;
+            return TCCTimer<tccNum>::getInterruptCause(channel);
+        }
+
+        TimerChannelInterruptOptions getInterruptCause() {
+            int16_t channel = channelNum;
+            return TCCTimer<tccNum>::getInterruptCause(channel);
+        }
+
+        // Placeholder for user interrupt handler
+        static void interrupt();
     };
 
     /**************************************************
@@ -775,6 +1437,9 @@ namespace Motate {
                 return; // we would extend the timer
             }
             start_ = SysTickTimer.getValue();
+            // Ensure start_ is never 0 so isSet() returns true.
+            // This handles the case where SysTick hasn't started yet.
+            if (start_ == 0) { start_ = 1; }
             delay_ = delay;
         };
 

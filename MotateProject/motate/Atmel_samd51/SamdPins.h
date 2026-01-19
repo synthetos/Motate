@@ -460,6 +460,12 @@ namespace Motate {
                 pwmpin_init((invertedByDefault ^ ((options & kPWMPinInverted)?true:false)) ? kPWMOnInverted : kPWMOn); \
             }; \
             using RealPWMOutputPin<pinNum, timerOrPWM>::operator=; \
+            /* Expose DMA/sync methods from timer for NeoPixel and other DMA-driven PWM */ \
+            using timerOrPWM::stop; \
+            using timerOrPWM::setSync; \
+            using timerOrPWM::setSyncMode; \
+            using timerOrPWM::isTransferDone; \
+            using timerOrPWM::startTransfer; \
             /* Signal to _GetAvailablePWMOrAlike that we're here, AND a real Pin<> exists. */ \
             static constexpr bool _isAvailable() { return !ReversePinLookup<registerChar, registerPin>::isNull(); };  \
         };

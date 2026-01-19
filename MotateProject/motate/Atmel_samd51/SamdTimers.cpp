@@ -74,3 +74,48 @@ _MAKE_TCx_Handler(4, TC4)
 _MAKE_TCx_Handler(5, TC5)
 
 #undef _MAKE_TCx_Handler
+
+// TCC Interrupt Handlers
+// TCC peripherals have multiple IRQs per instance (OVF, MCx, etc.)
+// We handle the main OVF/ERR interrupt here.
+//
+// Note: For DMA-driven PWM (NeoPixel), interrupts are typically not used
+// as DMA handles the transfers automatically.
+
+#define _MAKE_TCCx_Handler(x, tccbase) \
+    namespace Motate { \
+        template<> void TCCTimer<x>::interrupt() __attribute__ ((weak)); \
+        template<> void TCCChannel<x, 0>::interrupt() __attribute__ ((weak)); \
+        template<> void TCCChannel<x, 1>::interrupt() __attribute__ ((weak)); \
+        template<> void TCCChannel<x, 2>::interrupt() __attribute__ ((weak)); \
+    } \
+    extern "C" \
+    void TCC##x##_0_Handler(void) { \
+        Motate::TCCTimer<x>::_interrupt_cause_cached = tccbase->INTFLAG.reg; \
+        tccbase->INTFLAG.reg = TCC_INTFLAG_MASK; \
+        if (Motate::TCCTimer<x>::interrupt) { \
+            Motate::TCCTimer<x>::interrupt(); \
+        } \
+    } \
+    extern "C" \
+    void TCC##x##_1_Handler(void) { \
+        TCC##x##_0_Handler(); \
+    } \
+    extern "C" \
+    void TCC##x##_2_Handler(void) { \
+        TCC##x##_0_Handler(); \
+    }
+
+_MAKE_TCCx_Handler(0, TCC0)
+_MAKE_TCCx_Handler(1, TCC1)
+_MAKE_TCCx_Handler(2, TCC2)
+
+#ifdef TCC3
+_MAKE_TCCx_Handler(3, TCC3)
+#endif
+
+#ifdef TCC4
+_MAKE_TCCx_Handler(4, TCC4)
+#endif
+
+#undef _MAKE_TCCx_Handler
