@@ -429,7 +429,14 @@ namespace Motate {
             // for SETUP packets on every SOF (1ms intervals) to meet USB timing
             _enable_sof_interrupt();
 
-            _attached = true;  // Mark as attached to bus
+            // CRITICAL: Trigger VBUS change callback to notify upper layers of connection
+            // SAMD51 has no hardware VBUS detection like SAM3X, so we must trigger
+            // this manually when attaching. Only trigger if not already attached to
+            // avoid infinite loop (checkAndHandleVbusChange() calls _attach()).
+            if (!_attached) {
+                _attached = true;  // Mark as attached to bus
+                _vbus_changed = true;  // Trigger connection callback on next poll()
+            }
         };
 
         bool attach() {
