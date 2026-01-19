@@ -1476,6 +1476,178 @@ namespace Motate {
             _attach();
             return true;
         }
+
+        /*** Polled I/O for Passthrough Mode ***/
+        // These methods provide simple byte-level access for USB-UART bridging
+        // Used when DMA-based transfers are too complex for simple passthrough
+
+        // State for polled reading - buffers received packets
+        uint8_t _polled_rx_buffer[64];
+        volatile uint8_t _polled_rx_count = 0;
+        volatile uint8_t _polled_rx_index = 0;
+
+        /**
+         * Read a single byte from an OUT endpoint (host to device)
+         * Returns the byte value (0-255) or -1 if no data available
+         * Non-blocking.
+         */
+        int16_t readByte(const uint8_t ep) {
+            // First check if we have buffered data from previous packet
+            if (_polled_rx_index < _polled_rx_count) {
+                return _polled_rx_buffer[_polled_rx_index++];
+            }
+
+            // No buffered data, check for new packet
+            // For OUT endpoints, check TRCPT0 (transfer complete bank 0)
+            if (!(USB->DEVICE.DeviceEndpoint[ep].EPINTFLAG.reg & USB_DEVICE_EPINTFLAG_TRCPT0)) {
+                return -1;  // No data available
+            }
+
+            // Data received - get byte count
+            uint16_t received = _ep_descriptors[ep].DeviceDescBank[0].PCKSIZE.bit.BYTE_COUNT;
+            if (received == 0) {
+                // Zero-length packet, re-arm and return no data
+                _ack_out_received(ep);
+                _set_bank0_ready(ep);
+                USB->DEVICE.DeviceEndpoint[ep].EPINTFLAG.reg = USB_DEVICE_EPINTFLAG_TRFAIL0;
+                return -1;
+            }
+
+            // Copy received data to our buffer
+            // Data is at the address pointed to by ADDR register
+            uint8_t *src = (uint8_t *)_ep_descriptors[ep].DeviceDescBank[0].ADDR.reg;
+            _polled_rx_count = (received > 64) ? 64 : received;
+            memcpy(_polled_rx_buffer, src, _polled_rx_count);
+            _polled_rx_index = 0;
+
+            // Acknowledge and re-arm endpoint for next packet
+            _ack_out_received(ep);
+            _set_bank0_ready(ep);
+            USB->DEVICE.DeviceEndpoint[ep].EPINTFLAG.reg = USB_DEVICE_EPINTFLAG_TRFAIL0;
+
+            // Return first byte
+            return _polled_rx_buffer[_polled_rx_index++];
+        }
+
+        /**
+         * Read multiple bytes from an OUT endpoint
+         * Returns number of bytes actually read (may be less than requested)
+         * Non-blocking.
+         */
+        uint16_t read(const uint8_t ep, char *buffer, const uint16_t maxlen) {
+            uint16_t count = 0;
+            while (count < maxlen) {
+                int16_t b = readByte(ep);
+                if (b < 0) break;
+                buffer[count++] = (char)b;
+            }
+            return count;
+        }
+
+        // State for polled writing - buffers outgoing data
+        uint8_t _polled_tx_buffer[64];
+        volatile uint8_t _polled_tx_count = 0;
+
+        /**
+         * Write a single byte to an IN endpoint (device to host)
+         * Returns 1 if byte was buffered, 0 if buffer full (need to flush)
+         * Call polledFlush() to actually send the data.
+         */
+        int16_t writeByte(const uint8_t ep, uint8_t data) {
+            if (_polled_tx_count >= 64) {
+                // Buffer full, try to flush
+                if (!polledFlush(ep)) {
+                    return 0;  // Can't flush, buffer still full
+                }
+            }
+            _polled_tx_buffer[_polled_tx_count++] = data;
+            return 1;
+        }
+
+        /**
+         * Write multiple bytes to an IN endpoint
+         * Returns number of bytes actually written
+         * Non-blocking - may need multiple calls with polledFlush() in between.
+         */
+        uint16_t write(const uint8_t ep, const char *buffer, const uint16_t len) {
+            uint16_t written = 0;
+            while (written < len) {
+                if (writeByte(ep, buffer[written]) == 0) {
+                    break;  // Buffer full
+                }
+                written++;
+            }
+            return written;
+        }
+
+        /**
+         * Flush buffered TX data to the endpoint (polled mode)
+         * Returns true if flush successful (or nothing to flush)
+         * Returns false if previous transfer still in progress
+         */
+        bool polledFlush(const uint8_t ep) {
+            if (_polled_tx_count == 0) {
+                return true;  // Nothing to flush
+            }
+
+            // Check if previous transfer is complete (BK1RDY should be clear)
+            if (USB->DEVICE.DeviceEndpoint[ep].EPSTATUS.reg & USB_DEVICE_EPSTATUS_BK1RDY) {
+                return false;  // Previous transfer still in progress
+            }
+
+            // Copy data to endpoint buffer (bank 1 for IN)
+            memcpy(_ep_buffers[ep][1], _polled_tx_buffer, _polled_tx_count);
+
+            // Set up descriptor
+            _ep_descriptors[ep].DeviceDescBank[1].ADDR.reg = (uint32_t)_ep_buffers[ep][1];
+            _ep_descriptors[ep].DeviceDescBank[1].PCKSIZE.reg =
+                USB_DEVICE_PCKSIZE_SIZE(3) |  // 64-byte max
+                USB_DEVICE_PCKSIZE_BYTE_COUNT(_polled_tx_count);
+
+            __DSB();  // Memory barrier
+
+            // Trigger transmission
+            _set_bank1_ready(ep);
+            USB->DEVICE.DeviceEndpoint[ep].EPINTFLAG.reg = USB_DEVICE_EPINTFLAG_TRFAIL1;
+
+            _polled_tx_count = 0;
+            return true;
+        }
+
+        /**
+         * Clear polled RX buffer
+         */
+        void polledFlushRead(const uint8_t ep) {
+            (void)ep;
+            _polled_rx_count = 0;
+            _polled_rx_index = 0;
+        }
+
+        /**
+         * Prepare endpoint for polled mode
+         * Disables DMA transfers and sets up for polling
+         */
+        void enablePolledMode(const uint8_t ep) {
+            // Cancel any active DMA transfer
+            if (_transfer_active_by_endpoint & (1 << ep)) {
+                _transfer_active_by_endpoint &= ~(1 << ep);
+                _transfers[ep].active = false;
+            }
+
+            // Reset polled state
+            _polled_rx_count = 0;
+            _polled_rx_index = 0;
+            _polled_tx_count = 0;
+
+            // For OUT endpoint, arm to receive
+            if (!_is_endpoint_a_tx_in(ep)) {
+                _ep_descriptors[ep].DeviceDescBank[0].ADDR.reg = (uint32_t)_ep_buffers[ep][0];
+                _ep_descriptors[ep].DeviceDescBank[0].PCKSIZE.reg = USB_DEVICE_PCKSIZE_SIZE(3);
+                _set_bank0_ready(ep);
+                USB->DEVICE.DeviceEndpoint[ep].EPINTFLAG.reg = USB_DEVICE_EPINTFLAG_TRFAIL0;
+            }
+        }
+
     };  // struct USBDeviceHardware
 
 }  // namespace Motate
