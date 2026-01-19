@@ -35,6 +35,14 @@
 
 namespace Motate {
 
+    /*** CDC Debug Counters - track SET_CONTROL_LINE_STATE for reconnect debugging ***/
+    volatile uint32_t g_cdc_set_control_line_count = 0;
+    volatile uint32_t g_cdc_rts_change_count = 0;
+    volatile uint8_t g_cdc_last_line_state = 0;
+    volatile uint8_t g_cdc_last_old_line_state = 0xFF;  // Start with invalid value to detect first call
+    volatile uint32_t g_cdc_line_encoding_count = 0;
+    volatile uint32_t g_cdc_flag_reset_count = 0;
+
     /*** Static member definitions ***/
 
     USBDeviceHardware *USBDeviceHardware::hw = nullptr;
@@ -51,7 +59,9 @@ namespace Motate {
 
     // Control buffer for USB control transfers (used by MotateUSB.h)
     // SAMD51 is full-speed only so 64 bytes is sufficient, but keep 512 for compatibility
-    uint8_t USBControlBuffer[512];
+    // CRITICAL: Must be word-aligned (4-byte) for USB DMA to work properly!
+    // Misaligned buffers cause TRFAIL1 during IN transfers.
+    alignas(4) uint8_t USBControlBuffer[512];
 
     /*** Language string (required by USB spec) ***/
 

@@ -35,6 +35,7 @@ int main(void);
 /** \endcond */
 
 void __libc_init_array(void);
+void SystemInit(void);
 
 /* Default empty handler */
 void Dummy_Handler(void);
@@ -374,6 +375,9 @@ void Reset_Handler(void)
     __DSB();
     __ISB();
 #endif
+
+    /* Initialize system clocks (120 MHz CPU, 48 MHz USB) */
+    SystemInit();
 
     /* Initialize the C library */
     __libc_init_array();

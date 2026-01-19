@@ -64,6 +64,13 @@ static inline void oscctrl_dpll_sync(uint8_t dpll)
  */
 void SystemInit(void)
 {
+    /* Disable Watchdog Timer if not locked by fuses (ALWAYSON) */
+    /* This prevents WDT reset during clock configuration */
+    if (!WDT->CTRLA.bit.ALWAYSON) {
+        WDT->CTRLA.bit.ENABLE = 0;
+        while (WDT->SYNCBUSY.reg) ;
+    }
+
     /* Set flash wait states for 120 MHz at 3.3V (see datasheet table 54-42) */
     /* 5 wait states required for >104 MHz at 3.3V */
     NVMCTRL->CTRLA.bit.RWS = 5;
@@ -127,20 +134,34 @@ void SystemInit(void)
     OSCCTRL->Dpll[0].DPLLCTRLA.reg = OSCCTRL_DPLLCTRLA_ENABLE;
     oscctrl_dpll_sync(0);
 
-    /* Wait for DPLL0 to lock */
-    while (!(OSCCTRL->Dpll[0].DPLLSTATUS.bit.LOCK))
-        ;
-
-    /* Now switch GCLK0 to DPLL0 for 120 MHz operation */
-    GCLK->GENCTRL[0].reg = GCLK_GENCTRL_SRC_DPLL0 |
+    /* Configure GCLK1 for 48 MHz (USB) using DFLL48M FIRST
+     * This must happen before any early returns so USB always has a clock.
+     * DFLL48M is already running from reset in open-loop mode at 48 MHz.
+     */
+    GCLK->GENCTRL[1].reg = GCLK_GENCTRL_SRC_DFLL |
                            GCLK_GENCTRL_IDC |
                            GCLK_GENCTRL_GENEN;
     gclk_sync();
 
-    /* Configure GCLK1 for 48 MHz (USB) using DFLL48M
-     * DFLL48M is already running from reset in open-loop mode at 48 MHz
+    /* Wait for DPLL0 to lock with timeout
+     * At 48 MHz (DFLL48M), 480000 iterations ~= 10ms
+     * If DPLL fails to lock, we fall back to DFLL48M at 48 MHz
      */
-    GCLK->GENCTRL[1].reg = GCLK_GENCTRL_SRC_DFLL |
+    volatile uint32_t timeout = 480000;
+    while (!(OSCCTRL->Dpll[0].DPLLSTATUS.bit.LOCK) && --timeout)
+        ;
+
+    /* If DPLL failed to lock, stay on DFLL48M and skip GCLK0 switch */
+    if (timeout == 0) {
+        /* DPLL failed - disable it and keep running on DFLL48M at 48 MHz */
+        OSCCTRL->Dpll[0].DPLLCTRLA.reg = 0;
+        oscctrl_dpll_sync(0);
+        SystemCoreClock = 48000000UL;
+        return;  /* Exit early, skip 120 MHz configuration (USB clock already set) */
+    }
+
+    /* Now switch GCLK0 to DPLL0 for 120 MHz operation */
+    GCLK->GENCTRL[0].reg = GCLK_GENCTRL_SRC_DPLL0 |
                            GCLK_GENCTRL_IDC |
                            GCLK_GENCTRL_GENEN;
     gclk_sync();

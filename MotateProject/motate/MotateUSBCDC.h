@@ -38,6 +38,14 @@
 
 namespace Motate {
 
+    // Global debug counters for SET_CONTROL_LINE_STATE tracking - readable via J-Link
+    extern volatile uint32_t g_cdc_set_control_line_count;
+    extern volatile uint32_t g_cdc_rts_change_count;
+    extern volatile uint8_t g_cdc_last_line_state;
+    extern volatile uint8_t g_cdc_last_old_line_state;
+    extern volatile uint32_t g_cdc_line_encoding_count;
+    extern volatile uint32_t g_cdc_flag_reset_count;
+
     /* ############################################ */
     /* #                                          # */
     /* #             USB CDC Interface            # */
@@ -515,6 +523,13 @@ namespace Motate {
             if (setup.isAHostToDeviceClassInterfaceRequest()) {
                 if (setup.requestIs(kSetLineEncoding)) {
                     // if (setup.length() < sizeof(_line_info_t)) { return false; }
+                    g_cdc_line_encoding_count++;  // Debug counter
+                    // Always reset line state to 0 to simulate clean connection start.
+                    // This ensures reconnection works even if Windows didn't send RTS=0 on close.
+                    if (_line_state != 0) {
+                        g_cdc_flag_reset_count++;  // Debug: track line_state resets
+                    }
+                    _line_state = 0;
                     _line_info_valid = false;
                     usb.readFromControlThen((char*)&_line_info, sizeof(_line_info_t), [&]{
                         _line_info_valid = true;
@@ -526,12 +541,22 @@ namespace Motate {
                     uint8_t _old_line_state = _line_state;
                     _line_state = setup.valueLow();
 
-                    // If the RTS changed, call connectionStateChanged (if it's defined)
-                    if ((_old_line_state & kCDCControlState_RTS) != (_line_state & kCDCControlState_RTS)) {
-                        flush();
+                    // Debug: track all SET_CONTROL_LINE_STATE requests
+                    g_cdc_set_control_line_count++;
+                    g_cdc_last_old_line_state = _old_line_state;
+                    g_cdc_last_line_state = _line_state;
 
+                    bool old_rts = _old_line_state & kCDCControlState_RTS;
+                    bool new_rts = _line_state & kCDCControlState_RTS;
+
+                    // Handle connection state changes based on RTS transitions.
+                    // SET_LINE_ENCODING resets _line_state to 0 when reconnecting,
+                    // so we get a proper 0→1 transition even if Windows didn't send RTS=0 on close.
+                    if (old_rts != new_rts) {
+                        g_cdc_rts_change_count++;  // Debug: track RTS transitions
+                        flush();
                         if (connection_state_changed_callback) {
-                            connection_state_changed_callback(_line_state & kCDCControlState_RTS);
+                            connection_state_changed_callback(new_rts);
                         }
                     }
                     // Auto-reset into the bootloader is triggered when the port, already open at 1200 bps, is closed.

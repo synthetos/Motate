@@ -636,7 +636,12 @@ namespace Motate {
             return (flag & USB_DEVICE_EPINTFLAG_RXSTP) != 0;
         };
         void _ack_setup_received(uint32_t ep) {
-            USB->DEVICE.DeviceEndpoint[ep].EPINTFLAG.reg = USB_DEVICE_EPINTFLAG_RXSTP;
+            // CRITICAL: Clear both RXSTP and TRCPT0 together!
+            // Per TinyUSB, a SETUP token can occur immediately after a ZLP Status,
+            // causing TRCPT0 to be set simultaneously. If we only clear RXSTP,
+            // the stale TRCPT0 flag triggers erroneous _handleControlRX() calls.
+            USB->DEVICE.DeviceEndpoint[ep].EPINTFLAG.reg =
+                USB_DEVICE_EPINTFLAG_RXSTP | USB_DEVICE_EPINTFLAG_TRCPT0;
         };
         void _enable_setup_received_interrupt(uint32_t ep) {
             USB->DEVICE.DeviceEndpoint[ep].EPINTENSET.reg = USB_DEVICE_EPINTENSET_RXSTP;

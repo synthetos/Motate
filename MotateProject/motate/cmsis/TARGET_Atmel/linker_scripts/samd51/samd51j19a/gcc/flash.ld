@@ -20,6 +20,7 @@ OUTPUT_ARCH(arm)
 SEARCH_DIR(.)
 
 /* Memory Spaces Definitions */
+/* JTAG-only: App starts at 0x0000, full 512KB flash available */
 MEMORY
 {
   rom (rx)  : ORIGIN = 0x00000000, LENGTH = 0x00080000  /* 512 KB */
@@ -101,6 +102,7 @@ SECTIONS
         . = ALIGN(4);
         _srelocate = .;
         *(.ramfunc .ramfunc.*);
+        *(.hot_data .hot_data.*);  /* HOT_DATA section for frequently accessed data */
         *(.data .data.*);
         . = ALIGN(4);
         _erelocate = .;
