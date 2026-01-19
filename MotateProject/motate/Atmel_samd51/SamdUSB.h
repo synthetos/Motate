@@ -723,6 +723,8 @@ namespace Motate {
 
             _configure_address(0);
             _address_available = false;
+            config_number = 0;  // Reset configuration - device is no longer configured
+            _vbus_changed = true;  // Trigger connection state callback on next poll
 
             // Clear any active transfers
             for (uint32_t ep = 0; ep < MAX_PEP_NB(); ep++) {
@@ -1091,7 +1093,7 @@ namespace Motate {
             return false;
         };
 
-        virtual bool isConnected() { return false; };
+        virtual bool isConnected() { return config_number > 0; };
 
         bool checkAndHandleWakeupSuspend() {
             if (_is_wake_up()) {
