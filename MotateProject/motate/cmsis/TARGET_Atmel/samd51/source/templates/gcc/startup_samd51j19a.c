@@ -343,6 +343,19 @@ void Reset_Handler(void)
 {
     uint32_t *pSrc, *pDest;
 
+    /* CRITICAL: Set VTOR as the VERY FIRST thing before ANY other code runs.
+     * The UF2 bootloader may have interrupts pending (USB, SysTick, etc.)
+     * If an interrupt fires before VTOR is set, the CPU will use the bootloader's
+     * vector table at 0x0000, causing undefined behavior.
+     */
+    __disable_irq();
+    __DSB();
+    __ISB();
+    SCB->VTOR = ((uint32_t)&_sfixed & SCB_VTOR_TBLOFF_Msk);
+    __DSB();
+    __ISB();
+    __enable_irq();
+
     /* Initialize the relocate segment */
     pSrc = &_etext;
     pDest = &_srelocate;
@@ -357,14 +370,6 @@ void Reset_Handler(void)
     for (pDest = &_szero; pDest < &_ezero;) {
         *pDest++ = 0;
     }
-
-    /* Set the vector table base address */
-    pSrc = (uint32_t *) & _sfixed;
-    __DSB();
-    __ISB();
-    SCB->VTOR = ((uint32_t) pSrc & SCB_VTOR_TBLOFF_Msk);
-    __DSB();
-    __ISB();
 
 #if __FPU_USED
     /* Enable the FPU */

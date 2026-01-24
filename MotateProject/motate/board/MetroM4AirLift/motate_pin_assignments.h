@@ -24,29 +24,30 @@ namespace Motate {
     // Metro M4 AirLift Lite Pin Assignments
     // Format: _MAKE_MOTATE_PIN(Arduino_Pin, Port_Letter, Port_Number)
 
-    // Digital pins (Arduino header)
+    // Digital pins (Arduino header) - Metro M4 AirLift specific!
+    // Note: AirLift uses different pins than standard Metro M4 due to ESP32 NINA
     _MAKE_MOTATE_PIN( 0, 'A', 23);   // D0/RX - PA23 SERCOM3/PAD[1]
     _MAKE_MOTATE_PIN( 1, 'A', 22);   // D1/TX - PA22 SERCOM3/PAD[0]
-    _MAKE_MOTATE_PIN( 2, 'A', 14);   // D2 - PA14 (TCC2/WO[0])
-    _MAKE_MOTATE_PIN( 3, 'A',  9);   // D3 - PA09 (TCC0/WO[1] or TCC1/WO[3])
-    _MAKE_MOTATE_PIN( 4, 'A',  8);   // D4 - PA08 (TCC0/WO[0] or TCC1/WO[2])
-    _MAKE_MOTATE_PIN( 5, 'A', 15);   // D5 - PA15 (TCC2/WO[1])
-    _MAKE_MOTATE_PIN( 6, 'A', 20);   // D6 - PA20 (TCC0/WO[0] or TCC1/WO[2])
-    _MAKE_MOTATE_PIN( 7, 'A', 21);   // D7 - PA21 (TCC0/WO[1] or TCC1/WO[3])
-    _MAKE_MOTATE_PIN( 8, 'A',  6);   // D8 - PA06
-    _MAKE_MOTATE_PIN( 9, 'A',  7);   // D9 - PA07 (TCC1/WO[1])
-    _MAKE_MOTATE_PIN(10, 'A', 18);   // D10 - PA18 (TCC0/WO[2])
-    _MAKE_MOTATE_PIN(11, 'A', 16);   // D11 - PA16 (TCC0/WO[4])
-    _MAKE_MOTATE_PIN(12, 'A', 19);   // D12 - PA19 (TCC0/WO[3])
-    _MAKE_MOTATE_PIN(13, 'A', 17);   // D13/LED - PA17 (TCC0/WO[5])
+    _MAKE_MOTATE_PIN( 2, 'B', 17);   // D2 - PB17 (TCC3/WO[1], TCC0/WO[5])
+    _MAKE_MOTATE_PIN( 3, 'B', 16);   // D3 - PB16 (TCC3/WO[0], TCC0/WO[4])
+    _MAKE_MOTATE_PIN( 4, 'B', 13);   // D4 - PB13 (TCC3/WO[1], TCC0/WO[1])
+    _MAKE_MOTATE_PIN( 5, 'B', 14);   // D5 - PB14 (TCC4/WO[0], TCC0/WO[2])
+    _MAKE_MOTATE_PIN( 6, 'B', 15);   // D6 - PB15 (TCC4/WO[1], TCC0/WO[3])
+    _MAKE_MOTATE_PIN( 7, 'B', 12);   // D7 - PB12 (TCC3/WO[0], TCC0/WO[0])
+    _MAKE_MOTATE_PIN( 8, 'A', 21);   // D8 - PA21 (TCC0/WO[1], TCC1/WO[5])
+    _MAKE_MOTATE_PIN( 9, 'A', 20);   // D9 - PA20 (TCC0/WO[0], TCC1/WO[4])
+    _MAKE_MOTATE_PIN(10, 'A', 18);   // D10 - PA18 (TCC1/WO[2], SERCOM1 TX)
+    _MAKE_MOTATE_PIN(11, 'A', 19);   // D11 - PA19 (TCC1/WO[3], SERCOM1 RX)
+    _MAKE_MOTATE_PIN(12, 'A', 17);   // D12 - PA17 (TCC1/WO[1])
+    _MAKE_MOTATE_PIN(13, 'A', 16);   // D13/LED - PA16 (TCC1/WO[0])
 
-    // Analog pins (Arduino header)
+    // Analog pins (Arduino header) - Metro M4 AirLift specific!
     _MAKE_MOTATE_PIN(14, 'A',  2);   // A0 - PA02 (AIN0, DAC0)
-    _MAKE_MOTATE_PIN(15, 'A',  5);   // A1 - PA05 (AIN5)
-    _MAKE_MOTATE_PIN(16, 'B',  8);   // A2 - PB08 (AIN2)
-    _MAKE_MOTATE_PIN(17, 'B',  9);   // A3 - PB09 (AIN3)
-    _MAKE_MOTATE_PIN(18, 'A',  4);   // A4 - PA04 (AIN4)
-    // A5 (PA06) is shared with D8, use pin 8
+    _MAKE_MOTATE_PIN(15, 'A',  5);   // A1 - PA05 (AIN2)
+    _MAKE_MOTATE_PIN(16, 'B',  6);   // A2 - PB06 (AIN3)
+    _MAKE_MOTATE_PIN(17, 'B',  0);   // A3 - PB00 (AIN4)
+    _MAKE_MOTATE_PIN(18, 'B',  8);   // A4 - PB08 (AIN5)
+    _MAKE_MOTATE_PIN(19, 'B',  9);   // A5 - PB09 (AIN10)
 
     // I2C pins
     _MAKE_MOTATE_PIN(20, 'B',  2);   // SDA - PB02 SERCOM5/PAD[0]
@@ -98,46 +99,55 @@ namespace Motate {
     using TCC0_CH3 = TCCChannel<0, 3>;
     using TCC0_CH4 = TCCChannel<0, 4>;
     using TCC0_CH5 = TCCChannel<0, 5>;
+    using TCC1_CH0 = TCCChannel<1, 0>;
     using TCC1_CH1 = TCCChannel<1, 1>;
     using TCC1_CH2 = TCCChannel<1, 2>;
-    using TCC2_CH0 = TCCChannel<2, 0>;
-    using TCC2_CH1 = TCCChannel<2, 1>;
+    using TCC1_CH3 = TCCChannel<1, 3>;
+    using TCC3_CH0 = TCCChannel<3, 0>;
+    using TCC3_CH1 = TCCChannel<3, 1>;
+    using TCC4_CH0 = TCCChannel<4, 0>;
+    using TCC4_CH1 = TCCChannel<4, 1>;
 
-    // D2/PA14 - TCC2/WO[0] via Function G
-    _MAKE_MOTATE_PWM_PIN('A', 14, TCC2_CH0, G, false);
+    // PWM Pin Definitions for Metro M4 AirLift
+    // Updated to match the correct AirLift pin mapping
 
-    // D3/PA09 - TCC0/WO[1] or TCC1/WO[3] via Function F
-    _MAKE_MOTATE_PWM_PIN('A',  9, TCC0_CH1, F, false);
+    // D2/PB17 - TCC3/WO[1] or TCC0/WO[5] via Function F
+    _MAKE_MOTATE_PWM_PIN('B', 17, TCC3_CH1, F, false);
 
-    // D4/PA08 - TCC0/WO[0] or TCC1/WO[2] via Function F
-    _MAKE_MOTATE_PWM_PIN('A',  8, TCC0_CH0, F, false);
+    // D3/PB16 - TCC3/WO[0] or TCC0/WO[4] via Function F
+    _MAKE_MOTATE_PWM_PIN('B', 16, TCC3_CH0, F, false);
 
-    // D5/PA15 - TCC2/WO[1] via Function G
-    _MAKE_MOTATE_PWM_PIN('A', 15, TCC2_CH1, G, false);
+    // D4/PB13 - TCC3/WO[1] or TCC0/WO[1] via Function F
+    _MAKE_MOTATE_PWM_PIN('B', 13, TCC0_CH1, F, false);
 
-    // D6/PA20 - TCC0/WO[0] via Function G
-    _MAKE_MOTATE_PWM_PIN('A', 20, TCC0_CH0, G, false);
+    // D5/PB14 - TCC4/WO[0] or TCC0/WO[2] via Function F
+    _MAKE_MOTATE_PWM_PIN('B', 14, TCC4_CH0, F, false);
 
-    // D7/PA21 - TCC0/WO[1] via Function G
+    // D6/PB15 - TCC4/WO[1] or TCC0/WO[3] via Function F
+    _MAKE_MOTATE_PWM_PIN('B', 15, TCC4_CH1, F, false);
+
+    // D7/PB12 - TCC3/WO[0] or TCC0/WO[0] via Function F
+    _MAKE_MOTATE_PWM_PIN('B', 12, TCC0_CH0, F, false);
+
+    // D8/PA21 - TCC0/WO[1] or TCC1/WO[5] via Function G
     _MAKE_MOTATE_PWM_PIN('A', 21, TCC0_CH1, G, false);
 
-    // D9/PA07 - TCC1/WO[1] via Function F
-    _MAKE_MOTATE_PWM_PIN('A',  7, TCC1_CH1, F, false);
+    // D9/PA20 - TCC0/WO[0] or TCC1/WO[4] via Function G
+    _MAKE_MOTATE_PWM_PIN('A', 20, TCC0_CH0, G, false);
 
-    // D10/PA18 - TCC0/WO[2] via Function G
-    _MAKE_MOTATE_PWM_PIN('A', 18, TCC0_CH2, G, false);
+    // D10/PA18 - TCC1/WO[2] via Function F
+    _MAKE_MOTATE_PWM_PIN('A', 18, TCC1_CH2, F, false);
 
-    // D11/PA16 - TCC0/WO[4] via Function G (Spindle PWM)
-    _MAKE_MOTATE_PWM_PIN('A', 16, TCC0_CH4, G, false);
+    // D11/PA19 - TCC1/WO[3] via Function F
+    _MAKE_MOTATE_PWM_PIN('A', 19, TCC1_CH3, F, false);
 
-    // D12/PA19 - TCC0/WO[3] via Function G
-    _MAKE_MOTATE_PWM_PIN('A', 19, TCC0_CH3, G, false);
+    // D12/PA17 - TCC1/WO[1] via Function F
+    _MAKE_MOTATE_PWM_PIN('A', 17, TCC1_CH1, F, false);
 
-    // D13/PA17 - TCC0/WO[5] via Function G (Built-in LED)
-    _MAKE_MOTATE_PWM_PIN('A', 17, TCC0_CH5, G, false);
+    // D13/PA16 - TCC1/WO[0] via Function F (Built-in LED)
+    _MAKE_MOTATE_PWM_PIN('A', 16, TCC1_CH0, F, false);
 
     // PB22/Pin40 - TCC1/WO[2] via Function F (NeoPixel)
-    // This is the important one for NeoPixel DMA-driven PWM
     _MAKE_MOTATE_PWM_PIN('B', 22, TCC1_CH2, F, false);
 
 } // namespace Motate

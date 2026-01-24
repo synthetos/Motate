@@ -159,7 +159,10 @@ namespace Motate {
             if (pos == _last_known_write_offset) {
                 _getWriteOffset();
                 if (pos == _last_known_write_offset) {
-                    //_restartTransfer();
+                    // CRITICAL: Re-enabled for SAMD51 - when initial transfer fails (USB not
+                    // configured yet), this ensures we retry when the buffer is polled.
+                    // Without this, the transfer callback never fires and no data is received.
+                    _restartTransfer();
                     return false;
                 }
             }

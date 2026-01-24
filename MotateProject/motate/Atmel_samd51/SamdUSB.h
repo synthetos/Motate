@@ -180,6 +180,19 @@ namespace Motate {
     // This needs to be provided in the hardware file
     const char16_t *getUSBLanguageString(int8_t &length);
 
+    // Global USB debug counters (for debugging RX buffer issues)
+    extern volatile uint32_t g_usb_out_addr_set;
+    extern volatile uint32_t g_usb_out_buffer_addr;
+    extern volatile uint32_t g_usb_out_transfer_count;
+    extern volatile uint32_t g_usb_out_bytes_received;
+    extern volatile uint32_t g_usb_out_actual_addr;
+    extern volatile uint32_t g_usb_out_addr_readback;  // Verify ADDR register was written correctly
+    extern volatile uint32_t g_usb_out_ts_buffer;      // ts.buffer address
+    extern volatile uint32_t g_usb_out_ts_transferred; // ts.transferred value
+    extern volatile uint8_t g_usb_out_byte_at_addr;    // Byte at ADDR position after transfer
+    extern volatile uint8_t g_usb_out_byte_before_addr;// Byte at ADDR-1 position after transfer
+    extern volatile uint8_t g_usb_out_first_data_byte; // First byte of received data
+
     /*** USB_DMA_Descriptor - Software-driven transfer descriptor for SAMD51 ***/
     // SAMD51 doesn't have dedicated USB DMA like SAMS70, but we use this struct
     // to maintain API compatibility
@@ -264,6 +277,10 @@ namespace Motate {
         uint32_t _transfer_active_by_endpoint;
         TransferState _transfers[8];
 
+        // SAMD51 USB OUT DMA workaround: track if first transfer done per endpoint
+        // Hardware writes to ADDR-1 for non-first transfers, need to compensate
+        uint8_t _out_transfer_count[8] = {0};
+
         // callback for after a control read is done
         std::function<void(void)> _control_read_completed_callback;
 
@@ -279,6 +296,10 @@ namespace Motate {
         USBDeviceHardware(USBDevice_t * const _proxy) : proxy{_proxy}
         {
             hw = this;
+            // Initialize OUT transfer workaround array
+            for (int i = 0; i < 8; i++) {
+                _out_transfer_count[i] = 0;
+            }
             _init();
         };
 
@@ -1264,37 +1285,54 @@ namespace Motate {
             TransferState &ts = _transfers[ep];
             if (!ts.active) return;
 
-            uint32_t remaining = ts.total_length - ts.transferred;
+            // Debug: capture transfer info
+            g_usb_out_transfer_count++;
+            g_usb_out_buffer_addr = (uint32_t)ts.buffer;
+            g_usb_out_ts_buffer = (uint32_t)ts.buffer;
+            g_usb_out_ts_transferred = ts.transferred;
 
-            // Step 1: Point ADDR directly to user buffer - USB hardware will DMA to there
-            _ep_descriptors[ep].DeviceDescBank[0].ADDR.reg = (uint32_t)(ts.buffer + ts.transferred);
+            // CRITICAL: Disable USB interrupts during descriptor update
+            uint32_t primask = __get_PRIMASK();
+            __disable_irq();
 
-            // Step 2: Build PCKSIZE as full register write (avoid R-M-W race with hardware)
-            // SIZE=3 means 64-byte max packet size for Full-Speed bulk endpoint
-            uint32_t pcksize = USB_DEVICE_PCKSIZE_SIZE(3);  // 64 bytes max
+            // Step 1: Clear STATUS_BK to remove any stale error flags
+            _ep_descriptors[ep].DeviceDescBank[0].STATUS_BK.reg = 0;
 
-            // For multi-packet OUT: set MULTI_PACKET_SIZE to expected total
-            // Hardware will accumulate packets until BYTE_COUNT reaches MULTI_PACKET_SIZE
-            if (remaining > 64) {
-                // Multi-packet: round up to multiple of 64 for MULTI_PACKET_SIZE
-                uint32_t multi_size = (remaining + 63) & ~63;
-                pcksize |= USB_DEVICE_PCKSIZE_MULTI_PACKET_SIZE(multi_size) |
-                           USB_DEVICE_PCKSIZE_BYTE_COUNT(0);
-            } else {
-                pcksize |= USB_DEVICE_PCKSIZE_MULTI_PACKET_SIZE(0) |
-                           USB_DEVICE_PCKSIZE_BYTE_COUNT(0);
-            }
-            _ep_descriptors[ep].DeviceDescBank[0].PCKSIZE.reg = pcksize;  // FULL REGISTER WRITE
-
-            // Step 3: Memory barrier to ensure descriptor writes complete before HW access
+            // Step 2: ZERO PCKSIZE first to clear any stale BYTE_COUNT
+            _ep_descriptors[ep].DeviceDescBank[0].PCKSIZE.reg = 0;
             __DSB();
 
-            // Step 4: Clear BK0RDY to indicate buffer is ready to receive
+            // Step 3: Set PCKSIZE with SIZE and BYTE_COUNT=0
+            // SIZE=3 means 64-byte max packet size for Full-Speed bulk endpoint
+            // Don't use MULTI_PACKET for OUT - receive one packet at a time into ep buffer
+            uint32_t pcksize = USB_DEVICE_PCKSIZE_SIZE(3) |
+                               USB_DEVICE_PCKSIZE_MULTI_PACKET_SIZE(0) |
+                               USB_DEVICE_PCKSIZE_BYTE_COUNT(0);
+            _ep_descriptors[ep].DeviceDescBank[0].PCKSIZE.reg = pcksize;
+
+            // Step 4: Memory barrier between PCKSIZE and ADDR writes
+            __DSB();
+
+            // Step 5: Point ADDR to the fixed endpoint buffer (bank 0)
+            // This avoids DMA address quirks by always using the same aligned buffer
+            // We'll copy data to the user buffer after receiving
+            uint32_t ep_buf_addr = (uint32_t)_ep_buffers[ep][0];
+            _ep_descriptors[ep].DeviceDescBank[0].ADDR.reg = ep_buf_addr;
+            g_usb_out_addr_set = ep_buf_addr;
+            g_usb_out_addr_readback = _ep_descriptors[ep].DeviceDescBank[0].ADDR.reg;
+
+            // Step 5: Memory barrier to ensure descriptor writes complete before HW access
+            __DSB();
+
+            // Step 6: Clear BK0RDY to indicate buffer is ready to receive
             _set_bank0_ready(ep);
 
-            // Step 5: Clear TRFAIL0 AFTER clearing BK0RDY (per TinyUSB implementation)
+            // Step 7: Clear TRFAIL0 AFTER clearing BK0RDY (per TinyUSB implementation)
             // This ensures any stale transfer failure doesn't block new transfers
             USB->DEVICE.DeviceEndpoint[ep].EPINTFLAG.reg = USB_DEVICE_EPINTFLAG_TRFAIL0;
+
+            // Re-enable interrupts
+            __set_PRIMASK(primask);
 
             _enable_out_received_interrupt(ep);
         }
@@ -1378,15 +1416,34 @@ namespace Motate {
                         _ack_out_received(ep);
 
                         if (ts.active) {
-                            // BYTE_COUNT contains total bytes received (hardware DMA'd directly to buffer)
+                            // BYTE_COUNT contains bytes received into endpoint buffer
                             uint32_t received = _ep_descriptors[ep].DeviceDescBank[0].PCKSIZE.bit.BYTE_COUNT;
-                            ts.transferred = received;  // Hardware tracks cumulative count
 
-                            // With multi-packet, TRCPT fires when:
-                            // - BYTE_COUNT reaches MULTI_PACKET_SIZE, or
-                            // - A short packet is received (less than SIZE bytes)
-                            // Either way, transfer is complete
-                            _completeTransfer(ep);
+                            // Debug: capture what was actually written
+                            g_usb_out_bytes_received = received;
+                            g_usb_out_actual_addr = _ep_descriptors[ep].DeviceDescBank[0].ADDR.reg;
+                            g_usb_out_first_data_byte = _ep_buffers[ep][0][0];
+                            g_usb_out_byte_at_addr = _ep_buffers[ep][0][0];
+                            g_usb_out_byte_before_addr = 0;
+
+                            // Copy data from endpoint buffer to user buffer
+                            // This avoids DMA address quirks by always using the fixed endpoint buffer
+                            char *dest = ts.buffer + ts.transferred;
+                            uint8_t *src = _ep_buffers[ep][0];
+                            for (uint32_t i = 0; i < received; i++) {
+                                dest[i] = src[i];
+                            }
+
+                            ts.transferred += received;
+
+                            // Check if more data expected (multi-packet transfer)
+                            if (ts.transferred < ts.total_length && received == 64) {
+                                // More packets expected, re-arm for next packet
+                                _startOUTTransfer(ep);
+                            } else {
+                                // Transfer complete (short packet or all data received)
+                                _completeTransfer(ep);
+                            }
                         } else {
                             // No active transfer, but data arrived
                             // Re-arm endpoint to accept more data (prevent endpoint hang)

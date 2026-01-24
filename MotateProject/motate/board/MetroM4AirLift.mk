@@ -40,6 +40,10 @@ ifeq ("$(BASE_BOARD)","metrom4airlift")
 
     PLATFORM_BASE = ${MOTATE_PATH}/platform/atmel_sam
     include $(PLATFORM_BASE).mk
+
+    # Metro M4 has UF2 bootloader at 0x0000-0x3FFF, so app must start at 0x4000
+    # Override the default linker script to use bootloader-aware version
+    DEVICE_LINKER_SCRIPT = $(SAM_PATH)/linker_scripts/$(CHIP_SERIES)/$(CHIP_SUBSERIES)/$(GCC_TOOLCHAIN)/flash_bootloader.ld
 endif
 
 endif # _BOARD_FOUND check

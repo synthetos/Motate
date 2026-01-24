@@ -105,11 +105,14 @@ extern int _read(int file, char *ptr, int len)
     return 0 ;
 }
 
-// We leave this for the user to implement, if they use it:
-//extern int _write( int file, char *ptr, int len )
-//{
-//	return 0;
-//}
+// Weak stub implementation - override in user code (e.g., g2core xio.cpp) if real output is needed
+__attribute__((weak))
+extern int _write( int file, char *ptr, int len )
+{
+    (void)file;
+    (void)ptr;
+    return len;  // Pretend we wrote everything
+}
 
 extern void _exit( int status )
 {

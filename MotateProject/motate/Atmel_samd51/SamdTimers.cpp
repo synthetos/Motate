@@ -10,6 +10,14 @@
 
 #include "SamdTimers.h"
 
+// Debug counters for interrupt tracking
+volatile uint32_t g_tc3_handler_count = 0;      // DDA timer handler
+volatile uint32_t g_tc3_interrupt_fn_count = 0; // DDA timer function called
+volatile uint32_t g_tc4_handler_count = 0;
+volatile uint32_t g_tc5_handler_count = 0;
+volatile uint32_t g_tc4_interrupt_fn_count = 0;
+volatile uint32_t g_tc5_interrupt_fn_count = 0;
+
 namespace Motate {
 
     // SysTickTimer instance and static members
@@ -69,9 +77,62 @@ extern "C" void SysTick_Handler(void) {
 _MAKE_TCx_Handler(0, TC0)
 _MAKE_TCx_Handler(1, TC1)
 _MAKE_TCx_Handler(2, TC2)
-_MAKE_TCx_Handler(3, TC3)
-_MAKE_TCx_Handler(4, TC4)
-_MAKE_TCx_Handler(5, TC5)
+
+// TC3 handler with debug counters (DDA timer for stepper pulses)
+namespace Motate {
+    template<> void TimerChannel<3, 0>::interrupt() __attribute__ ((weak));
+    template<> void Timer<3>::interrupt() __attribute__ ((weak));
+}
+
+extern "C"
+void TC3_Handler(void) {
+    g_tc3_handler_count++;
+    Motate::Timer<3>::_interrupt_cause_cached = TC3->COUNT16.INTFLAG.reg;
+    TC3->COUNT16.INTFLAG.reg = TC_INTFLAG_MASK;
+    if (Motate::TimerChannel<3, 0>::interrupt) {
+        g_tc3_interrupt_fn_count++;
+        Motate::TimerChannel<3, 0>::interrupt();
+    }
+    if (Motate::Timer<3>::interrupt) {
+        Motate::Timer<3>::interrupt();
+    }
+}
+
+// TC4 and TC5 handlers with debug counters
+namespace Motate {
+    template<> void TimerChannel<4, 0>::interrupt() __attribute__ ((weak));
+    template<> void Timer<4>::interrupt() __attribute__ ((weak));
+    template<> void TimerChannel<5, 0>::interrupt() __attribute__ ((weak));
+    template<> void Timer<5>::interrupt() __attribute__ ((weak));
+}
+
+extern "C"
+void TC4_Handler(void) {
+    g_tc4_handler_count++;
+    Motate::Timer<4>::_interrupt_cause_cached = TC4->COUNT16.INTFLAG.reg;
+    TC4->COUNT16.INTFLAG.reg = TC_INTFLAG_MASK;
+    if (Motate::TimerChannel<4, 0>::interrupt) {
+        g_tc4_interrupt_fn_count++;
+        Motate::TimerChannel<4, 0>::interrupt();
+    }
+    if (Motate::Timer<4>::interrupt) {
+        Motate::Timer<4>::interrupt();
+    }
+}
+
+extern "C"
+void TC5_Handler(void) {
+    g_tc5_handler_count++;
+    Motate::Timer<5>::_interrupt_cause_cached = TC5->COUNT16.INTFLAG.reg;
+    TC5->COUNT16.INTFLAG.reg = TC_INTFLAG_MASK;
+    if (Motate::TimerChannel<5, 0>::interrupt) {
+        g_tc5_interrupt_fn_count++;
+        Motate::TimerChannel<5, 0>::interrupt();
+    }
+    if (Motate::Timer<5>::interrupt) {
+        Motate::Timer<5>::interrupt();
+    }
+}
 
 #undef _MAKE_TCx_Handler
 

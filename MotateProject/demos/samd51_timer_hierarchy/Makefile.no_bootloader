@@ -1,0 +1,12 @@
+# Makefile for SAMD51 Timer Hierarchy demo - NO BOOTLOADER VERSION
+# This builds the firmware to run at 0x0000 (overwrites bootloader)
+
+PROJECT = samd51_timer_hierarchy_noboot
+TOOLS_VERSION = 12.2r1
+MOTATE_PATH ?= ../../motate
+BOARD = MetroM4AirLift
+
+# Override the linker script to use the non-bootloader version
+override DEVICE_LINKER_SCRIPT = $(MOTATE_PATH)/cmsis/TARGET_Atmel/linker_scripts/samd51/samd51j19a/gcc/flash.ld
+
+include $(MOTATE_PATH)/Motate.mk

@@ -43,6 +43,19 @@ namespace Motate {
     volatile uint32_t g_cdc_line_encoding_count = 0;
     volatile uint32_t g_cdc_flag_reset_count = 0;
 
+    /*** USB OUT transfer debug counters ***/
+    volatile uint32_t g_usb_out_addr_set = 0;
+    volatile uint32_t g_usb_out_buffer_addr = 0;
+    volatile uint32_t g_usb_out_transfer_count = 0;
+    volatile uint32_t g_usb_out_bytes_received = 0;
+    volatile uint32_t g_usb_out_actual_addr = 0;
+    volatile uint32_t g_usb_out_addr_readback = 0;
+    volatile uint32_t g_usb_out_ts_buffer = 0;
+    volatile uint32_t g_usb_out_ts_transferred = 0;
+    volatile uint8_t g_usb_out_byte_at_addr = 0;       // Byte at ADDR position after transfer
+    volatile uint8_t g_usb_out_byte_before_addr = 0;   // Byte at ADDR-1 position after transfer
+    volatile uint8_t g_usb_out_first_data_byte = 0;    // First byte of received data
+
     /*** Static member definitions ***/
 
     USBDeviceHardware *USBDeviceHardware::hw = nullptr;
